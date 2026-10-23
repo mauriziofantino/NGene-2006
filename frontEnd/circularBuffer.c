@@ -18,19 +18,11 @@
 #include "ioFunctions.h"
 #include "timeConstants.h"
 #include "usbFrontEndConfiguration.h"
-#include "stereo.h"
 #include "sige.h"
-#include "fraunhofer.h"
-#include "data_shift.h"
 #include "sigeV3.h"
 #include "frontend.h"
 #include "closeManager.h"
 #include "arrays.h"
-#include "usrp.h"
-#include "stereoTriton.h"
-#include "amungoNT1065.h"
-#include "jrc.h"
-#include "short2char.h"
 
 
 /* Perform the Circular buffer initialization */
@@ -54,19 +46,6 @@ int InitCircularBuffer(TNGeneConfiguration *cfg, TCircularBuffer *buf)
     buf->discardedSamples = 0;	/* no samples have been elaborated yet */
      /**/ buf->sigeExpected = 0x02;
     buf->sigeMaskOffset = 0;
-    posix_memalign((void **) &(buf->usrpSamples), POSIX_ALIGNMENT, buf->dim * sizeof(short int));
-    if (buf->usrpSamples == NULL) {
-	SwrxLog(NGENE_LOG_SEVERITY_ERROR, "malloc returned NULL pointer in InitCircularBuffer function");
-	return FAILURE_RETURN;
-    }
-    buf->usrpMaskOffset = 0;
-    posix_memalign((void **) &(buf->stereoTritonSamples), POSIX_ALIGNMENT, buf->dim * sizeof(char));
-    if (buf->stereoTritonSamples == NULL) {
-	SwrxLog(NGENE_LOG_SEVERITY_ERROR, "malloc returned NULL pointer in InitCircularBuffer function");
-	return FAILURE_RETURN;
-    }
-    buf->stereoTritonMaskOffset = 0;
-    buf->jrcMaskOffset = 0;
     if (cfg->fePars->resolution > 4) {
 	buf->shiftAmount = cfg->fePars->resolution - 4;
 	buf->unsignedToSignedCorrection[0] = (unsigned char) cfg->fePars->meanValue >> buf->shiftAmount;
@@ -87,14 +66,6 @@ void DeinitCircularBuffer(TCircularBuffer *buf)
     if (buf->buffer != NULL) {
 	free(buf->buffer);
 	buf->buffer = NULL;
-    }
-    if (buf->usrpSamples != NULL) {
-	free(buf->usrpSamples);
-	buf->usrpSamples = NULL;
-    }
-    if (buf->stereoTritonSamples != NULL) {
-	free(buf->stereoTritonSamples);
-	buf->stereoTritonSamples = NULL;
     }
     buf->dim = 0;
     buf->fill1 = 0;
@@ -179,9 +150,6 @@ void ConvertSamplesIntoNGeneFormat(TNGeneConfiguration *cfg, TCircularBuffer *bu
 	return;
 
     switch (cfg->usedFrontEnd) {
-    case NGENE_FE_STEREO:
-	StereoSamplesElab(ptr, ptr, n);
-	break;
     case NGENE_FE_SIGE:
 	if ((ptr[0] & 0x02) != buf->sigeExpected) {
 	    buf->sigeExpected = buf->sigeExpected ^ 0x02;
@@ -193,25 +161,10 @@ void ConvertSamplesIntoNGeneFormat(TNGeneConfiguration *cfg, TCircularBuffer *bu
 	SigeSamplesElab(ptr, ptr, n, buf->sigeMaskOffset);
 	buf->sigeMaskOffset = (buf->sigeMaskOffset + n) & 0x03;
 	break;
-    case NGENE_FE_FRAUNHOFER:
-	FraunhoferSamplesElab(ptr, ptr, n);
-	break;
     case NGENE_FE_SIGE_V3:
 	SigeV3SamplesElab(ptr, ptr, n);
 	break;
-    case NGENE_FE_AMUNGO_NT1065:
-	AmungoNT1065SamplesElab(ptr, ptr, n);
-	break;
-    case NGENE_FE_JRC:
-	JrcSamplesElab(ptr, ptr, n, &(buf->jrcMaskOffset), buf->shiftAmount);
-	break;
-    default:
-	if (cfg->fePars->meanValue > 0) {
-	    RightShiftU2sByte(ptr, ptr, n, buf->shiftAmount, buf->unsignedToSignedCorrection);
-	} else if (buf->shiftAmount > 0) {
-	    RightShiftByte(ptr, ptr, n, buf->shiftAmount);
-	}
-	break;
+    default: break;
     }
 }
 
@@ -222,39 +175,13 @@ int FillInputBuffer(TNGeneConfiguration *cfg, TCircularBuffer *buf, TRxFe *rxFe)
     unsigned int read2 = 0;
     unsigned int readTot;
 
-    if ((cfg->usedFrontEnd != NGENE_FE_USRP) && (cfg->usedFrontEnd != NGENE_FE_STEREO_TRITON)) {
-	if (buf->free1 > 0) {
-	    read1 = ReadRxFrontEnd(rxFe, (void *) &(buf->buffer[buf->head]), buf->free1);
-	    ConvertSamplesIntoNGeneFormat(cfg, buf, &(buf->buffer[buf->head]), read1);
-	}
-	if ((read1 == buf->free1) && (buf->free2 > 0)) {
-	    read2 = ReadRxFrontEnd(rxFe, (void *) &(buf->buffer[0]), buf->free2);
-	    ConvertSamplesIntoNGeneFormat(cfg, buf, &(buf->buffer[0]), read2);
-	}
-    } else if ((cfg->usedFrontEnd == NGENE_FE_USRP)) {
-	/* NGENE_FE_USRP is 16 bits per sample! read and convert to 8 bits per sample */
-	if (buf->free1 > 0) {
-	    read1 = ReadRxFrontEnd(rxFe, (void *) buf->usrpSamples, 2 * buf->free1);	// reads bytes!
-	    read1 = read1 / 2;	// from number of bytes to number of words
-	    FromShortArrayToCharArray(buf->usrpSamples, &(buf->buffer[buf->head]), read1, buf->shiftAmount);
-	    JrcSamplesElab(&(buf->buffer[buf->head]), &(buf->buffer[buf->head]), read1, &(buf->jrcMaskOffset), 0);
-	}
-	if ((read1 == buf->free1) && (buf->free2 > 0)) {
-	    read2 = ReadRxFrontEnd(rxFe, (void *) buf->usrpSamples, 2 * buf->free2);	// reads bytes!
-	    read2 = read2 / 2;	// from number of bytes to number of words
-	    FromShortArrayToCharArray(buf->usrpSamples, &(buf->buffer[0]), read2, buf->shiftAmount);
-	    JrcSamplesElab(&(buf->buffer[0]), &(buf->buffer[0]), read2, &(buf->jrcMaskOffset), 0);
-	}
-    } else if (cfg->usedFrontEnd == NGENE_FE_STEREO_TRITON) {
-	/* NGENE_FE_STEREO_TRITON works only from file, and with a specific sample format! */
-	if (buf->free1 > 0) {
-	    read1 = fread(buf->stereoTritonSamples, sizeof(char), buf->free1, rxFe->incomingFile);
-	    StereoTritonSamplesElab(buf->stereoTritonSamples, &(buf->buffer[buf->head]), read1, &(buf->stereoTritonMaskOffset), buf->shiftAmount);
-	}
-	if ((read1 == buf->free1) && (buf->free2 > 0)) {
-	    read2 = fread(buf->stereoTritonSamples, sizeof(char), buf->free2, rxFe->incomingFile);
-	    StereoTritonSamplesElab(buf->stereoTritonSamples, &(buf->buffer[0]), read2, &(buf->stereoTritonMaskOffset), buf->shiftAmount);
-	}
+    if (buf->free1 > 0) {
+        read1 = ReadRxFrontEnd(rxFe, &(buf->buffer[buf->head]), buf->free1);
+        ConvertSamplesIntoNGeneFormat(cfg, buf, &(buf->buffer[buf->head]), read1);
+    }
+    if ((read1 == buf->free1) && (buf->free2 > 0)) {
+        read2 = ReadRxFrontEnd(rxFe, buf->buffer, buf->free2);
+        ConvertSamplesIntoNGeneFormat(cfg, buf, buf->buffer, read2);
     }
 
     readTot = read1 + read2;

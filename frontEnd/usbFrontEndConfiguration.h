@@ -19,16 +19,8 @@
 /* Each index is used to indicate a supported front-end
  * INFO These numbers must be equal to those reported in the Front_End.conf configuration file
  * and those sent by the GUI */
-#define NGENE_FE_STEREO			0
 #define NGENE_FE_SIGE			1
-#define NGENE_FE_CUSTOM   		2
-#define NGENE_FE_NFUELS			3
-#define NGENE_FE_FRAUNHOFER		4
-#define NGENE_FE_USRP			5
 #define NGENE_FE_SIGE_V3        6
-#define NGENE_FE_STEREO_TRITON  7
-#define NGENE_FE_AMUNGO_NT1065  8
-#define NGENE_FE_JRC            9
 
 /**
  * @struct usbFeParsStruct

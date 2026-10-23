@@ -860,11 +860,7 @@ void CompleteConfiguration(TNGeneConfiguration *cfg)
 	}
 	else
 	{
-		cfg->fePars = &(cfg->usbFeParameters.feList[0]);
-	}
-	if(((cfg->fePars->index==NGENE_FE_NFUELS) || (cfg->fePars->index==NGENE_FE_STEREO_TRITON)) && (cfg->inputMethod==USB_FRONTEND))
-	{
-		SwrxLog(NGENE_LOG_SEVERITY_ERROR,"Invalid configuration: NGene2 must work from file when the %s front-end is selected",cfg->fePars->name);
+		SwrxLog(NGENE_LOG_SEVERITY_ERROR,"Unsupported front-end ID %d: select SiGe (1 or 6)",cfg->usedFrontEnd);
 		CloseNGene(cfg,EXIT_FAILURE);
 	}
 	if((cfg->fePars->vid==0) && (cfg->fePars->pid==0) && (cfg->inputMethod==USB_FRONTEND))

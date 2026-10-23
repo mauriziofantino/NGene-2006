@@ -81,7 +81,7 @@ void PreparePaths(TNGeneConfiguration *cfg, TNGeneData *rx)
     }
     homeFolder = getenv("HOME");
     if (homeFolder == NULL) {
-	homeFolder = FALSE_FLAG;
+	homeFolderValid = FALSE_FLAG;
     }
     if (getcwd(currFolder, MAX_ROW_LENGTH) == NULL) {
 	currFolderValid = FALSE_FLAG;

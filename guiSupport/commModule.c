@@ -17,7 +17,12 @@
 
 #include <sys/types.h>
 #include <sys/socket.h>
+#ifdef __CYGWIN__
+#include "../platform/cygwin_sendfile.h"
+#define sendfile NgCygwinSendfile
+#else
 #include <sys/sendfile.h>
+#endif
 #include <netinet/in.h>
 #include <netdb.h>
 

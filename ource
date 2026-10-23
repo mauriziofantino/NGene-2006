@@ -1,0 +1,457 @@
+ .gitignore                                         |   27 [32m+[m
+ CMakeLists.txt                                     |  228 [32m+[m
+ Makefile.am                                        |  126 [32m+[m
+ README.md                                          |   42 [32m+[m
+ acquisition/acqConfiguration.h                     |   67 [32m+[m
+ acquisition/acquisition.c                          |  566 [32m+++[m
+ acquisition/acquisition.h                          |  108 [32m+[m
+ acquisition/acquisitionDataStructure.h             |  202 [32m+[m
+ acquisition/coarseAcquisition.c                    |  359 [32m++[m
+ acquisition/coarseAcquisition.h                    |   53 [32m+[m
+ acquisition/confirmation.c                         |  134 [32m+[m
+ acquisition/confirmation.h                         |   68 [32m+[m
+ acquisition/manageAcqConfiguration.c               |  224 [32m+[m
+ acquisition/manageAcqConfiguration.h               |   32 [32m+[m
+ acquisition/nonCoherentSumsManager.c               |   97 [32m+[m
+ acquisition/nonCoherentSumsManager.h               |   43 [32m+[m
+ acquisition/refinement.c                           |  279 [32m++[m
+ acquisition/refinement.h                           |   75 [32m+[m
+ asmFolder/amungoNT1065.c                           |  200 [32m+[m
+ asmFolder/amungoNT1065.h                           |   40 [32m+[m
+ asmFolder/arrays.c                                 |  960 [32m++++[m
+ asmFolder/arrays.h                                 |  217 [32m+[m
+ asmFolder/carrierTable.c                           |  452 [32m++[m
+ asmFolder/carrierTable.h                           |   98 [32m+[m
+ asmFolder/data_shift.c                             |  372 [32m++[m
+ asmFolder/data_shift.function                      |  143 [32m+[m
+ asmFolder/data_shift.h                             |   79 [32m+[m
+ asmFolder/data_shift_left.function                 |   14 [32m+[m
+ asmFolder/data_shift_right_uint32.function         |   15 [32m+[m
+ asmFolder/data_shift_u2s.function                  |  327 [32m++[m
+ asmFolder/fft.c                                    |  495 [32m++[m
+ asmFolder/fft.h                                    |   71 [32m+[m
+ asmFolder/fraunhofer.c                             |  179 [32m+[m
+ asmFolder/fraunhofer.h                             |   30 [32m+[m
+ asmFolder/jrc.c                                    |  104 [32m+[m
+ asmFolder/jrc.h                                    |   35 [32m+[m
+ asmFolder/prnTable.c                               |  448 [32m++[m
+ asmFolder/prnTable.h                               |  123 [32m+[m
+ asmFolder/short2char.c                             |  135 [32m+[m
+ asmFolder/short2char.function                      |   39 [32m+[m
+ asmFolder/short2char.h                             |   34 [32m+[m
+ asmFolder/sige.c                                   |  435 [32m++[m
+ asmFolder/sige.h                                   |   29 [32m+[m
+ asmFolder/sigeV3.c                                 |  113 [32m+[m
+ asmFolder/sigeV3.h                                 |   28 [32m+[m
+ asmFolder/simd.h                                   |  520 [32m++[m
+ asmFolder/stereo.c                                 |  358 [32m++[m
+ asmFolder/stereo.h                                 |   39 [32m+[m
+ asmFolder/stereoTriton.c                           |   95 [32m+[m
+ asmFolder/stereoTriton.function                    |   84 [32m+[m
+ asmFolder/stereoTriton.h                           |   34 [32m+[m
+ asmFolder/usrp.c                                   |  119 [32m+[m
+ asmFolder/usrp.function                            |   74 [32m+[m
+ asmFolder/usrp.h                                   |   34 [32m+[m
+ chimera/chimeraCryptoFunctions.c                   | 1258 [32m+++++[m
+ chimera/chimeraCryptoFunctions.h                   |  261 [32m+[m
+ chimera/chimeraDataStructures.h                    |  130 [32m+[m
+ chimera/testCryptoFunctions/SectorPatternsTable    |   32 [32m+[m
+ chimera/testCryptoFunctions/executeProfiling.sh    |   22 [32m+[m
+ .../testCryptoFunctions/executeProfiling_allDF.sh  |   35 [32m+[m
+ chimera/testCryptoFunctions/mainTestChimera.c      |  292 [32m++[m
+ configure.ac                                       |   43 [32m+[m
+ frontEnd/circularBuffer.c                          |  286 [32m++[m
+ frontEnd/circularBuffer.h                          |  142 [32m+[m
+ frontEnd/frontend.c                                |  151 [32m+[m
+ frontEnd/frontend.h                                |  239 [32m+[m
+ frontEnd/frontendThreadFunctions.c                 |  168 [32m+[m
+ frontEnd/frontendThreadFunctions.h                 |   92 [32m+[m
+ frontEnd/manageUsbFrontEndConfiguration.c          |  127 [32m+[m
+ frontEnd/manageUsbFrontEndConfiguration.h          |   36 [32m+[m
+ frontEnd/megaBuffer.c                              |  122 [32m+[m
+ frontEnd/megaBuffer.h                              |   42 [32m+[m
+ frontEnd/usbDevicesConstants.h                     |   73 [32m+[m
+ frontEnd/usbFrontEndConfiguration.h                |   62 [32m+[m
+ frontEnd/usbInterface.c                            |  610 [32m+++[m
+ frontEnd/usbInterface.h                            |   97 [32m+[m
+ guiSupport/commModule.c                            | 1513 [32m++++++[m
+ guiSupport/commModule.h                            |  241 [32m+[m
+ guiSupport/generic.h                               |   19 [32m+[m
+ guiSupport/guiInterfaceFunctions.c                 |  500 [32m++[m
+ guiSupport/guiInterfaceFunctions.h                 |  142 [32m+[m
+ guiSupport/threadutils.c                           |   49 [32m+[m
+ guiSupport/threadutils.h                           |   17 [32m+[m
+ libraries/libfec/.configured_stamp                 |    0
+ libraries/libfec/.gitignore                        |    2 [32m+[m
+ libraries/libfec/CMakeLists.txt                    |  166 [32m+[m
+ libraries/libfec/INSTALL                           |   45 [32m+[m
+ libraries/libfec/README                            |  120 [32m+[m
+ libraries/libfec/ccsds.h                           |    5 [32m+[m
+ libraries/libfec/ccsds_tab.c                       |   43 [32m+[m
+ libraries/libfec/ccsds_tab.o                       |  Bin [31m0[m -> [32m1680[m bytes
+ libraries/libfec/ccsds_tal.c                       |   38 [32m+[m
+ libraries/libfec/ccsds_tal.o                       |  Bin [31m0[m -> [32m1568[m bytes
+ libraries/libfec/char.h                            |   24 [32m+[m
+ libraries/libfec/config.guess                      | 1516 [32m++++++[m
+ libraries/libfec/config.h                          |   20 [32m+[m
+ libraries/libfec/config.h.cmake                    |    6 [32m+[m
+ libraries/libfec/config.h.in                       |   19 [32m+[m
+ libraries/libfec/config.log                        |  456 [32m++[m
+ libraries/libfec/config.status                     | 1017 [32m++++[m
+ libraries/libfec/config.sub                        | 1807 [32m+++++++[m
+ libraries/libfec/configure                         | 5139 [32m++++++++++++++++++++[m
+ libraries/libfec/configure.in                      |  104 [32m+[m
+ libraries/libfec/cpu_features.s                    |   15 [32m+[m
+ libraries/libfec/cpu_mode_ppc.c                    |   40 [32m+[m
+ libraries/libfec/cpu_mode_unknown.c                |   22 [32m+[m
+ libraries/libfec/cpu_mode_unknown.o                |  Bin [31m0[m -> [32m2240[m bytes
+ libraries/libfec/cpu_mode_x86.c                    |   33 [32m+[m
+ libraries/libfec/decode_rs.c                       |  262 [32m+[m
+ libraries/libfec/decode_rs.h                       |  298 [32m++[m
+ libraries/libfec/decode_rs_8.c                     |   24 [32m+[m
+ libraries/libfec/decode_rs_8.o                     |  Bin [31m0[m -> [32m4448[m bytes
+ libraries/libfec/decode_rs_ccsds.c                 |   26 [32m+[m
+ libraries/libfec/decode_rs_ccsds.o                 |  Bin [31m0[m -> [32m1920[m bytes
+ libraries/libfec/decode_rs_char.c                  |   22 [32m+[m
+ libraries/libfec/decode_rs_char.o                  |  Bin [31m0[m -> [32m5392[m bytes
+ libraries/libfec/decode_rs_int.c                   |   22 [32m+[m
+ libraries/libfec/decode_rs_int.o                   |  Bin [31m0[m -> [32m5472[m bytes
+ libraries/libfec/dotprod.c                         |   94 [32m+[m
+ libraries/libfec/dotprod.h                         |   15 [32m+[m
+ libraries/libfec/dotprod.o                         |  Bin [31m0[m -> [32m1736[m bytes
+ libraries/libfec/dotprod_av.c                      |   93 [32m+[m
+ libraries/libfec/dotprod_mmx.c                     |   81 [32m+[m
+ libraries/libfec/dotprod_mmx_assist.s              |   83 [32m+[m
+ libraries/libfec/dotprod_port.c                    |   58 [32m+[m
+ libraries/libfec/dotprod_port.o                    |  Bin [31m0[m -> [32m2112[m bytes
+ libraries/libfec/dotprod_sse2.c                    |   72 [32m+[m
+ libraries/libfec/dotprod_sse2_assist.s             |   85 [32m+[m
+ libraries/libfec/dsp.3                             |   63 [32m+[m
+ libraries/libfec/dtest.c                           |   99 [32m+[m
+ libraries/libfec/encode_rs.c                       |   52 [32m+[m
+ libraries/libfec/encode_rs.h                       |   58 [32m+[m
+ libraries/libfec/encode_rs_8.c                     |  109 [32m+[m
+ libraries/libfec/encode_rs_8.o                     |  Bin [31m0[m -> [32m2176[m bytes
+ libraries/libfec/encode_rs_av.c                    |   61 [32m+[m
+ libraries/libfec/encode_rs_ccsds.c                 |   24 [32m+[m
+ libraries/libfec/encode_rs_ccsds.o                 |  Bin [31m0[m -> [32m1856[m bytes
+ libraries/libfec/encode_rs_char.c                  |   15 [32m+[m
+ libraries/libfec/encode_rs_char.o                  |  Bin [31m0[m -> [32m1840[m bytes
+ libraries/libfec/encode_rs_int.c                   |   15 [32m+[m
+ libraries/libfec/encode_rs_int.o                   |  Bin [31m0[m -> [32m1864[m bytes
+ libraries/libfec/exercise.c                        |  122 [32m+[m
+ libraries/libfec/fec.c                             |   66 [32m+[m
+ libraries/libfec/fec.h                             |  347 [32m++[m
+ libraries/libfec/fec.o                             |  Bin [31m0[m -> [32m2640[m bytes
+ libraries/libfec/fixed.h                           |   33 [32m+[m
+ libraries/libfec/gen_ccsds                         |  Bin [31m0[m -> [32m15952[m bytes
+ libraries/libfec/gen_ccsds.c                       |   39 [32m+[m
+ libraries/libfec/gen_ccsds.o                       |  Bin [31m0[m -> [32m2808[m bytes
+ libraries/libfec/gen_ccsds_tal                     |  Bin [31m0[m -> [32m15688[m bytes
+ libraries/libfec/gen_ccsds_tal.c                   |   53 [32m+[m
+ libraries/libfec/gen_ccsds_tal.o                   |  Bin [31m0[m -> [32m2720[m bytes
+ libraries/libfec/init_rs.c                         |   39 [32m+[m
+ libraries/libfec/init_rs.h                         |  106 [32m+[m
+ libraries/libfec/init_rs_char.c                    |   35 [32m+[m
+ libraries/libfec/init_rs_char.o                    |  Bin [31m0[m -> [32m2736[m bytes
+ libraries/libfec/init_rs_char_local.c              |   35 [32m+[m
+ libraries/libfec/init_rs_char_local.o              |  Bin [31m0[m -> [32m3496[m bytes
+ libraries/libfec/init_rs_int.c                     |   35 [32m+[m
+ libraries/libfec/init_rs_int.o                     |  Bin [31m0[m -> [32m2800[m bytes
+ libraries/libfec/install-sh                        |  251 [32m+[m
+ libraries/libfec/int.h                             |   22 [32m+[m
+ libraries/libfec/lesser.txt                        |  506 [32m++[m
+ libraries/libfec/libfec.a                          |  Bin [31m0[m -> [32m82840[m bytes
+ libraries/libfec/libfec.so                         |  Bin [31m0[m -> [32m54896[m bytes
+ libraries/libfec/makefile.in                       |  257 [32m+[m
+ libraries/libfec/mmxbfly27.s                       |  148 [32m+[m
+ libraries/libfec/mmxbfly29.s                       |  161 [32m+[m
+ libraries/libfec/peak_mmx_assist.s                 |   70 [32m+[m
+ libraries/libfec/peak_sse2_assist.s                |   51 [32m+[m
+ libraries/libfec/peak_sse_assist.s                 |   49 [32m+[m
+ libraries/libfec/peaktest.c                        |   38 [32m+[m
+ libraries/libfec/peakval.c                         |   39 [32m+[m
+ libraries/libfec/peakval.o                         |  Bin [31m0[m -> [32m1496[m bytes
+ libraries/libfec/peakval_av.c                      |   61 [32m+[m
+ libraries/libfec/peakval_mmx.c                     |   34 [32m+[m
+ libraries/libfec/peakval_mmx_assist.s              |   70 [32m+[m
+ libraries/libfec/peakval_port.c                    |   16 [32m+[m
+ libraries/libfec/peakval_port.o                    |  Bin [31m0[m -> [32m1528[m bytes
+ libraries/libfec/peakval_sse.c                     |   35 [32m+[m
+ libraries/libfec/peakval_sse2.c                    |   34 [32m+[m
+ libraries/libfec/peakval_sse2_assist.s             |   51 [32m+[m
+ libraries/libfec/peakval_sse_assist.s              |   49 [32m+[m
+ libraries/libfec/rs-common.h                       |   26 [32m+[m
+ libraries/libfec/rs.3                              |  198 [32m+[m
+ libraries/libfec/rs_speedtest.c                    |   54 [32m+[m
+ libraries/libfec/rstest.c                          |  296 [32m++[m
+ libraries/libfec/sim.c                             |   43 [32m+[m
+ libraries/libfec/simd-viterbi.3                    |  247 [32m+[m
+ libraries/libfec/sqtest.c                          |   42 [32m+[m
+ libraries/libfec/sse2bfly27.s                      |  202 [32m+[m
+ libraries/libfec/sse2bfly29.s                      |  245 [32m+[m
+ libraries/libfec/ssebfly27.s                       |  205 [32m+[m
+ libraries/libfec/ssebfly29.s                       |  271 [32m++[m
+ libraries/libfec/sumsq.c                           |   40 [32m+[m
+ libraries/libfec/sumsq.o                           |  Bin [31m0[m -> [32m1400[m bytes
+ libraries/libfec/sumsq_av.c                        |   78 [32m+[m
+ libraries/libfec/sumsq_mmx.c                       |   35 [32m+[m
+ libraries/libfec/sumsq_mmx_assist.s                |   83 [32m+[m
+ libraries/libfec/sumsq_port.c                      |   16 [32m+[m
+ libraries/libfec/sumsq_port.o                      |  Bin [31m0[m -> [32m1496[m bytes
+ libraries/libfec/sumsq_sse2.c                      |   33 [32m+[m
+ libraries/libfec/sumsq_sse2_assist.s               |   49 [32m+[m
+ libraries/libfec/sumsq_test.c                      |  101 [32m+[m
+ libraries/libfec/viterbi27.c                       |  161 [32m+[m
+ libraries/libfec/viterbi27.o                       |  Bin [31m0[m -> [32m2408[m bytes
+ libraries/libfec/viterbi27_av.c                    |  210 [32m+[m
+ libraries/libfec/viterbi27_mmx.c                   |  115 [32m+[m
+ libraries/libfec/viterbi27_port.c                  |  191 [32m+[m
+ libraries/libfec/viterbi27_port.o                  |  Bin [31m0[m -> [32m8720[m bytes
+ libraries/libfec/viterbi27_sse.c                   |  113 [32m+[m
+ libraries/libfec/viterbi27_sse2.c                  |  180 [32m+[m
+ libraries/libfec/viterbi29.c                       |  152 [32m+[m
+ libraries/libfec/viterbi29.o                       |  Bin [31m0[m -> [32m2384[m bytes
+ libraries/libfec/viterbi29_av.c                    |  190 [32m+[m
+ libraries/libfec/viterbi29_mmx.c                   |  118 [32m+[m
+ libraries/libfec/viterbi29_port.c                  |  166 [32m+[m
+ libraries/libfec/viterbi29_port.o                  |  Bin [31m0[m -> [32m3912[m bytes
+ libraries/libfec/viterbi29_sse.c                   |  114 [32m+[m
+ libraries/libfec/viterbi29_sse2.c                  |  119 [32m+[m
+ libraries/libfec/viterbi39.c                       |  153 [32m+[m
+ libraries/libfec/viterbi39.o                       |  Bin [31m0[m -> [32m2384[m bytes
+ libraries/libfec/viterbi39_av.c                    |  251 [32m+[m
+ libraries/libfec/viterbi39_mmx.c                   |  185 [32m+[m
+ libraries/libfec/viterbi39_port.c                  |  168 [32m+[m
+ libraries/libfec/viterbi39_port.o                  |  Bin [31m0[m -> [32m4176[m bytes
+ libraries/libfec/viterbi39_sse.c                   |  201 [32m+[m
+ libraries/libfec/viterbi39_sse2.c                  |  200 [32m+[m
+ libraries/libfec/viterbi615.c                      |  155 [32m+[m
+ libraries/libfec/viterbi615.o                      |  Bin [31m0[m -> [32m2400[m bytes
+ libraries/libfec/viterbi615_av.c                   |  257 [32m+[m
+ libraries/libfec/viterbi615_mmx.c                  |  183 [32m+[m
+ libraries/libfec/viterbi615_port.c                 |  156 [32m+[m
+ libraries/libfec/viterbi615_port.o                 |  Bin [31m0[m -> [32m4312[m bytes
+ libraries/libfec/viterbi615_sse.c                  |  201 [32m+[m
+ libraries/libfec/viterbi615_sse2.c                 |  204 [32m+[m
+ libraries/libfec/vtest27.c                         |  184 [32m+[m
+ libraries/libfec/vtest29.c                         |  185 [32m+[m
+ libraries/libfec/vtest39.c                         |  186 [32m+[m
+ libraries/libfec/vtest615.c                        |  191 [32m+[m
+ osnma/base64.c                                     |  153 [32m+[m
+ osnma/base64.h                                     |   19 [32m+[m
+ osnma/createPemFIle/createPemFile.c                |  176 [32m+[m
+ osnma/createPemFIle/createPemFile.c~               |  189 [32m+[m
+ osnma/cryptoFunctions.c                            | 3376 [32m+++++++++++++[m
+ osnma/cryptoFunctions.h                            |  407 [32m++[m
+ osnma/defineNgene2_vs_osnmaData.txt                |   41 [32m+[m
+ osnma/dsmData.c                                    |  144 [32m+[m
+ osnma/dsmData.h                                    |   30 [32m+[m
+ osnma/macLookupTable.c                             |  200 [32m+[m
+ osnma/macLookupTable.h                             |   25 [32m+[m
+ osnma/mackList.c                                   |  488 [32m++[m
+ osnma/mackList.h                                   |   44 [32m+[m
+ osnma/osnmaConstants.h                             |  537 [32m++[m
+ osnma/osnmaDataStructures.h                        |  665 [32m+++[m
+ osnma/osnmaManagement.c                            | 4193 [32m++++++++++++++++[m
+ osnma/osnmaManagement.h                            |   60 [32m+[m
+ osnma/osnmaUtilities.c                             |  401 [32m++[m
+ osnma/osnmaUtilities.h                             |  184 [32m+[m
+ osnma/osnmaValidations.c                           |  581 [32m+++[m
+ osnma/osnmaValidations.h                           |   41 [32m+[m
+ osnma/osnmaValidationsDataStructures.h             |   98 [32m+[m
+ osnma/testCryptoFunctions/ec-pub_ICDv1.1.pem       |    4 [32m+[m
+ osnma/testCryptoFunctions/executeProfiling.sh      |   22 [32m+[m
+ osnma/testCryptoFunctions/mainTestCrytoFunction.c  | 1470 [32m++++++[m
+ pvt/carrierSmoothing.c                             |  210 [32m+[m
+ pvt/carrierSmoothing.h                             |   95 [32m+[m
+ pvt/dop.c                                          |  131 [32m+[m
+ pvt/dop.h                                          |   40 [32m+[m
+ pvt/kalmanFilter.c                                 |  709 [32m+++[m
+ pvt/kalmanFilter.h                                 |   53 [32m+[m
+ pvt/leastSquares.c                                 |  301 [32m++[m
+ pvt/leastSquares.h                                 |   44 [32m+[m
+ pvt/managePvtConfiguration.c                       |  167 [32m+[m
+ pvt/managePvtConfiguration.h                       |   29 [32m+[m
+ pvt/pvt.c                                          | 2343 [32m+++++++++[m
+ pvt/pvt.h                                          |   38 [32m+[m
+ pvt/pvtChecks.c                                    |  340 [32m++[m
+ pvt/pvtChecks.h                                    |   90 [32m+[m
+ pvt/pvtConfiguration.h                             |   80 [32m+[m
+ pvt/pvtConstants.h                                 |  212 [32m+[m
+ pvt/pvtDataStructure.h                             |  332 [32m++[m
+ pvt/pvtUtility.c                                   |  739 [32m+++[m
+ pvt/pvtUtility.h                                   |  160 [32m+[m
+ pvt/receiverTime.c                                 |  229 [32m+[m
+ pvt/receiverTime.h                                 |   38 [32m+[m
+ receiver/channelDataStructure.h                    |  153 [32m+[m
+ receiver/channelManager.c                          |  774 [32m+++[m
+ receiver/channelManager.h                          |  133 [32m+[m
+ receiver/guiConstants.h                            |   43 [32m+[m
+ receiver/logSplitterDataStructure.h                |   36 [32m+[m
+ receiver/manageConfiguration.c                     |  928 [32m++++[m
+ receiver/manageConfiguration.h                     |   98 [32m+[m
+ receiver/manageLogs.c                              |  441 [32m++[m
+ receiver/manageLogs.h                              |   40 [32m+[m
+ receiver/ngene.c                                   |  635 [32m+++[m
+ receiver/ngeneConfiguration.h                      |  273 [32m++[m
+ receiver/ngeneConstants.h                          |  215 [32m+[m
+ receiver/ngeneDataStructure.h                      |  124 [32m+[m
+ receiver/ngeneInitialization.c                     |  539 [32m++[m
+ receiver/ngeneInitialization.h                     |   56 [32m+[m
+ receiver/ngeneNavMesg.c                            |  322 [32m++[m
+ receiver/ngeneNavMesgUtility.c                     |  871 [32m++++[m
+ receiver/ngeneNavMesgUtility.h                     |  184 [32m+[m
+ receiver/signalHandler.c                           |  100 [32m+[m
+ receiver/signalHandler.h                           |   32 [32m+[m
+ .../configuration/Acquisition.conf                 |   81 [32m+[m
+ .../configuration/Front_End.conf                   |  144 [32m+[m
+ .../configuration/GNSS_RX.conf                     |   69 [32m+[m
+ .../configuration/GNSS_RX_NavMesg.conf             |   96 [32m+[m
+ sampleConfigurationFiles/configuration/Logs.conf   |  196 [32m+[m
+ .../configuration/NavigationMessages.conf          |   48 [32m+[m
+ .../configuration/OSNMA_parameters.txt             |   64 [32m+[m
+ .../configuration/PRN_List.conf                    |   12 [32m+[m
+ sampleConfigurationFiles/configuration/PVT.conf    |   96 [32m+[m
+ .../configuration/Tracking.conf                    |  110 [32m+[m
+ sampleConfigurationFiles/configuration/Warm.conf   |   43 [32m+[m
+ sampleConfigurationFiles/otherData/EGNOS_codes.dat |  Bin [31m0[m -> [32m6138[m bytes
+ .../otherData/EGNOS_codes_v2.dat                   |  Bin [31m0[m -> [32m8184[m bytes
+ sampleConfigurationFiles/otherData/FFT_codes.dat   |  Bin [31m0[m -> [32m2818048[m bytes
+ sampleConfigurationFiles/otherData/GPS_codes.dat   |  Bin [31m0[m -> [32m65472[m bytes
+ .../otherData/Galileo_E1b_codes.dat                |  Bin [31m0[m -> [32m409200[m bytes
+ .../otherData/Galileo_E1c_codes.dat                |  Bin [31m0[m -> [32m409200[m bytes
+ .../otherData/Galileo_real_PRNs.txt                |   30 [32m+[m
+ sampleConfigurationFiles/otherData/MerkleTree.xml  |    1 [32m+[m
+ .../otherData/MerkleTreeRoot.txt                   |    1 [32m+[m
+ .../otherData/NGene2License.txt                    |    2 [32m+[m
+ .../otherData/TeslaKeysIndexTable.txt              |   54 [32m+[m
+ .../otherData/codesFileFormat.txt                  |   43 [32m+[m
+ sampleConfigurationFiles/otherData/ec-pub.pem      |    7 [32m+[m
+ .../otherData/macLookupTable.txt                   |   40 [32m+[m
+ .../otherData/nequickParameters/ccir11.asc         |  715 [32m+++[m
+ .../otherData/nequickParameters/ccir12.asc         |  715 [32m+++[m
+ .../otherData/nequickParameters/ccir13.asc         |  715 [32m+++[m
+ .../otherData/nequickParameters/ccir14.asc         |  715 [32m+++[m
+ .../otherData/nequickParameters/ccir15.asc         |  715 [32m+++[m
+ .../otherData/nequickParameters/ccir16.asc         |  715 [32m+++[m
+ .../otherData/nequickParameters/ccir17.asc         |  715 [32m+++[m
+ .../otherData/nequickParameters/ccir18.asc         |  715 [32m+++[m
+ .../otherData/nequickParameters/ccir19.asc         |  715 [32m+++[m
+ .../otherData/nequickParameters/ccir20.asc         |  715 [32m+++[m
+ .../otherData/nequickParameters/ccir21.asc         |  715 [32m+++[m
+ .../otherData/nequickParameters/ccir22.asc         |  715 [32m+++[m
+ .../nequickParameters/modip2001_wrapped.asc        |   39 [32m+[m
+ sampleConfigurationFiles/otherData/publicKey.xml   |    1 [32m+[m
+ sampleConfigurationFiles/otherData/rxver.dat       |  Bin [31m0[m -> [32m3[m bytes
+ .../otherData/sampleYumaAlmanac.alm                |  465 [32m++[m
+ tracking/galileoTracking.c                         |  102 [32m+[m
+ tracking/galileoTracking.h                         |   38 [32m+[m
+ tracking/gpsTracking.c                             |  192 [32m+[m
+ tracking/gpsTracking.h                             |   38 [32m+[m
+ tracking/manageTrkConfiguration.c                  |  249 [32m+[m
+ tracking/manageTrkConfiguration.h                  |   27 [32m+[m
+ tracking/tracking.c                                |  854 [32m++++[m
+ tracking/tracking.h                                |  135 [32m+[m
+ tracking/trackingDataStructure.h                   |  279 [32m++[m
+ tracking/trackingDiscriminatorsLoops.c             |  307 [32m++[m
+ tracking/trackingDiscriminatorsLoops.h             |  106 [32m+[m
+ tracking/trkConfiguration.h                        |   76 [32m+[m
+ utility/additionalLogs.c                           |  268 [32m+[m
+ utility/additionalLogs.h                           |   69 [32m+[m
+ utility/argvParser.c                               |  174 [32m+[m
+ utility/argvParser.h                               |   38 [32m+[m
+ utility/checkFolder.c                              |   71 [32m+[m
+ utility/checkFolder.h                              |   37 [32m+[m
+ utility/closeManager.c                             |   43 [32m+[m
+ utility/closeManager.h                             |   27 [32m+[m
+ utility/ioFunctions.c                              |  750 [32m+++[m
+ utility/ioFunctions.h                              |  272 [32m++[m
+ utility/mathFunctions.c                            |  371 [32m++[m
+ utility/mathFunctions.h                            |  326 [32m++[m
+ utility/matrices.c                                 |  378 [32m++[m
+ utility/matrices.h                                 |  122 [32m+[m
+ utility/ncursesApi.c                               |  771 [32m+++[m
+ utility/ncursesApi.h                               |   63 [32m+[m
+ utility/ncursesDataStructure.h                     |  142 [32m+[m
+ utility/nmeaLog.c                                  |  265 [32m+[m
+ utility/nmeaLog.h                                  |   47 [32m+[m
+ utility/profilingSupport.c                         |  113 [32m+[m
+ utility/profilingSupport.h                         |   87 [32m+[m
+ utility/rinexDataStructure.h                       |   42 [32m+[m
+ utility/rinexLog.c                                 |  917 [32m++++[m
+ utility/rinexLog.h                                 |  133 [32m+[m
+ utility/sampleCompression.c                        |  203 [32m+[m
+ utility/sampleCompression.h                        |   36 [32m+[m
+ utility/samplesHistogram.c                         |  120 [32m+[m
+ utility/samplesHistogram.h                         |   97 [32m+[m
+ utility/samplesSpectrum.c                          |  230 [32m+[m
+ utility/samplesSpectrum.h                          |  106 [32m+[m
+ utilityGnss/NeQuick/ionoCalcModip.c                |  178 [32m+[m
+ utilityGnss/NeQuick/ionoCalcModip.h                |   34 [32m+[m
+ utilityGnss/NeQuick/neqCalcBottomsideNe.c          |  135 [32m+[m
+ utilityGnss/NeQuick/neqCalcBottomsideNe.h          |   37 [32m+[m
+ utilityGnss/NeQuick/neqCalcEpstParams.c            |  706 [32m+++[m
+ utilityGnss/NeQuick/neqCalcEpstParams.h            |   45 [32m+[m
+ utilityGnss/NeQuick/neqCalcTopsideNe.c             |   69 [32m+[m
+ utilityGnss/NeQuick/neqCalcTopsideNe.h             |   38 [32m+[m
+ utilityGnss/NeQuick/neqGetNeOnSlantRay.c           |   89 [32m+[m
+ utilityGnss/NeQuick/neqGetNeOnSlantRay.h           |   47 [32m+[m
+ utilityGnss/NeQuick/neqGetNeOnVertRay.c            |   42 [32m+[m
+ utilityGnss/NeQuick/neqGetNeOnVertRay.h            |   36 [32m+[m
+ utilityGnss/NeQuick/neqGetRayProperties.c          |  207 [32m+[m
+ utilityGnss/NeQuick/neqGetRayProperties.h          |   41 [32m+[m
+ utilityGnss/NeQuick/neqIntegrate.c                 |  140 [32m+[m
+ utilityGnss/NeQuick/neqIntegrate.h                 |   51 [32m+[m
+ utilityGnss/NeQuick/neqUtils.c                     |   58 [32m+[m
+ utilityGnss/NeQuick/neqUtils.h                     |   62 [32m+[m
+ utilityGnss/NeQuick/nequick.c                      |  234 [32m+[m
+ utilityGnss/NeQuick/nequick.h                      |   49 [32m+[m
+ utilityGnss/NeQuick/nequickComputation.c           |  392 [32m++[m
+ utilityGnss/NeQuick/nequickComputation.h           |   39 [32m+[m
+ utilityGnss/NeQuick/nequickConstants.h             |  420 [32m++[m
+ utilityGnss/NeQuick/nequickDataStructures.h        |  183 [32m+[m
+ utilityGnss/cno.c                                  |  105 [32m+[m
+ utilityGnss/cno.h                                  |  142 [32m+[m
+ utilityGnss/egnosCorrections.c                     |  516 [32m++[m
+ utilityGnss/egnosCorrections.h                     |   35 [32m+[m
+ utilityGnss/egnosCorrectionsDataStructure.h        |  241 [32m+[m
+ utilityGnss/egnosIonoCorrections.c                 |  877 [32m++++[m
+ utilityGnss/egnosIonoCorrections.h                 |   46 [32m+[m
+ utilityGnss/egnosIonoMaskBandTable.h               | 2211 [32m+++++++++[m
+ utilityGnss/egnosMessageParser.c                   | 1487 [32m++++++[m
+ utilityGnss/egnosMessageParser.h                   |   25 [32m+[m
+ utilityGnss/fnavMessageParser.c                    |  566 [32m+++[m
+ utilityGnss/fnavMessageParser.h                    |  146 [32m+[m
+ utilityGnss/galileoMessageParser.c                 | 1694 [32m+++++++[m
+ utilityGnss/galileoMessageParser.h                 |  716 [32m+++[m
+ utilityGnss/gpsMessageParser.c                     | 1061 [32m++++[m
+ utilityGnss/gpsMessageParser.h                     |  643 [32m+++[m
+ utilityGnss/ifenLog.c                              |  209 [32m+[m
+ utilityGnss/ifenLog.h                              |   55 [32m+[m
+ utilityGnss/manageNavMsgConfiguration.c            |   64 [32m+[m
+ utilityGnss/manageNavMsgConfiguration.h            |   29 [32m+[m
+ utilityGnss/navigationMessage.c                    |  568 [32m+++[m
+ utilityGnss/navigationMessage.h                    |   74 [32m+[m
+ utilityGnss/navigationMessageConfiguration.h       |   43 [32m+[m
+ utilityGnss/navigationMessageDataStructure.h       |  236 [32m+[m
+ utilityGnss/navigationMessageParser.c              |  290 [32m++[m
+ utilityGnss/navigationMessageParser.h              |  754 [32m+++[m
+ utilityGnss/prnList.c                              |  434 [32m++[m
+ utilityGnss/prnList.h                              |  198 [32m+[m
+ utilityGnss/prnListDataStructure.h                 |   62 [32m+[m
+ utilityGnss/reedSolomon.c                          |  244 [32m+[m
+ utilityGnss/reedSolomon.h                          |   31 [32m+[m
+ utilityGnss/spreadingCodes.h                       |  184 [32m+[m
+ utilityGnss/timeConstants.h                        |  195 [32m+[m
+ utilityGnss/timeConversions.c                      |  474 [32m++[m
+ utilityGnss/timeConversions.h                      |  170 [32m+[m
+ utilityGnss/viterbi.c                              |  515 [32m++[m
+ utilityGnss/viterbi.h                              |   39 [32m+[m
+ warmStart/manageWarmStartConfiguration.c           |  204 [32m+[m
+ warmStart/manageWarmStartConfiguration.h           |   34 [32m+[m
+ warmStart/warmStart.c                              |  936 [32m++++[m
+ warmStart/warmStart.h                              |   73 [32m+[m
+ warmStart/warmStartConfiguration.h                 |   49 [32m+[m
+ warmStart/warmStartDataStructure.h                 |   52 [32m+[m
+ 456 files changed, 103403 insertions(+)

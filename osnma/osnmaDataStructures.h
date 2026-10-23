@@ -20,7 +20,7 @@
 #include "ngeneConstants.h"
 #include <openssl/ossl_typ.h>
 #include "profilingSupport.h"
-#include <bits/pthreadtypes.h>
+#include <pthread.h>
 
 /**
  * @enum ValidationStatusEnum

@@ -1,37 +1,27 @@
-cmake_minimum_required(VERSION 3.10)
-project(ngene VERSION 1.0)
+cmake_minimum_required(VERSION 3.20)
+project(ngene VERSION 1.0 LANGUAGES C)
 
-#Check of the architecture
-if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64")
-    set(ARCH "x86_64")
-    message(STATUS "Target architecture: x86_64 (PC)")
-
-elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64")
-    set(ARCH "ARM64")
-    message(STATUS "Target architecture: ARM64 (Raspberry Pi 4 64-bit)")
-
-elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "armv7l")
-    set(ARCH "ARM32")
-    message(STATUS "Target architecture: ARM32 (Odroid XU4 or Raspberry Pi 4 32-bit)")
-
-elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "arm")
-    set(ARCH "ARM")
-    message(STATUS "Target architecture: Generic ARM")
-
-else()
-    set(ARCH "UNKNOWN")
-    message(WARNING "Unknown architecture detected: ${CMAKE_SYSTEM_PROCESSOR}")
+# Preserve the GNU inline assembly and POSIX data model of the classic receiver.
+if(WIN32 AND NOT CYGWIN)
+    message(FATAL_ERROR "Use Cygwin x64 GCC for Windows; see docs/WINDOWS.md. MSVC/MinGW are not supported by this increment.")
 endif()
-
-# Normal Flags
-#set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -U_FORTIFY_SOURCE -D_FILE_OFFSET_BITS=64 -D_FORTIFY_SOURCE=0 -pthread -msse2 -mfpmath=sse -fPIE")
-
-# Optimized
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -march=native -mtune=native -Wall -Wextra -U_FORTIFY_SOURCE -D_FILE_OFFSET_BITS=64 -D_FORTIFY_SOURCE=0 -pthread -msse2 -mfpmath=sse -fexpensive-optimizations -funroll-loops -fPIE -flto -fwhole-program -fomit-frame-pointer -fstrict-aliasing -ffast-math -fno-math-errno -fno-trapping-math -fassociative-math -fno-signed-zeros -ftree-vectorize -funswitch-loops -fno-stack-protector -fprofile-use -fprofile-correction -fopt-info-vec -fopt-info-omp -DNDEBUG -s")
-
-# Optimized with graphite
-#set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -march=native -mtune=native -Wall -Wextra -U_FORTIFY_SOURCE -D_FILE_OFFSET_BITS=64 -D_FORTIFY_SOURCE=0 -pthread -msse2 -mfpmath=sse -fexpensive-optimizations -funroll-loops -fPIE -flto -fwhole-program -fomit-frame-pointer -fstrict-aliasing -ffast-math -fno-math-errno -fno-trapping-math -fassociative-math -fno-signed-zeros -ftree-vectorize -floop-nest-optimize -funswitch-loops -fno-stack-protector -fprofile-use -fprofile-correction -fopt-info-vec -fopt-info-omp -DNDEBUG -s")
-
+if(NOT CMAKE_C_COMPILER_ID STREQUAL "GNU" OR NOT CMAKE_SIZEOF_VOID_P EQUAL 8
+   OR NOT CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64|amd64")
+    message(FATAL_ERROR "The classic SIMD implementation requires x86_64 GCC.")
+endif()
+set(CMAKE_C_STANDARD 99)
+set(CMAKE_C_STANDARD_REQUIRED ON)
+set(CMAKE_C_EXTENSIONS ON)
+# The historical SIMD macros do not declare register clobbers. Keep optimization
+# off in this preservation build; enabling it needs a separate DSP validation.
+add_compile_options(-O0 -msse2 -mfpmath=sse -fno-tree-vectorize -Wall -Wextra)
+add_compile_definitions(_GNU_SOURCE _FILE_OFFSET_BITS=64)
+if(CYGWIN)
+    # libusb 1.0.21 includes windows.h: keep RPC's boolean out of the GUI ABI.
+    add_compile_definitions(WIN32_LEAN_AND_MEAN NOMINMAX)
+endif()
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
 
 include_directories(
     ${PROJECT_SOURCE_DIR}/secure
@@ -52,10 +42,10 @@ include_directories(
 )
 
 find_package(PkgConfig REQUIRED)
-pkg_check_modules(SSL REQUIRED openssl)
-pkg_check_modules(CRYPTO REQUIRED libcrypto)
-pkg_check_modules(USB REQUIRED libusb-1.0)
-pkg_check_modules(NCURSES REQUIRED ncurses)
+pkg_check_modules(SSL REQUIRED IMPORTED_TARGET openssl)
+
+pkg_check_modules(USB REQUIRED IMPORTED_TARGET libusb-1.0)
+pkg_check_modules(NCURSES REQUIRED IMPORTED_TARGET ncurses)
 
 # Add all necessary source files from Makefile.am
 add_executable(ngene
@@ -144,85 +134,41 @@ add_executable(ngene
     guiSupport/guiInterfaceFunctions.c
     guiSupport/threadutils.c
     asmFolder/fft.c
-    asmFolder/amungoNT1065.c
     asmFolder/arrays.c
     asmFolder/data_shift.c
     asmFolder/carrierTable.c
-    asmFolder/jrc.c
     asmFolder/prnTable.c
-    asmFolder/short2char.c
     asmFolder/sige.c
     asmFolder/sigeV3.c
-    asmFolder/stereo.c
-    asmFolder/stereoTriton.c
-    asmFolder/usrp.c
-    asmFolder/fraunhofer.c
     warmStart/manageWarmStartConfiguration.c
     warmStart/warmStart.c
 )
 
-# Link the necessary libraries
-target_link_libraries(ngene
-    ${SSL_LIBRARIES}
-    ${CRYPTO_LIBRARIES}
-    ${USB_LIBRARIES}
-    ${NCURSES_LIBRARIES}
-    m
-    ncurses
-    tinfo
-    ${PROJECT_SOURCE_DIR}/libraries/libfec/libfec.a
-)
+# Build the bundled Reed-Solomon code used by NGene from source. Never link the
+# Linux archive shipped in the old source tree into the Windows executable.
+add_library(ngene_fec STATIC
+    libraries/libfec/init_rs_char.c
+    libraries/libfec/encode_rs_char.c
+    libraries/libfec/decode_rs_char.c)
+target_include_directories(ngene_fec PUBLIC libraries/libfec)
+target_link_libraries(ngene PRIVATE ngene_fec PkgConfig::SSL PkgConfig::USB
+    PkgConfig::NCURSES Threads::Threads m)
 
-# Correct the logic to prevent re-running of ./configure
-set(LIBFEC_CONFIGURE_STAMP ${PROJECT_SOURCE_DIR}/libraries/libfec/.configured_stamp)
-
-add_custom_command(
-    OUTPUT ${LIBFEC_CONFIGURE_STAMP}
-    COMMAND ./configure && touch ${LIBFEC_CONFIGURE_STAMP}
-    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/libraries/libfec
-    COMMENT "Running libfec configure script (only once)"
-)
-
-add_custom_target(libfec_build
-    COMMAND ${CMAKE_MAKE_PROGRAM} -C ${PROJECT_SOURCE_DIR}/libraries/libfec
-    DEPENDS ${LIBFEC_CONFIGURE_STAMP}
-    COMMENT "Building libfec library"
-)
-
-# Make sure ngene depends on the libfec build
-add_dependencies(ngene libfec_build)
-
-# Set installation path to home directory
-set(CMAKE_INSTALL_PREFIX "$ENV{HOME}/.ngene" CACHE PATH "Installation directory" FORCE)
-
-# Create the necessary directories in the home folder
-install(CODE "execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory \$ENV{HOME}/.ngene/bin)")
-
-# Copy sample configuration files from the repository tree to the .ngene directory in the home folder
-install(CODE "execute_process(COMMAND ${CMAKE_COMMAND} -E copy_directory ${PROJECT_SOURCE_DIR}/sampleConfigurationFiles \$ENV{HOME}/.ngene)")
-
-# Install the ngene executable into the bin directory
 install(TARGETS ngene RUNTIME DESTINATION bin)
+install(DIRECTORY sampleConfigurationFiles/ DESTINATION .)
 
-# Add the bin directory to the user's PATH persistently and source the updated .bashrc
-install(CODE "
-    file(WRITE \$ENV{HOME}/.ngene/add_to_path.sh \"
-    # Add .ngene/bin to the user's PATH
-    if [[ \\\$PATH != *\\\"$HOME/.ngene/bin\\\"* ]]; then
-        export PATH=\\\$PATH:\\\$HOME/.ngene/bin
-    fi
-    \")
-    
-    # Add the source command to .bashrc if it doesn't exist
-    execute_process(COMMAND /bin/bash -c \"if ! grep -q 'source \$HOME/.ngene/add_to_path.sh' \$HOME/.bashrc; then echo 'source \$HOME/.ngene/add_to_path.sh' >> \$HOME/.bashrc; fi\")
-
-    # Source the updated .bashrc to make the changes effective in the current session
-    execute_process(COMMAND /bin/bash -c \"source \$HOME/.bashrc\")
-")
-
-# Add a custom uninstall target
-add_custom_target(uninstall
-    COMMAND ${CMAKE_COMMAND} -E remove_directory "$ENV{HOME}/.ngene"
-    COMMAND sed -i '/source \$HOME\\/\\.ngene\\/add_to_path\\.sh/d' "$ENV{HOME}/.bashrc"
-    COMMENT "Uninstalling ngene and removing .ngene folder and PATH entry"
-)
+option(NGENE_BUILD_PLATFORM_CHECKS "Build USB/platform diagnostic tools" OFF)
+if(NGENE_BUILD_PLATFORM_CHECKS)
+    enable_testing()
+    add_executable(ngene_usb_probe tools/usb_probe.c)
+    target_link_libraries(ngene_usb_probe PRIVATE PkgConfig::USB)
+    add_executable(ngene_check_sige tools/check_sige_samples.c asmFolder/sige.c asmFolder/sigeV3.c)
+    add_test(NAME sige_sample_preservation COMMAND ngene_check_sige)
+    add_executable(ngene_check_usb tools/check_usb_errors.c frontEnd/usbInterface.c)
+    target_link_libraries(ngene_check_usb PRIVATE PkgConfig::USB Threads::Threads)
+    add_test(NAME usb_error_paths COMMAND ngene_check_usb)
+    if(CYGWIN)
+        add_executable(ngene_check_sendfile tools/check_cygwin_sendfile.c)
+        add_test(NAME cygwin_gui_file_copy COMMAND ngene_check_sendfile)
+    endif()
+endif()

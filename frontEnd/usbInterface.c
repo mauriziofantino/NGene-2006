@@ -33,7 +33,7 @@ void FindUsbDevice(unsigned short vid, unsigned short pid, libusb_device **ppUsb
     libusb_device **list;
     libusb_device *dev = NULL;
     struct libusb_device_descriptor desc;
-    int cnt, i;
+    ssize_t cnt, i;
     int ret;
 
     if (ppUsbDev == NULL) {
@@ -50,13 +50,14 @@ void FindUsbDevice(unsigned short vid, unsigned short pid, libusb_device **ppUsb
 	dev = list[i];
 	ret = libusb_get_device_descriptor(dev, &desc);
 	if (ret < 0) {
-	    return;
+	    continue;
 	}
 	if ((desc.idVendor == vid) && (desc.idProduct == pid)) {
-	    (*ppUsbDev) = dev;
-	    return;
+	    (*ppUsbDev) = libusb_ref_device(dev);
+	    break;
 	}
     }
+    libusb_free_device_list(list, 1);
 }
 
 void OpenUsbDevice(TUsbFe *usbFe, libusb_device *pUsbDev, libusb_device_handle **ppUDH)
@@ -69,8 +70,17 @@ void OpenUsbDevice(TUsbFe *usbFe, libusb_device *pUsbDev, libusb_device_handle *
 	SwrxLog(NGENE_LOG_SEVERITY_ERROR, "Error in libusb_open (%d)", returnValue);
 	return;
     }
+    /** Query first: WinUSB cannot switch to a different configuration. */
+    int currentConfiguration;
+    returnValue = libusb_get_configuration(*ppUDH, &currentConfiguration);
+    if (returnValue < 0) {
+        libusb_close(*ppUDH);
+        *ppUDH = NULL;
+        return;
+    }
     /* set configuration */
-    if ((usbFe->index != NGENE_FE_AMUNGO_NT1065) && (usbFe->index != NGENE_FE_USRP) && (usbFe->index != NGENE_FE_JRC)) {
+    if (currentConfiguration != usbFe->configuration)
+    {
 	returnValue = libusb_set_configuration((*ppUDH), usbFe->configuration);
 	if (returnValue < 0) {
 	    SwrxLog(NGENE_LOG_SEVERITY_ERROR, "Error in libusb_set_configuration (%d)", returnValue);
@@ -88,7 +98,7 @@ void OpenUsbDevice(TUsbFe *usbFe, libusb_device *pUsbDev, libusb_device_handle *
 	return;
     }
     /* set alternate interface */
-    if ((usbFe->index != NGENE_FE_AMUNGO_NT1065) && (usbFe->index != NGENE_FE_USRP) && (usbFe->index != NGENE_FE_JRC)) {
+    {
 	returnValue = libusb_set_interface_alt_setting(*ppUDH, usbFe->interface, usbFe->altInterface);
 	if (returnValue < 0) {
 	    SwrxLog(NGENE_LOG_SEVERITY_ERROR, "Error in libusb_set_interface_alt_setting (%d)", returnValue);
@@ -111,14 +121,16 @@ void CloseUsbDevice(TUsbFe *usbFe, libusb_device_handle *pUDH)
 }
 
 
-void UsbReadCallback(struct libusb_transfer *transfer)
+void LIBUSB_CALL UsbReadCallback(struct libusb_transfer *transfer)
 {
     TUsbTransferElement *pTransferElem = (TUsbTransferElement *) (transfer->user_data);
 
     switch (transfer->status) {
     case LIBUSB_TRANSFER_COMPLETED:
 	/* Mark the transfer as complete */
-	pTransferElem->status = NGENE_USB_TRANSFER_COMPLETED;
+        /** The circular buffer consumes complete blocks, never stale tails. */
+        pTransferElem->status = transfer->actual_length == transfer->length
+            ? NGENE_USB_TRANSFER_COMPLETED : NGENE_USB_OTHER_ERRORS;
 	break;
     case LIBUSB_TRANSFER_TIMED_OUT:
 	pTransferElem->status = NGENE_USB_TRANSFER_TIMED_OUT;
@@ -135,6 +147,9 @@ void UsbReadCallback(struct libusb_transfer *transfer)
     case LIBUSB_TRANSFER_STALL:
 	pTransferElem->status = NGENE_USB_TRANSFER_STALL;
 	break;
+    case LIBUSB_TRANSFER_NO_DEVICE:
+        pTransferElem->status = NGENE_USB_TRANSFER_NO_DEVICE;
+        break;
     default:
 	pTransferElem->status = NGENE_USB_OTHER_ERRORS;
 	break;
@@ -154,7 +169,7 @@ TUsbEndpointHandle *MakeEndpointHandle(TUsbFe *usbFe, libusb_device_handle *usbD
 	return NULL;
     }
     /* Alloc the endpoint handler signal structure */
-    pTmpEpHandle = (TUsbEndpointHandle *) malloc(sizeof(TUsbEndpointHandle));
+    pTmpEpHandle = (TUsbEndpointHandle *) calloc(1, sizeof(TUsbEndpointHandle));
     if (NULL == pTmpEpHandle) {
 	SwrxLog(NGENE_LOG_SEVERITY_ERROR, "Error from malloc in MakeEndpointHandle");
 	return NULL;
@@ -169,6 +184,10 @@ TUsbEndpointHandle *MakeEndpointHandle(TUsbFe *usbFe, libusb_device_handle *usbD
 	(pTmpEpHandle->transferArray[blkIdx]).transfer = libusb_alloc_transfer(0);
 	if ((pTmpEpHandle->transferArray[blkIdx]).transfer == NULL) {
 	    SwrxLog(NGENE_LOG_SEVERITY_ERROR, "Error from libusb_alloc_transfer in MakeEndpointHandle");
+            while (blkIdx > 0) {
+                libusb_free_transfer(pTmpEpHandle->transferArray[--blkIdx].transfer);
+            }
+            free(pTmpEpHandle);
 	    return NULL;
 	}
 	/* Fill the bulk request */
@@ -219,74 +238,29 @@ int OpenUsbFrontend(TNGeneConfiguration *cfg, TRxFe *rxFe)
     usbFe->index = cfg->fePars->index;
     usbFe->vid = cfg->fePars->vid;
     usbFe->pid = cfg->fePars->pid;
-    switch (cfg->usedFrontEnd) {
-    case NGENE_FE_NFUELS:
-	SwrxLog(NGENE_LOG_SEVERITY_ERROR, "N-Fuels virtual front-end requires input from file!");
-	CloseNGene(cfg, EXIT_FAILURE);
-	break;
-    case NGENE_FE_STEREO:
-	usbFe->configuration = STEREO_CONFIG;
-	usbFe->interface = STEREO_INTF;
-	usbFe->altInterface = STEREO_ALTINTF;
-	usbFe->endpoint = STEREO_RX_EP;
-	usbFe->vrqtVendorOut = STEREO_VRQT_VENDOR_OUT;
-	usbFe->vrqStartXfer = STEREO_VRQ_START_XFER;
-	usbFe->vrqStopXfer = STEREO_VRQ_STOP_XFER;
-	usbFe->wValue = STEREO_WVALUE;
-	break;
-    case NGENE_FE_CUSTOM:
-    case NGENE_FE_FRAUNHOFER:
-    case NGENE_FE_SIGE:
-    case NGENE_FE_SIGE_V3:
-	usbFe->configuration = SIGE_CONFIG;
-	usbFe->interface = SIGE_INTF;
-	usbFe->altInterface = SIGE_ALTINTF;
-	usbFe->endpoint = SIGE_RX_EP;
-	usbFe->vrqtVendorOut = SIGE_VRQT_VENDOR_OUT;
-	usbFe->vrqStartXfer = SIGE_VRQ_START_XFER;
-	usbFe->vrqStopXfer = SIGE_VRQ_STOP_XFER;
-	usbFe->wValue = SIGE_WVALUE;
-	break;
-    case NGENE_FE_AMUNGO_NT1065:
-	usbFe->configuration = NT1065_CONFIG;
-	usbFe->interface = NT1065_INTF;
-	usbFe->altInterface = NT1065_ALTINTF;
-	usbFe->endpoint = NT1065_RX_EP;
-	usbFe->vrqtVendorOut = SIGE_VRQT_VENDOR_OUT;
-	usbFe->vrqStartXfer = SIGE_VRQ_START_XFER;
-	usbFe->vrqStopXfer = SIGE_VRQ_STOP_XFER;
-	usbFe->wValue = SIGE_WVALUE;
-	break;
-    case NGENE_FE_JRC:
-    case NGENE_FE_USRP:
-	/* TODO CHECK!!!! */
-	usbFe->configuration = USRP_B200_CONFIG;
-	usbFe->interface = USRP_B200_INTF;
-	usbFe->altInterface = USRP_B200_ALTINTF;
-	usbFe->endpoint = USRP_B200_RX_EP;
-	usbFe->vrqtVendorOut = SIGE_VRQT_VENDOR_OUT;
-	usbFe->vrqStartXfer = SIGE_VRQ_START_XFER;
-	usbFe->vrqStopXfer = SIGE_VRQ_STOP_XFER;
-	usbFe->wValue = DEFAULT_WVALUE;
-	break;
-    default:
-	usbFe->configuration = DEFAULT_CONFIG;
-	usbFe->interface = DEFAULT_RX_INTERFACE;
-	usbFe->altInterface = DEFAULT_RX_ALTINTERFACE;
-	usbFe->endpoint = DEFAULT_RX_ENDPOINTS;
-	usbFe->vrqtVendorOut = DEFAULT_VRT_VENDOR_OUT;
-	usbFe->vrqStartXfer = DEFAULT_VRQ_START_XFER;
-	usbFe->vrqStopXfer = DEFAULT_VRQ_STOP_XFER;
-	usbFe->wValue = DEFAULT_WVALUE;
-	break;
+    if (cfg->usedFrontEnd != NGENE_FE_SIGE && cfg->usedFrontEnd != NGENE_FE_SIGE_V3) {
+        return FAILURE_RETURN;
     }
-     /**/ posix_memalign((void **) &(usbFe->usbBuffer), POSIX_ALIGNMENT, USB_BUFFER_SIZE * USB_BLOCKSIZE * sizeof(char));
+    usbFe->configuration = SIGE_CONFIG;
+    usbFe->interface = SIGE_INTF;
+    usbFe->altInterface = SIGE_ALTINTF;
+    usbFe->endpoint = SIGE_RX_EP;
+    usbFe->vrqtVendorOut = SIGE_VRQT_VENDOR_OUT;
+    usbFe->vrqStartXfer = SIGE_VRQ_START_XFER;
+    usbFe->vrqStopXfer = SIGE_VRQ_STOP_XFER;
+    usbFe->wValue = SIGE_WVALUE;
+
+    if (posix_memalign((void **) &(usbFe->usbBuffer), POSIX_ALIGNMENT, USB_BUFFER_SIZE * USB_BLOCKSIZE) != 0) {
+        return FAILURE_RETURN;
+    }
     if (usbFe->usbBuffer == NULL) {
 	SwrxLog(NGENE_LOG_SEVERITY_ERROR, "Malloc returned a NULL pointer in OpenUsbFrontend");
 	CloseNGene(cfg, EXIT_FAILURE);
     }
     usbFe->usbBufferIndex = 0;
-    posix_memalign((void **) &(usbFe->usbIntermediateBuffer), POSIX_ALIGNMENT, USB_INTERMEDIATE_BUFFER_SIZE * USB_BLOCKSIZE * sizeof(char));
+    if (posix_memalign((void **) &(usbFe->usbIntermediateBuffer), POSIX_ALIGNMENT, USB_INTERMEDIATE_BUFFER_SIZE * USB_BLOCKSIZE) != 0) {
+        goto allocation_failure;
+    }
     if (usbFe->usbIntermediateBuffer == NULL) {
 	SwrxLog(NGENE_LOG_SEVERITY_ERROR, "Malloc returned a NULL pointer in OpenUsbFrontend");
 	CloseNGene(cfg, EXIT_FAILURE);
@@ -294,41 +268,64 @@ int OpenUsbFrontend(TNGeneConfiguration *cfg, TRxFe *rxFe)
     usbFe->usbIntermediateBufferWriteIndex = 0;
     usbFe->usbIntermediateBufferReadIndex = 0;
     usbFe->usbIntermediateBufferSampleIndex = 0;
-     /**/ libusb_init(NULL);
+    if (libusb_init(NULL) < 0) {
+        goto allocation_failure;
+    }
     /* Search for the selected USB device */
     FindUsbDevice(usbFe->vid, usbFe->pid, &pUsbDevice);
     if (pUsbDevice == NULL) {
 	SwrxLog(NGENE_LOG_SEVERITY_ERROR, "Cannot find selected USB front-end (VID/PID %04x/%04x)", usbFe->vid, usbFe->pid);
-	return FAILURE_RETURN;
+        goto usb_failure;
     }
     /* Now create a handle for the device, and selects interface and alternative configuration */
     OpenUsbDevice(usbFe, pUsbDevice, &pUsbDevHandle);
+    libusb_unref_device(pUsbDevice);
     if (pUsbDevHandle == NULL) {
 	SwrxLog(NGENE_LOG_SEVERITY_ERROR, "Cannot create a handle for the selected USB front-end (VID/PID %04x/%04x)", usbFe->vid, usbFe->pid);
-	return FAILURE_RETURN;
+        goto usb_failure;
     }
     /* Allocate the endpoint handler. This will be shared between the library */
     usbFe->epHandle = MakeEndpointHandle(usbFe, pUsbDevHandle);
     if (usbFe->epHandle == NULL) {
 	SwrxLog(NGENE_LOG_SEVERITY_ERROR, "Cannot initialize asynchronous transfers for the selected USB front-end (VID/PID %04x/%04x)", usbFe->vid, usbFe->pid);
-	return FAILURE_RETURN;
+        CloseUsbDevice(usbFe, pUsbDevHandle);
+        goto usb_failure;
     }
     usbFe->usbStatus = NGENE_USB_OK;
     usbFe->usbSamplesRead = FALSE_FLAG;
     return SUCCESS_RETURN;
+
+usb_failure:
+    libusb_exit(NULL);
+allocation_failure:
+    free(usbFe->usbIntermediateBuffer);
+    free(usbFe->usbBuffer);
+    usbFe->usbIntermediateBuffer = NULL;
+    usbFe->usbBuffer = NULL;
+    return FAILURE_RETURN;
 }
 
 
 int CloseUsbFrontend(TRxFe *rxFe)
 {
     TUsbFe *usbFe = &(rxFe->usbFe);
-    libusb_device_handle *pUsbDevHandle = usbFe->epHandle->usbParentDeviceHandler;
+    libusb_device_handle *pUsbDevHandle;
+
+    if (usbFe->epHandle == NULL) {
+        return SUCCESS_RETURN;
+    }
+    if (StopUsbInterface(rxFe) != SUCCESS_RETURN) {
+        return FAILURE_RETURN;
+    }
+    pUsbDevHandle = usbFe->epHandle->usbParentDeviceHandler;
 
     CloseUsbDevice(usbFe, pUsbDevHandle);
     DeleteEndpointHandle(usbFe->epHandle);
     usbFe->epHandle = NULL;
     free(usbFe->usbBuffer);
     free(usbFe->usbIntermediateBuffer);
+    usbFe->usbBuffer = NULL;
+    usbFe->usbIntermediateBuffer = NULL;
     libusb_exit(NULL);
 
     return SUCCESS_RETURN;
@@ -353,18 +350,21 @@ int StartUsbInterface(TRxFe *rxFe)
 	return FAILURE_RETURN;
     }
 
+    /** Track partially submitted batches so failures can drain them safely. */
+    epHandle->flagStarted = TRUE_FLAG;
     /* Send out all the bulk transfers on the USB bus */
     for (blkIdx = 0; blkIdx < USB_BUFFER_SIZE; blkIdx++) {
 	ret = libusb_submit_transfer((epHandle->transferArray[blkIdx]).transfer);
 	if (ret < 0) {
 	    SwrxLog(NGENE_LOG_SEVERITY_ERROR, "libusb_submit_transfer error (%d) in StartUsbInterface", ret);
+            StopUsbInterface(rxFe);
 	    return FAILURE_RETURN;
 	}
 	(epHandle->transferArray[blkIdx]).status = NGENE_USB_TRANSFER_PENDING;
     }
 
     /* Send a "start transfer" message to the Cypress GPIF */
-    if ((usbFe->index != NGENE_FE_AMUNGO_NT1065) && (usbFe->index != NGENE_FE_USRP) && (usbFe->index != NGENE_FE_JRC)) {
+    {
 	ret = libusb_control_transfer(pUsbDevHandle,	/* dev_handle */
 				      usbFe->vrqtVendorOut,	/* request_type */
 				      usbFe->vrqStartXfer,	/* bRequest */
@@ -375,6 +375,7 @@ int StartUsbInterface(TRxFe *rxFe)
 				      USB_CONTROL_TRANSFER_TIMEOUT);	/* timeout */
 	if (ret < 0) {
 	    SwrxLog(NGENE_LOG_SEVERITY_ERROR, "libusb_control_transfer error (%d) in StartUsbInterface", ret);
+            StopUsbInterface(rxFe);
 	    return FAILURE_RETURN;
 	}
     }
@@ -391,9 +392,11 @@ int StopUsbInterface(TRxFe *rxFe)
 {
     TUsbFe *usbFe = &(rxFe->usbFe);
     TUsbEndpointHandle *epHandle = usbFe->epHandle;
-//      int ret;
     int blkIdx;
-    libusb_device_handle *pUsbDevHandle = epHandle->usbParentDeviceHandler;
+    int pending;
+    int ret;
+    struct timeval timeout = {0, 100000};
+    libusb_device_handle *pUsbDevHandle;
 
     if (NULL == epHandle) {
 	return FAILURE_RETURN;
@@ -401,6 +404,7 @@ int StopUsbInterface(TRxFe *rxFe)
     if (epHandle->flagStarted == FALSE_FLAG) {
 	return SUCCESS_RETURN;
     }
+    pUsbDevHandle = epHandle->usbParentDeviceHandler;
     if (NULL == pUsbDevHandle) {
 	return FAILURE_RETURN;
     }
@@ -420,11 +424,29 @@ int StopUsbInterface(TRxFe *rxFe)
 //              return FAILURE_RETURN;
 //      }
 
-    /* Now discard all the pending URBs */
-//      ret = 0;
+    /** Cancellation is asynchronous; retain buffers until every callback runs. */
     for (blkIdx = 0; blkIdx < USB_BUFFER_SIZE; blkIdx++) {
-	libusb_cancel_transfer(epHandle->transferArray[blkIdx].transfer);
-	epHandle->transferArray[blkIdx].status = NGENE_USB_TRANSFER_OFF;
+        if (epHandle->transferArray[blkIdx].status == NGENE_USB_TRANSFER_PENDING) {
+            libusb_cancel_transfer(epHandle->transferArray[blkIdx].transfer);
+        }
+    }
+    do {
+        pending = FALSE_FLAG;
+        for (blkIdx = 0; blkIdx < USB_BUFFER_SIZE; blkIdx++) {
+            if (epHandle->transferArray[blkIdx].status == NGENE_USB_TRANSFER_PENDING) {
+                pending = TRUE_FLAG;
+            }
+        }
+        if (pending) {
+            ret = libusb_handle_events_timeout(NULL, &timeout);
+            if (ret < 0 && ret != LIBUSB_ERROR_INTERRUPTED) {
+                SwrxLog(NGENE_LOG_SEVERITY_ERROR, "USB shutdown: %s", libusb_error_name(ret));
+                return FAILURE_RETURN;
+            }
+        }
+    } while (pending);
+    for (blkIdx = 0; blkIdx < USB_BUFFER_SIZE; blkIdx++) {
+        epHandle->transferArray[blkIdx].status = NGENE_USB_TRANSFER_OFF;
     }
 
     /* Declare the endpoint handle stopped */
@@ -443,8 +465,14 @@ void CopySamplesIntoUsbIntermediateBuffer(TRxFe *rxFe)
     char *srcPtr;
     char *dstPtr;
     int samplesWritten = FALSE_FLAG;
+    int eventResult;
+    struct timeval eventTimeout = {0, 100000};
 
-    libusb_handle_events(NULL);
+    eventResult = libusb_handle_events_timeout(NULL, &eventTimeout);
+    if (eventResult < 0 && eventResult != LIBUSB_ERROR_INTERRUPTED) {
+        usbFe->usbStatus = NGENE_USB_OTHER_ERRORS;
+        return;
+    }
 
     pthread_mutex_lock(&usbFe->frontEndMutex);
     currTransfer = &(epHandle->transferArray[usbFe->usbBufferIndex]);
@@ -456,8 +484,10 @@ void CopySamplesIntoUsbIntermediateBuffer(TRxFe *rxFe)
 	/* new transfer */
 	if (libusb_submit_transfer(currTransfer->transfer) < 0) {
 	    usbFe->usbStatus = NGENE_USB_SUBMIT_TRANSFER_ERROR;
-	}
-	currTransfer->status = NGENE_USB_TRANSFER_PENDING;
+            currTransfer->status = NGENE_USB_SUBMIT_TRANSFER_ERROR;
+        } else {
+            currTransfer->status = NGENE_USB_TRANSFER_PENDING;
+        }
 	/* update indexes */
 	idx++;
 	usbFe->usbBufferIndex = (usbFe->usbBufferIndex + 1) % USB_BUFFER_SIZE;
@@ -483,11 +513,14 @@ void CopySamplesIntoUsbIntermediateBuffer(TRxFe *rxFe)
 	// if timeout and some samples have been read, try to restart
 	// if no samples have been read, better to stop and try to change the USB_BLOCKSIZE
 	SwrxLog(NGENE_LOG_SEVERITY_ERROR, "LIBUSB_TRANSFER_TIMED_OUT: NGene2 restarts USB...");
-	StopUsbInterface(rxFe);
-	StartUsbInterface(rxFe);
-	usbFe->usbIntermediateBufferWriteIndex = 0;
-	usbFe->usbIntermediateBufferReadIndex = 0;
-	usbFe->usbIntermediateBufferSampleIndex = 0;
+        if (StopUsbInterface(rxFe) != SUCCESS_RETURN ||
+            StartUsbInterface(rxFe) != SUCCESS_RETURN) {
+            usbFe->usbStatus = NGENE_USB_OTHER_ERRORS;
+        } else {
+            usbFe->usbIntermediateBufferWriteIndex = 0;
+            usbFe->usbIntermediateBufferReadIndex = 0;
+            usbFe->usbIntermediateBufferSampleIndex = 0;
+        }
 	usbFe->flagBufferFull = FALSE_FLAG;
     } else if ((currTransfer->status != NGENE_USB_TRANSFER_COMPLETED) && (currTransfer->status != NGENE_USB_TRANSFER_PENDING) && (currTransfer->status != NGENE_USB_TRANSFER_OFF)) {
 	// if other errors, stop

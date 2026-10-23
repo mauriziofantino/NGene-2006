@@ -52,16 +52,6 @@ typedef struct CircularBufferStruct {
                                                              will be an in-phase (0x02) or a quadrature one (0x00) */
     int sigeMaskOffset;									/**< samples from SIGE must be demodulated using two different laws alternatively.
     														This is done through a mask, sigeMaskOffset is the offset used to access this mask */
-    short int *usrpSamples;								/**< Temporary buffer used to store samples read from the file as a sequence of short int at base-band
-     	 	 	 	 	 	 	 	 	 	 	 	 	 	 Ready for the conversion in the internal format */
-    char *stereoTritonSamples;						/**< Temporary buffer used to store samples read from the file as a sequence of char at base-band
-     	 	 	 	 	 	 	 	 	 	 	 	 	 	 Ready for the conversion in the internal format */
-    int usrpMaskOffset;									/**< samples from USRP must be demodulated using two different laws alternatively.
-    														 This is done through a mask, usrpMaskOffset is the offset used to access this mask */
-    int stereoTritonMaskOffset;							/**< samples from Stereo TRITON must be demodulated using two different laws alternatively.
-        													 This is done through a mask, stereoTritonMaskOffset is the offset used to access this mask */
-    int jrcMaskOffset;									/**< samples from JRC FE must be demodulated using two different laws alternatively.
-    														 This is done through a mask, jrcMaskOffset is the offset used to access this mask */
     int shiftAmount;									/**< Amount of the right shift (in bits) to be performed in order to limit the input range */
     unsigned char unsignedToSignedCorrection[XMM_REGISTER_SIZE];/**< Array containing the correction to be used in unsigned to signed conversion */
 } TCircularBuffer;

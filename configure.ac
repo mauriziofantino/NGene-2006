@@ -15,13 +15,11 @@ fi
 # Checks for libraries using pkg-config
 PKG_CHECK_MODULES([SSL], [openssl])
 PKG_CHECK_MODULES([CRYPTO], [libcrypto])
-PKG_CHECK_MODULES([PCI], [libpci])
 PKG_CHECK_MODULES([USB], [libusb-1.0])
 PKG_CHECK_MODULES([NCURSES], [ncurses])
 
 # Checks for header files and add include paths if found
 AC_CHECK_HEADERS([openssl/ssl.h], [CPPFLAGS="$CPPFLAGS -I/usr/include/openssl"])
-AC_CHECK_HEADERS([pci/pci.h], [CPPFLAGS="$CPPFLAGS -I/usr/include/pci"])
 AC_CHECK_HEADERS([libusb-1.0/libusb.h], [CPPFLAGS="$CPPFLAGS -I/usr/include/libusb-1.0"])
 AC_CHECK_HEADERS([ncurses.h], [CPPFLAGS="$CPPFLAGS -I/usr/include/ncurses"])
 

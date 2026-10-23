@@ -20,7 +20,7 @@
 #include "ngeneConstants.h"
 #include <openssl/ossl_typ.h>
 #include "megaBuffer.h"
-#include <bits/pthreadtypes.h>
+#include <pthread.h>
 #include "profilingSupport.h"
 
 

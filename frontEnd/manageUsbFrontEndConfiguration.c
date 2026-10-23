@@ -52,10 +52,9 @@ int ManageUsbFeConfiguration(TNGeneConfiguration *cfg)
     strcpy(tag, "USB Blocksize");
     if (GetVal(cfgFilename, tag, (void *) &USB_BLOCKSIZE, F_INTEGER, 1) == SUCCESS_RETURN) {
 	// check it is a power of two
-	num = USB_BLOCKSIZE;
-	while (num > 2)
-	    num /= 2;
-	if (num < 2) {
+        num = USB_BLOCKSIZE;
+        if (num < 2 || num > INT_MAX / USB_INTERMEDIATE_BUFFER_SIZE ||
+            (num & (num - 1)) != 0) {
 	    SwrxLog(NGENE_LOG_SEVERITY_ERROR, "Error while parsing configuration file <%s>", cfgFilename);
 	    SwrxLog(NGENE_LOG_SEVERITY_ERROR, "<%s>: value <%d> is not a power of two", tag, USB_BLOCKSIZE);
 	    CloseNGene(cfg, EXIT_FAILURE);
@@ -71,6 +70,10 @@ int ManageUsbFeConfiguration(TNGeneConfiguration *cfg)
     if (GetVal(cfgFilename, tag, (void *) &(feCfg->numberOfSupportedFes), F_INTEGER, 1) == FAILURE_RETURN) {
 	SwrxLog(NGENE_LOG_SEVERITY_ERROR, "Error while parsing configuration file <%s>: tag <%s> not found", cfgFilename, tag);
 	CloseNGene(cfg, EXIT_FAILURE);
+    }
+    if (feCfg->numberOfSupportedFes < 1 || feCfg->numberOfSupportedFes > 2) {
+        SwrxLog(NGENE_LOG_SEVERITY_ERROR, "Only one or two SiGe configurations are supported");
+        CloseNGene(cfg, EXIT_FAILURE);
     }
     feCfg->feList = (TUsbFePars *) malloc(feCfg->numberOfSupportedFes * sizeof(TUsbFePars));
     if (feCfg->feList == NULL) {
@@ -91,9 +94,12 @@ int ManageUsbFeConfiguration(TNGeneConfiguration *cfg)
     charPtr = tmp;
     for (idx = 0; idx < feCfg->numberOfSupportedFes; idx++) {
 	pars = &(feCfg->feList[idx]);
-	sscanf(charPtr, "%d %s %f %f %d %u %u %s %n", &(pars->index), pars->name, &(pars->samplingRate), &(pars->intermediateFrequency), &(pars->dopplerCorrection), &(pars->resolution), &(pars->meanValue), usbPath, &byteIdx);
+        if (sscanf(charPtr, "%d %s %f %f %d %u %u %s %n", &(pars->index), pars->name, &(pars->samplingRate), &(pars->intermediateFrequency), &(pars->dopplerCorrection), &(pars->resolution), &(pars->meanValue), usbPath, &byteIdx) != ENTRIES_PER_FRONTEND) {
+            SwrxLog(NGENE_LOG_SEVERITY_ERROR, "Incomplete SiGe front-end configuration");
+            CloseNGene(cfg, EXIT_FAILURE);
+        }
 	charPtr += byteIdx;
-	if (pars->index != idx) {
+	if (((pars->index != NGENE_FE_SIGE) && (pars->index != NGENE_FE_SIGE_V3)) || ((idx > 0) && (pars->index == feCfg->feList[0].index))) {
 	    SwrxLog(NGENE_LOG_SEVERITY_ERROR, "Front End: problem while parsing the parameters of %s front-end (wrong file format?)", pars->name);
 	    CloseNGene(cfg, EXIT_FAILURE);
 	}

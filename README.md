@@ -2,7 +2,8 @@
 
 NGene Classic is the original C codebase of the NGene software GNSS receiver. This
 repository preserves the classic implementation, including its historical receiver
-architecture and front-end support.
+architecture. This increment retains only the SiGe front-end chain, including the
+SiGe V3 recorded-sample format.
 
 The project is being maintained to refine its coding style and to identify and remove
 bugs introduced by past changes. Changes should preserve the behavior and compatibility
@@ -20,6 +21,9 @@ of the classic receiver unless a specific correction requires otherwise.
 - `libraries/` contains bundled dependencies.
 
 ## Build
+
+For the incremental SiGe-only Windows x64 build, see [Windows instructions](docs/WINDOWS.md).
+It uses Cygwin GCC to retain the classic POSIX and assembly implementation.
 
 The source tree includes CMake and Autotools build descriptions. Consult the selected
 build system and the platform's dependency documentation before building. The receiver

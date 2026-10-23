@@ -96,23 +96,16 @@ ngene_SOURCES = \
     receiver/signalHandler.c \
     receiver/manageLogs.c \
     receiver/ngeneInitialization.c \
-    asmFolder/amungoNT1065.c \
     asmFolder/carrierTable.c \
     asmFolder/fft.c \
-    asmFolder/jrc.c \
-    asmFolder/short2char.c \
     asmFolder/sigeV3.c \
-    asmFolder/stereoTriton.c \
     asmFolder/arrays.c \
     asmFolder/data_shift.c \
-    asmFolder/fraunhofer.c \
     asmFolder/prnTable.c \
-    asmFolder/sige.c \
-    asmFolder/stereo.c \
-    asmFolder/usrp.c
+    asmFolder/sige.c
 
 # Link with the libraries, including the statically built libfec
-ngene_LDADD = libraries/libfec/libfec.a -lssl -lcrypto -lpci -lusb-1.0 -lm -lncurses -ltinfo
+ngene_LDADD = libraries/libfec/libfec.a -lssl -lcrypto -lusb-1.0 -lm -lncurses -ltinfo
 
 # Build the libfec.a before building ngene
 libraries/libfec/libfec.a:
