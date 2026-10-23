@@ -44,7 +44,12 @@ include_directories(
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(SSL REQUIRED IMPORTED_TARGET openssl)
 
-pkg_check_modules(USB REQUIRED IMPORTED_TARGET libusb-1.0)
+if(CYGWIN)
+    add_subdirectory(libraries/libusb)
+    add_library(PkgConfig::USB ALIAS ngene_usb)
+else()
+    pkg_check_modules(USB REQUIRED IMPORTED_TARGET libusb-1.0)
+endif()
 pkg_check_modules(NCURSES REQUIRED IMPORTED_TARGET ncurses)
 
 # Add all necessary source files from Makefile.am
@@ -167,6 +172,13 @@ if(NGENE_BUILD_PLATFORM_CHECKS)
     add_executable(ngene_check_usb tools/check_usb_errors.c frontEnd/usbInterface.c)
     target_link_libraries(ngene_check_usb PRIVATE PkgConfig::USB Threads::Threads)
     add_test(NAME usb_error_paths COMMAND ngene_check_usb)
+    add_executable(ngene_check_usb_stream tools/check_usb_stream.c frontEnd/usbInterface.c)
+    target_link_libraries(ngene_check_usb_stream PRIVATE PkgConfig::USB Threads::Threads)
+    target_link_options(ngene_check_usb_stream PRIVATE
+        -Wl,--wrap=libusb_handle_events_timeout -Wl,--wrap=libusb_submit_transfer
+        -Wl,--wrap=libusb_control_transfer -Wl,--wrap=libusb_cancel_transfer)
+    add_test(NAME usb_stream_shutdown_restart COMMAND ngene_check_usb_stream)
+    set_tests_properties(usb_stream_shutdown_restart PROPERTIES TIMEOUT 10)
     if(CYGWIN)
         add_executable(ngene_check_sendfile tools/check_cygwin_sendfile.c)
         add_test(NAME cygwin_gui_file_copy COMMAND ngene_check_sendfile)

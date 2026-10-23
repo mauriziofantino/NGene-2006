@@ -12,6 +12,7 @@
  */
 
 #include <stdlib.h>
+#include <string.h>
 #include <libusb-1.0/libusb.h>
 #include <pthread.h>
 #include "simd.h"
@@ -22,6 +23,21 @@
 #include "arrays.h"
 #include "usbDevicesConstants.h"
 #include "usbInterface.h"
+#include "signalHandler.h"
+#include <time.h>
+
+/** @brief Recheck stop requests periodically while preserving the buffer mutex. */
+static void WaitForUsbBuffer(pthread_cond_t *condition, pthread_mutex_t *mutex)
+{
+    struct timespec deadline;
+    clock_gettime(CLOCK_REALTIME, &deadline);
+    deadline.tv_nsec += 100000000;
+    if (deadline.tv_nsec >= 1000000000) {
+        deadline.tv_sec++;
+        deadline.tv_nsec -= 1000000000;
+    }
+    pthread_cond_timedwait(condition, mutex, &deadline);
+}
 
 
 /* Global variable */
@@ -108,6 +124,34 @@ void OpenUsbDevice(TUsbFe *usbFe, libusb_device *pUsbDev, libusb_device_handle *
 	    return;
 	}
     }
+#if defined(__CYGWIN__) && LIBUSB_API_VERSION >= 0x0100010C
+    /* FX2 FIFO streaming requires reads queued directly to the Windows driver. */
+    returnValue = libusb_endpoint_supports_raw_io(*ppUDH, usbFe->endpoint);
+    if (returnValue == 1) {
+        int maximumSize;
+        int packetSize = libusb_get_max_packet_size(pUsbDev, usbFe->endpoint);
+        maximumSize = libusb_get_max_raw_io_transfer_size(*ppUDH, usbFe->endpoint);
+        if (maximumSize > 0 && packetSize > 0 &&
+            USB_BLOCKSIZE % packetSize == 0 && USB_BLOCKSIZE <= maximumSize) {
+            returnValue = libusb_endpoint_set_raw_io(*ppUDH, usbFe->endpoint, 1);
+        } else {
+            returnValue = maximumSize < 0 ? maximumSize :
+                          packetSize < 0 ? packetSize : LIBUSB_ERROR_INVALID_PARAM;
+        }
+        if (returnValue == 0) {
+            SwrxLog(NGENE_LOG_SEVERITY_INFO, "USB WinUSB RAW_IO enabled on endpoint 0x%02x",
+                    usbFe->endpoint);
+        }
+    }
+    if (returnValue < 0) {
+        SwrxLog(NGENE_LOG_SEVERITY_ERROR, "USB RAW_IO setup: %s (%d)",
+                libusb_error_name(returnValue), returnValue);
+        libusb_release_interface(*ppUDH, usbFe->interface);
+        libusb_close(*ppUDH);
+        *ppUDH = NULL;
+        return;
+    }
+#endif
 }
 
 void CloseUsbDevice(TUsbFe *usbFe, libusb_device_handle *pUDH)
@@ -128,6 +172,11 @@ void LIBUSB_CALL UsbReadCallback(struct libusb_transfer *transfer)
     switch (transfer->status) {
     case LIBUSB_TRANSFER_COMPLETED:
 	/* Mark the transfer as complete */
+        if (transfer->actual_length != transfer->length) {
+            SwrxLog(NGENE_LOG_SEVERITY_ERROR,
+                    "USB short transfer: received %d bytes, requested %d bytes",
+                    transfer->actual_length, transfer->length);
+        }
         /** The circular buffer consumes complete blocks, never stale tails. */
         pTransferElem->status = transfer->actual_length == transfer->length
             ? NGENE_USB_TRANSFER_COMPLETED : NGENE_USB_OTHER_ERRORS;
@@ -151,6 +200,7 @@ void LIBUSB_CALL UsbReadCallback(struct libusb_transfer *transfer)
         pTransferElem->status = NGENE_USB_TRANSFER_NO_DEVICE;
         break;
     default:
+        SwrxLog(NGENE_LOG_SEVERITY_ERROR, "USB callback status: %d", transfer->status);
 	pTransferElem->status = NGENE_USB_OTHER_ERRORS;
 	break;
     }
@@ -350,6 +400,8 @@ int StartUsbInterface(TRxFe *rxFe)
 	return FAILURE_RETURN;
     }
 
+    /** Every new batch starts at transfer zero, including after a timeout. */
+    usbFe->usbBufferIndex = 0;
     /** Track partially submitted batches so failures can drain them safely. */
     epHandle->flagStarted = TRUE_FLAG;
     /* Send out all the bulk transfers on the USB bus */
@@ -386,8 +438,6 @@ int StartUsbInterface(TRxFe *rxFe)
 }
 
 
-/* TODO Se la chiamata a libusb_control_transfer viene eseguita con il SiGE viene ritornato un valore di errore,
- *      ma tutto sembra funzionare. Indagare? */
 int StopUsbInterface(TRxFe *rxFe)
 {
     TUsbFe *usbFe = &(rxFe->usbFe);
@@ -409,20 +459,19 @@ int StopUsbInterface(TRxFe *rxFe)
 	return FAILURE_RETURN;
     }
 
-    /* First send a STOP command to the Cypress microcontroller */
-//      ret =
-    libusb_control_transfer(pUsbDevHandle,	/* dev_handle */
+    /* Start and stop share request 0x01; wValue selects the operation. */
+    ret = libusb_control_transfer(pUsbDevHandle,	/* dev_handle */
 			    usbFe->vrqtVendorOut,	/* request_type */
 			    usbFe->vrqStopXfer,	/* bRequest */
-			    usbFe->wValue,	/* wValue */
+			    SIGE_STOP_WVALUE,	/* wValue */
 			    0,	/* wIndex */
 			    NULL,	/* data */
 			    0,	/* wLength */
 			    USB_CONTROL_TRANSFER_TIMEOUT);	/* timeout */
-//      if(ret<0)
-//      {
-//              return FAILURE_RETURN;
-//      }
+    if (ret < 0 && ret != LIBUSB_ERROR_NO_DEVICE) {
+        SwrxLog(NGENE_LOG_SEVERITY_WARNING, "USB stop command: %s (%d)",
+                libusb_error_name(ret), ret);
+    }
 
     /** Cancellation is asynchronous; retain buffers until every callback runs. */
     for (blkIdx = 0; blkIdx < USB_BUFFER_SIZE; blkIdx++) {
@@ -470,17 +519,33 @@ void CopySamplesIntoUsbIntermediateBuffer(TRxFe *rxFe)
 
     eventResult = libusb_handle_events_timeout(NULL, &eventTimeout);
     if (eventResult < 0 && eventResult != LIBUSB_ERROR_INTERRUPTED) {
+        SwrxLog(NGENE_LOG_SEVERITY_ERROR, "USB event handling: %s (%d)",
+                libusb_error_name(eventResult), eventResult);
         usbFe->usbStatus = NGENE_USB_OTHER_ERRORS;
         return;
     }
 
     pthread_mutex_lock(&usbFe->frontEndMutex);
+    if (ngeneStopRequested || usbFe->shutdownRequested) {
+        pthread_mutex_unlock(&usbFe->frontEndMutex);
+        return;
+    }
     currTransfer = &(epHandle->transferArray[usbFe->usbBufferIndex]);
     while ((currTransfer->status == NGENE_USB_TRANSFER_COMPLETED) && (idx < USB_BUFFER_SIZE)) {
+	/* A wakeup alone does not mean the consumer freed a complete block. */
+        while (!ngeneStopRequested && !usbFe->shutdownRequested && usbFe->flagBufferFull) {
+            WaitForUsbBuffer(&usbFe->intermediateBufferFull, &usbFe->frontEndMutex);
+        }
+        if (ngeneStopRequested || usbFe->shutdownRequested) {
+            pthread_mutex_unlock(&usbFe->frontEndMutex);
+            return;
+        }
 	/* copy samples */
 	srcPtr = currTransfer->destinationBuffer;
 	dstPtr = &(usbFe->usbIntermediateBuffer[usbFe->usbIntermediateBufferWriteIndex * USB_BLOCKSIZE]);
-	ArrayCopy(srcPtr, dstPtr, USB_BLOCKSIZE);
+        /* The legacy SIMD copy uses the receiver's global XMM backup. It must
+         * never run concurrently in the USB producer and the receiver thread. */
+        memcpy(dstPtr, srcPtr, (size_t)USB_BLOCKSIZE);
 	/* new transfer */
 	if (libusb_submit_transfer(currTransfer->transfer) < 0) {
 	    usbFe->usbStatus = NGENE_USB_SUBMIT_TRANSFER_ERROR;
@@ -502,11 +567,11 @@ void CopySamplesIntoUsbIntermediateBuffer(TRxFe *rxFe)
 	    // usbFe->usbStatus = NGENE_USB_INTERMEDIATE_BUFFER_FULL;
 	    usbFe->flagBufferFull = TRUE_FLAG;
 	    pthread_cond_signal(&rxFe->usbFe.intermediateBufferEmpty);
-	    while (usbFe->usbIntermediateBufferWriteIndex == usbFe->usbIntermediateBufferReadIndex) {
-		pthread_cond_wait(&usbFe->intermediateBufferFull, &usbFe->frontEndMutex);
-		// if a cond_signal is received, but the buffer is still full, repeat the cond_wait
-	    }
 	}
+    }
+    if (ngeneStopRequested || usbFe->shutdownRequested) {
+        pthread_mutex_unlock(&usbFe->frontEndMutex);
+        return;
     }
     /* verify errors */
     if ((currTransfer->status == NGENE_USB_TRANSFER_TIMED_OUT) && (usbFe->usbSamplesRead == TRUE_FLAG)) {
@@ -514,7 +579,7 @@ void CopySamplesIntoUsbIntermediateBuffer(TRxFe *rxFe)
 	// if no samples have been read, better to stop and try to change the USB_BLOCKSIZE
 	SwrxLog(NGENE_LOG_SEVERITY_ERROR, "LIBUSB_TRANSFER_TIMED_OUT: NGene2 restarts USB...");
         if (StopUsbInterface(rxFe) != SUCCESS_RETURN ||
-            StartUsbInterface(rxFe) != SUCCESS_RETURN) {
+            (!ngeneStopRequested && StartUsbInterface(rxFe) != SUCCESS_RETURN)) {
             usbFe->usbStatus = NGENE_USB_OTHER_ERRORS;
         } else {
             usbFe->usbIntermediateBufferWriteIndex = 0;
@@ -549,9 +614,9 @@ int ReadUsbInterface(TRxFe *rxFe, char *buffer, int dim)
     pthread_mutex_lock(&rxFe->usbFe.frontEndMutex);
 
     /* Verify the presence of some samples */
-    if ((usbFe->usbIntermediateBufferWriteIndex == usbFe->usbIntermediateBufferReadIndex) && (usbFe->flagBufferFull == FALSE_FLAG)) {
+    if (!ngeneStopRequested && !usbFe->shutdownRequested && (usbFe->usbIntermediateBufferWriteIndex == usbFe->usbIntermediateBufferReadIndex) && (usbFe->flagBufferFull == FALSE_FLAG)) {
 	/* If the intermediate buffer is empty, wait */
-	pthread_cond_wait(&rxFe->usbFe.intermediateBufferEmpty, &rxFe->usbFe.frontEndMutex);
+        WaitForUsbBuffer(&rxFe->usbFe.intermediateBufferEmpty, &rxFe->usbFe.frontEndMutex);
     }
 
     /* Check again if samples are available, to avoid errors in the circular buffer */

@@ -60,7 +60,9 @@
  *        Each block is made of USB_BLOCKSIZE bytes, i.e. one USB transfer.
  *        Default value from the NVS Stereo Grabber: 256.
  */
-#define USB_BUFFER_SIZE		128
+/* The bundled Windows backend uses an I/O completion port, so pending reads
+ * do not consume one WaitForMultipleObjects handle per transfer. */
+#define USB_BUFFER_SIZE 128
 
 /**
  * @def USB_INTERMEDIATE_BUFFER_SIZE
@@ -152,6 +154,7 @@ typedef struct UsbFeStruct {
     pthread_cond_t intermediateBufferEmpty;	/**< Condition variable indicating that the intermediate buffer is empty.
 												 When empty, the receiver thread wait that it will be filled by the front-end thread. */
     pthread_mutex_t frontEndMutex;			/**< This mutex protects both intermediateBufferFull and intermediateBufferEmpty condition variables and the flagBufferFull flag */
+    int shutdownRequested; /**< Protected by frontEndMutex; releases buffer waits on shutdown. */
     /* Mutex and condition variable to handle the interaction between the two threads: the receiver thread and the front-end thread */
     pthread_mutex_t threadsMutexStopReceiver;		/**< This mutex protects the stopReceiverFlag flag (defined in receiver/ngene.c)*/
     pthread_mutex_t threadsMutexStopFrontEnd;		/**< This mutex protects the stopFrontEndFlag flag (defined in receiver/ngene.c)*/

@@ -52,6 +52,16 @@ int main(int argc, char **argv)
             }
             result = libusb_open(list[i], &handle);
             if (result == 0) {
+                unsigned char identity[256];
+                printf("Device release: %04x\n", desc.bcdDevice);
+                if (desc.iManufacturer && libusb_get_string_descriptor_ascii(handle,
+                        desc.iManufacturer, identity, sizeof(identity)) > 0) {
+                    printf("Manufacturer: %s\n", identity);
+                }
+                if (desc.iProduct && libusb_get_string_descriptor_ascii(handle,
+                        desc.iProduct, identity, sizeof(identity)) > 0) {
+                    printf("Product: %s\n", identity);
+                }
                 result = libusb_claim_interface(handle, 2);
                 printf("Claim interface 2: %s\n", libusb_error_name(result));
                 if (result == 0) libusb_release_interface(handle, 2);

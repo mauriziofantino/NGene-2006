@@ -10,7 +10,11 @@ port. Acquisition, tracking, navigation, PVT and SIMD algorithm sources are reta
 
 Install [Cygwin x64](https://www.cygwin.com/install.html) with these packages:
 
-`gcc-core cmake make pkg-config libusb1.0-devel libncurses-devel libssl-devel`
+`gcc-core cmake make pkg-config libncurses-devel libssl-devel`
+
+The Cygwin build compiles the bundled libusb 1.0.30 Windows backend from source.
+It uses WinUSB RAW_IO for continuous sampler reads; the old Cygwin libusb 1.0.21
+DLL is no longer used. See [dependency notes](../libraries/libusb/README.md).
 
 From PowerShell in the repository:
 
@@ -56,16 +60,61 @@ The original parameters remain unchanged:
 | ID | Sampling rate | IF | VID:PID | Input |
 | --- | --- | --- | --- | --- |
 | 1 | 16367600 Hz | 4130400 Hz | 16c0:072f | USB or file |
-| 6 | 16368000 Hz | 4092000 Hz | 0000:0000 in archive | File by default |
+| 6 | 16368000 Hz | 4092000 Hz | 0000:0000, unset in the original archive | File; USB requires a verified firmware configuration |
 
-The archive does not establish a USB identity for SiGe V3. Do not invent one or
-substitute the ID of another device. For live GNSS3 hardware, confirm its USB
-descriptors and sample encoding before selecting a variant. Neither firmware nor
-a firmware loader is included in this increment.
+Use the original SiGe selection, ID `1`, for the connected `16c0:072f` sampler:
+16367600 Hz sampling rate and 4130400 Hz IF. The user identifies the physical board
+as V3, but its captured samples use the classic SiGe format. Bit 1 alternates on
+every byte, and an independent GPS correlation of the capture finds satellite
+peaks with the original SiGe converter. The V3 converter produces noise-level
+results on the same capture. Selecting ID `6` from the board name alone therefore
+chose the wrong sample conversion and IF. Its original unset VID/PID is retained.
+Firmware and a firmware loader are not included.
 
-USB configuration 1, interface 2, alternate setting 0, bulk IN endpoint `0x86`,
-and the historical Cypress start/stop vendor requests are preserved. The SiGe
-sample conversion functions themselves are unchanged.
+At startup NGene prints the selected frontend name, ID, sampling rate and IF.
+For this device the line must read `SIGE (ID 1), fs 16367600 Hz, IF 4130400 Hz`.
+The configuration is read from the Cygwin user's `$HOME/.ngene/configuration`,
+independently of the executable's directory. In the Cygwin terminal,
+`cygpath -w "$HOME/.ngene"` prints its Windows location.
+
+USB configuration 1, interface 2, alternate setting 0 and bulk IN endpoint `0x86`
+are preserved. Start and stop both use vendor request `0x01`, with `wValue=1`
+and `wValue=0`, respectively. The old stop request `0x00` stalled on the connected
+device; the corrected stop command was accepted. The SiGe sample conversion
+functions themselves are unchanged.
+
+The historical queue of 128 bulk transfers is restored on Windows. The bundled
+libusb 1.0.30 backend uses an I/O completion port and does not require the old
+32-transfer workaround for a wait-handle limit. Transfer size and intermediate
+buffer capacity are unchanged. The USB worker starts streaming after setting its
+CPU affinity and priority, so samples do not arrive before that worker is ready.
+
+On WinUSB endpoints NGene enables RAW_IO before submitting transfers, checking
+the endpoint packet size and maximum RAW_IO transfer length. Without RAW_IO the
+connected sampler stopped after a few kilobytes. A later isolated RAW_IO run
+with 128 transfers received 482,721,792 bytes during a bounded 30-second run,
+with zero reported transfer errors. This checks the transport in isolation;
+full receiver throughput, sample continuity and navigation need separate validation.
+
+The frontend thread also avoids an extra `nanosleep` after event processing;
+Windows timer rounding can starve the USB queue under receiver load. An earlier
+15-second run had no timeout messages, but the user's later run had recurring
+timeouts and no acquired satellites. That short run did not establish a working
+receiver. The producer now uses `memcpy` instead of the legacy SIMD `ArrayCopy`,
+whose global XMM backup was shared with processing in the receiver thread. The
+sample converters and acquisition/tracking algorithms remain unchanged.
+
+The rebuilt Windows executable confirmed acquisition and entered tracking on
+GPS 12, 13, 25 and 32 during a replay of real samples with those PRNs selected.
+The capture lasts about one second, so sustained lock and live USB reception
+still require a longer run; see the exact conditions in [verification results](VERIFICATION.md).
+
+USB shutdown now sets a mutex-protected request before waking buffer waiters,
+so a full buffer cannot trap the producer during thread join. Signal requests
+are also checked during buffer waits and by the frontend thread. A timeout
+restart resets the transfer read index to zero to preserve batch order. Failed
+USB startup is propagated to the frontend status instead of leaving the receiver
+waiting on transfers that were never started.
 
 ## USB checks on Windows
 
@@ -92,6 +141,15 @@ This prints the loaded libusb version, enumerates devices, and attempts to open
 means access succeeded, 1 means an API/access error, and 2 means the selected device
 was absent. A different verified identity can be passed as two hexadecimal arguments.
 Enumeration alone does not validate streaming, firmware, sample order or sustained rate.
+
+The probe also prints the manufacturer, product and device release. During a
+follow-up check, the user identified the board as SiGe V3, while its loaded USB
+firmware reported `16c0:072f`, `SiGe Semiconductor`, `SE4110L`, release `0102`.
+The user confirmed that this is the correct loaded firmware. Its accepted
+start/stop protocol is used; NGene does not send the unsupported V3 mode/AGC
+commands found in drivers for other firmware variants. RAW_IO permits sustained
+isolated transfers without replacing the device firmware. The sample format,
+rather than the product name, determines which existing SiGe converter to select.
 
 ## Remaining platform differences
 
@@ -120,6 +178,7 @@ ctest --test-dir build/windows-cygwin --output-on-failure
 
 These check the unchanged SiGe sample mappings and buffer boundaries over all byte
 values, sixteen alignments, four SiGe phases and lengths spanning SIMD boundaries;
-USB callback statuses, partial-block rejection and null handles; and GUI file copy
+USB callback statuses, partial-block rejection and null handles; full-buffer
+shutdown and transfer order after timeout restart using simulated USB I/O; and GUI file copy
 payload, explicit offset and end-of-file behavior. The hardware probe is separate
 and is not an automated streaming test. See [verification results](VERIFICATION.md).

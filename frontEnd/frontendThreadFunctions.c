@@ -25,6 +25,7 @@
 #include "channelManager.h"
 #include "ngeneConfiguration.h"
 #include "ioFunctions.h"
+#include "signalHandler.h"
 
 
 extern int stopFrontEndFlag;
@@ -52,9 +53,9 @@ void InitUsbFrontEndThreadFunction(TRxFe *ngeneFe, TFrontEndThreadFunctionParame
     pthread_mutex_init(&(ngeneFe->usbFe.threadsMutexStopReceiver), NULL);
     pthread_mutex_init(&(ngeneFe->usbFe.threadsMutexStopFrontEnd), NULL);
     ngeneFe->usbFe.flagBufferFull = FALSE_FLAG;
+    ngeneFe->usbFe.shutdownRequested = FALSE_FLAG;
     /* Initialize USB front-end */
     InitializeRxFrontEnd(frontEndThreadFunctionParameters->ngeneConfiguration, frontEndThreadFunctionParameters->ngeneFrontEnd);
-    StartRxFrontEnd(frontEndThreadFunctionParameters->ngeneConfiguration, frontEndThreadFunctionParameters->ngeneFrontEnd);
 #ifdef MONITOR_INTERMEDIATE_BUFFER
     char filename[MAX_ROW_LENGTH];
     filename[0] = '\0';
@@ -91,12 +92,6 @@ void *UsbFrontEndThreadFunction(TFrontEndThreadFunctionParameters *frontEndThrea
     int maxPriority;
     int indexCpu;
     int numCpus = DEFAULT_INDEX_CPU + 1;
-    struct timespec delay;
-
-    /* used to sleep when CopySamplesIntoUsbIntermediateBuffer terminates
-     * (i.e. all the USB completed USB transfers have been processed */
-    delay.tv_sec = 0;
-    delay.tv_nsec = USB_WAIT_NS;
 
     /* Adjust the CPU index
        The maximum value for the CPU index is the number of available CPUs -1 */
@@ -112,8 +107,22 @@ void *UsbFrontEndThreadFunction(TFrontEndThreadFunctionParameters *frontEndThrea
     maxPriority = sched_get_priority_max(SCHED_FIFO);
     SetCpuPriorityAndPolicy(indexCpu, SCHED_FIFO, maxPriority);
 
+    /* Queue and start sampling only once this worker is ready to service USB.
+     * Starting in the creator left a running FX2 without an event consumer
+     * while pthread creation and worker scheduling were still in progress. */
+    pthread_mutex_lock(&usbFe->frontEndMutex);
+    if (ngeneStopRequested || usbFe->shutdownRequested) {
+        stopThread = TRUE_FLAG;
+    }
+    pthread_mutex_unlock(&usbFe->frontEndMutex);
+    if (!stopThread && !ngeneStopRequested &&
+        StartRxFrontEnd(frontEndThreadFunctionParameters->ngeneConfiguration,
+                        frontEndThreadFunctionParameters->ngeneFrontEnd) != SUCCESS_RETURN) {
+        usbFe->usbStatus = NGENE_USB_OTHER_ERRORS;
+    }
+
     /* Thread main loop */
-    while (stopThread == FALSE_FLAG) {
+    while (stopThread == FALSE_FLAG && !ngeneStopRequested) {
 	if (FrontEndCheckStatus(frontEndThreadFunctionParameters->ngeneFrontEnd) == FAILURE_RETURN) {
 	    SwrxLog(NGENE_LOG_SEVERITY_INFO, "NGene2 front end thread stops due to a USB error");
 	    stopThread = TRUE_FLAG;
@@ -133,8 +142,8 @@ void *UsbFrontEndThreadFunction(TFrontEndThreadFunctionParameters *frontEndThrea
 		SwrxLog(NGENE_LOG_SEVERITY_INFO, "NGene2 front end thread stops due to a user command");
 	    } else {
 		CopySamplesIntoUsbIntermediateBuffer(frontEndThreadFunctionParameters->ngeneFrontEnd);
-		// wait some time
-		nanosleep(&delay, NULL);
+		/* libusb already waits for events; an extra sleep starves the USB queue
+		 * on Windows when the OS rounds tiny delays to its timer interval. */
 	    }
 	}
     }

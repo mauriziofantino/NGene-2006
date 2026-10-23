@@ -624,7 +624,9 @@ void ManageFrontEndThreadDeinitialization(void)
 		pthread_mutex_unlock(&(ngeneFe.usbFe.threadsMutexStopFrontEnd));
 		/* If the front-end thread is blocked on a cond_wait, we need to release it */
 		pthread_mutex_lock(&(ngeneFe.usbFe.frontEndMutex));
-		pthread_cond_signal(&(ngeneFe.usbFe.intermediateBufferFull));
+		ngeneFe.usbFe.shutdownRequested = TRUE_FLAG;
+		pthread_cond_broadcast(&(ngeneFe.usbFe.intermediateBufferFull));
+		pthread_cond_broadcast(&(ngeneFe.usbFe.intermediateBufferEmpty));
 		pthread_mutex_unlock(&(ngeneFe.usbFe.frontEndMutex));
 		pthread_join(threadFrontEnd, NULL);
 		DeinitUsbFrontEndThreadFunction(&ngeneFe,&feThFuncParam);

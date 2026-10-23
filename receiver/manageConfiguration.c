@@ -872,6 +872,8 @@ void CompleteConfiguration(TNGeneConfiguration *cfg)
 	cfg->fs=cfg->fePars->samplingRate;
 	cfg->ts=1.0/cfg->fs;
 	cfg->fif=cfg->fePars->intermediateFrequency;
+	SwrxLog(NGENE_LOG_SEVERITY_INFO, "Front end: %s (ID %d), fs %.0f Hz, IF %.0f Hz",
+	        cfg->fePars->name, cfg->usedFrontEnd, cfg->fs, cfg->fif);
 	cfg->samplesPerMillisecond = cfg->fs/SECONDS_TO_MILLISECONDS;
 	cfg->samplesPerChip = cfg->fs/GPS_CODE_RATE;
 	cfg->pvtPeriodMilliseconds = (unsigned int)ceil(SECONDS_TO_MILLISECONDS/cfg->pvtConfiguration.pvtRate);

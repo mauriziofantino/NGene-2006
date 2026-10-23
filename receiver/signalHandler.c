@@ -32,10 +32,12 @@ extern enum ComStatus_t status;
 
 static TNGeneConfiguration *signalHandlerCfg;
 static int *signalHandlerRun;
+volatile sig_atomic_t ngeneStopRequested = 0;
 
 
 void StartListeningSignals(TNGeneConfiguration *cfg,int *run)
 {
+    ngeneStopRequested = 0;
     /* sigaction must before set if a signal has to be masked and how it has to be treated
        then a link between the signal and the corresponding action is created */
     sigemptyset(&action.sa_mask);
@@ -59,6 +61,7 @@ void StartListeningSignals(TNGeneConfiguration *cfg,int *run)
 
 void SignalHandler(int signol)
 {
+    ngeneStopRequested = 1;
     *signalHandlerRun = FALSE_FLAG;			///< the receiver is stopped
 
     switch (signol)

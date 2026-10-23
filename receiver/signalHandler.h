@@ -13,6 +13,10 @@
 #ifndef SIGNAL_HANDLER_H_INCLUDED
 #define SIGNAL_HANDLER_H_INCLUDED
 
+#include <signal.h>
+/** @brief Signal-safe stop request observed by blocking frontend waits. */
+extern volatile sig_atomic_t ngeneStopRequested;
+
 
 /**
  * @brief This function just start to listen for signal which can be sent by the OS, by the GUI

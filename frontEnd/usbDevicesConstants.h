@@ -28,7 +28,8 @@
 #define SIGE_RX_EP  			(0x86)
 #define SIGE_VRQT_VENDOR_OUT	(0x40)
 #define SIGE_VRQ_START_XFER		(0x01)
-#define SIGE_VRQ_STOP_XFER   	(0x00)
+#define SIGE_VRQ_STOP_XFER   	(0x01)
 #define SIGE_WVALUE 			(0x01)
+#define SIGE_STOP_WVALUE         (0x00)
 
 #endif				/* USB_DEVICES_CONSTANTS_H_INCLUDED */

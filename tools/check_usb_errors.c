@@ -6,6 +6,8 @@
 #include <string.h>
 #include "usbInterface.h"
 #include "ngeneConstants.h"
+#include "signalHandler.h"
+volatile sig_atomic_t ngeneStopRequested = 0; /**< Test stop request. */
 
 int USB_BLOCKSIZE = 8192; /**< Test transfer size. */
 
