@@ -1,0 +1,27 @@
+# CMake and compiled build artifacts
+/build/
+/cmake-build-*/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+install_manifest.txt
+Makefile
+
+# Autotools generated files
+/aclocal.m4
+/autom4te.cache/
+/config.h
+/config.log
+/config.status
+/configure
+/depcomp
+/install-sh
+/ltmain.sh
+/missing
+/Makefile.in
+
+# Editor and operating system files
+.DS_Store
+Thumbs.db
+*.user
+*.suo
