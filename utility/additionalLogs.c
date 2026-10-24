@@ -51,7 +51,7 @@ int EvaluateAndSendSamplesHistogram(TNGeneData *rx)
 	}
 
 	/* Prepare input samples */
-	if(CopyABunchOfContiguousSamples(buf,hist->neededSamples,hist->inputSamples)==FAILURE_RETURN)
+	if(CopyCircularBufferComponent(buf,hist->neededSamples,0,hist->inputSamples)==FAILURE_RETURN)
 	{
 		return FAILURE_RETURN;
 	}
@@ -89,7 +89,7 @@ int EvaluateAndSendSamplesSpectrum(TNGeneConfiguration *cfg,TNGeneData *rx)
 	}
 
 	/* Prepare input samples */
-	if(CopyABunchOfContiguousSamples(buf,spectrum->neededSamples,spectrum->inputSamples)==FAILURE_RETURN)
+	if(CopyCircularBufferComponent(buf,spectrum->neededSamples,0,spectrum->inputSamples)==FAILURE_RETURN)
 	{
 		return FAILURE_RETURN;
 	}

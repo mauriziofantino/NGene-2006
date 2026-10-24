@@ -87,7 +87,7 @@ TAcquisitionStatus PerformConfirmation(TNGeneConfiguration *cfg, TNGeneData *rx,
 
     /* generate and remove carrier */
     ch->carrierPhase = GenerateCarrier(cfg, &(rx->fifTable), ch->carrierFrequency, ch->carrierPhase, ch->blocksize, rx->sinArray, rx->cosArray);
-    CarrierComplexWipeOff(firstBunch, firstBunchSize, secondBunch, secondBunchSize, rx->cosArray, rx->sinArray, ch->blocksize, rx->cosArray, rx->sinArray);
+    CarrierInputWipeOff(cfg->sigeNativeIq, firstBunch, firstBunchSize, secondBunch, secondBunchSize, rx->cosArray, rx->sinArray, ch->blocksize, rx->cosArray, rx->sinArray);
     /* code despreading */
     if (ch->satType == GALILEO_SAT) {
 	/* if Galileo, generate also the subcarrier */

@@ -26,4 +26,8 @@
  */
 void SigeSamplesElab(char *inputArray, char *outputArray, int arrayLength,int maskOffset);
 
+/* Decode marker-tagged 1-bit I,Q pairs to interleaved signed bytes, with no
+ * artificial IF modulation. Returns nonzero on a broken I/Q sequence. */
+int SigeDecodeNativeIq(const unsigned char *raw, char *iq, unsigned int pairs);
+
 #endif

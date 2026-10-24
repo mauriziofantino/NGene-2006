@@ -46,6 +46,12 @@ typedef struct CircularBufferStruct {
     unsigned int free1;						/**< Size of the first free block */
     unsigned int free2;						/**< Size of the second free block */
     char *buffer;							/**< The buffer (samples for the E1 band) */
+    unsigned int sampleStride; /**< Bytes per time sample: 1 real, 2 interleaved I/Q. All ring indices count time samples. */
+    unsigned char *sigeIqRaw; /**< Native input scratch, before bit decoding. */
+    unsigned char sigeIqPending; /**< Incomplete I component retained between reads. */
+    int sigeIqHasPending;
+    int sigeIqSynchronized;
+    unsigned int sigeIqGeneration;
     unsigned long long int discardedSamples;			/**< Number of already elaborated samples */
     /* variables related to sample conversion */
     char sigeExpected;									/**< specifies if the next samples that will be read from SIGE front-end
@@ -128,5 +134,9 @@ int FillInputBuffer(TNGeneConfiguration * cfg, TCircularBuffer * buf, TRxFe * rx
  * @return SUCCESS_RETURN when the function ends with success, FAILURE_RETURN otherwise
  */
 int CopyABunchOfContiguousSamples(TCircularBuffer * buf, int neededSamples, char *outputArray);
+
+/* Copy a single component for existing real-valued diagnostic displays. */
+int CopyCircularBufferComponent(TCircularBuffer *buf, int neededSamples,
+                                unsigned int component, char *outputArray);
 
 #endif

@@ -409,7 +409,7 @@ void GetSamplePointersForChannel(TChannel *ch,TCircularBuffer *buf,char **firstB
 	if(ch->bufferOffset<buf->fill1)
 	{
 		/* useful samples starts in the first bunch of samples in the buffer */
-		*firstBunch = &(buf->buffer[buf->tail+ch->bufferOffset]);
+		*firstBunch = &(buf->buffer[(buf->tail+ch->bufferOffset) * buf->sampleStride]);
 		*firstBunchSize = buf->fill1-ch->bufferOffset;
 		if(buf->fill2>0)
 		{
@@ -425,7 +425,7 @@ void GetSamplePointersForChannel(TChannel *ch,TCircularBuffer *buf,char **firstB
 	else if(ch->bufferOffset<(buf->fill1+buf->fill2))
 	{
 		/* useful samples starts in the second bunch of samples in the buffer  */
-		*firstBunch = &(buf->buffer[ch->bufferOffset-buf->fill1]);
+		*firstBunch = &(buf->buffer[(ch->bufferOffset-buf->fill1) * buf->sampleStride]);
 		*firstBunchSize = buf->fill1+buf->fill2-ch->bufferOffset;
 		*secondBunch = NULL;
 		*secondBunchSize = 0;

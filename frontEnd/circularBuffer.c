@@ -13,6 +13,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "circularBuffer.h"
 #include "ngeneConstants.h"
 #include "ioFunctions.h"
@@ -31,10 +32,22 @@ int InitCircularBuffer(TNGeneConfiguration *cfg, TCircularBuffer *buf)
     int index;
 
     buf->dim = (unsigned int) ((cfg->fs * INPUT_BUFFER_SIZE) / SECONDS_TO_MILLISECONDS);
-    buf->buffer = (char *) malloc(buf->dim * sizeof(char));
+    buf->sampleStride = cfg->sigeNativeIq ? 2 : 1;
+    buf->sigeIqRaw = NULL;
+    buf->sigeIqHasPending = buf->sigeIqSynchronized = 0;
+    buf->sigeIqGeneration = 0;
+    buf->buffer = (char *) malloc((size_t)buf->dim * buf->sampleStride);
     if (buf->buffer == NULL) {
 	SwrxLog(NGENE_LOG_SEVERITY_ERROR, "malloc returned NULL pointer in InitCircularBuffer function");
 	return FAILURE_RETURN;
+    }
+    if (cfg->sigeNativeIq) {
+        buf->sigeIqRaw = malloc((size_t)buf->dim * 2 + 1);
+        if (buf->sigeIqRaw == NULL) {
+            free(buf->buffer);
+            buf->buffer = NULL;
+            return FAILURE_RETURN;
+        }
     }
     /* after the creation, the buffer is empty */
     buf->fill1 = 0;
@@ -63,6 +76,8 @@ int InitCircularBuffer(TNGeneConfiguration *cfg, TCircularBuffer *buf)
 /* It is the opposite of the Initialize function. It destroy and clean everything */
 void DeinitCircularBuffer(TCircularBuffer *buf)
 {
+    free(buf->sigeIqRaw);
+    buf->sigeIqRaw = NULL;
     if (buf->buffer != NULL) {
 	free(buf->buffer);
 	buf->buffer = NULL;
@@ -175,6 +190,64 @@ int FillInputBuffer(TNGeneConfiguration *cfg, TCircularBuffer *buf, TRxFe *rxFe)
     unsigned int read2 = 0;
     unsigned int readTot;
 
+    if (cfg->sigeNativeIq) {
+        unsigned int freeSamples = buf->free1 + buf->free2;
+        unsigned int prefix = buf->sigeIqHasPending ? 1 : 0;
+        unsigned int bytes, offset = 0, pairs, first;
+        if (freeSamples == 0) return SUCCESS_RETURN;
+        if (prefix) buf->sigeIqRaw[0] = buf->sigeIqPending;
+        bytes = prefix + ReadRxFrontEnd(rxFe, (char *)buf->sigeIqRaw + prefix,
+                                        2 * freeSamples - prefix);
+        if (bytes == prefix) return FAILURE_RETURN;
+        if (cfg->inputMethod == USB_FRONTEND &&
+            buf->sigeIqGeneration != rxFe->usbFe.usbReadGeneration) {
+            buf->sigeIqGeneration = rxFe->usbFe.usbReadGeneration;
+            buf->sigeIqHasPending = buf->sigeIqSynchronized = 0;
+            offset = prefix; /* Discard the old stream's incomplete I. */
+        }
+        if (!buf->sigeIqSynchronized) {
+            /* Start at the first I marker, even if USB starts on a Q byte. */
+            if (!(buf->sigeIqRaw[offset] & 2)) offset++;
+            if (bytes == offset) return FAILURE_RETURN;
+            buf->sigeIqSynchronized = 1;
+        }
+        pairs = (bytes - offset) / 2;
+        first = pairs < buf->free1 ? pairs : buf->free1;
+        if (SigeDecodeNativeIq(buf->sigeIqRaw + offset,
+                              buf->buffer + 2 * buf->head, first) != 0 ||
+            SigeDecodeNativeIq(buf->sigeIqRaw + offset + 2 * first,
+                              buf->buffer, pairs - first) != 0 ||
+            (((bytes-offset)&1) && !(buf->sigeIqRaw[bytes-1]&2))) {
+            unsigned int k;
+            /* USB restart/FIFO remnants can contain unmatched components.
+             * Recover only adjacent I,Q pairs, never exchange I and Q or
+             * fabricate a counterpart. All valid streams use the SIMD path. */
+            if (buf->sigeIqSynchronized != 2)
+                SwrxLog(NGENE_LOG_SEVERITY_WARNING,
+                        "Native SiGe IQ: discarding unmatched components (sample discontinuity)");
+            buf->sigeIqSynchronized = 2;
+            pairs = 0;
+            buf->sigeIqHasPending = 0;
+            for (k=offset; k<bytes; k++) {
+                if (buf->sigeIqRaw[k]&2) {
+                    buf->sigeIqPending = buf->sigeIqRaw[k];
+                    buf->sigeIqHasPending = 1;
+                } else if (buf->sigeIqHasPending) {
+                    unsigned int pos = (buf->head+pairs) % buf->dim;
+                    buf->buffer[2*pos] = 1-2*(buf->sigeIqPending&1);
+                    buf->buffer[2*pos+1] = 1-2*(buf->sigeIqRaw[k]&1);
+                    pairs++;
+                    buf->sigeIqHasPending = 0;
+                }
+            }
+        } else {
+            buf->sigeIqHasPending = (bytes - offset) & 1;
+            if (buf->sigeIqHasPending) buf->sigeIqPending = buf->sigeIqRaw[bytes - 1];
+        }
+        if (InsertIntoCircularBuffer(buf, pairs) != SUCCESS_RETURN) return FAILURE_RETURN;
+        return buf->free1 + buf->free2 == 0 ? SUCCESS_RETURN : FAILURE_RETURN;
+    }
+
     if (buf->free1 > 0) {
         read1 = ReadRxFrontEnd(rxFe, &(buf->buffer[buf->head]), buf->free1);
         ConvertSamplesIntoNGeneFormat(cfg, buf, &(buf->buffer[buf->head]), read1);
@@ -202,12 +275,30 @@ int CopyABunchOfContiguousSamples(TCircularBuffer *buf, int neededSamples, char 
     if (buf->dim < (unsigned int) neededSamples) {
 	return FAILURE_RETURN;
     }
-    /* select the most recent samples in the input buffer */
-    if (buf->head >= (unsigned int) neededSamples) {
-	ArrayCopy(&(buf->buffer[buf->head - neededSamples]), outputArray, neededSamples);
-    } else {
-	ArrayCopy(buf->buffer, outputArray, buf->head);
-	ArrayCopy(&(buf->buffer[buf->dim - (neededSamples - buf->head)]), &(outputArray[buf->head]), neededSamples - buf->head);
+    /* Copy in chronological order, including both components in native mode. */
+    {
+        unsigned int start = (buf->head + buf->dim - neededSamples) % buf->dim;
+        unsigned int first = buf->dim - start;
+        if (first > (unsigned int)neededSamples) first = neededSamples;
+        memcpy(outputArray, buf->buffer + start * buf->sampleStride, first * buf->sampleStride);
+        memcpy(outputArray + first * buf->sampleStride, buf->buffer,
+               (neededSamples - first) * buf->sampleStride);
+    }
+    return SUCCESS_RETURN;
+}
+
+int CopyCircularBufferComponent(TCircularBuffer *buf, int neededSamples,
+                                unsigned int component, char *outputArray)
+{
+    unsigned int k, start;
+    if (neededSamples < 0 || (unsigned int)neededSamples > buf->dim ||
+        component >= buf->sampleStride) return FAILURE_RETURN;
+    if (buf->sampleStride == 1)
+        return CopyABunchOfContiguousSamples(buf, neededSamples, outputArray);
+    start = (buf->head + buf->dim - neededSamples) % buf->dim;
+    for (k = 0; k < (unsigned int)neededSamples; k++) {
+        outputArray[k] = buf->buffer[start * buf->sampleStride + component];
+        if (++start == buf->dim) start = 0;
     }
     return SUCCESS_RETURN;
 }

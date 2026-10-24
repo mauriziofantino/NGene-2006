@@ -142,6 +142,7 @@ add_executable(ngene
     asmFolder/arrays.c
     asmFolder/data_shift.c
     asmFolder/carrierTable.c
+    asmFolder/complexInput.c
     asmFolder/prnTable.c
     asmFolder/sige.c
     asmFolder/sigeV3.c
@@ -159,6 +160,11 @@ target_include_directories(ngene_fec PUBLIC libraries/libfec)
 target_link_libraries(ngene PRIVATE ngene_fec PkgConfig::SSL PkgConfig::USB
     PkgConfig::NCURSES Threads::Threads m)
 
+option(NGENE_RX_PROFILING "Measure receiver processing stages and replay throughput" OFF)
+if(NGENE_RX_PROFILING)
+    target_compile_definitions(ngene PRIVATE RX_PROFILING)
+endif()
+
 install(TARGETS ngene RUNTIME DESTINATION bin)
 install(DIRECTORY sampleConfigurationFiles/ DESTINATION .)
 
@@ -169,6 +175,11 @@ if(NGENE_BUILD_PLATFORM_CHECKS)
     target_link_libraries(ngene_usb_probe PRIVATE PkgConfig::USB)
     add_executable(ngene_check_sige tools/check_sige_samples.c asmFolder/sige.c asmFolder/sigeV3.c)
     add_test(NAME sige_sample_preservation COMMAND ngene_check_sige)
+    add_executable(ngene_check_native_iq tools/check_native_iq.c
+        asmFolder/complexInput.c asmFolder/arrays.c asmFolder/sige.c
+        asmFolder/sigeV3.c frontEnd/circularBuffer.c)
+    target_link_libraries(ngene_check_native_iq PRIVATE PkgConfig::USB)
+    add_test(NAME sige_native_iq COMMAND ngene_check_native_iq)
     add_executable(ngene_check_usb tools/check_usb_errors.c frontEnd/usbInterface.c)
     target_link_libraries(ngene_check_usb PRIVATE PkgConfig::USB Threads::Threads)
     add_test(NAME usb_error_paths COMMAND ngene_check_usb)

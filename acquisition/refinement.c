@@ -96,7 +96,7 @@ TAcquisitionStatus PerformDopplerRefinement(TNGeneConfiguration *cfg, TNGeneData
 
     /* generate and remove carrier */
     ch->carrierPhase = GenerateCarrier(cfg, &(rx->fifTable), ch->carrierFrequency + fcCorrection, ch->carrierPhase, ch->blocksize, rx->sinArray, rx->cosArray);
-    CarrierComplexWipeOff(firstBunch, firstBunchSize, secondBunch, secondBunchSize, rx->cosArray, rx->sinArray, ch->blocksize, rx->cosArray, rx->sinArray);
+    CarrierInputWipeOff(cfg->sigeNativeIq, firstBunch, firstBunchSize, secondBunch, secondBunchSize, rx->cosArray, rx->sinArray, ch->blocksize, rx->cosArray, rx->sinArray);
     /* code despreading */
     if (ch->satType == GALILEO_SAT) {
 	/* if Galileo, generate also the subcarrier */
@@ -218,12 +218,12 @@ TAcquisitionStatus PerformCodeRefinement(TNGeneConfiguration *cfg, TNGeneData *r
 
     /* apply the code delay  */
     if ((unsigned int) curDelay < firstBunchSize) {
-	input1 = &(firstBunch[curDelay]);
+	input1 = &(firstBunch[curDelay * rx->buf.sampleStride]);
 	size1 = firstBunchSize - curDelay;
 	input2 = secondBunch;
 	size2 = secondBunchSize;
     } else {
-	input1 = &(secondBunch[curDelay - firstBunchSize]);
+	input1 = &(secondBunch[(curDelay - firstBunchSize) * rx->buf.sampleStride]);
 	size1 = secondBunchSize - curDelay + firstBunchSize;
 	input2 = NULL;
 	size2 = 0;
@@ -231,7 +231,7 @@ TAcquisitionStatus PerformCodeRefinement(TNGeneConfiguration *cfg, TNGeneData *r
 
     /* generate and remove carrier */
     ch->carrierPhase = GenerateCarrier(cfg, &(rx->fifTable), ch->carrierFrequency, ch->carrierPhase, ch->blocksize, rx->sinArray, rx->cosArray);
-    CarrierComplexWipeOff(input1, size1, input2, size2, rx->cosArray, rx->sinArray, ch->blocksize, rx->cosArray, rx->sinArray);
+    CarrierInputWipeOff(cfg->sigeNativeIq, input1, size1, input2, size2, rx->cosArray, rx->sinArray, ch->blocksize, rx->cosArray, rx->sinArray);
     /* code despreading */
     if (ch->satType == GALILEO_SAT) {
 	/* if Galileo, generate also the subcarrier */

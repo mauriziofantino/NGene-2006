@@ -146,6 +146,11 @@ typedef struct UsbFeStruct {
     TUsbEndpointHandle *epHandle;
     TUsbTransferStatus usbStatus;
     int usbSamplesRead;	    /**< TRUE_FLAG when samples have been read from USB, FALSE_FLAG otherwise */
+    unsigned int usbStreamGeneration; /**< New generation for each USB start. */
+    unsigned int usbReadGeneration; /**< Generation of the last nonempty consumer read; set under frontEndMutex. */
+    unsigned int usbBufferFullWaits; /**< Producer waits since the last USB start. */
+    double usbLastProducerTime, usbLastConsumerTime;
+    double usbMaxProducerGap, usbMaxConsumerGap; /**< Seconds, including waits; protected by frontEndMutex. */
     /* variables used for USB thread */
     /* Mutex and condition variable to handle writing and reading of intermediate buffer */
     pthread_cond_t intermediateBufferFull;	/**< Condition variable indicating that the intermediate buffer is full.

@@ -14,6 +14,8 @@ int USB_BLOCKSIZE = 16;
 static int submissions;
 static int startCommands;
 static int stopCommands;
+static int eventCalls;
+static int lastEventWait;
 static pthread_t receiverThread;
 static pthread_mutex_t progressMutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t progressCondition = PTHREAD_COND_INITIALIZER;
@@ -48,7 +50,8 @@ void ArrayCopy(char *input, char *output, int length)
 int LIBUSB_CALL __wrap_libusb_handle_events_timeout(libusb_context *context, struct timeval *timeout)
 {
     (void)context;
-    (void)timeout;
+    eventCalls++;
+    lastEventWait = timeout->tv_usec;
     return 0;
 }
 
@@ -130,6 +133,7 @@ int main(void)
     pthread_mutex_unlock(&usb->frontEndMutex);
     pthread_join(producer, NULL);
     if (submissions != 1 || usb->usbIntermediateBuffer[0] != 0x55) return 1;
+    if (eventCalls < 2 || lastEventWait != 0 || usb->usbBufferFullWaits == 0) return 1;
 
     /* Empty reads must also return immediately during shutdown. */
     usb->flagBufferFull = FALSE_FLAG;
@@ -150,8 +154,13 @@ int main(void)
         submissions != USB_BUFFER_SIZE + 1) return 1;
     endpoint->transferArray[0].status = NGENE_USB_TRANSFER_COMPLETED;
     CopySamplesIntoUsbIntermediateBuffer(&frontend);
+    if (lastEventWait != 0) return 1;
     if (ReadUsbInterface(&frontend, output, sizeof(output)) != sizeof(output) ||
         output[0] != 0x11 || usb->usbBufferIndex != 1) return 1;
+
+    /* Pending reads may wait for events; completed reads above must not. */
+    CopySamplesIntoUsbIntermediateBuffer(&frontend);
+    if (lastEventWait != 100000) return 1;
 
     if (StopUsbInterface(&frontend) != SUCCESS_RETURN) return 1;
     if (startCommands != 1 || stopCommands != 2) return 1;

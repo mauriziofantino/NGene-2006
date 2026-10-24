@@ -190,6 +190,8 @@ typedef struct NGeneConfigurationStruct
 	/* GNSS_RX.conf */
 	int usedFrontEnd;							/**< Index of the selected front-end */
 	int inputMethod;                            /**< Binary file or USB front-end */
+	int sigeNativeIq;                           /**< Native marker-tagged SiGe I/Q input; no real-IF conditioning. */
+	double sigeIqIntermediateFrequency;         /**< Native complex IF in Hz (Colorado nominal value: 38400). */
 	char *sampleFilename;		                /**< Path of the input samples file */
 	int numberOfGpsChannels;					/**< Number of GPS channels */
 	int numberOfGalileoChannels;				/**< Number of Galileo channels */

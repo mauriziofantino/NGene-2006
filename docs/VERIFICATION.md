@@ -157,3 +157,9 @@ The new capture supports selection of the original sample format and NGene's
 entry into tracking in the bounded replay above. A longer live or recorded run
 is still needed to validate navigation and sustained tracking.
 See [Windows instructions](WINDOWS.md) for the hardware probe and build commands.
+
+## Native I/Q follow-up
+
+The optional native input path and its comparison with the working real-IF
+receiver are documented in [NATIVE_IQ.md](NATIVE_IQ.md). That follow-up modifies
+the input buffer and mixer boundaries while preserving the receiver algorithms.

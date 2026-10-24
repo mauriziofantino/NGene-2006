@@ -26,6 +26,18 @@
 #include "signalHandler.h"
 #include <time.h>
 
+static void RecordUsbServiceGap(double *lastTime, double *maximumGap)
+{
+    struct timespec now;
+    double seconds;
+    if (clock_gettime(CLOCK_MONOTONIC, &now) != 0) return;
+    seconds = now.tv_sec + now.tv_nsec * 1e-9;
+    if (*lastTime > 0.0 && seconds - *lastTime > *maximumGap) {
+        *maximumGap = seconds - *lastTime;
+    }
+    *lastTime = seconds;
+}
+
 /** @brief Recheck stop requests periodically while preserving the buffer mutex. */
 static void WaitForUsbBuffer(pthread_cond_t *condition, pthread_mutex_t *mutex)
 {
@@ -343,6 +355,9 @@ int OpenUsbFrontend(TNGeneConfiguration *cfg, TRxFe *rxFe)
     }
     usbFe->usbStatus = NGENE_USB_OK;
     usbFe->usbSamplesRead = FALSE_FLAG;
+    usbFe->usbStreamGeneration = usbFe->usbReadGeneration = 0;
+    usbFe->usbLastProducerTime = usbFe->usbLastConsumerTime = 0.0;
+    usbFe->usbMaxProducerGap = usbFe->usbMaxConsumerGap = 0.0;
     return SUCCESS_RETURN;
 
 usb_failure:
@@ -403,6 +418,8 @@ int StartUsbInterface(TRxFe *rxFe)
     /** Every new batch starts at transfer zero, including after a timeout. */
     usbFe->usbBufferIndex = 0;
     /** Track partially submitted batches so failures can drain them safely. */
+    usbFe->usbBufferFullWaits = 0;
+    usbFe->usbStreamGeneration++;
     epHandle->flagStarted = TRUE_FLAG;
     /* Send out all the bulk transfers on the USB bus */
     for (blkIdx = 0; blkIdx < USB_BUFFER_SIZE; blkIdx++) {
@@ -517,6 +534,11 @@ void CopySamplesIntoUsbIntermediateBuffer(TRxFe *rxFe)
     int eventResult;
     struct timeval eventTimeout = {0, 100000};
 
+    /* A previous event dispatch may already have completed the next block.
+     * Never wait for a new event before recycling those completed reads. */
+    if (epHandle->transferArray[usbFe->usbBufferIndex].status != NGENE_USB_TRANSFER_PENDING) {
+        eventTimeout.tv_usec = 0;
+    }
     eventResult = libusb_handle_events_timeout(NULL, &eventTimeout);
     if (eventResult < 0 && eventResult != LIBUSB_ERROR_INTERRUPTED) {
         SwrxLog(NGENE_LOG_SEVERITY_ERROR, "USB event handling: %s (%d)",
@@ -526,6 +548,7 @@ void CopySamplesIntoUsbIntermediateBuffer(TRxFe *rxFe)
     }
 
     pthread_mutex_lock(&usbFe->frontEndMutex);
+    RecordUsbServiceGap(&usbFe->usbLastProducerTime, &usbFe->usbMaxProducerGap);
     if (ngeneStopRequested || usbFe->shutdownRequested) {
         pthread_mutex_unlock(&usbFe->frontEndMutex);
         return;
@@ -534,7 +557,24 @@ void CopySamplesIntoUsbIntermediateBuffer(TRxFe *rxFe)
     while ((currTransfer->status == NGENE_USB_TRANSFER_COMPLETED) && (idx < USB_BUFFER_SIZE)) {
 	/* A wakeup alone does not mean the consumer freed a complete block. */
         while (!ngeneStopRequested && !usbFe->shutdownRequested && usbFe->flagBufferFull) {
+            if (usbFe->usbBufferFullWaits++ == 0) {
+                SwrxLog(NGENE_LOG_SEVERITY_WARNING,
+                        "USB sample buffer full (%u bytes): receiver processing is behind; stream continuity at risk",
+                        (unsigned int)(USB_INTERMEDIATE_BUFFER_SIZE * USB_BLOCKSIZE));
+            }
             WaitForUsbBuffer(&usbFe->intermediateBufferFull, &usbFe->frontEndMutex);
+            /* Keep dispatching completions and errors even under backpressure.
+             * A zero timeout avoids delaying a consumer that just freed space. */
+            pthread_mutex_unlock(&usbFe->frontEndMutex);
+            eventTimeout.tv_sec = 0;
+            eventTimeout.tv_usec = 0;
+            eventResult = libusb_handle_events_timeout(NULL, &eventTimeout);
+            pthread_mutex_lock(&usbFe->frontEndMutex);
+            if (eventResult < 0 && eventResult != LIBUSB_ERROR_INTERRUPTED) {
+                usbFe->usbStatus = NGENE_USB_OTHER_ERRORS;
+                pthread_mutex_unlock(&usbFe->frontEndMutex);
+                return;
+            }
         }
         if (ngeneStopRequested || usbFe->shutdownRequested) {
             pthread_mutex_unlock(&usbFe->frontEndMutex);
@@ -577,7 +617,13 @@ void CopySamplesIntoUsbIntermediateBuffer(TRxFe *rxFe)
     if ((currTransfer->status == NGENE_USB_TRANSFER_TIMED_OUT) && (usbFe->usbSamplesRead == TRUE_FLAG)) {
 	// if timeout and some samples have been read, try to restart
 	// if no samples have been read, better to stop and try to change the USB_BLOCKSIZE
-	SwrxLog(NGENE_LOG_SEVERITY_ERROR, "LIBUSB_TRANSFER_TIMED_OUT: NGene2 restarts USB...");
+	SwrxLog(NGENE_LOG_SEVERITY_ERROR,
+                "LIBUSB_TRANSFER_TIMED_OUT: block %d, %d/%d bytes, buffer waits %u; restarting USB (sample discontinuity)",
+                usbFe->usbBufferIndex, currTransfer->transfer->actual_length,
+                currTransfer->transfer->length, usbFe->usbBufferFullWaits);
+        SwrxLog(NGENE_LOG_SEVERITY_WARNING,
+                "USB maximum service gaps since open (including waits): producer %.3f ms, receiver %.3f ms",
+                1000.0 * usbFe->usbMaxProducerGap, 1000.0 * usbFe->usbMaxConsumerGap);
         if (StopUsbInterface(rxFe) != SUCCESS_RETURN ||
             (!ngeneStopRequested && StartUsbInterface(rxFe) != SUCCESS_RETURN)) {
             usbFe->usbStatus = NGENE_USB_OTHER_ERRORS;
@@ -612,6 +658,7 @@ int ReadUsbInterface(TRxFe *rxFe, char *buffer, int dim)
     char *srcPtr;
 
     pthread_mutex_lock(&rxFe->usbFe.frontEndMutex);
+    RecordUsbServiceGap(&usbFe->usbLastConsumerTime, &usbFe->usbMaxConsumerGap);
 
     /* Verify the presence of some samples */
     if (!ngeneStopRequested && !usbFe->shutdownRequested && (usbFe->usbIntermediateBufferWriteIndex == usbFe->usbIntermediateBufferReadIndex) && (usbFe->flagBufferFull == FALSE_FLAG)) {
@@ -626,6 +673,9 @@ int ReadUsbInterface(TRxFe *rxFe, char *buffer, int dim)
 	return 0;
     }
 
+    /* Associate the delivered bytes with their stream, so a native I/Q
+     * decoder never joins a pending component to a restarted USB stream. */
+    usbFe->usbReadGeneration = usbFe->usbStreamGeneration;
     /* Now some samples are available */
     srcPtr = &(usbFe->usbIntermediateBuffer[(usbFe->usbIntermediateBufferReadIndex * USB_BLOCKSIZE) + usbFe->usbIntermediateBufferSampleIndex]);
     if (usbFe->usbIntermediateBufferWriteIndex > usbFe->usbIntermediateBufferReadIndex) {

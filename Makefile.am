@@ -97,6 +97,7 @@ ngene_SOURCES = \
     receiver/manageLogs.c \
     receiver/ngeneInitialization.c \
     asmFolder/carrierTable.c \
+    asmFolder/complexInput.c \
     asmFolder/fft.c \
     asmFolder/sigeV3.c \
     asmFolder/arrays.c \

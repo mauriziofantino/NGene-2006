@@ -110,6 +110,10 @@ int main(int argc,char *argv[])
 
 	#ifdef RX_PROFILING
 	int pvtStatus;
+	TProfilingSupport receiverLoopProfiling;
+	TProfilingSupport receiverIterationProfiling;
+	double maximumIterationTime = 0.0;
+	unsigned long long profiledSamples = 0;
 	#endif
 
 	unsigned long long int loopCyclesCounter=0;
@@ -182,6 +186,11 @@ int main(int argc,char *argv[])
 	StartListeningSignals(&ngeneCfg,&run);
 
 	/* Execution cycle */
+	#ifdef RX_PROFILING
+	InitProfilingSupport(&receiverLoopProfiling, "Receiver loop (including input waits)");
+	InitProfilingSupport(&receiverIterationProfiling, "Receiver iteration");
+	StartProfilingUpdate(&receiverLoopProfiling);
+	#endif
 	#ifdef OSNMA_PROFILING
 	StartProfilingUpdate(&(ngene.osnmaData.mainLoop));
 	#endif
@@ -189,6 +198,9 @@ int main(int argc,char *argv[])
 		  ((ngeneCfg.userInterface==RX_UI_GUI) && ((run==TRUE_FLAG) && (ComGetStatus() == RUNNING))))
 	{
 		/* Read input samples when needed */
+		#ifdef RX_PROFILING
+		StartProfilingUpdate(&receiverIterationProfiling);
+		#endif
 		samplesNeeded = GetMaximumNumberOfSamplesNeeded(&ngeneCfg,&ngene);
 		if(samplesNeeded>(ngene.buf.fill1+ngene.buf.fill2))
 		{
@@ -260,6 +272,9 @@ int main(int argc,char *argv[])
 		/* Discard samples elaborated by all the channels (if possible) */
 		samplesToBeDiscarded = GetNumberOfUsedSamples(&ngeneCfg,&ngene);
 		samplesDiscarded = DeleteFromCircularBuffer(&(ngene.buf),samplesToBeDiscarded);
+		#ifdef RX_PROFILING
+		profiledSamples += samplesDiscarded;
+		#endif
 		CleanBufferOffsetForAllChannels(&ngeneCfg,&ngene,samplesDiscarded);
 
 		/* Update acquisition threshold */
@@ -386,6 +401,12 @@ int main(int argc,char *argv[])
 		}
 
 		/* Stop for debug purposes */
+		#ifdef RX_PROFILING
+		StopProfilingUpdate(&receiverIterationProfiling, 1);
+		if (receiverIterationProfiling.totalTimeS > maximumIterationTime)
+			maximumIterationTime = receiverIterationProfiling.totalTimeS;
+		receiverIterationProfiling.totalTimeS = 0.0;
+		#endif
 		if(AllChannelsUnused(&ngeneCfg,&ngene)==TRUE_FLAG)
 			run=FALSE_FLAG;
 
@@ -459,6 +480,18 @@ int main(int argc,char *argv[])
 	ngene.osnmaData.saveMackInMackListExcludingTESLA.numberOfExecutions=ngene.osnmaData.saveMackInMackList.numberOfExecutions;
 	#endif
 
+	#ifdef RX_PROFILING
+	StopProfilingUpdate(&receiverLoopProfiling, 1);
+	ReportProfilingData(&receiverLoopProfiling);
+	SwrxLog(NGENE_LOG_SEVERITY_IMPORTANT_INFO,
+	        "Receiver throughput: %llu samples in %.6f s (%.3f Msamples/s)",
+	        profiledSamples, receiverLoopProfiling.totalTimeS,
+	        receiverLoopProfiling.totalTimeS > 0.0 ?
+	        profiledSamples / receiverLoopProfiling.totalTimeS / 1e6 : 0.0);
+	SwrxLog(NGENE_LOG_SEVERITY_IMPORTANT_INFO,
+	        "Receiver maximum processing iteration (including input waits): %.3f ms",
+	        maximumIterationTime * 1000.0);
+	#endif
 	/* Deinitialize the receiver */
 	if(ngeneCfg.userInterface==RX_UI_GUI)
 	{

@@ -200,6 +200,15 @@ void ArrayCopy(char *inputArray,char *outputArray,int arrayLength);
  */
 void CarrierComplexWipeOff(char *input1, unsigned int size1, char *input2, unsigned int size2, char *cosArray, char *sinArray, unsigned int carrierSize, char *cosDemod, char *sinDemod);
 
+/* Input boundary: sizes count real samples or I/Q pairs, according to nativeIq.
+ * Native mode rotates (I+jQ)*(cos+j*sin), using NGene's sign-valued oscillator.
+ * Native outputs retain the XOR MAC half-LSB convention through balanced
+ * packing. Oscillator arrays become the packing masks for the existing coarse
+ * acquisition ArraySub calls; in-place aliases remain supported. */
+void CarrierInputWipeOff(int nativeIq, char *input1, unsigned int size1,
+    char *input2, unsigned int size2, char *cosArray, char *sinArray,
+    unsigned int carrierSize, char *cosDemod, char *sinDemod);
+
 /**
  * @brief Performs carrier wipe-off on input samples using only cos (or sin). For subcarrier removal.
  *

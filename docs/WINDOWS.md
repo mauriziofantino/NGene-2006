@@ -51,6 +51,9 @@ for compatibility checks and recorded input. No real-time throughput guarantee i
 
 ## SiGe configuration
 
+For the native I/Q experiment, see [native input configuration and verification](NATIVE_IQ.md).
+It reuses the current marker-tagged sampler stream and bypasses real-IF conditioning.
+
 Historical frontend IDs are preserved: `1` is SiGe, `6` is SiGe V3. The frontend table
 contains only those entries. Older tables containing ten frontends are rejected, as
 are unknown selected IDs; the receiver no longer silently selects a fallback device.
@@ -117,6 +120,23 @@ USB startup is propagated to the frontend status instead of leaving the receiver
 waiting on transfers that were never started.
 
 ## USB checks on Windows
+
+The intermediate buffer remains 512 blocks (4 MiB / approximately 256 ms at the
+default SiGe settings). Increasing it would only postpone a sustained processing
+overrun. When it fills, NGene now logs that condition once per USB start and
+continues dispatching libusb events between buffer waits. Already completed
+blocks are serviced without waiting for another USB event. Timeout messages
+include the failed block, received length, buffer-wait count and maximum producer
+and consumer service gaps since opening the device. The gaps include input/event
+waits and restarts; they are scheduling diagnostics, not CPU execution times.
+
+For an isolated replay throughput measurement, configure a separate build with
+`-DNGENE_RX_PROFILING=ON`. It writes `profilingResults.csv` in the working directory
+and reports processed samples per second and the maximum processing iteration
+(including input waits). Use text mode (`-t`) to avoid the terminal shutdown pause.
+FFT and compression timings are nested inside acquisition and must not be added
+to acquisition totals. Replay throughput does not validate live USB scheduling
+or sustained tracking beyond the duration of the recording.
 
 The [libusb Windows documentation](https://github.com/libusb/libusb/wiki/Windows)
 describes the required driver. A vendor driver that works with the original Windows

@@ -464,6 +464,10 @@ int ParseConfigurationFiles(TNGeneConfiguration *cfg)
 	cfgFilename[0] = '\0';
 	strcat(cfgFilename, cfg->configurationPath);
 	strcat(cfgFilename, "GNSS_RX.conf");
+	cfg->sigeNativeIq = 0;
+	cfg->sigeIqIntermediateFrequency = 38400.0;
+	GetVal(cfgFilename, "SiGe native IQ", &cfg->sigeNativeIq, F_INTEGER, 1);
+	GetVal(cfgFilename, "SiGe IQ intermediate frequency (Hz)", &cfg->sigeIqIntermediateFrequency, F_DOUBLE, 1);
 	/**/
 	strcpy(tag, "Used FrontEnd");
 	if(GetVal(cfgFilename,tag,(void *)&(cfg->usedFrontEnd),F_INTEGER,1) == FAILURE_RETURN)
@@ -870,10 +874,24 @@ void CompleteConfiguration(TNGeneConfiguration *cfg)
 	}
 	/* other parameters */
 	cfg->fs=cfg->fePars->samplingRate;
-	cfg->ts=1.0/cfg->fs;
 	cfg->fif=cfg->fePars->intermediateFrequency;
+	if(cfg->sigeNativeIq)
+	{
+		if(cfg->sigeNativeIq != 1 || cfg->usedFrontEnd != NGENE_FE_SIGE ||
+		   !isfinite(cfg->sigeIqIntermediateFrequency) ||
+		   fabs(cfg->sigeIqIntermediateFrequency) >= cfg->fs/4.0)
+		{
+			SwrxLog(NGENE_LOG_SEVERITY_ERROR,"Native IQ requires SiGe ID 1 and a valid complex IF");
+			CloseNGene(cfg,EXIT_FAILURE);
+		}
+		cfg->fs *= 0.5; /* Two transport bytes represent one complex sample. */
+		cfg->fif = cfg->sigeIqIntermediateFrequency;
+	}
+	cfg->ts=1.0/cfg->fs;
 	SwrxLog(NGENE_LOG_SEVERITY_INFO, "Front end: %s (ID %d), fs %.0f Hz, IF %.0f Hz",
 	        cfg->fePars->name, cfg->usedFrontEnd, cfg->fs, cfg->fif);
+	SwrxLog(NGENE_LOG_SEVERITY_INFO, "Input samples: %s", cfg->sigeNativeIq ?
+	        "native complex I/Q (one pair per sample)" : "real IF");
 	cfg->samplesPerMillisecond = cfg->fs/SECONDS_TO_MILLISECONDS;
 	cfg->samplesPerChip = cfg->fs/GPS_CODE_RATE;
 	cfg->pvtPeriodMilliseconds = (unsigned int)ceil(SECONDS_TO_MILLISECONDS/cfg->pvtConfiguration.pvtRate);
