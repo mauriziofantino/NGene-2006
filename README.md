@@ -51,6 +51,10 @@ For textual output, add `-t -v`. The recording is a local test artifact and is n
 included in a fresh source checkout. See [Windows instructions](docs/WINDOWS.md)
 for configuration details and [verification](docs/VERIFICATION.md) for checks.
 
+The first [EVO FFT migration](docs/FFT_MIGRATION.md) ports the optimized SSE2
+codelets and scheduling while retaining Classic's gains and Q14 coefficients.
+`build.cmd` includes its numerical and concurrency regression check.
+
 ## Coding conventions and status
 
 The adjacent NGene evolution project documents the supplied ESA BSSC(2000)1 Issue 1

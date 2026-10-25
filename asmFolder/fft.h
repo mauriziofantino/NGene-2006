@@ -25,9 +25,8 @@ typedef struct FftTableStruct
   unsigned int  maxLog2FftSize;  /**< log2 of the maximum supported size for FFT */
   unsigned int  maxFftSize;      /**< maximum supported size for FFT */
   unsigned int  *reverse;        /**< pointer to reverse bit indices. Has size 'max_fft_size' */
-  s128          *twiddles;       /**< pointer to twiddle factors in the format [Re -Im Im Re] for each twiddle
-                                      Re and Im are represented on 16 bits. Therefore each twiddle need 4x16 bits
-                                      'twiddles' has size (max_fft_size-4)/2  s128 objects */
+  s128          *twiddles;       /**< Owned 4*(maxFftSize-1) int16 Q14 coefficients, accessed as short.
+                                     Full radix-2 stage tables use [Re,-Im,Im,Re]. Immutable after init. */
 } TFftTable;
 
 
@@ -50,18 +49,23 @@ void DeinitFftTable(TFftTable *t);
 
 
 /**
- * @brief Fast Fourier Transform using fixed point arithmetic
+ * @brief Native x64 SSE2 FFT using EVO scheduling and Classic fixed-point gains.
  *        Computes b = fft(a) where a and b are complex vectors with N complex elements each.
  *
  * @param cfg points to the receiver configuration
  * @param table is a table containing some precomputed parameters (such as twiddles, reverse bit indices, ecc)
- * @param a is the pointer to the input samples. It should be aligned to a 16 byte boundary and contains 2^(log2_size) complex elements in the format (Re Im)
+ * @param a is the pointer to the input samples. Natural short alignment is sufficient; contains 2^(log2_size) complex elements in the format (Re Im)
  *        where both Re and Im are signed short integers
- * @param b is the pointer to the output samples.It should be aligned to a 16 byte boundary and contains 2^(log2_size) complex elements in the format (Re Im)
+ * @param b is the pointer to the output samples. Must not overlap a; natural short alignment is sufficient. Contains 2^(log2_size) complex elements in the format (Re Im)
  *        where Re and Im are signed short integers
  *
  * @param log2Size is the base-2 logarithm of the fft size (i.e. the number of complex elements in a and b)
  * @param gain sets the gain of the fft routine.   -log2_size <= gain <= 0. It amplifies the output by 2^gain (To be used when the output overflows)
+ * @details Forward exp(-j*2*pi*k*n/N). The first -gain stages divide by two,
+ * retaining signed-floor rounding at each stage. Products and sums are widened;
+ * saturation follows scaling. Truncated Classic Q14 coefficients are retained.
+ * No allocations or global register backups occur during execution. Immutable
+ * tables can be shared between concurrent calls with disjoint input/workspaces.
  *
  * @return SUCCESS_RETURN when the function ends with success, FAILURE_RETURN otherwise
  */

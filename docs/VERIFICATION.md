@@ -6,13 +6,14 @@ rebuild using `build.cmd clean`. Both execute the following tests.
 
 | Check | Result |
 | --- | --- |
+| EVO FFT port: 263,056 exact scalar comparisons, DFT, gains, guards and concurrency | Passed |
 | Legacy SiGe conversion preservation | Passed |
 | Native I/Q decoding, mixing and circular buffer | Passed |
 | USB error handling | Passed |
 | Simulated USB shutdown and restart | Passed |
 | Win32 clocks, allocation, pthreads, options, text input, sockets and >4 GiB offsets | Passed |
 
-The full receiver and all five tests compile and link using Microsoft ABI native
+The full receiver and all six tests compile and link using Microsoft ABI native
 libraries. The executable imports only Windows system DLLs: WS2_32, KERNEL32,
 ADVAPI32, USER32 and CRYPT32. `--help` and `--version` run directly from PowerShell.
 
@@ -34,3 +35,6 @@ recording in recordings/native-ab.raw is retained for optional playback.
 
 Live USB stability remains a separate hardware validation; recorded PVT and
 simulated USB tests do not establish continuous error-free sampling.
+
+The incremental EVO FFT migration and differential replay results are documented
+in [FFT_MIGRATION.md](FFT_MIGRATION.md).

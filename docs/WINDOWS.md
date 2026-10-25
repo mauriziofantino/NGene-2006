@@ -28,7 +28,7 @@ registrazioni e cache delle dipendenze. Per ricompilare dopo la pulizia usare
 `build.cmd`.
 
 Entrambi i comandi individuano Visual Studio, preparano le dipendenze e lanciano
-cinque test. Non serve definire `$cmake`, modificare PATH o aprire un terminale
+sei test. Non serve definire `$cmake`, modificare PATH o aprire un terminale
 speciale. La pulizia conserva configurazioni, registrazioni e cache delle
 librerie. La prima build richiede Internet per scaricare le dipendenze.
 

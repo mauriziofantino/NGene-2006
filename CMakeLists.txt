@@ -40,6 +40,13 @@ include_directories(
 add_subdirectory(libraries/libusb)
 add_library(PkgConfig::USB ALIAS ngene_usb)
 
+# Intrinsic FFT kernels have complete compiler/ABI contracts and can be optimized
+# independently. Historical inline-assembly receiver modules retain /Od.
+add_library(ngene_fft STATIC asmFolder/fft.c asmFolder/fft_sse2.c)
+target_include_directories(ngene_fft PUBLIC "${PROJECT_SOURCE_DIR}/libraries/libusb")
+target_link_libraries(ngene_fft PUBLIC ngene_windows)
+target_compile_options(ngene_fft PRIVATE /O2)
+
 # Receiver sources. Signal-processing algorithms retain their existing code.
 add_executable(ngene
     receiver/ngene.c
@@ -126,7 +133,6 @@ add_executable(ngene
     guiSupport/commModule.c
     guiSupport/guiInterfaceFunctions.c
     guiSupport/threadutils.c
-    asmFolder/fft.c
     asmFolder/arrays.c
     asmFolder/data_shift.c
     asmFolder/carrierTable.c
@@ -143,7 +149,7 @@ add_executable(ngene
 add_subdirectory(libraries/libfec)
 target_link_libraries(ngene PRIVATE ngene_fec PkgConfig::SSL PkgConfig::USB
     PkgConfig::NCURSES Threads::Threads)
-target_link_libraries(ngene PRIVATE ngene_windows)
+target_link_libraries(ngene PRIVATE ngene_windows ngene_fft)
 
 option(NGENE_RX_PROFILING "Measure receiver processing stages and replay throughput" OFF)
 if(NGENE_RX_PROFILING)
@@ -156,6 +162,11 @@ install(DIRECTORY sampleConfigurationFiles/ DESTINATION .)
 option(NGENE_BUILD_PLATFORM_CHECKS "Build USB/platform diagnostic tools" OFF)
 if(NGENE_BUILD_PLATFORM_CHECKS)
     enable_testing()
+    add_executable(ngene_check_fft tools/check_fft.c)
+    target_link_libraries(ngene_check_fft PRIVATE ngene_fft)
+    target_compile_options(ngene_check_fft PRIVATE /O2)
+    add_test(NAME fft_evo_classic_contract COMMAND ngene_check_fft)
+    set_tests_properties(fft_evo_classic_contract PROPERTIES TIMEOUT 60)
     add_executable(ngene_usb_probe tools/usb_probe.c)
     target_link_libraries(ngene_usb_probe PRIVATE PkgConfig::USB)
     add_executable(ngene_check_sige tools/check_sige_samples.c asmFolder/sige.c asmFolder/sigeV3.c)
