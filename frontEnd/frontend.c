@@ -19,6 +19,7 @@
 #include "ngeneConstants.h"
 #include "ioFunctions.h"
 #include "closeManager.h"
+#include "hackrfFrontend.h"
 
 
 int InitializeRxFrontEnd(TNGeneConfiguration *cfg, TRxFe *rxFe)
@@ -28,6 +29,7 @@ int InitializeRxFrontEnd(TNGeneConfiguration *cfg, TRxFe *rxFe)
     /* default values */
     rxFe->feInitialized = FALSE_FLAG;
     rxFe->incomingFile = NULL;
+    rxFe->hackrf = NULL;
     usbFe->usbBuffer = NULL;
     usbFe->usbBufferIndex = 0;
     usbFe->usbIntermediateBuffer = NULL;
@@ -56,7 +58,8 @@ int InitializeRxFrontEnd(TNGeneConfiguration *cfg, TRxFe *rxFe)
 	    CloseNGene(cfg, EXIT_FAILURE);
 	}
     } else if (cfg->inputMethod == USB_FRONTEND) {
-	if (OpenUsbFrontend(cfg, rxFe) == FAILURE_RETURN) {
+	if ((cfg->usedFrontEnd == NGENE_FE_HACKRF ? OpenHackrfFrontend(cfg, rxFe) :
+             OpenUsbFrontend(cfg, rxFe)) == FAILURE_RETURN) {
 	    SwrxLog(NGENE_LOG_SEVERITY_ERROR, "Front End: unable to open Front End (usb)");
 	    CloseNGene(cfg, EXIT_FAILURE);
 	}
@@ -78,7 +81,8 @@ int DeinitializeRxFrontEnd(TNGeneConfiguration *cfg, TRxFe *rxFe)
 	rxFe->incomingFile = NULL;
     } else if (cfg->inputMethod == USB_FRONTEND) {
 	/* input from USB */
-	CloseUsbFrontend(rxFe);
+        if (rxFe->hackrf) CloseHackrfFrontend(rxFe);
+        else CloseUsbFrontend(rxFe);
     }
     rxFe->feInitialized = FALSE_FLAG;
     return SUCCESS_RETURN;
@@ -95,7 +99,7 @@ int StartRxFrontEnd(TNGeneConfiguration *cfg, TRxFe *rxFe)
 	return SUCCESS_RETURN;
     }
     /* Starts the USB data transfers */
-    if (StartUsbInterface(rxFe) == FAILURE_RETURN) {
+    if ((rxFe->hackrf ? StartHackrfFrontend(rxFe) : StartUsbInterface(rxFe)) == FAILURE_RETURN) {
 	SwrxLog(NGENE_LOG_SEVERITY_ERROR, "Front End: cannot start the Front End");
 	return FAILURE_RETURN;
     }
@@ -112,7 +116,7 @@ int StopRxFrontEnd(TRxFe *rxFe)
 	fclose(rxFe->incomingFile);
 	rxFe->incomingFile = NULL;
     } else if (rxFe->inputMethod == USB_FRONTEND) {
-	if (StopUsbInterface(rxFe) == FAILURE_RETURN) {
+	if ((rxFe->hackrf ? StopHackrfFrontend(rxFe) : StopUsbInterface(rxFe)) == FAILURE_RETURN) {
 	    SwrxLog(NGENE_LOG_SEVERITY_ERROR, "Front End: cannot stop the Front End");
 	    return FAILURE_RETURN;
 	}
@@ -129,7 +133,7 @@ int FrontEndCheckStatus(TRxFe *rxFe)
 	    return FAILURE_RETURN;
 	}
     } else if (rxFe->inputMethod == USB_FRONTEND) {
-	if (UsbCheckOverrun(rxFe) == FAILURE_RETURN) {
+	if ((rxFe->hackrf ? CheckHackrfFrontend(rxFe) : UsbCheckOverrun(rxFe)) == FAILURE_RETURN) {
 	    SwrxLog(NGENE_LOG_SEVERITY_NOTE, "Front End: USB errors found");
 	    return FAILURE_RETURN;
 	}
@@ -145,7 +149,8 @@ unsigned int ReadRxFrontEnd(TRxFe *rxFe, char *buffer, int dim)
     if (rxFe->incomingFile != NULL) {
 	readByte = (unsigned int) fread(buffer, sizeof(char), dim, rxFe->incomingFile);
     } else if (rxFe->inputMethod == USB_FRONTEND) {
-	readByte = (unsigned int) ReadUsbInterface(rxFe, buffer, dim);
+        readByte = rxFe->hackrf ? ReadHackrfFrontend(rxFe, buffer, dim) :
+                   (unsigned int) ReadUsbInterface(rxFe, buffer, dim);
     }
     return readByte;
 }

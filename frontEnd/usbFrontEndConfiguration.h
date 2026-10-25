@@ -21,6 +21,7 @@
  * and those sent by the GUI */
 #define NGENE_FE_SIGE			1
 #define NGENE_FE_SIGE_V3        6
+#define NGENE_FE_HACKRF         7
 
 /**
  * @struct usbFeParsStruct

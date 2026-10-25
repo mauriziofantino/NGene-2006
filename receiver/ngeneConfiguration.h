@@ -191,6 +191,8 @@ typedef struct NGeneConfigurationStruct
 	int usedFrontEnd;							/**< Index of the selected front-end */
 	int inputMethod;                            /**< Binary file or USB front-end */
 	int sigeNativeIq;                           /**< Native marker-tagged SiGe I/Q input; no real-IF conditioning. */
+    int nativeIq;                               /**< Complex input selected for either SiGe or HackRF. */
+    int frontEndOverride;                       /**< Optional --frontend selector, zero means use configuration. */
 	double sigeIqIntermediateFrequency;         /**< Native complex IF in Hz (Colorado nominal value: 38400). */
 	char *sampleFilename;		                /**< Path of the input samples file */
     const char *inputFileOverride;              /**< Optional --input argument; does not change the configuration file. */

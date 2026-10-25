@@ -39,6 +39,7 @@ include_directories(
 
 add_subdirectory(libraries/libusb)
 add_library(PkgConfig::USB ALIAS ngene_usb)
+include(platform/windows/hackrf.cmake)
 
 # Intrinsic FFT kernels have complete compiler/ABI contracts and can be optimized
 # independently. Historical inline-assembly receiver modules retain /Od.
@@ -57,6 +58,7 @@ add_executable(ngene
     receiver/channelManager.c
     frontEnd/circularBuffer.c
     frontEnd/frontend.c
+    frontEnd/hackrfFrontend.c
     frontEnd/frontendThreadFunctions.c
     frontEnd/megaBuffer.c
     frontEnd/usbInterface.c
@@ -149,7 +151,7 @@ add_executable(ngene
 add_subdirectory(libraries/libfec)
 target_link_libraries(ngene PRIVATE ngene_fec PkgConfig::SSL PkgConfig::USB
     PkgConfig::NCURSES Threads::Threads)
-target_link_libraries(ngene PRIVATE ngene_windows ngene_fft)
+target_link_libraries(ngene PRIVATE ngene_windows ngene_fft ngene_hackrf)
 
 option(NGENE_RX_PROFILING "Measure receiver processing stages and replay throughput" OFF)
 if(NGENE_RX_PROFILING)
@@ -158,10 +160,16 @@ endif()
 
 install(TARGETS ngene RUNTIME DESTINATION .)
 install(DIRECTORY sampleConfigurationFiles/ DESTINATION .)
+install(FILES libraries/libhackrf-LICENSE.txt DESTINATION licenses)
 
 option(NGENE_BUILD_PLATFORM_CHECKS "Build USB/platform diagnostic tools" OFF)
 if(NGENE_BUILD_PLATFORM_CHECKS)
     enable_testing()
+    add_executable(ngene_check_hackrf tools/check_hackrf.c frontEnd/hackrfFrontend.c)
+    target_include_directories(ngene_check_hackrf PRIVATE "${_hackrf_generated}")
+    target_link_libraries(ngene_check_hackrf PRIVATE ngene_windows PkgConfig::USB)
+    add_test(NAME hackrf_rx_contract COMMAND ngene_check_hackrf)
+    set_tests_properties(hackrf_rx_contract PROPERTIES TIMEOUT 15)
     add_executable(ngene_check_fft tools/check_fft.c)
     target_link_libraries(ngene_check_fft PRIVATE ngene_fft)
     target_compile_options(ngene_check_fft PRIVATE /O2)
@@ -172,7 +180,7 @@ if(NGENE_BUILD_PLATFORM_CHECKS)
     add_executable(ngene_check_sige tools/check_sige_samples.c asmFolder/sige.c asmFolder/sigeV3.c)
     add_test(NAME sige_sample_preservation COMMAND ngene_check_sige)
     add_executable(ngene_check_native_iq tools/check_native_iq.c
-        asmFolder/complexInput.c asmFolder/arrays.c asmFolder/sige.c
+        asmFolder/complexInput.c asmFolder/arrays.c asmFolder/carrierTable.c asmFolder/sige.c
         asmFolder/sigeV3.c frontEnd/circularBuffer.c)
     target_link_libraries(ngene_check_native_iq PRIVATE PkgConfig::USB)
     add_test(NAME sige_native_iq COMMAND ngene_check_native_iq)

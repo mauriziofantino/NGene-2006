@@ -348,6 +348,7 @@ int ParseConfigurationFiles(TNGeneConfiguration *cfg)
 	}
 	/**/
 	strcpy(tag, "Input method");
+    if (cfg->frontEndOverride) cfg->usedFrontEnd = cfg->frontEndOverride;
 	if(GetVal(cfgFilename,tag,(void *)&(cfg->inputMethod),F_INTEGER,1) == FAILURE_RETURN)
 	{
 		SwrxLog(NGENE_LOG_SEVERITY_ERROR,"Error while parsing configuration file <%s>: tag <%s> not found",cfgFilename,tag);
@@ -743,7 +744,7 @@ void CompleteConfiguration(TNGeneConfiguration *cfg)
 	}
 	else
 	{
-		SwrxLog(NGENE_LOG_SEVERITY_ERROR,"Unsupported front-end ID %d: select SiGe (1 or 6)",cfg->usedFrontEnd);
+		SwrxLog(NGENE_LOG_SEVERITY_ERROR,"Unsupported front-end ID %d: select SiGe (1 or 6) or HackRF (7)",cfg->usedFrontEnd);
 		CloseNGene(cfg,EXIT_FAILURE);
 	}
 	if((cfg->fePars->vid==0) && (cfg->fePars->pid==0) && (cfg->inputMethod==USB_FRONTEND))
@@ -754,7 +755,8 @@ void CompleteConfiguration(TNGeneConfiguration *cfg)
 	/* other parameters */
 	cfg->fs=cfg->fePars->samplingRate;
 	cfg->fif=cfg->fePars->intermediateFrequency;
-	if(cfg->sigeNativeIq)
+    cfg->nativeIq = cfg->usedFrontEnd == NGENE_FE_HACKRF || cfg->sigeNativeIq;
+	if(cfg->sigeNativeIq && cfg->usedFrontEnd != NGENE_FE_HACKRF)
 	{
 		if(cfg->sigeNativeIq != 1 || cfg->usedFrontEnd != NGENE_FE_SIGE ||
 		   !isfinite(cfg->sigeIqIntermediateFrequency) ||
@@ -766,10 +768,18 @@ void CompleteConfiguration(TNGeneConfiguration *cfg)
 		cfg->fs *= 0.5; /* Two transport bytes represent one complex sample. */
 		cfg->fif = cfg->sigeIqIntermediateFrequency;
 	}
+    if (cfg->usedFrontEnd == NGENE_FE_HACKRF &&
+        (cfg->fs != 8183800.0 || cfg->fif != 38400.0 ||
+         cfg->fePars->dopplerCorrection != -1 || cfg->fePars->resolution != 8 ||
+         cfg->fePars->meanValue != 0)) {
+        SwrxLog(NGENE_LOG_SEVERITY_ERROR,
+                "HackRF comparison profile requires fs=8183800, IF=38400, correction=-1, signed CI8");
+        CloseNGene(cfg, EXIT_FAILURE);
+    }
 	cfg->ts=1.0/cfg->fs;
 	SwrxLog(NGENE_LOG_SEVERITY_INFO, "Front end: %s (ID %d), fs %.0f Hz, IF %.0f Hz",
 	        cfg->fePars->name, cfg->usedFrontEnd, cfg->fs, cfg->fif);
-	SwrxLog(NGENE_LOG_SEVERITY_INFO, "Input samples: %s", cfg->sigeNativeIq ?
+	SwrxLog(NGENE_LOG_SEVERITY_INFO, "Input samples: %s", cfg->nativeIq ?
 	        "native complex I/Q (one pair per sample)" : "real IF");
 	cfg->samplesPerMillisecond = cfg->fs/SECONDS_TO_MILLISECONDS;
 	cfg->samplesPerChip = cfg->fs/GPS_CODE_RATE;

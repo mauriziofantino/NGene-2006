@@ -224,7 +224,7 @@ TAcquisitionStatus PerformCoarseAcquisition(TNGeneConfiguration *cfg, TNGeneData
 	ch->carrierPhase = GenerateCarrier(cfg, &(rx->fifTable), fc, ch->carrierPhase, ch->blocksize, rx->sinArray, rx->cosArray);
     }
     /* remove the carrier (and, for Galileo, also subcarrier) */
-    if (ch->satType == GALILEO_SAT && !cfg->sigeNativeIq) {
+    if (ch->satType == GALILEO_SAT && !cfg->nativeIq) {
 	GenerateSine(cfg, &(rx->fscTable), ch->codeRate, 0.0, ch->blocksize, rx->subcarrierArray);
 	CarrierRealWipeOff(input1, size1, input2, size2, rx->subcarrierArray, ch->blocksize, acqCom->demodulatedSin);
 	ArraySub(acqCom->demodulatedSin, rx->subcarrierArray, acqCom->demodulatedSin, ch->blocksize);
@@ -233,11 +233,11 @@ TAcquisitionStatus PerformCoarseAcquisition(TNGeneConfiguration *cfg, TNGeneData
 	ArraySub(acqCom->demodulatedCos, rx->cosArray, acqCom->demodulatedCos, ch->blocksize);
 	ArraySub(acqCom->demodulatedSin, rx->sinArray, acqCom->demodulatedSin, ch->blocksize);
     } else {
-	CarrierInputWipeOff(cfg->sigeNativeIq, input1, size1, input2, size2, rx->cosArray, rx->sinArray, ch->blocksize, acqCom->demodulatedCos, acqCom->demodulatedSin);
+	CarrierInputWipeOff(cfg->nativeIq, input1, size1, input2, size2, rx->cosArray, rx->sinArray, ch->blocksize, acqCom->demodulatedCos, acqCom->demodulatedSin);
 	ArraySub(acqCom->demodulatedCos, rx->cosArray, acqCom->demodulatedCos, ch->blocksize);
 	ArraySub(acqCom->demodulatedSin, rx->sinArray, acqCom->demodulatedSin, ch->blocksize);
     }
-    if (ch->satType == GALILEO_SAT && cfg->sigeNativeIq) {
+    if (ch->satType == GALILEO_SAT && cfg->nativeIq) {
         /* The complex input has two components; remove BOC from both after
          * the input rotation. The remaining acquisition steps are unchanged. */
         GenerateSine(cfg, &(rx->fscTable), ch->codeRate, 0.0, ch->blocksize, rx->subcarrierArray);

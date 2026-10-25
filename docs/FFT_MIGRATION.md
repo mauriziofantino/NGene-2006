@@ -52,7 +52,7 @@ This adapter makes that boundary explicit for subsequent convergence work.
 
 ## Numerical verification
 
-`build.cmd` now runs six checks. `fft_evo_classic_contract` contains an independent
+At this FFT increment, `build.cmd` ran six checks. `fft_evo_classic_contract` contains an independent
 signed64 scalar oracle with scalar scatter/breadth-first traversal, independently
 generated coefficients and explicit floor division. It checks 263,056 complete
 transforms: sizes 8..16384, every supported gain, random and rail/odd inputs,

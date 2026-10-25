@@ -32,7 +32,7 @@ int InitCircularBuffer(TNGeneConfiguration *cfg, TCircularBuffer *buf)
     int index;
 
     buf->dim = (unsigned int) ((cfg->fs * INPUT_BUFFER_SIZE) / SECONDS_TO_MILLISECONDS);
-    buf->sampleStride = cfg->sigeNativeIq ? 2 : 1;
+    buf->sampleStride = cfg->nativeIq ? 2 : 1;
     buf->sigeIqRaw = NULL;
     buf->sigeIqHasPending = buf->sigeIqSynchronized = 0;
     buf->sigeIqGeneration = 0;
@@ -41,7 +41,7 @@ int InitCircularBuffer(TNGeneConfiguration *cfg, TCircularBuffer *buf)
 	SwrxLog(NGENE_LOG_SEVERITY_ERROR, "malloc returned NULL pointer in InitCircularBuffer function");
 	return FAILURE_RETURN;
     }
-    if (cfg->sigeNativeIq) {
+    if (cfg->nativeIq) {
         buf->sigeIqRaw = malloc((size_t)buf->dim * 2 + 1);
         if (buf->sigeIqRaw == NULL) {
             free(buf->buffer);
@@ -189,6 +189,27 @@ int FillInputBuffer(TNGeneConfiguration *cfg, TCircularBuffer *buf, TRxFe *rxFe)
     unsigned int read1 = 0;
     unsigned int read2 = 0;
     unsigned int readTot;
+
+    if (cfg->usedFrontEnd == NGENE_FE_HACKRF) {
+        unsigned int freeSamples = buf->free1 + buf->free2;
+        unsigned int prefix = buf->sigeIqHasPending ? 1 : 0;
+        unsigned int bytes, pairs, first;
+        if (!freeSamples) return SUCCESS_RETURN;
+        if (prefix) buf->sigeIqRaw[0] = buf->sigeIqPending;
+        bytes = prefix + ReadRxFrontEnd(rxFe, (char *)buf->sigeIqRaw + prefix,
+                                        2 * freeSamples - prefix);
+        if (bytes == prefix) return FAILURE_RETURN;
+        pairs = bytes / 2;
+        first = pairs < buf->free1 ? pairs : buf->free1;
+        /* Match SiGe's one-bit/component amplitude contract. No IF modulation,
+         * conjugation, I/Q exchange or decimation; zero maps to positive. */
+        QuantizeIqSigns(buf->sigeIqRaw, buf->buffer + 2 * buf->head, first);
+        QuantizeIqSigns(buf->sigeIqRaw + 2 * first, buf->buffer, pairs - first);
+        buf->sigeIqHasPending = bytes & 1;
+        if (buf->sigeIqHasPending) buf->sigeIqPending = buf->sigeIqRaw[bytes - 1];
+        if (InsertIntoCircularBuffer(buf, pairs) != SUCCESS_RETURN) return FAILURE_RETURN;
+        return buf->free1 + buf->free2 == 0 ? SUCCESS_RETURN : FAILURE_RETURN;
+    }
 
     if (cfg->sigeNativeIq) {
         unsigned int freeSamples = buf->free1 + buf->free2;

@@ -25,6 +25,7 @@
 #include "ngeneConfiguration.h"
 #include "ioFunctions.h"
 #include "signalHandler.h"
+#include "hackrfFrontend.h"
 
 
 extern int stopFrontEndFlag;
@@ -70,14 +71,15 @@ void InitUsbFrontEndThreadFunction(TRxFe *ngeneFe, TFrontEndThreadFunctionParame
 
 void DeinitUsbFrontEndThreadFunction(TRxFe *ngeneFe, TFrontEndThreadFunctionParameters *frontEndThreadFunctionParameters)
 {
+    /* Join native vendor callbacks before destroying their synchronization. */
+    StopRxFrontEnd(frontEndThreadFunctionParameters->ngeneFrontEnd);
+    DeinitializeRxFrontEnd(frontEndThreadFunctionParameters->ngeneConfiguration, frontEndThreadFunctionParameters->ngeneFrontEnd);
     pthread_cond_destroy(&(ngeneFe->usbFe.intermediateBufferFull));
     pthread_cond_destroy(&(ngeneFe->usbFe.intermediateBufferEmpty));
     pthread_mutex_destroy(&(ngeneFe->usbFe.frontEndMutex));
     pthread_mutex_destroy(&(ngeneFe->usbFe.threadsMutexStopFrontEnd));
     pthread_mutex_destroy(&(ngeneFe->usbFe.threadsMutexStopReceiver));
     /* Deinit USB front end */
-    StopRxFrontEnd(frontEndThreadFunctionParameters->ngeneFrontEnd);
-    DeinitializeRxFrontEnd(frontEndThreadFunctionParameters->ngeneConfiguration, frontEndThreadFunctionParameters->ngeneFrontEnd);
 #ifdef MONITOR_INTERMEDIATE_BUFFER
     fclose(ngeneFe->usbFe.percentageIntBufFullFile);
 #endif
@@ -122,6 +124,14 @@ void *UsbFrontEndThreadFunction(TFrontEndThreadFunctionParameters *frontEndThrea
         StartRxFrontEnd(frontEndThreadFunctionParameters->ngeneConfiguration,
                         frontEndThreadFunctionParameters->ngeneFrontEnd) != SUCCESS_RETURN) {
         usbFe->usbStatus = NGENE_USB_OTHER_ERRORS;
+        pthread_mutex_lock(&usbFe->threadsMutexStopReceiver);
+        stopReceiverFlag = TRUE_FLAG;
+        pthread_mutex_unlock(&usbFe->threadsMutexStopReceiver);
+        pthread_mutex_lock(&usbFe->frontEndMutex);
+        usbFe->shutdownRequested = TRUE_FLAG;
+        pthread_cond_broadcast(&usbFe->intermediateBufferEmpty);
+        pthread_mutex_unlock(&usbFe->frontEndMutex);
+        stopThread = TRUE_FLAG;
     }
 
     /* Thread main loop */
@@ -144,7 +154,9 @@ void *UsbFrontEndThreadFunction(TFrontEndThreadFunctionParameters *frontEndThrea
 		stopThread = TRUE_FLAG;
 		SwrxLog(NGENE_LOG_SEVERITY_INFO, "NGene2 front end thread stops due to a user command");
 	    } else {
-		CopySamplesIntoUsbIntermediateBuffer(frontEndThreadFunctionParameters->ngeneFrontEnd);
+        if (frontEndThreadFunctionParameters->ngeneFrontEnd->hackrf)
+            ServiceHackrfFrontend(frontEndThreadFunctionParameters->ngeneFrontEnd);
+        else CopySamplesIntoUsbIntermediateBuffer(frontEndThreadFunctionParameters->ngeneFrontEnd);
 		/* libusb already waits for events; an extra sleep starves the USB queue
 		 * on Windows when the OS rounds tiny delays to its timer interval. */
 	    }

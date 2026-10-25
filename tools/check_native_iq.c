@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
+#include "carrierTable.h"
 #include "arrays.h"
 #include "sige.h"
 #include "circularBuffer.h"
@@ -26,6 +28,52 @@ unsigned int ReadRxFrontEnd(TRxFe *frontend, char *out, int capacity)
 
 #define REQUIRE(x) do { if (!(x)) { fprintf(stderr, "Native IQ failure at line %d\n", __LINE__); return 1; } } while (0)
 
+static int VerifyHackrfDoppler(void)
+{
+    const unsigned int length = 8184;
+    TNGeneConfiguration config = {0};
+    TSinCosTable table = {0};
+    char *input, *cosine, *sine, *real, *imaginary, *code;
+    int direction, trial;
+    unsigned int k;
+    double power[2];
+    config.fs = 8183800.0; config.ts = 1.0 / config.fs;
+    REQUIRE(posix_memalign((void **)&input, 16, 2 * length) == 0);
+    REQUIRE(posix_memalign((void **)&cosine, 16, length) == 0);
+    REQUIRE(posix_memalign((void **)&sine, 16, length) == 0);
+    REQUIRE(posix_memalign((void **)&real, 16, length) == 0);
+    REQUIRE(posix_memalign((void **)&imaginary, 16, length) == 0);
+    code = calloc(length, 1);
+    REQUIRE(code != NULL);
+    REQUIRE(InitCarrierTable(&config, &table, 38400.0) == SUCCESS_RETURN);
+    for (direction = -1; direction <= 1; direction += 2) {
+        double physicalDoppler = direction * 2000.0;
+        for (k = 0; k < length; k++) {
+            double phase = 0.17 + 2.0 * 3.14159265358979323846 *
+                           (-38400.0 + physicalDoppler) * k / config.fs;
+            input[2*k] = cos(phase) < 0 ? -1 : 1;
+            input[2*k+1] = sin(phase) < 0 ? -1 : 1;
+        }
+        for (trial = 0; trial < 2; trial++) {
+            double ncoDoppler = (trial ? 1 : -1) * physicalDoppler;
+            int sumI, sumQ;
+            GenerateCarrier(&config, &table, 38400.0 + ncoDoppler, 0, length, sine, cosine);
+            CarrierInputWipeOff(1, input, 73, input + 146, length - 73,
+                               cosine, sine, length, real, imaginary);
+            sumI = ArrayMac(real, code, length) + length / 2;
+            sumQ = ArrayMac(imaginary, code, length) + length / 2;
+            power[trial] = (double)sumI * sumI + (double)sumQ * sumQ;
+        }
+        /* Production carrier generator, SSE2 IQ rotation and XOR MAC agree:
+         * for native HackRF, NCO Doppler=-physical Doppler, correction=-1. */
+        REQUIRE(power[0] > 2.0 * length * length);
+        REQUIRE(power[0] > 100.0 * power[1]);
+    }
+    DeinitCarrierTable(&table);
+    free(input); free(cosine); free(sine); free(real); free(imaginary); free(code);
+    return 0;
+}
+
 int main(void)
 {
     unsigned char raw[320];
@@ -38,6 +86,16 @@ int main(void)
     char copied[32];
     unsigned int consumed = 0, iterations = 0;
     REQUIRE(posix_memalign((void **)&ngeneXmmsBackup, 16, 128) == 0);
+    REQUIRE(VerifyHackrfDoppler() == 0);
+    /* Every CI8 bit pattern, SIMD alignment and scalar tail; no marker bits. */
+    for (offset = 0; offset < 16; offset++) for (n = 0; n <= 128; n++) {
+        for (k = 0; k < 2*n; k++) raw[offset+k] = (unsigned char)k;
+        memset(iq, 0x55, sizeof(iq));
+        QuantizeIqSigns(raw+offset, iq+offset, n);
+        for (k = 0; k < 2*n; k++)
+            REQUIRE(iq[offset+k] == ((signed char)raw[offset+k] < 0 ? -1 : 1));
+        REQUIRE(iq[offset+2*n] == 0x55);
+    }
 
     /* Conditioning must change only the period-four modulation, never the
      * native component amplitudes. Check against the actual working IF code. */
@@ -105,7 +163,7 @@ int main(void)
 
     /* Transport starts on Q; odd and one-byte reads must retain the pending I.
      * Exercise real production ring insertion, deletion and physical wrap. */
-    cfg.fs = 1000.0; cfg.sigeNativeIq = 1; cfg.usedFrontEnd = NGENE_FE_SIGE;
+    cfg.fs = 1000.0; cfg.nativeIq = cfg.sigeNativeIq = 1; cfg.usedFrontEnd = NGENE_FE_SIGE;
     cfg.fePars = &pars;
     REQUIRE(InitCircularBuffer(&cfg, &ring) == SUCCESS_RETURN);
     REQUIRE(ring.sampleStride == 2 && ring.dim == 16);
@@ -125,6 +183,32 @@ int main(void)
         consumed += take;
     }
     REQUIRE(consumed == 40 && wireIndex == sizeof(wire) && !ring.sigeIqHasPending);
+    /* HackRF signed CI8 has no SiGe marker bits: preserve chronological I/Q,
+     * quantize every signed byte value, retain odd fragments and wrap pairs. */
+    DeinitCircularBuffer(&ring);
+    cfg.usedFrontEnd = NGENE_FE_HACKRF;
+    REQUIRE(InitCircularBuffer(&cfg, &ring) == SUCCESS_RETURN);
+    wireIndex = readCalls = consumed = iterations = 0;
+    for (k = 0; k < sizeof(wire); k++) wire[k] = (unsigned char)(k * 73);
+    while (consumed < 40 && iterations++ < 200) {
+        unsigned int take;
+        FillInputBuffer(&cfg, &ring, &frontend);
+        take = ring.fill1 + ring.fill2;
+        if (take > 3) take = 3;
+        for (k = 0; k < 2 * take; k++) {
+            unsigned int position = (ring.tail + k / 2) % ring.dim;
+            REQUIRE(ring.buffer[2 * position + k % 2] ==
+                    ((signed char)wire[2 * consumed + k] < 0 ? -1 : 1));
+        }
+        REQUIRE(DeleteFromCircularBuffer(&ring, take) == take);
+        consumed += take;
+    }
+    REQUIRE(consumed == 40 && wireIndex == sizeof(wire) && ring.sigeIqHasPending);
+    DeinitCircularBuffer(&ring);
+    cfg.usedFrontEnd = NGENE_FE_SIGE;
+    REQUIRE(InitCircularBuffer(&cfg, &ring) == SUCCESS_RETURN);
+    wire[0] = 0;
+    for (k=0; k<40; k++) { wire[1+2*k] = 2 | (k&1); wire[2+2*k] = (k>>1)&1; }
     /* A USB restart discards a pending old I and aligns the new stream by
      * its own markers, including a one-byte leading Q. */
     cfg.inputMethod = USB_FRONTEND;

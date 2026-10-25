@@ -118,7 +118,7 @@ TTrackingStatus PerformGpsTracking(TNGeneConfiguration *cfg,TNGeneData *rx,TChan
 
 	/* carrier wipe-off */
 	ch->carrierPhase = GenerateCarrier(cfg,&(rx->fifTable),ch->carrierFrequency,ch->carrierPhase,ch->blocksize,rx->sinArray,rx->cosArray);
-	CarrierInputWipeOff(cfg->sigeNativeIq, firstBunch,firstBunchSize,secondBunch,secondBunchSize,rx->cosArray,rx->sinArray,ch->blocksize,rx->cosArray,rx->sinArray);
+	CarrierInputWipeOff(cfg->nativeIq, firstBunch,firstBunchSize,secondBunch,secondBunchSize,rx->cosArray,rx->sinArray,ch->blocksize,rx->cosArray,rx->sinArray);
 	ch->carrierFrequencyOld = ch->carrierFrequency;
 	ch->dopplerShiftOld = ch->dopplerShift;
 	/* code wipeoff */

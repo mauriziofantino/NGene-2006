@@ -6,6 +6,7 @@ rebuild using `build.cmd clean`. Both execute the following tests.
 
 | Check | Result |
 | --- | --- |
+| HackRF native RX settings, cleanup, queue ordering, overflow, disconnect and shutdown (simulated hardware) | Passed |
 | EVO FFT port: 263,056 exact scalar comparisons, DFT, gains, guards and concurrency | Passed |
 | Legacy SiGe conversion preservation | Passed |
 | Native I/Q decoding, mixing and circular buffer | Passed |
@@ -13,7 +14,7 @@ rebuild using `build.cmd clean`. Both execute the following tests.
 | Simulated USB shutdown and restart | Passed |
 | Win32 clocks, allocation, pthreads, options, text input, sockets and >4 GiB offsets | Passed |
 
-The full receiver and all six tests compile and link using Microsoft ABI native
+The full receiver and all seven tests compile and link using Microsoft ABI native
 libraries. The executable imports only Windows system DLLs: WS2_32, KERNEL32,
 ADVAPI32, USER32 and CRYPT32. `--help` and `--version` run directly from PowerShell.
 
@@ -38,3 +39,11 @@ simulated USB tests do not establish continuous error-free sampling.
 
 The incremental EVO FFT migration and differential replay results are documented
 in [FFT_MIGRATION.md](FFT_MIGRATION.md).
+
+The HackRF increment also retains the complete SiGe replay: 23 PVT solutions and
+all 5,782 receiver-log lines identical after host timestamps are removed.
+Native I/Q checks cover every CI8 component value, sign quantization, odd reads,
+ring wrap and positive/negative synthetic RF Doppler through the actual Classic
+carrier generator, SSE2 rotation and XOR MAC. HackRF enumeration found no device;
+RF acquisition, hardware tuning accuracy and sustained reception are unverified.
+See [HACKRF.md](HACKRF.md).

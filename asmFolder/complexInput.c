@@ -3,6 +3,19 @@
 #include "arrays.h"
 #include "sige.h"
 
+/* Match the SiGe one-bit/component scale without changing I/Q order. */
+void QuantizeIqSigns(const unsigned char *raw, char *iq, unsigned int pairs)
+{
+    unsigned int k = 0, bytes = 2 * pairs;
+    const __m128i zero = _mm_setzero_si128(), one = _mm_set1_epi8(1);
+    for (; k + 16 <= bytes; k += 16) {
+        __m128i samples = _mm_loadu_si128((const __m128i *)(raw + k));
+        __m128i negative = _mm_cmpgt_epi8(zero, samples);
+        _mm_storeu_si128((__m128i *)(iq + k), _mm_or_si128(negative, one));
+    }
+    for (; k < bytes; k++) iq[k] = (signed char)raw[k] < 0 ? -1 : 1;
+}
+
 int SigeDecodeNativeIq(const unsigned char *raw, char *iq, unsigned int pairs)
 {
     unsigned int n = 2 * pairs, k = 0;

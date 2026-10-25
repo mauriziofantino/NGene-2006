@@ -41,6 +41,7 @@ int HandleCmdLine(int argc, char *argv[], TNGeneConfiguration *cfg)
     		{"textual", 0, 0, 't'},
     		{"ncurses", 0, 0, 'n'},
             {"input", 1, 0, 'i'},
+            {"frontend", 1, 0, 'f'},
     		{"port", 1, 0, 'p'},
     		{"googleEarth", 1, 0, 'g'},
     		{"logfile", 1, 0, 'l'},
@@ -54,6 +55,7 @@ int HandleCmdLine(int argc, char *argv[], TNGeneConfiguration *cfg)
     		"Use the textual interface (No GUI).",
     		"Use the ncurses terminal interface.",
             "Process the specified recording instead of USB (configuration unchanged).",
+            "Select sige or hackrf for this run (configuration unchanged).",
     		"Set the COM port for the communication with the GUI (default 4999).",
     		"Record the receiver output as a GoogleEarth file.",
     		"Log all the operation a logging file.",
@@ -76,10 +78,11 @@ int HandleCmdLine(int argc, char *argv[], TNGeneConfiguration *cfg)
     cfg->verbose = FALSE_FLAG;
     cfg->configurationValid = FALSE_FLAG;
     cfg->inputFileOverride = NULL;
+    cfg->frontEndOverride = 0;
     /* Parse options */
     while (1)
     {
-        i = getopt_long(argc, argv, "Vtni:p:g:l:vcrh", opts, NULL);
+        i = getopt_long(argc, argv, "Vtni:f:p:g:l:vcrh", opts, NULL);
     	if(i == -1)
     	{
     		break;
@@ -103,6 +106,14 @@ int HandleCmdLine(int argc, char *argv[], TNGeneConfiguration *cfg)
     			break;
             case 'i':
                 cfg->inputFileOverride = optarg;
+                break;
+            case 'f':
+                if (strcasecmp(optarg, "sige") == 0) cfg->frontEndOverride = NGENE_FE_SIGE;
+                else if (strcasecmp(optarg, "hackrf") == 0) cfg->frontEndOverride = NGENE_FE_HACKRF;
+                else {
+                    fprintf(stderr, "Unknown frontend: %s (use sige or hackrf)\n", optarg);
+                    exit(EXIT_FAILURE);
+                }
                 break;
     		case 'g':
     			// Get the googleEarth file name

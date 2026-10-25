@@ -71,11 +71,11 @@ int ManageUsbFeConfiguration(TNGeneConfiguration *cfg)
 	SwrxLog(NGENE_LOG_SEVERITY_ERROR, "Error while parsing configuration file <%s>: tag <%s> not found", cfgFilename, tag);
 	CloseNGene(cfg, EXIT_FAILURE);
     }
-    if (feCfg->numberOfSupportedFes < 1 || feCfg->numberOfSupportedFes > 2) {
-        SwrxLog(NGENE_LOG_SEVERITY_ERROR, "Only one or two SiGe configurations are supported");
+    if (feCfg->numberOfSupportedFes < 1 || feCfg->numberOfSupportedFes > 3) {
+        SwrxLog(NGENE_LOG_SEVERITY_ERROR, "Expected one to three front-end configurations");
         CloseNGene(cfg, EXIT_FAILURE);
     }
-    feCfg->feList = (TUsbFePars *) malloc(feCfg->numberOfSupportedFes * sizeof(TUsbFePars));
+    feCfg->feList = (TUsbFePars *) calloc(feCfg->numberOfSupportedFes + 1, sizeof(TUsbFePars));
     if (feCfg->feList == NULL) {
 	SwrxLog(NGENE_LOG_SEVERITY_ERROR, "Malloc error in ManageUsbFeConfiguration");
 	CloseNGene(cfg, EXIT_FAILURE);
@@ -99,10 +99,16 @@ int ManageUsbFeConfiguration(TNGeneConfiguration *cfg)
             CloseNGene(cfg, EXIT_FAILURE);
         }
 	charPtr += byteIdx;
-	if (((pars->index != NGENE_FE_SIGE) && (pars->index != NGENE_FE_SIGE_V3)) || ((idx > 0) && (pars->index == feCfg->feList[0].index))) {
+	if ((pars->index != NGENE_FE_SIGE) && (pars->index != NGENE_FE_SIGE_V3) && (pars->index != NGENE_FE_HACKRF)) {
 	    SwrxLog(NGENE_LOG_SEVERITY_ERROR, "Front End: problem while parsing the parameters of %s front-end (wrong file format?)", pars->name);
 	    CloseNGene(cfg, EXIT_FAILURE);
 	}
+        for (num = 0; num < idx; num++) {
+            if (pars->index == feCfg->feList[num].index) {
+                SwrxLog(NGENE_LOG_SEVERITY_ERROR, "Duplicate front-end ID %d", pars->index);
+                CloseNGene(cfg, EXIT_FAILURE);
+            }
+        }
 	if ((pars->dopplerCorrection != -1) && (pars->dopplerCorrection != 1)) {
 	    if (pars->dopplerCorrection < 0)
 		pars->dopplerCorrection = -1;
@@ -123,6 +129,21 @@ int ManageUsbFeConfiguration(TNGeneConfiguration *cfg)
 	}
     }
     free(tmp);
+    /* Existing SiGe configuration files remain valid. Expose the comparison
+     * profile without overwriting the user's file during an upgrade. */
+    for (idx = 0; idx < feCfg->numberOfSupportedFes; idx++)
+        if (feCfg->feList[idx].index == NGENE_FE_HACKRF) break;
+    if (idx == feCfg->numberOfSupportedFes) {
+        pars = &feCfg->feList[feCfg->numberOfSupportedFes++];
+        pars->index = NGENE_FE_HACKRF;
+        strcpy(pars->name, "HackRF");
+        pars->samplingRate = 8183800.0f;
+        pars->intermediateFrequency = 38400.0f;
+        pars->dopplerCorrection = -1;
+        pars->resolution = 8;
+        pars->vid = 0x1d50;
+        pars->pid = 0x6089;
+    }
     return SUCCESS_RETURN;
 }
 

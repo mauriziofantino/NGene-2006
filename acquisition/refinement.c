@@ -96,7 +96,7 @@ TAcquisitionStatus PerformDopplerRefinement(TNGeneConfiguration *cfg, TNGeneData
 
     /* generate and remove carrier */
     ch->carrierPhase = GenerateCarrier(cfg, &(rx->fifTable), ch->carrierFrequency + fcCorrection, ch->carrierPhase, ch->blocksize, rx->sinArray, rx->cosArray);
-    CarrierInputWipeOff(cfg->sigeNativeIq, firstBunch, firstBunchSize, secondBunch, secondBunchSize, rx->cosArray, rx->sinArray, ch->blocksize, rx->cosArray, rx->sinArray);
+    CarrierInputWipeOff(cfg->nativeIq, firstBunch, firstBunchSize, secondBunch, secondBunchSize, rx->cosArray, rx->sinArray, ch->blocksize, rx->cosArray, rx->sinArray);
     /* code despreading */
     if (ch->satType == GALILEO_SAT) {
 	/* if Galileo, generate also the subcarrier */
@@ -231,7 +231,7 @@ TAcquisitionStatus PerformCodeRefinement(TNGeneConfiguration *cfg, TNGeneData *r
 
     /* generate and remove carrier */
     ch->carrierPhase = GenerateCarrier(cfg, &(rx->fifTable), ch->carrierFrequency, ch->carrierPhase, ch->blocksize, rx->sinArray, rx->cosArray);
-    CarrierInputWipeOff(cfg->sigeNativeIq, input1, size1, input2, size2, rx->cosArray, rx->sinArray, ch->blocksize, rx->cosArray, rx->sinArray);
+    CarrierInputWipeOff(cfg->nativeIq, input1, size1, input2, size2, rx->cosArray, rx->sinArray, ch->blocksize, rx->cosArray, rx->sinArray);
     /* code despreading */
     if (ch->satType == GALILEO_SAT) {
 	/* if Galileo, generate also the subcarrier */

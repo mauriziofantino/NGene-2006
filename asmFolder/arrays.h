@@ -205,6 +205,9 @@ void CarrierComplexWipeOff(char *input1, unsigned int size1, char *input2, unsig
  * Native outputs retain the XOR MAC half-LSB convention through balanced
  * packing. Oscillator arrays become the packing masks for the existing coarse
  * acquisition ArraySub calls; in-place aliases remain supported. */
+/* Input-only sign quantizer: signed CI8 components become +/-1, zero is +1. */
+void QuantizeIqSigns(const unsigned char *raw, char *iq, unsigned int pairs);
+
 void CarrierInputWipeOff(int nativeIq, char *input1, unsigned int size1,
     char *input2, unsigned int size2, char *cosArray, char *sinArray,
     unsigned int carrierSize, char *cosDemod, char *sinDemod);

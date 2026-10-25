@@ -28,13 +28,14 @@ registrazioni e cache delle dipendenze. Per ricompilare dopo la pulizia usare
 `build.cmd`.
 
 Entrambi i comandi individuano Visual Studio, preparano le dipendenze e lanciano
-sei test. Non serve definire `$cmake`, modificare PATH o aprire un terminale
+sette test. Non serve definire `$cmake`, modificare PATH o aprire un terminale
 speciale. La pulizia conserva configurazioni, registrazioni e cache delle
 librerie. La prima build richiede Internet per scaricare le dipendenze.
 
 Installare una volta i componenti Visual Studio: C++ x64, Windows SDK, C++ Clang
 Tools e CMake Tools. Le dipendenze vengono compilate dai sorgenti con ABI Microsoft:
-OpenSSL 3.5.9, pthreads4w, PDCursesMod 4.5.4, libusb 1.0.30 e libfec. Versioni,
+OpenSSL 3.5.9, pthreads4w, PDCursesMod 4.5.4, libusb 1.0.30, libhackrf v2026.01.3
+e libfec. Versioni,
 URL e checksum sono fissati in `scripts/build-native-windows.ps1`.
 
 ## Dove sono i file
@@ -47,6 +48,7 @@ NGene Classic/
   configuration/
     GNSS_RX.conf
     Front_End.conf
+    HackRF.conf
     Acquisition.conf
     Tracking.conf
     PVT.conf
@@ -95,6 +97,21 @@ Per vedere il log testuale:
 `Input method = 0` usa la USB. Il SiGe deve essere collegato, con firmware caricato
 ed accessibile al backend WinUSB. Un errore `16c0/072f` assente riguarda il
 dispositivo, non la cartella dei file di configurazione.
+
+## HackRF
+
+Per selezionare HackRF per il solo avvio corrente:
+
+```powershell
+.\run.cmd --frontend hackrf
+```
+
+Per tornare al SiGe usare `--frontend sige`. Per rendere permanente la selezione
+HackRF impostare `Used FrontEnd = 7` in `configuration/GNSS_RX.conf` e lasciare
+`Input method = 0`. I vecchi `Front_End.conf` con le sole righe SiGe restano validi:
+il profilo HackRF viene aggiunto in memoria, senza sovrascrivere il file.
+Guadagni, filtro e alimentazione antenna sono in `configuration/HackRF.conf`.
+Vedere [HACKRF.md](HACKRF.md) per frequenze, ampiezza e segno del Doppler.
 
 ## Registrazione
 

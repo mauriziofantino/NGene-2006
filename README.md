@@ -2,8 +2,8 @@
 
 NGene Classic is the original C codebase of the NGene software GNSS receiver. This
 repository preserves the classic implementation, including its historical receiver
-architecture. This increment retains only the SiGe front-end chain, including the
-SiGe V3 recorded-sample format.
+architecture. It supports the SiGe front-end chain (including SiGe V3 recordings)
+and native HackRF reception with a matching digital comparison profile.
 
 The project is being maintained to refine its coding style and to identify and remove
 bugs introduced by past changes. Changes should preserve the behavior and compatibility
@@ -40,6 +40,18 @@ The build downloads and compiles its dependencies automatically. The executable 
 **`configuration/GNSS_RX.conf` beside the executable**. No environment variables or
 user home directories select a different configuration. Builds preserve existing
 settings; `sampleConfigurationFiles/` is used only to fill missing files.
+
+To compare the two live frontends without editing the selected configuration:
+
+```powershell
+.\run.cmd --frontend sige
+.\run.cmd --frontend hackrf
+```
+
+HackRF uses 8,183,800 complex pairs/s and a 38,400 Hz residual IF. For this first
+comparison its CI8 amplitudes are reduced to one bit per component, as on SiGe.
+Gains and antenna power are in `configuration/HackRF.conf`. Details and Doppler
+sign conventions are in [HACKRF.md](docs/HACKRF.md).
 
 To process the existing workspace recording without changing USB settings:
 

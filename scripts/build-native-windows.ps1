@@ -49,10 +49,12 @@ if ($CleanOnly) {
 $taskSslArchive = Get-NativeArchive 'openssl.tar.gz' 'https://github.com/openssl/openssl/releases/download/openssl-3.5.9/openssl-3.5.9.tar.gz' '603f5602e2eef00d77fbd429d34dcd5822bb301757a1bc9cdb24c670f1eb859a'
 $taskPdcArchive = Get-NativeArchive 'pdcurses.tar.gz' 'https://codeload.github.com/Bill-Gray/PDCursesMod/tar.gz/refs/tags/v4.5.4' 'd5efc7f2b7107abe382bdf8bac0a9bfd8e716facbca2bb9cf12dfeb8e1122c4b'
 $taskPthreadArchive = Get-NativeArchive 'pthreads4w-native.tar.gz' 'https://codeload.github.com/jwinarske/pthreads4w/tar.gz/44daa2441137b90477b449663abe9755b2c9a16b' '82dc760207f0c3f492fe4ffe2c081741bcbbd7a54d71153a54cf2971d7d64f54'
+$taskHackrfArchive = Get-NativeArchive 'hackrf-v2026.01.3.tar.gz' 'https://codeload.github.com/greatscottgadgets/hackrf/tar.gz/refs/tags/v2026.01.3' '48238f3a21189fa8cbe67838584cc045b9e5433767db8c9c30c1da02a1489f2c'
 $taskPerlArchive = Get-NativeArchive 'strawberry.zip' 'https://github.com/StrawberryPerl/Perl-Dist-Strawberry/releases/download/SP_54231_64bit/strawberry-perl-5.42.3.1-64bit-portable.zip' '6a081a811781c30aca51dbc036afd93092af91e3297901f02c17043795a10690'
 $taskTar = Join-Path $env:SystemRoot 'System32/tar.exe'
 if (!(Test-Path (Join-Path $taskSources 'openssl-3.5.9/Configure'))) { Invoke-NativeTool $taskTar @('-xf',$taskSslArchive,'-C',$taskSources) }
 if (!(Test-Path (Join-Path $taskSources 'PDCursesMod-4.5.4/curses.h'))) { Invoke-NativeTool $taskTar @('-xf',$taskPdcArchive,'-C',$taskSources) }
+if (!(Test-Path (Join-Path $taskSources 'hackrf-2026.01.3/host/libhackrf/src/hackrf.c'))) { Invoke-NativeTool $taskTar @('-xf',$taskHackrfArchive,'-C',$taskSources) }
 $taskPthreadSource = Join-Path $taskSources 'pthreads4w'
 if (!(Test-Path (Join-Path $taskPthreadSource 'pthread.c'))) {
     New-Item -ItemType Directory -Force $taskPthreadSource | Out-Null

@@ -181,6 +181,7 @@ typedef struct RxFeStruct {
     int feInitialized;		/**< if != 0, indicates that Front-end has been initialized */
     FILE *incomingFile;		/**< Pointer to the incoming file, NULL if sample are read from USB */
     TUsbFe usbFe;		/**< to handle samples from the USB */
+    struct HackrfFrontend *hackrf; /**< Owned native libhackrf receive state. */
 } TRxFe;
 
 /* Functions */
