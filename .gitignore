@@ -1,5 +1,10 @@
 # CMake and compiled build artifacts
 /build/
+/ngene.exe
+/configuration/
+/otherData/
+/logs/
+/recordings/
 /cmake-build-*/
 CMakeFiles/
 CMakeCache.txt

@@ -105,8 +105,8 @@ C/N0 is in dB-Hz. These means cover nearly identical intervals rather than
 sample-by-sample equality. Weak PRN 25 was also acquired, with different lock
 histories in the two paths, and is excluded from this stable-channel comparison.
 
-Raw capture, reference/native logs, correlation logs and comparison CSV files
-are in the ignored `build/native-ab*` artifacts. This comparison validates the
+The original raw capture is retained as `recordings/native-ab.raw`.
+Temporary comparison logs and CSV files have been removed. This comparison validates the
 native input path and resulting PVT on this recording, not general equivalence
 under all signals or the stability of the USB transport.
 

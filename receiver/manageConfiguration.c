@@ -37,20 +37,7 @@
 #include "timeConversions.h"
 
 
-/*
- * La versione di ricevitore con cui sono creati i file di configurazione e' scritta
- * nel file otherData/rxver.dat
- *
- * All'avvio il ricevitore confronta rxver.dat installato nel sistema (/usr/share/ngene2/sampleConfigurationFiles/otherData/)
- * e quello usato dall'utente in ~/.ngene/otherData.
- *
- * - se il file installato e' più recente di quello usato dall'utente,
- *   il ricevitore si ferma e chiede di eseguire ngene2 -s
- * - altrimenti prosegue tutto normalmente
- *
- * Se il ricevitore e' compilato con la define DISABLE_CONFIGURATION_CHECK,
- * questo check viene saltato (usare per debug)
- **/
+/* Compare the active configuration version with the bundled template version. */
 
 
 /**
@@ -146,7 +133,7 @@ int ConfigurationFilesValid(TNGeneConfiguration *cfg)
 
 	// find the receiver version required by the current installation
 	// if not available the configuration folder is valid
-	sprintf(cfgFilename,"/usr/share/ngene2/sampleConfigurationFiles/otherData/%s",VERSION_INDEX_FILENAME);
+	sprintf(cfgFilename,"%s/sampleConfigurationFiles/otherData/%s",cfg->homePath,VERSION_INDEX_FILENAME);
 	fp = fopen(cfgFilename,"rb");
 	if(fp==NULL)
 	{
@@ -173,122 +160,6 @@ int ConfigurationFilesValid(TNGeneConfiguration *cfg)
 	return TRUE_FLAG;
 }
 #endif
-
-
-void CreateConfigurationFiles(TNGeneConfiguration *cfg)
-{
-	char command[5*MAX_ROW_LENGTH];
-	int overwriteChoice = 0;
-	char compressChoice = ' ';
-	char backupName[MAX_ROW_LENGTH];
-	TDateTime pcTime;
-
-	/* do not execute with sudo */
-	if(cfg->sudoer==TRUE_FLAG)
-	{
-		fprintf(stdout,"\n");
-		fprintf(stdout,"The setup of NGene must executed without root privileges\n");
-		fprintf(stdout,"The setup operation is skipped. NGene terminates now.\n");
-		CloseNGene(cfg,EXIT_FAILURE);
-	}
-
-	/* user choices when the configuration folder is already existing */
-	if(IsFolderExistent(cfg->configurationPath)==TRUE_FLAG)
-	{
-		// overwrite strategy
-		fprintf(stdout,"\n");
-		fprintf(stdout,"Configuration folder %s already existing in %s\n",GNSS_RX_CFGFOLDER,cfg->homePath);
-		fprintf(stdout,"Choose one of the following actions:\n");
-		fprintf(stdout,"1 Skip the setup and exit\n");
-		fprintf(stdout,"2 Save the configuration folder and perform setup\n");
-		fprintf(stdout,"3 Delete the configuration folder and perform setup\n");
-		do
-		{
-			fprintf(stdout,"Enter your choice (1,2,3): ");
-			fflush(stdout);
-			if(fgets(command,MAX_ROW_LENGTH,stdin)==NULL)
-				overwriteChoice = 0;
-			else
-				sscanf(command,"%d",&overwriteChoice);
-			if((overwriteChoice<1) || (overwriteChoice>3))
-				fprintf(stdout,"Invalid selection\n");
-		} while((overwriteChoice<1) || (overwriteChoice>3));
-		// terminate if required
-		if(overwriteChoice==1)
-		{
-			fprintf(stdout,"\n");
-			fprintf(stdout,"The setup operation is skipped. NGene terminates now.\n");
-			CloseNGene(cfg,EXIT_SUCCESS);
-		}
-		// compression choice
-		if(overwriteChoice==2)
-		{
-			fprintf(stdout,"\n");
-			fprintf(stdout,"Do you want to compress the backup?\n");
-			do
-			{
-				fprintf(stdout,"Enter your choice (y,n): ");
-				fflush(stdout);
-				if(fgets(command,MAX_ROW_LENGTH,stdin)==NULL)
-					compressChoice = ' ';
-				else
-					compressChoice = (char)tolower((int)command[0]);
-				if((compressChoice!='y') && (compressChoice!='n'))
-					fprintf(stdout,"Invalid selection\n");
-			} while((compressChoice!='y') && (compressChoice!='n'));
-		}
-	}
-
-	/* rename the current configuration folder */
-	if(overwriteChoice!=0)
-	{
-		GetPcTime(&pcTime);
-		sprintf(backupName,"%s_%04d%02d%02d_%02d%02d%02d",
-				GNSS_RX_CFGFOLDER,pcTime.year,pcTime.month,pcTime.day,pcTime.hour,pcTime.minute,(int)floor(pcTime.second));
-		sprintf(command,"mv %s/%s %s/%s",cfg->homePath,GNSS_RX_CFGFOLDER,cfg->homePath,backupName);
-		system(command);
-	}
-
-	/* Create the configuration folder in the home */
-	sprintf(command,"mkdir %s/%s", cfg->homePath, GNSS_RX_CFGFOLDER);
-	system(command);
-	/* copy the files from the installation folder */
-	sprintf(command,"cp -R /usr/share/ngene2/sampleConfigurationFiles/configuration %s/%s", cfg->homePath, GNSS_RX_CFGFOLDER);
-	system(command);
-	sprintf(command,"cp -R /usr/share/ngene2/sampleConfigurationFiles/otherData %s/%s", cfg->homePath, GNSS_RX_CFGFOLDER);
-	system(command);
-	sprintf(command,"cp -R /usr/share/ngene2/GUI %s/%s", cfg->homePath, GNSS_RX_CFGFOLDER);
-	system(command);
-	sprintf(command,"cp -R /usr/share/ngene2/matlabScripts %s/%s", cfg->homePath, GNSS_RX_CFGFOLDER);
-	system(command);
-	fprintf(stdout,"\n");
-	fprintf(stdout,"Configuration folder %s created in %s\n",GNSS_RX_CFGFOLDER,cfg->homePath);
-
-	/* manage the backup of the old folder */
-	if((overwriteChoice==2) && (compressChoice=='y'))
-	{
-		sprintf(command,"tar -czf %s/%s.tgz  -C %s  %s",cfg->homePath,backupName,cfg->homePath,backupName);
-		system(command);
-		sprintf(command,"rm -rf %s/%s",cfg->homePath,backupName);
-		system(command);
-		fprintf(stdout,"Old configuration folder saved in %s/%s.tgz\n",cfg->homePath,backupName);
-	}
-	else if(overwriteChoice==2) // && (compressChoice=='n')
-	{
-		fprintf(stdout,"Old configuration folder saved in %s/%s\n",cfg->homePath,backupName);
-	}
-
-	/* delete the old folder */
-	if(overwriteChoice==3)
-	{
-		sprintf(command,"rm -rf %s/%s",cfg->homePath,backupName);
-		system(command);
-	}
-
-	/* log to the user */
-	fprintf(stdout,"\nSetup finished. NGene terminates now.\n");
-	CloseNGene(cfg,EXIT_SUCCESS);
-}
 
 
 int ManageLogsConfiguration(TNGeneConfiguration *cfg)
@@ -448,8 +319,8 @@ int ParseConfigurationFiles(TNGeneConfiguration *cfg)
     /* check if the current configuration folder is valid, terminates if it must be updated! */
     if(ConfigurationFilesValid(cfg)==FALSE_FLAG)
     {
-    	SwrxLog(NGENE_LOG_SEVERITY_ERROR,"The current configuration folder %s is out-of-date!",GNSS_RX_CFGFOLDER);
-    	SwrxLog(NGENE_LOG_SEVERITY_ERROR,"Please update it executing <ngene2 -s>");
+        SwrxLog(NGENE_LOG_SEVERITY_ERROR,"The current configuration folder %s is out-of-date!",cfg->configurationPath);
+        SwrxLog(NGENE_LOG_SEVERITY_ERROR,"Update the settings using the templates in sampleConfigurationFiles.");
     	CloseNGene(cfg,EXIT_FAILURE);
     }
 	#endif
@@ -482,6 +353,7 @@ int ParseConfigurationFiles(TNGeneConfiguration *cfg)
 		SwrxLog(NGENE_LOG_SEVERITY_ERROR,"Error while parsing configuration file <%s>: tag <%s> not found",cfgFilename,tag);
 		CloseNGene(cfg,EXIT_FAILURE);
 	}
+    if (cfg->inputFileOverride) cfg->inputMethod = INPUT_FILE;
 	if(cfg->inputMethod==USB_FRONTEND)
 	{
 		cfg->sampleFilename = NULL;
@@ -491,7 +363,14 @@ int ParseConfigurationFiles(TNGeneConfiguration *cfg)
 	{
 		cfg->inputMethod = INPUT_FILE;
 		strcpy(tag, "Input file");
-		if(GetVal(cfgFilename,tag,(void *)string,F_STRING,1) == FAILURE_RETURN)
+        if (cfg->inputFileOverride) {
+            if (strlen(cfg->inputFileOverride) >= sizeof(string)) {
+                SwrxLog(NGENE_LOG_SEVERITY_ERROR,"Input file path is too long");
+                CloseNGene(cfg,EXIT_FAILURE);
+            }
+            strcpy(string,cfg->inputFileOverride);
+        }
+		else if(GetVal(cfgFilename,tag,(void *)string,F_STRING,1) == FAILURE_RETURN)
 		{
 			SwrxLog(NGENE_LOG_SEVERITY_ERROR,"Error while parsing configuration file <%s>: tag <%s> not found",cfgFilename,tag);
 			CloseNGene(cfg,EXIT_FAILURE);

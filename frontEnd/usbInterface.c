@@ -26,6 +26,17 @@
 #include "signalHandler.h"
 #include <time.h>
 
+#ifdef NGENE_USB_TEST_IO
+int LIBUSB_CALL __wrap_libusb_handle_events_timeout(libusb_context *, struct timeval *);
+int LIBUSB_CALL __wrap_libusb_submit_transfer(struct libusb_transfer *);
+int LIBUSB_CALL __wrap_libusb_control_transfer(libusb_device_handle *,uint8_t,uint8_t,uint16_t,uint16_t,unsigned char *,uint16_t,unsigned int);
+int LIBUSB_CALL __wrap_libusb_cancel_transfer(struct libusb_transfer *);
+#define libusb_handle_events_timeout __wrap_libusb_handle_events_timeout
+#define libusb_submit_transfer __wrap_libusb_submit_transfer
+#define libusb_control_transfer __wrap_libusb_control_transfer
+#define libusb_cancel_transfer __wrap_libusb_cancel_transfer
+#endif
+
 static void RecordUsbServiceGap(double *lastTime, double *maximumGap)
 {
     struct timespec now;
@@ -136,7 +147,7 @@ void OpenUsbDevice(TUsbFe *usbFe, libusb_device *pUsbDev, libusb_device_handle *
 	    return;
 	}
     }
-#if defined(__CYGWIN__) && LIBUSB_API_VERSION >= 0x0100010C
+#if defined(NGENE_NATIVE_WINDOWS) && LIBUSB_API_VERSION >= 0x0100010C
     /* FX2 FIFO streaming requires reads queued directly to the Windows driver. */
     returnValue = libusb_endpoint_supports_raw_io(*ppUDH, usbFe->endpoint);
     if (returnValue == 1) {

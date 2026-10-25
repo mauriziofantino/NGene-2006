@@ -17,18 +17,39 @@ of the classic receiver unless a specific correction requires otherwise.
 - `utilityGnss/` contains GNSS-specific navigation and signal utilities.
 - `frontEnd/` and `asmFolder/` contain front-end interfaces and optimized signal code.
 - `osnma/` and `chimera/` contain authentication-related code.
-- `sampleConfigurationFiles/` contains example configuration and supporting data.
+- `configuration/` contains the active receiver settings beside `ngene.exe`.
+- `otherData/` contains the active supporting data; output goes into `logs/`.
+- `sampleConfigurationFiles/` contains the templates used on the first build.
 - `libraries/` contains bundled dependencies.
 
 ## Build
 
-For the incremental SiGe-only Windows x64 build, see [Windows instructions](docs/WINDOWS.md).
-It uses Cygwin GCC to retain the classic POSIX and assembly implementation.
+This package builds only native Windows x64 with Visual Studio clang-cl, Microsoft
+SDK and runtime. Install Visual Studio's C++ x64, Windows SDK, Clang and CMake
+components once. From PowerShell in this folder:
 
-The source tree includes CMake and Autotools build descriptions. Consult the selected
-build system and the platform's dependency documentation before building. The receiver
-uses system libraries such as ncurses; bundled components may have their own build or
-license requirements.
+```powershell
+.\build.cmd          # Compile, prepare dependencies and run tests
+.\clean.cmd          # Clean compiled outputs without rebuilding
+.\build.cmd clean    # Clean compiled objects, then rebuild and run tests
+.\run.cmd            # Start the receiver with its configured input (USB by default)
+```
+
+The build downloads and compiles its dependencies automatically. The executable is
+**`ngene.exe` in this folder**. The main configuration is always
+**`configuration/GNSS_RX.conf` beside the executable**. No environment variables or
+user home directories select a different configuration. Builds preserve existing
+settings; `sampleConfigurationFiles/` is used only to fill missing files.
+
+To process the existing workspace recording without changing USB settings:
+
+```powershell
+.\run.cmd --input recordings\native-ab.raw
+```
+
+For textual output, add `-t -v`. The recording is a local test artifact and is not
+included in a fresh source checkout. See [Windows instructions](docs/WINDOWS.md)
+for configuration details and [verification](docs/VERIFICATION.md) for checks.
 
 ## Coding conventions and status
 

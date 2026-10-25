@@ -11,6 +11,7 @@
  */
 
 #include <stdio.h>
+#include <string.h>
 #include <unistd.h>
 #include <sys/stat.h>
 #include "ngeneConstants.h"
@@ -48,7 +49,18 @@ int GetFilenameFromFilePointer(FILE *fp,char *filename)
 		return FALSE_FLAG;
 	}
 
-	// read file descriptor and use to address the file in proc
+#ifdef NGENE_NATIVE_WINDOWS
+    {
+        HANDLE handle=(HANDLE)_get_osfhandle(_fileno(fp));
+        DWORD count=GetFinalPathNameByHandleA(handle,outPath,sizeof(outPath),FILE_NAME_NORMALIZED);
+        char *last;
+        if (!count || count>=sizeof(outPath)) return FALSE_FLAG;
+        last=strrchr(outPath,'\\');
+        snprintf(filename,MAX_ROW_LENGTH,"%s",last ? last+1 : outPath);
+        return TRUE_FLAG;
+    }
+#else
+    // read file descriptor and use to address the file in proc
 	sprintf(tmpPath,"/proc/self/fd/%d",fileno(fp));
 	// get the complete path of the target file
 	len = readlink(tmpPath, outPath, MAX_ROW_LENGTH-1);
@@ -68,4 +80,5 @@ int GetFilenameFromFilePointer(FILE *fp,char *filename)
 	// output
 	sprintf(filename,"%s",&(outPath[idx]));
 	return TRUE_FLAG;
+#endif
 }

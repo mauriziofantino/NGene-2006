@@ -16,15 +16,27 @@
 #include <stdlib.h>
 
 #include <sys/types.h>
+#ifndef NGENE_NATIVE_WINDOWS
 #include <sys/socket.h>
-#ifdef __CYGWIN__
-#include "../platform/cygwin_sendfile.h"
-#define sendfile NgCygwinSendfile
-#else
 #include <sys/sendfile.h>
-#endif
 #include <netinet/in.h>
 #include <netdb.h>
+#endif
+
+#ifdef NGENE_NATIVE_WINDOWS
+typedef SOCKET NgCommSocket;
+#define NG_SOCKET_READ NgSocketRead
+#define NG_SOCKET_WRITE NgSocketWrite
+#define NG_SOCKET_CLOSE closesocket
+#define NG_INVALID_SOCKET INVALID_SOCKET
+#define sendfile NgSocketSendfile
+#else
+typedef int NgCommSocket;
+#define NG_SOCKET_READ read
+#define NG_SOCKET_WRITE write
+#define NG_SOCKET_CLOSE close
+#define NG_INVALID_SOCKET (-1)
+#endif
 
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -116,8 +128,13 @@ boolean histogram_on = COMM_F;
 ///////////////////////// Socket communication definitions /////////////////////////
 
 pthread_mutex_t	sock_mutex = PTHREAD_MUTEX_INITIALIZER;
-int sockfd, newsockfd, portno;
+NgCommSocket sockfd, newsockfd;
+int portno;
+#ifdef NGENE_NATIVE_WINDOWS
+int clilen;
+#else
 unsigned int clilen;
+#endif
 struct sockaddr_in serv_addr, cli_addr;
 struct hostent *host_remote;
 
@@ -518,7 +535,7 @@ enum ComStatus_t get_status (void) {
   return mystatus;
 };
 
-int read_msg (int sockfd, msg_t *msg) {
+int read_msg (NgCommSocket sockfd, msg_t *msg) {
 
   unsigned char buffer_rx[RX_BUFFER_LEN];
   unsigned int checksum = 0;
@@ -562,7 +579,7 @@ int read_msg (int sockfd, msg_t *msg) {
 #endif
 
   /** read datalen */
-  n = read (sockfd, &(buffer_rx[3]), 8);
+  n = NG_SOCKET_READ (sockfd, &(buffer_rx[3]), 8);
   if (n != 8)
     return (-5);
 
@@ -599,14 +616,24 @@ int read_msg (int sockfd, msg_t *msg) {
   minByteOpt = (unsigned int)(msg->len + 4);
   timeout.tv_sec = 1;
   timeout.tv_usec = 0;
+#ifdef NGENE_NATIVE_WINDOWS
+  { DWORD timeoutMs = 1000;
+    setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, (const char *)&timeoutMs, sizeof(timeoutMs)); }
+#else
   setsockopt(sockfd, SOL_SOCKET, SO_RCVLOWAT, &minByteOpt, 4);
   setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(struct timeval));
-  n = read (sockfd, &(buffer_rx[11]), (unsigned int)(msg->len + 4));
+#endif
+  n = NG_SOCKET_READ (sockfd, &(buffer_rx[11]), (unsigned int)(msg->len + 4));
   minByteOpt = 1;
   timeout.tv_sec = 0;
   timeout.tv_usec = 0;
+#ifdef NGENE_NATIVE_WINDOWS
+  { DWORD timeoutMs = 0;
+    setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, (const char *)&timeoutMs, sizeof(timeoutMs)); }
+#else
   setsockopt(sockfd, SOL_SOCKET, SO_RCVLOWAT, &minByteOpt, 4);
   setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(struct timeval));
+#endif
 
   if ((unsigned long long)n != msg->len + 4)
     return (-7);
@@ -690,8 +717,11 @@ void *rx_pthread_func (void *ptr) {
   /**
    *  initialize rx socket
    */
+#ifdef NGENE_NATIVE_WINDOWS
+  if (NgSocketInit() != 0) return NULL;
+#endif
   sockfd = socket (AF_INET, SOCK_STREAM, 0);
-  if (sockfd < 0) {
+  if (sockfd == NG_INVALID_SOCKET) {
 #ifdef _COMM_MODULE_DEBUG
     fprintf(stdout, "ERROR opening rx socket\n");
 #endif
@@ -733,7 +763,7 @@ void *rx_pthread_func (void *ptr) {
 #endif
 
     newsockfd = accept (sockfd, (struct sockaddr *) &cli_addr, &clilen);
-    if (newsockfd < 0) {
+    if (newsockfd == NG_INVALID_SOCKET) {
 
 #ifdef _COMM_MODULE_DEBUG
       fprintf(stdout, "***** ERROR ON RX ACCEPT *****\n");
@@ -869,7 +899,7 @@ void *rx_pthread_func (void *ptr) {
 #ifdef _COMM_MODULE_DEBUG
        fprintf(stdout, "Closing connection\n");
 #endif
-       close(newsockfd);
+       NG_SOCKET_CLOSE(newsockfd);
        newsockfd = 0;
     }
 
@@ -961,7 +991,7 @@ int commit_ack (msg_t *msg) {
   buffer[15] = (unsigned char) ((checksum & 0x000000FF));
 
   pthread_mutex_lock (&sock_mutex);
-  write (newsockfd, buffer, 16);
+  NG_SOCKET_WRITE (newsockfd, buffer, 16);
   pthread_mutex_unlock (&sock_mutex);
 
   return 0;
@@ -1022,7 +1052,7 @@ int commit_nack (msg_t *msg) {
   buffer[15] = (unsigned char) ((checksum & 0x000000FF));
 
   pthread_mutex_lock (&sock_mutex);
-  write (newsockfd, buffer, 16);
+  NG_SOCKET_WRITE (newsockfd, buffer, 16);
   pthread_mutex_unlock (&sock_mutex);
 
   return 0;
@@ -1104,7 +1134,7 @@ int commit_data () {
 
   if (buffer) {
     pthread_mutex_lock (&sock_mutex);
-    write (newsockfd, buffer, bufferlen);
+    NG_SOCKET_WRITE (newsockfd, buffer, bufferlen);
     pthread_mutex_unlock (&sock_mutex);
   }
 
@@ -1189,7 +1219,7 @@ int commit_spectrum () {
 
   if (buffer) {
     pthread_mutex_lock (&sock_mutex);
-    write (newsockfd, buffer, bufferlen);
+    NG_SOCKET_WRITE (newsockfd, buffer, bufferlen);
     pthread_mutex_unlock (&sock_mutex);
 
     // AM
@@ -1276,7 +1306,7 @@ int commit_histogram () {
 
   if (buffer) {
     pthread_mutex_lock (&sock_mutex);
-    write (newsockfd, buffer, bufferlen);
+    NG_SOCKET_WRITE (newsockfd, buffer, bufferlen);
     pthread_mutex_unlock (&sock_mutex);
 
     // AM
@@ -1364,7 +1394,7 @@ int commit_ephemeris () {
 
   if (buffer) {
     pthread_mutex_lock (&sock_mutex);
-    write (newsockfd, buffer, bufferlen);
+    NG_SOCKET_WRITE (newsockfd, buffer, bufferlen);
     pthread_mutex_unlock (&sock_mutex);
   }
 
@@ -1387,7 +1417,11 @@ int commit_file (char *filename, int filetype) {
   unsigned long tmpLen = 0;
 
   struct stat filestatus;
+#ifdef NGENE_NATIVE_WINDOWS
+  int64_t offset = 0;
+#else
   off_t offset = 0;
+#endif
 
   int fid;
 
@@ -1399,7 +1433,11 @@ int commit_file (char *filename, int filetype) {
    *  send file to socket
    */
 
+#ifdef NGENE_NATIVE_WINDOWS
+  fid = _open (filename, _O_RDONLY | _O_BINARY);
+#else
   fid = open (filename, O_RDONLY);
+#endif
   if (fid<0) return (-1);
 
   if (fstat (fid, &filestatus) < 0) return (-2);
@@ -1473,7 +1511,7 @@ int commit_file (char *filename, int filetype) {
   printf("\n");
 #endif
 
-  write (newsockfd, buffer, 11);
+  NG_SOCKET_WRITE (newsockfd, buffer, 11);
 
   /** Send file (payload) */
   sendfile (newsockfd, fid, &offset, filelen);
@@ -1504,7 +1542,7 @@ int commit_file (char *filename, int filetype) {
   buffer[13]  = (unsigned char) ((checksum & 0x0000FF00) >> 8);
   buffer[14] = (unsigned char) ((checksum & 0x000000FF));
 
-  write (newsockfd, &(buffer[11]), 4);
+  NG_SOCKET_WRITE (newsockfd, &(buffer[11]), 4);
 
 #ifdef _COMM_MODULE_DEBUG
   fprintf(stdout, "checksum sent\n");

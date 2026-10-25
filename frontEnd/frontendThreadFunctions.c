@@ -17,7 +17,6 @@
 #include <sched.h>
 #include <string.h>
 #include <unistd.h>
-#include <sys/msg.h>
 #include <errno.h>
 #include "frontendThreadFunctions.h"
 #include "usbInterface.h"
@@ -95,7 +94,11 @@ void *UsbFrontEndThreadFunction(TFrontEndThreadFunctionParameters *frontEndThrea
 
     /* Adjust the CPU index
        The maximum value for the CPU index is the number of available CPUs -1 */
+#ifdef NGENE_NATIVE_WINDOWS
+    { SYSTEM_INFO info; GetSystemInfo(&info); numCpus=(int)info.dwNumberOfProcessors; }
+#else
     numCpus = sysconf(_SC_NPROCESSORS_ONLN);
+#endif
     if (DEFAULT_INDEX_CPU >= numCpus) {
 	indexCpu = numCpus - 1;
 	SwrxLog(NGENE_LOG_SEVERITY_WARNING, "CPU index %d not available; pthread_setaffinity_np will use CPU index %d instead", DEFAULT_INDEX_CPU, indexCpu);
@@ -154,6 +157,18 @@ void *UsbFrontEndThreadFunction(TFrontEndThreadFunctionParameters *frontEndThrea
 
 void SetCpuPriorityAndPolicy(int indexCpu, int policy, int priority)
 {
+#ifdef NGENE_NATIVE_WINDOWS
+    DWORD_PTR available, systemMask;
+    (void)policy; (void)priority;
+    if (indexCpu>=0 && indexCpu<(int)(sizeof(DWORD_PTR)*8) &&
+        GetProcessAffinityMask(GetCurrentProcess(),&available,&systemMask) &&
+        (available&((DWORD_PTR)1<<indexCpu))) {
+        if (!SetThreadAffinityMask(GetCurrentThread(),(DWORD_PTR)1<<indexCpu))
+            SwrxLog(NGENE_LOG_SEVERITY_INFO,"Unsuccessful in setting Windows thread affinity (%lu)",GetLastError());
+    }
+    if (!SetThreadPriority(GetCurrentThread(),THREAD_PRIORITY_ABOVE_NORMAL))
+        SwrxLog(NGENE_LOG_SEVERITY_INFO,"Unsuccessful in setting Windows thread priority (%lu)",GetLastError());
+#else
     pthread_t this_thread;
     struct sched_param params;
     cpu_set_t cpuset;
@@ -173,5 +188,6 @@ void SetCpuPriorityAndPolicy(int indexCpu, int policy, int priority)
     if (ret != 0) {
 	SwrxLog(NGENE_LOG_SEVERITY_INFO, "Unsuccessful in setting thread priority and policy");
     }
+#endif
 
 }

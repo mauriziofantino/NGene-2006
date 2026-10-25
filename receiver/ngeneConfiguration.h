@@ -193,6 +193,7 @@ typedef struct NGeneConfigurationStruct
 	int sigeNativeIq;                           /**< Native marker-tagged SiGe I/Q input; no real-IF conditioning. */
 	double sigeIqIntermediateFrequency;         /**< Native complex IF in Hz (Colorado nominal value: 38400). */
 	char *sampleFilename;		                /**< Path of the input samples file */
+    const char *inputFileOverride;              /**< Optional --input argument; does not change the configuration file. */
 	int numberOfGpsChannels;					/**< Number of GPS channels */
 	int numberOfGalileoChannels;				/**< Number of Galileo channels */
 	int numberOfEgnosChannels;					/**< Number of EGNOS channels */

@@ -50,110 +50,25 @@
 
 void PreparePaths(TNGeneConfiguration *cfg, TNGeneData *rx)
 {
-    // info extracted from the environment variables
-    char *sudoUser;
-    int sudoUserValid = TRUE_FLAG;
-    char *user;
-    int userValid = TRUE_FLAG;
-    char *homeFolder;
-    int homeFolderValid = TRUE_FLAG;
-    // current folder folder from getcwd
-    char currFolder[MAX_ROW_LENGTH];
-    int currFolderValid = TRUE_FLAG;
-    // to manage the folder for the logs
+    const char *homeFolder = NgNativeHome();
     char cfgFilename[MAX_ROW_LENGTH];
     char tag[MAX_TAG_LEN];
     int parseReturn;
-    // filename for the log
     char logFilename[MAX_ROW_LENGTH];
 
-    // init all the useful variables
-    sudoUser = getenv("SUDO_USER");
-    if (sudoUser == NULL) {
-	sudoUserValid = FALSE_FLAG;
-	cfg->sudoer = FALSE_FLAG;
-    } else {
-	cfg->sudoer = TRUE_FLAG;
+    if (!homeFolder || strlen(homeFolder) + 32 >= MAX_ROW_LENGTH) {
+        fprintf(stderr, "Cannot determine the folder containing ngene.exe.\n");
+        exit(EXIT_FAILURE);
     }
-    user = getenv("USER");
-    if (user == NULL) {
-	userValid = FALSE_FLAG;
-    }
-    homeFolder = getenv("HOME");
-    if (homeFolder == NULL) {
-	homeFolderValid = FALSE_FLAG;
-    }
-    if (getcwd(currFolder, MAX_ROW_LENGTH) == NULL) {
-	currFolderValid = FALSE_FLAG;
-    }
-    // feedback for the folders
-    if (cfg->verbose) {
-	fprintf(stdout, "\n");
-	if (sudoUserValid)
-	    fprintf(stdout, "sudo user:   <%s>     len: %lu\n", sudoUser, (long unsigned int) strlen(sudoUser));
-	else
-	    fprintf(stdout, "sudo user:   N.A.\n");
-	//
-	if (userValid)
-	    fprintf(stdout, "user:        <%s>     len: %lu\n", user, (long unsigned int) strlen(user));
-	else
-	    fprintf(stdout, "user:        N.A.\n");
-	//
-	if (homeFolderValid)
-	    fprintf(stdout, "home folder: <%s>     len: %lu\n", homeFolder, (long unsigned int) strlen(homeFolder));
-	else
-	    fprintf(stdout, "home folder: N.A.\n");
-	//
-	if (currFolderValid)
-	    fprintf(stdout, "folder:      <%s>     len: %lu\n", currFolder, (long unsigned int) strlen(currFolder));
-	else
-	    fprintf(stdout, "folder:      N.A.\n");
-	fprintf(stdout, "\n");
-    }
-
-    /* initialize the folders in the configuration structures */
-    if (sudoUserValid == TRUE_FLAG) {
-	sprintf(cfg->homePath, "/home/%s", sudoUser);
-	sprintf(cfg->configurationPath, "/home/%s/%s/configuration/", sudoUser, GNSS_RX_CFGFOLDER);
-	sprintf(cfg->otherDataPath, "/home/%s/%s/otherData/", sudoUser, GNSS_RX_CFGFOLDER);
-    } else if (homeFolderValid == TRUE_FLAG) {
-	sprintf(cfg->homePath, "%s", homeFolder);
-	sprintf(cfg->configurationPath, "%s/%s/configuration/", homeFolder, GNSS_RX_CFGFOLDER);
-	sprintf(cfg->otherDataPath, "%s/%s/otherData/", homeFolder, GNSS_RX_CFGFOLDER);
-    } else if (userValid == TRUE_FLAG) {
-	sprintf(cfg->homePath, "/home/%s", user);
-	sprintf(cfg->configurationPath, "/home/%s/%s/configuration/", user, GNSS_RX_CFGFOLDER);
-	sprintf(cfg->otherDataPath, "/home/%s/%s/otherData/", user, GNSS_RX_CFGFOLDER);
-    } else {
-	// Error: feedback and termination
-	if (sudoUserValid)
-	    fprintf(stdout, "sudo user:   <%s>     len: %lu\n", sudoUser, (long unsigned int) strlen(sudoUser));
-	else
-	    fprintf(stdout, "sudo user:   N.A.\n");
-	//
-	if (userValid)
-	    fprintf(stdout, "user:        <%s>     len: %lu\n", user, (long unsigned int) strlen(user));
-	else
-	    fprintf(stdout, "user:        N.A.\n");
-	//
-	if (homeFolderValid)
-	    fprintf(stdout, "home folder: <%s>     len: %lu\n", homeFolder, (long unsigned int) strlen(homeFolder));
-	else
-	    fprintf(stdout, "home folder: N.A.\n");
-	//
-	if (currFolderValid)
-	    fprintf(stdout, "folder:      <%s>     len: %lu\n", currFolder, (long unsigned int) strlen(currFolder));
-	else
-	    fprintf(stdout, "folder:      N.A.\n");
-	fprintf(stdout, "\n");
-	fprintf(stderr, "Cannot find the name of the folder containing the configuration files. Exit...\n");
-	exit(EXIT_FAILURE);
-    }
+    cfg->sudoer = FALSE_FLAG;
+    snprintf(cfg->homePath, sizeof(cfg->homePath), "%s", homeFolder);
+    snprintf(cfg->configurationPath, sizeof(cfg->configurationPath), "%s/configuration/", homeFolder);
+    snprintf(cfg->otherDataPath, sizeof(cfg->otherDataPath), "%s/otherData/", homeFolder);
 
     /* check if the configuration folder does exist (only when -s is not specified) */
     if ((IsFolderExistent(cfg->configurationPath) == FALSE_FLAG) || (IsFolderExistent(cfg->otherDataPath) == FALSE_FLAG)){
-	fprintf(stderr, "The folder %s/.ngene does not exist or is incomplete\n", cfg->homePath);
-	fprintf(stderr, "reinstall ngene or manually fix the proper configuration folder\n");
+	fprintf(stderr, "Required folders are missing: %s and %s\n", cfg->configurationPath, cfg->otherDataPath);
+	fprintf(stderr, "Run build.cmd to prepare the configuration and data beside ngene.exe.\n");
 	exit(EXIT_FAILURE);
     }
 
@@ -167,11 +82,17 @@ void PreparePaths(TNGeneConfiguration *cfg, TNGeneData *rx)
     if ((parseReturn == SUCCESS_RETURN) && (IsFolderExistent(cfg->dumpPath) == FALSE_FLAG)) {
 	parseReturn = FAILURE_RETURN;
     }
-    // if needed, use the current folder
-    if ((parseReturn == FAILURE_RETURN) && (currFolderValid == TRUE_FLAG)) {
-	strcpy(cfg->dumpPath, currFolder);
-    } else if (parseReturn == FAILURE_RETURN) {
-	strcpy(cfg->dumpPath, ".");
+    /* Default logs have a fixed location beside the executable too. */
+    if (parseReturn == FAILURE_RETURN) {
+        if (strlen(homeFolder) + 6 >= sizeof(cfg->dumpPath)) {
+            fprintf(stderr, "The default log path is too long. Set Dump Path in configuration/Logs.conf.\n");
+            exit(EXIT_FAILURE);
+        }
+        snprintf(cfg->dumpPath, sizeof(cfg->dumpPath), "%s/logs", homeFolder);
+        if (!CreateDirectoryA(cfg->dumpPath, NULL) && GetLastError() != ERROR_ALREADY_EXISTS) {
+            fprintf(stderr, "Cannot create log folder %s (Windows error %lu).\n", cfg->dumpPath, GetLastError());
+            exit(EXIT_FAILURE);
+        }
     }
     // else dumpPath already contains the folder!
     // set the current dumpPath

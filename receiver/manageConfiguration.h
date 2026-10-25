@@ -24,14 +24,6 @@
  */
 //#define DISABLE_CONFIGURATION_CHECK
 
-/**
- * @brief Copies the configuration folder from the installation directory to the current home folder.
- *
- * @param cfg points to the receiver configuration
- */
-void CreateConfigurationFiles(TNGeneConfiguration *cfg);
-
-
 #ifndef DISABLE_CONFIGURATION_CHECK
 /**
  * @brief Checks whether the configuration folder is updated or not.

@@ -1,27 +1,23 @@
 cmake_minimum_required(VERSION 3.20)
 project(ngene VERSION 1.0 LANGUAGES C)
 
-# Preserve the GNU inline assembly and POSIX data model of the classic receiver.
-if(WIN32 AND NOT CYGWIN)
-    message(FATAL_ERROR "Use Cygwin x64 GCC for Windows; see docs/WINDOWS.md. MSVC/MinGW are not supported by this increment.")
+if(NOT WIN32 OR CYGWIN OR MINGW OR NOT MSVC OR NOT CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    message(FATAL_ERROR "This package builds only native Windows x64 with Visual Studio clang-cl. Run build.cmd.")
 endif()
-if(NOT CMAKE_C_COMPILER_ID STREQUAL "GNU" OR NOT CMAKE_SIZEOF_VOID_P EQUAL 8
-   OR NOT CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64|amd64")
-    message(FATAL_ERROR "The classic SIMD implementation requires x86_64 GCC.")
+set(NGENE_NATIVE_WINDOWS ON)
+set(CMAKE_MSVC_RUNTIME_LIBRARY MultiThreaded)
+if(NOT CMAKE_SIZEOF_VOID_P EQUAL 8 OR NOT CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64|amd64")
+    message(FATAL_ERROR "The classic SIMD implementation requires x86_64.")
 endif()
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS ON)
 # The historical SIMD macros do not declare register clobbers. Keep optimization
 # off in this preservation build; enabling it needs a separate DSP validation.
-add_compile_options(-O0 -msse2 -mfpmath=sse -fno-tree-vectorize -Wall -Wextra)
-add_compile_definitions(_GNU_SOURCE _FILE_OFFSET_BITS=64)
-if(CYGWIN)
-    # libusb 1.0.21 includes windows.h: keep RPC's boolean out of the GUI ABI.
-    add_compile_definitions(WIN32_LEAN_AND_MEAN NOMINMAX)
-endif()
-set(THREADS_PREFER_PTHREAD_FLAG ON)
-find_package(Threads REQUIRED)
+add_compile_options(/Od /W3 /clang:-fno-vectorize /clang:-fno-slp-vectorize)
+add_compile_definitions(NGENE_NATIVE_WINDOWS WIN32_LEAN_AND_MEAN NOMINMAX
+    _CRT_SECURE_NO_WARNINGS _CRT_NONSTDC_NO_DEPRECATE _USE_MATH_DEFINES)
+include(platform/windows/native_dependencies.cmake)
 
 include_directories(
     ${PROJECT_SOURCE_DIR}/secure
@@ -41,18 +37,10 @@ include_directories(
     ${PROJECT_SOURCE_DIR}/libraries/libfec  # Correct inclusion of libfec
 )
 
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(SSL REQUIRED IMPORTED_TARGET openssl)
+add_subdirectory(libraries/libusb)
+add_library(PkgConfig::USB ALIAS ngene_usb)
 
-if(CYGWIN)
-    add_subdirectory(libraries/libusb)
-    add_library(PkgConfig::USB ALIAS ngene_usb)
-else()
-    pkg_check_modules(USB REQUIRED IMPORTED_TARGET libusb-1.0)
-endif()
-pkg_check_modules(NCURSES REQUIRED IMPORTED_TARGET ncurses)
-
-# Add all necessary source files from Makefile.am
+# Receiver sources. Signal-processing algorithms retain their existing code.
 add_executable(ngene
     receiver/ngene.c
     receiver/manageConfiguration.c
@@ -152,20 +140,17 @@ add_executable(ngene
 
 # Build the bundled Reed-Solomon code used by NGene from source. Never link the
 # Linux archive shipped in the old source tree into the Windows executable.
-add_library(ngene_fec STATIC
-    libraries/libfec/init_rs_char.c
-    libraries/libfec/encode_rs_char.c
-    libraries/libfec/decode_rs_char.c)
-target_include_directories(ngene_fec PUBLIC libraries/libfec)
+add_subdirectory(libraries/libfec)
 target_link_libraries(ngene PRIVATE ngene_fec PkgConfig::SSL PkgConfig::USB
-    PkgConfig::NCURSES Threads::Threads m)
+    PkgConfig::NCURSES Threads::Threads)
+target_link_libraries(ngene PRIVATE ngene_windows)
 
 option(NGENE_RX_PROFILING "Measure receiver processing stages and replay throughput" OFF)
 if(NGENE_RX_PROFILING)
     target_compile_definitions(ngene PRIVATE RX_PROFILING)
 endif()
 
-install(TARGETS ngene RUNTIME DESTINATION bin)
+install(TARGETS ngene RUNTIME DESTINATION .)
 install(DIRECTORY sampleConfigurationFiles/ DESTINATION .)
 
 option(NGENE_BUILD_PLATFORM_CHECKS "Build USB/platform diagnostic tools" OFF)
@@ -185,13 +170,16 @@ if(NGENE_BUILD_PLATFORM_CHECKS)
     add_test(NAME usb_error_paths COMMAND ngene_check_usb)
     add_executable(ngene_check_usb_stream tools/check_usb_stream.c frontEnd/usbInterface.c)
     target_link_libraries(ngene_check_usb_stream PRIVATE PkgConfig::USB Threads::Threads)
-    target_link_options(ngene_check_usb_stream PRIVATE
-        -Wl,--wrap=libusb_handle_events_timeout -Wl,--wrap=libusb_submit_transfer
-        -Wl,--wrap=libusb_control_transfer -Wl,--wrap=libusb_cancel_transfer)
+    target_compile_definitions(ngene_check_usb_stream PRIVATE NGENE_USB_TEST_IO)
     add_test(NAME usb_stream_shutdown_restart COMMAND ngene_check_usb_stream)
     set_tests_properties(usb_stream_shutdown_restart PROPERTIES TIMEOUT 10)
-    if(CYGWIN)
-        add_executable(ngene_check_sendfile tools/check_cygwin_sendfile.c)
-        add_test(NAME cygwin_gui_file_copy COMMAND ngene_check_sendfile)
+    if(NGENE_NATIVE_WINDOWS)
+        add_executable(ngene_check_windows tools/check_native_windows.c)
+        target_link_libraries(ngene_check_windows PRIVATE ngene_windows)
+        add_test(NAME native_windows_platform COMMAND ngene_check_windows)
+        set_tests_properties(native_windows_platform PROPERTIES TIMEOUT 10)
+        foreach(check ngene_usb_probe ngene_check_sige ngene_check_native_iq ngene_check_usb ngene_check_usb_stream)
+            target_link_libraries(${check} PRIVATE ngene_windows)
+        endforeach()
     endif()
 endif()

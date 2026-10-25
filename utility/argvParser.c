@@ -40,6 +40,7 @@ int HandleCmdLine(int argc, char *argv[], TNGeneConfiguration *cfg)
     		{"version", 0,0,'V'},
     		{"textual", 0, 0, 't'},
     		{"ncurses", 0, 0, 'n'},
+            {"input", 1, 0, 'i'},
     		{"port", 1, 0, 'p'},
     		{"googleEarth", 1, 0, 'g'},
     		{"logfile", 1, 0, 'l'},
@@ -52,6 +53,7 @@ int HandleCmdLine(int argc, char *argv[], TNGeneConfiguration *cfg)
     		"Print the actual version of NGene receiver.",
     		"Use the textual interface (No GUI).",
     		"Use the ncurses terminal interface.",
+            "Process the specified recording instead of USB (configuration unchanged).",
     		"Set the COM port for the communication with the GUI (default 4999).",
     		"Record the receiver output as a GoogleEarth file.",
     		"Log all the operation a logging file.",
@@ -73,10 +75,11 @@ int HandleCmdLine(int argc, char *argv[], TNGeneConfiguration *cfg)
     cfg->googleEarthFilenameValid = FALSE_FLAG;
     cfg->verbose = FALSE_FLAG;
     cfg->configurationValid = FALSE_FLAG;
+    cfg->inputFileOverride = NULL;
     /* Parse options */
     while (1)
     {
-    	i = getopt_long(argc, argv, "Vtnp:g:l:vcrh", opts, NULL);	// This line has to be modified to handle an optional parameter
+        i = getopt_long(argc, argv, "Vtni:p:g:l:vcrh", opts, NULL);
     	if(i == -1)
     	{
     		break;
@@ -98,6 +101,9 @@ int HandleCmdLine(int argc, char *argv[], TNGeneConfiguration *cfg)
     		case 'p':
     			sscanf(optarg, "%u", &cfg->guiComPort);
     			break;
+            case 'i':
+                cfg->inputFileOverride = optarg;
+                break;
     		case 'g':
     			// Get the googleEarth file name
     			cfg->googleEarthFilename[0] = '\0';

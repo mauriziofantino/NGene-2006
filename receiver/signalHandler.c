@@ -21,7 +21,9 @@
 #include "ngeneConstants.h"
 #include "signalHandler.h"
 
+#ifndef NGENE_NATIVE_WINDOWS
 struct sigaction action;	///< The receiver must be able to catch a signal
+#endif
 
 /** Mutex for the status variable */
 extern pthread_mutex_t status_mutex;
@@ -34,10 +36,36 @@ static TNGeneConfiguration *signalHandlerCfg;
 static int *signalHandlerRun;
 volatile sig_atomic_t ngeneStopRequested = 0;
 
+#ifdef NGENE_NATIVE_WINDOWS
+static BOOL WINAPI NgConsoleHandler(DWORD event)
+{
+    if (event != CTRL_C_EVENT && event != CTRL_BREAK_EVENT &&
+        event != CTRL_CLOSE_EVENT && event != CTRL_SHUTDOWN_EVENT) return FALSE;
+    ngeneStopRequested = 1;
+    if (signalHandlerRun) InterlockedExchange((LONG *)signalHandlerRun, FALSE_FLAG);
+    /* A console callback runs on a Windows thread, not in a CRT signal
+     * context. Wake the GUI startup wait as well as the receiver loop. */
+    if (signalHandlerCfg && signalHandlerCfg->userInterface == RX_UI_GUI) {
+        pthread_mutex_lock(&status_mutex);
+        status = EXITING;
+        pthread_cond_broadcast(&status_cond);
+        pthread_mutex_unlock(&status_mutex);
+    }
+    return TRUE;
+}
+#endif
+
 
 void StartListeningSignals(TNGeneConfiguration *cfg,int *run)
 {
     ngeneStopRequested = 0;
+#ifdef NGENE_NATIVE_WINDOWS
+    signalHandlerRun = run;
+    signalHandlerCfg = cfg;
+    SetConsoleCtrlHandler(NgConsoleHandler, TRUE);
+    signal(SIGTERM, SignalHandler);
+    signal(SIGABRT, SignalHandler);
+#else
     /* sigaction must before set if a signal has to be masked and how it has to be treated
        then a link between the signal and the corresponding action is created */
     sigemptyset(&action.sa_mask);
@@ -54,6 +82,7 @@ void StartListeningSignals(TNGeneConfiguration *cfg,int *run)
     sigaction(SIGKILL, &action, NULL);
     sigaction(SIGTERM, &action, NULL);
     sigaction(SIGSTOP, &action, NULL);
+#endif
 
     return;
 }
@@ -63,6 +92,9 @@ void SignalHandler(int signol)
 {
     ngeneStopRequested = 1;
     *signalHandlerRun = FALSE_FLAG;			///< the receiver is stopped
+#ifdef NGENE_NATIVE_WINDOWS
+    return; /* CRT signal callbacks must not enter logging or pthread locks. */
+#else
 
     switch (signol)
     {
@@ -98,6 +130,7 @@ void SignalHandler(int signol)
     }
 
     return;
+#endif
 }
 
 

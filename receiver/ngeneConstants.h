@@ -72,12 +72,6 @@
 #define NGENE_VERSION_NAME 	"NGene"
 
 /**
- * @def GNSS_RX_CFGFOLDER
- * @brief Folder in the user home where configuration and other files.
- */
-#define GNSS_RX_CFGFOLDER ".ngene"
-
-/**
  * @def FALSE_FLAG
  * @brief It is the false value when an integer variable is used as a boolean one
  */

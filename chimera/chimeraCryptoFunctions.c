@@ -860,7 +860,12 @@ void MarkersGeneration(TChimeraData *chimera, TChimeraChannelEnum channel, int p
 int LoadSectorPatternTable(TChimeraData *chimera)
 {
    int pattern, segment;
-   FILE *sectorPatternFile = fopen("./SectorPatternsTable","r");
+   char tablePath[32768];
+   const char *directory = NgNativeHome();
+   FILE *sectorPatternFile;
+   if (!directory || snprintf(tablePath,sizeof(tablePath),"%s/otherData/SectorPatternsTable",directory) >= sizeof(tablePath))
+       return FAILURE_RETURN;
+   sectorPatternFile = fopen(tablePath,"r");
     if(sectorPatternFile==NULL)
     {
         printf("File SectorPatternsTable does not exist!\n");
