@@ -201,10 +201,11 @@ int FillInputBuffer(TNGeneConfiguration *cfg, TCircularBuffer *buf, TRxFe *rxFe)
         if (bytes == prefix) return FAILURE_RETURN;
         pairs = bytes / 2;
         first = pairs < buf->free1 ? pairs : buf->free1;
-        /* Match SiGe's one-bit/component amplitude contract. No IF modulation,
-         * conjugation, I/Q exchange or decimation; zero maps to positive. */
-        QuantizeIqSigns(buf->sigeIqRaw, buf->buffer + 2 * buf->head, first);
-        QuantizeIqSigns(buf->sigeIqRaw + 2 * first, buf->buffer, pairs - first);
+        /* Correct DC before narrowing; use common IQ gain across both ring
+         * segments. No modulation, conjugation, I/Q exchange or decimation. */
+        AdaptIqClassic(buf->sigeIqRaw, (char *)buf->sigeIqRaw, pairs, NULL);
+        memcpy(buf->buffer + 2 * buf->head, buf->sigeIqRaw, 2 * first);
+        memcpy(buf->buffer, buf->sigeIqRaw + 2 * first, 2 * (pairs - first));
         buf->sigeIqHasPending = bytes & 1;
         if (buf->sigeIqHasPending) buf->sigeIqPending = buf->sigeIqRaw[bytes - 1];
         if (InsertIntoCircularBuffer(buf, pairs) != SUCCESS_RETURN) return FAILURE_RETURN;

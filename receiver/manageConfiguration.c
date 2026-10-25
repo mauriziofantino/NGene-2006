@@ -28,6 +28,7 @@
 #include "manageWarmStartConfiguration.h"
 #include "manageNavMsgConfiguration.h"
 #include "manageUsbFrontEndConfiguration.h"
+#include "hackrfFrontend.h"
 #include "spreadingCodes.h"
 #include "rinexLog.h"
 #include "nmeaLog.h"
@@ -768,13 +769,9 @@ void CompleteConfiguration(TNGeneConfiguration *cfg)
 		cfg->fs *= 0.5; /* Two transport bytes represent one complex sample. */
 		cfg->fif = cfg->sigeIqIntermediateFrequency;
 	}
-    if (cfg->usedFrontEnd == NGENE_FE_HACKRF &&
-        (cfg->fs != 8183800.0 || cfg->fif != 38400.0 ||
-         cfg->fePars->dopplerCorrection != -1 || cfg->fePars->resolution != 8 ||
-         cfg->fePars->meanValue != 0)) {
-        SwrxLog(NGENE_LOG_SEVERITY_ERROR,
-                "HackRF comparison profile requires fs=8183800, IF=38400, correction=-1, signed CI8");
-        CloseNGene(cfg, EXIT_FAILURE);
+    if (cfg->usedFrontEnd == NGENE_FE_HACKRF) {
+        if (ConfigureHackrfFrontend(cfg) != SUCCESS_RETURN) CloseNGene(cfg, EXIT_FAILURE);
+        cfg->fePars->intermediateFrequency = (float)cfg->fif;
     }
 	cfg->ts=1.0/cfg->fs;
 	SwrxLog(NGENE_LOG_SEVERITY_INFO, "Front end: %s (ID %d), fs %.0f Hz, IF %.0f Hz",

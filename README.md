@@ -48,10 +48,11 @@ To compare the two live frontends without editing the selected configuration:
 .\run.cmd --frontend hackrf
 ```
 
-HackRF uses 8,183,800 complex pairs/s and a 38,400 Hz residual IF. For this first
-comparison its CI8 amplitudes are reduced to one bit per component, as on SiGe.
-Gains and antenna power are in `configuration/HackRF.conf`. Details and Doppler
-sign conventions are in [HACKRF.md](docs/HACKRF.md).
+HackRF uses 8,183,800 complex pairs/s. The supplied profile tunes exactly to GPS
+L1 (1,575,420,000 Hz); its signed NCO IF is derived from the configured RF centre.
+The input adapter removes component DC and retains signed levels -7..+7 with a
+shared I/Q gain. Tuning, gains and antenna power are in `configuration/HackRF.conf`.
+Live/replay findings and Doppler conventions are in [HACKRF.md](docs/HACKRF.md).
 
 To process the existing workspace recording without changing USB settings:
 

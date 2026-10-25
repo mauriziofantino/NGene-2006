@@ -117,6 +117,7 @@ static void VerifySettings(void)
         "[LNA gain (dB)]\n33\n", "[VGA gain (dB)]\n63\n",
         "[RF amplifier]\n2\n", "[Antenna power]\n-1\n",
         "[LNA gain (dB)]\n32oops\n", "[Serial number]\nnot-a-serial\n",
+        "[Center frequency (Hz)]\n0\n", "[Center frequency (Hz)]\n1575420000oops\n",
         "[LNA gain (dB)]\n", "[RF amplifier]\n0\n[RF amplifier]\n1\n"
     };
     char tempPath[MAX_PATH], folder[MAX_PATH], filename[MAX_PATH];
@@ -142,10 +143,12 @@ static void VerifySettings(void)
     file = fopen(filename, "w"); REQUIRE(file != NULL);
     fputs("# [Serial number] this comment must be ignored\n[LNA gain (dB)]\n40\n"
           "[VGA gain (dB)]\n62\n[RF amplifier]\n1\n[Antenna power]\n1\n"
+          "[Center frequency (Hz)]\n1575420000\n"
           "[Serial number]\n00000000000000000000000000000001\n", file);
     fclose(file);
     REQUIRE(OpenHackrfFrontend(&cfg, &fe) == SUCCESS_RETURN);
     REQUIRE(lnaGain == 40 && vgaGain == 62 && ampValue == 1);
+    REQUIRE(cfg.fif == 0 && frequency == UINT64_C(1575420000));
     REQUIRE(StartHackrfFrontend(&fe) == SUCCESS_RETURN);
     Destroy(&fe);
     REQUIRE(DeleteFileA(filename) && RemoveDirectoryA(folder));

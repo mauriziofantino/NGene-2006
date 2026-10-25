@@ -42,8 +42,12 @@ in [FFT_MIGRATION.md](FFT_MIGRATION.md).
 
 The HackRF increment also retains the complete SiGe replay: 23 PVT solutions and
 all 5,782 receiver-log lines identical after host timestamps are removed.
-Native I/Q checks cover every CI8 component value, sign quantization, odd reads,
+Native I/Q checks cover CI8 DC removal and multilevel scaling, odd reads,
 ring wrap and positive/negative synthetic RF Doppler through the actual Classic
-carrier generator, SSE2 rotation and XOR MAC. HackRF enumeration found no device;
-RF acquisition, hardware tuning accuracy and sustained reception are unverified.
+carrier generator, SSE2 rotation and XOR MAC. Connected HackRF captures now
+produce GPS PVT and Galileo I/NAV decoding after frontend corrections. Absolute
+hardware tuning accuracy and long-duration reception remain unmeasured.
+The direct 90-second GPS USB check produced 34 PVT solutions without a reported
+HackRF stream error and stopped through the normal console handler. A 60-second
+mixed GPS/Galileo check reached Galileo carrier lock but no PVT in that interval.
 See [HACKRF.md](HACKRF.md).

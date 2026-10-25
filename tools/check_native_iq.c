@@ -34,7 +34,8 @@ static int VerifyHackrfDoppler(void)
     TNGeneConfiguration config = {0};
     TSinCosTable table = {0};
     char *input, *cosine, *sine, *real, *imaginary, *code;
-    int direction, trial;
+    int direction, trial, ifCase;
+    const double intermediateFrequencies[] = {38400.0, 0.0, -38500.0};
     unsigned int k;
     double power[2];
     config.fs = 8183800.0; config.ts = 1.0 / config.fs;
@@ -45,19 +46,21 @@ static int VerifyHackrfDoppler(void)
     REQUIRE(posix_memalign((void **)&imaginary, 16, length) == 0);
     code = calloc(length, 1);
     REQUIRE(code != NULL);
-    REQUIRE(InitCarrierTable(&config, &table, 38400.0) == SUCCESS_RETURN);
+    for (ifCase = 0; ifCase < 3; ifCase++) {
+    double fif = intermediateFrequencies[ifCase];
+    REQUIRE(InitCarrierTable(&config, &table, fif) == SUCCESS_RETURN);
     for (direction = -1; direction <= 1; direction += 2) {
         double physicalDoppler = direction * 2000.0;
         for (k = 0; k < length; k++) {
             double phase = 0.17 + 2.0 * 3.14159265358979323846 *
-                           (-38400.0 + physicalDoppler) * k / config.fs;
+                           (-fif + physicalDoppler) * k / config.fs;
             input[2*k] = cos(phase) < 0 ? -1 : 1;
             input[2*k+1] = sin(phase) < 0 ? -1 : 1;
         }
         for (trial = 0; trial < 2; trial++) {
             double ncoDoppler = (trial ? 1 : -1) * physicalDoppler;
             int sumI, sumQ;
-            GenerateCarrier(&config, &table, 38400.0 + ncoDoppler, 0, length, sine, cosine);
+            GenerateCarrier(&config, &table, fif + ncoDoppler, 0, length, sine, cosine);
             CarrierInputWipeOff(1, input, 73, input + 146, length - 73,
                                cosine, sine, length, real, imaginary);
             sumI = ArrayMac(real, code, length) + length / 2;
@@ -70,7 +73,63 @@ static int VerifyHackrfDoppler(void)
         REQUIRE(power[0] > 100.0 * power[1]);
     }
     DeinitCarrierTable(&table);
+    }
+    /* Worst-case multilevel rails through the unchanged production MAC.
+     * Rotated values plus packing stay inside signed5; no partial sum clips. */
+    for (direction = 0; direction < 16; direction++) {
+        int i = (direction & 1) ? -7 : 7, q = (direction & 2) ? -7 : 7;
+        int c = (direction & 4) ? -1 : 1, s = (direction & 8) ? -1 : 1;
+        for(k=0;k<length;k++) {
+            input[2*k]=(char)i; input[2*k+1]=(char)q;
+            cosine[k]=(char)(c == 1 ? 0 : -1); sine[k]=(char)(s == 1 ? 0 : -1);
+        }
+        CarrierInputWipeOff(1,input,length,NULL,0,cosine,sine,length,real,imaginary);
+        REQUIRE(ArrayMac(real,code,length)+(int)length/2 == (i*c-q*s)*(int)length);
+        REQUIRE(ArrayMac(imaginary,code,length)+(int)length/2 == (i*s+q*c)*(int)length);
+    }
     free(input); free(cosine); free(sine); free(real); free(imaginary); free(code);
+    return 0;
+}
+
+static int VerifyInputAdapter(void)
+{
+    unsigned char source[320], original[320];
+    char destination[320];
+    unsigned int n, offset, k, alias, pattern;
+    TNativeIqScaling scale;
+    memset(destination,0x55,sizeof(destination));
+    AdaptIqClassic(NULL,destination,0,&scale);
+    REQUIRE(destination[0] == 0x55);
+    for (pattern=0;pattern<3;pattern++) for(alias=0;alias<2;alias++)
+    for(offset=0;offset<16;offset++) for(n=1;n<=128;n++) {
+        double sumI = 0, sumQ = 0, sumSquares = 0, rms;
+        memset(source,0x55,sizeof(source));
+        memset(destination,0x55,sizeof(destination));
+        for(k=0;k<2*n;k++) source[offset+k] = pattern == 0 ? (unsigned char)k :
+            pattern == 1 ? (unsigned char)((k & 1) ? 60-(int)(k/2) : (int)(k/2)-20) :
+                           (unsigned char)((k & 1) ? 5 : -3);
+        memcpy(original,source,sizeof(source));
+        for(k=0;k<n;k++) {
+            double i=(signed char)original[offset+2*k], q=(signed char)original[offset+2*k+1];
+            sumI+=i; sumQ+=q; sumSquares+=i*i+q*q;
+        }
+        AdaptIqClassic(source+offset,alias ? (char *)source+offset : destination+offset,n,&scale);
+        rms=sqrt(fmax(0,(sumSquares-(sumI*sumI+sumQ*sumQ)/n)/(2*n)));
+        REQUIRE(scale.meanIQ8 == lround(sumI*256/n) && scale.meanQQ8 == lround(sumQ*256/n));
+        REQUIRE(fabs(scale.rms-rms) < 1e-10);
+        REQUIRE((alias ? source[offset+2*n] : destination[offset+2*n]) == 0x55);
+        if(offset) REQUIRE((alias ? source[offset-1] : destination[offset-1]) == 0x55);
+        for(k=0;k<2*n;k++) {
+            double centered = (signed char)original[offset+k] -
+                              ((k&1) ? scale.meanQQ8 : scale.meanIQ8)/256.0;
+            int expected = (int)lround(ldexp(centered,scale.gainShift));
+            int actual = alias ? (signed char)source[offset+k] : destination[offset+k];
+            if(expected < -7)expected=-7; if(expected>7)expected=7;
+            if(actual!=expected) fprintf(stderr,"Adapter mismatch pattern %u alias %u offset %u n %u k %u actual %d expected %d\n",pattern,alias,offset,n,k,actual,expected);
+            REQUIRE(actual==expected);
+            if(pattern==2) REQUIRE(actual==0);
+        }
+    }
     return 0;
 }
 
@@ -87,15 +146,7 @@ int main(void)
     unsigned int consumed = 0, iterations = 0;
     REQUIRE(posix_memalign((void **)&ngeneXmmsBackup, 16, 128) == 0);
     REQUIRE(VerifyHackrfDoppler() == 0);
-    /* Every CI8 bit pattern, SIMD alignment and scalar tail; no marker bits. */
-    for (offset = 0; offset < 16; offset++) for (n = 0; n <= 128; n++) {
-        for (k = 0; k < 2*n; k++) raw[offset+k] = (unsigned char)k;
-        memset(iq, 0x55, sizeof(iq));
-        QuantizeIqSigns(raw+offset, iq+offset, n);
-        for (k = 0; k < 2*n; k++)
-            REQUIRE(iq[offset+k] == ((signed char)raw[offset+k] < 0 ? -1 : 1));
-        REQUIRE(iq[offset+2*n] == 0x55);
-    }
+    REQUIRE(VerifyInputAdapter() == 0);
 
     /* Conditioning must change only the period-four modulation, never the
      * native component amplitudes. Check against the actual working IF code. */
@@ -189,7 +240,11 @@ int main(void)
     cfg.usedFrontEnd = NGENE_FE_HACKRF;
     REQUIRE(InitCircularBuffer(&cfg, &ring) == SUCCESS_RETURN);
     wireIndex = readCalls = consumed = iterations = 0;
-    for (k = 0; k < sizeof(wire); k++) wire[k] = (unsigned char)(k * 73);
+    for (k = 0; k < 40; k++) {
+        wire[2*k] = (unsigned char)((int)k - 20);
+        wire[2*k+1] = (unsigned char)(60 - (int)k);
+    }
+    wire[80] = 20;
     while (consumed < 40 && iterations++ < 200) {
         unsigned int take;
         FillInputBuffer(&cfg, &ring, &frontend);
@@ -197,8 +252,12 @@ int main(void)
         if (take > 3) take = 3;
         for (k = 0; k < 2 * take; k++) {
             unsigned int position = (ring.tail + k / 2) % ring.dim;
-            REQUIRE(ring.buffer[2 * position + k % 2] ==
-                    ((signed char)wire[2 * consumed + k] < 0 ? -1 : 1));
+            REQUIRE(ring.buffer[2 * position + k % 2] >= -7 &&
+                    ring.buffer[2 * position + k % 2] <= 7);
+            if (ring.buffer[2 * position + 1] != -ring.buffer[2 * position])
+                fprintf(stderr, "Pair mismatch consumed=%u offset=%u I=%d Q=%d wire=%u\n",
+                        consumed,k,ring.buffer[2*position],ring.buffer[2*position+1],wireIndex);
+            REQUIRE(ring.buffer[2 * position + 1] == -ring.buffer[2 * position]);
         }
         REQUIRE(DeleteFromCircularBuffer(&ring, take) == take);
         consumed += take;

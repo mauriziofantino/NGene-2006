@@ -17,6 +17,7 @@ set(CMAKE_C_EXTENSIONS ON)
 add_compile_options(/Od /W3 /clang:-fno-vectorize /clang:-fno-slp-vectorize)
 add_compile_definitions(NGENE_NATIVE_WINDOWS WIN32_LEAN_AND_MEAN NOMINMAX
     _CRT_SECURE_NO_WARNINGS _CRT_NONSTDC_NO_DEPRECATE _USE_MATH_DEFINES)
+set_source_files_properties(asmFolder/complexInput.c PROPERTIES COMPILE_OPTIONS /O2)
 include(platform/windows/native_dependencies.cmake)
 
 include_directories(
@@ -165,6 +166,9 @@ install(FILES libraries/libhackrf-LICENSE.txt DESTINATION licenses)
 option(NGENE_BUILD_PLATFORM_CHECKS "Build USB/platform diagnostic tools" OFF)
 if(NGENE_BUILD_PLATFORM_CHECKS)
     enable_testing()
+    add_executable(ngene_hackrf_capture tools/hackrf_capture.c frontEnd/hackrfFrontend.c)
+    target_link_libraries(ngene_hackrf_capture PRIVATE ngene_hackrf)
+    target_compile_options(ngene_hackrf_capture PRIVATE /O2)
     add_executable(ngene_check_hackrf tools/check_hackrf.c frontEnd/hackrfFrontend.c)
     target_include_directories(ngene_check_hackrf PRIVATE "${_hackrf_generated}")
     target_link_libraries(ngene_check_hackrf PRIVATE ngene_windows PkgConfig::USB)

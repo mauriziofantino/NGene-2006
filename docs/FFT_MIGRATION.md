@@ -30,7 +30,7 @@ Ported changes:
 - Immutable tables, disjoint per-call workspaces and no global XMM backup.
 - Unaligned SSE2 loads/stores; natural int16 alignment suffices.
 
-Only the two FFT C files are compiled with `/O2`. The compiler manages all
+At this FFT increment, only the two FFT C files were compiled with `/O2`. The compiler manages all
 register clobbers and Microsoft ABI preservation. Historical receiver modules
 with incomplete inline-assembly clobbers retain `/Od`.
 

@@ -3,6 +3,7 @@
 #include "frontend.h"
 
 int OpenHackrfFrontend(TNGeneConfiguration *cfg, TRxFe *fe);
+int ConfigureHackrfFrontend(TNGeneConfiguration *cfg);
 int StartHackrfFrontend(TRxFe *fe);
 int StopHackrfFrontend(TRxFe *fe);
 void CloseHackrfFrontend(TRxFe *fe);

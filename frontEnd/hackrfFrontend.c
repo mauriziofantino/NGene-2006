@@ -80,10 +80,10 @@ static int VendorResult(int code, const char *operation)
 
 /* Local bounded parser: optional settings, exact tags, no commented tag matches
  * and no silently accepted malformed values. Existing receiver parsers stay put. */
-static int ReadSettings(const char *filename, int values[5], char *serial, size_t serialSize)
+static int ReadSettings(const char *filename, int values[6], char *serial, size_t serialSize)
 {
     static const char *tags[] = { "LNA gain (dB)", "VGA gain (dB)", "RF amplifier",
-                                 "Antenna power", "Baseband bandwidth (Hz)", "Serial number" };
+                                 "Antenna power", "Baseband bandwidth (Hz)", "Center frequency (Hz)", "Serial number" };
     FILE *file = fopen(filename, "r");
     char line[512], *text, *end;
     unsigned int seen = 0;
@@ -104,12 +104,12 @@ static int ReadSettings(const char *filename, int values[5], char *serial, size_
             size_t length = strlen(text);
             if (length < 3 || text[0] != '[' || text[length-1] != ']') goto invalid;
             text[length-1] = '\0';
-            for (tag = 0; tag < 6; tag++) if (!strcmp(text+1, tags[tag])) break;
-            if (tag == 6 || (seen & (1u << tag))) goto invalid;
+            for (tag = 0; tag < 7; tag++) if (!strcmp(text+1, tags[tag])) break;
+            if (tag == 7 || (seen & (1u << tag))) goto invalid;
             seen |= 1u << tag;
             pending = tag;
         } else {
-            if (pending == 5) {
+            if (pending == 6) {
                 size_t k, length = strlen(text);
                 if (!length || length > 32 || length >= serialSize) goto invalid;
                 for (k = 0; k < length; k++) if (!isxdigit((unsigned char)text[k])) goto invalid;
@@ -135,19 +135,20 @@ invalid:
 
 #define CONFIGURE(call) do { if (VendorResult((call), #call) != SUCCESS_RETURN) goto failed; } while (0)
 
-int OpenHackrfFrontend(TNGeneConfiguration *cfg, TRxFe *fe)
+int ConfigureHackrfFrontend(TNGeneConfiguration *cfg)
 {
-    struct HackrfFrontend *h;
-    hackrf_device_list_t *devices;
-    int values[5] = {32, 32, 0, 0, 5000000};
+    THackrfConfiguration *settings = &cfg->hackrfConfiguration;
+    int values[6] = {32, 32, 0, 0, 5000000, 1575458400};
     int lna, vga, amp, antenna, bandwidth;
     char filename[MAX_ROW_LENGTH], serial[MAX_ROW_LENGTH] = "";
-    /* Fixed first comparison profile. fs counts complex pairs, not bytes. */
-    if (cfg->fs != 8183800.0 || cfg->fif != 38400.0 ||
+    settings->loaded = 0;
+    /* fs counts complex pairs. RF centre and signed IF may vary independently
+     * of sample rate; derive the NCO reference from the actual hardware tune. */
+    if (cfg->fs != 8183800.0 ||
         cfg->fePars->dopplerCorrection != -1 || cfg->fePars->resolution != 8 ||
         cfg->fePars->meanValue != 0) {
         SwrxLog(NGENE_LOG_SEVERITY_ERROR,
-                "HackRF comparison profile requires fs=8183800, IF=38400, Doppler correction=-1, signed CI8");
+                "HackRF profile requires fs=8183800, Doppler correction=-1, signed CI8");
         return FAILURE_RETURN;
     }
     snprintf(filename, sizeof(filename), "%sHackRF.conf", cfg->configurationPath);
@@ -155,20 +156,36 @@ int OpenHackrfFrontend(TNGeneConfiguration *cfg, TRxFe *fe)
     lna = values[0]; vga = values[1]; amp = values[2]; antenna = values[3]; bandwidth = values[4];
     if (lna < 0 || lna > 40 || lna % 8 || vga < 0 || vga > 62 || vga % 2 ||
         (amp != 0 && amp != 1) || (antenna != 0 && antenna != 1) || bandwidth <= 0 ||
-        bandwidth > cfg->fs || hackrf_compute_baseband_filter_bw(bandwidth) != (unsigned int)bandwidth) {
+        bandwidth > cfg->fs || hackrf_compute_baseband_filter_bw(bandwidth) != (unsigned int)bandwidth ||
+        fabs(values[5] - 1575420000.0) >= cfg->fs / 2.0) {
         SwrxLog(NGENE_LOG_SEVERITY_ERROR, "Invalid gains, switches or bandwidth in HackRF.conf");
         return FAILURE_RETURN;
     }
+    settings->centerFrequencyHz = values[5]; settings->bandwidthHz = bandwidth;
+    settings->lnaGain = lna; settings->vgaGain = vga;
+    settings->amplifier = amp; settings->antennaPower = antenna;
+    strcpy(settings->serial, serial);
+    cfg->fif = settings->centerFrequencyHz - 1575420000.0;
+    settings->loaded = 1;
+    return SUCCESS_RETURN;
+}
+
+int OpenHackrfFrontend(TNGeneConfiguration *cfg, TRxFe *fe)
+{
+    struct HackrfFrontend *h;
+    hackrf_device_list_t *devices;
+    THackrfConfiguration *settings = &cfg->hackrfConfiguration;
+    if (!settings->loaded && ConfigureHackrfFrontend(cfg) != SUCCESS_RETURN) return FAILURE_RETURN;
     h = calloc(1, sizeof(*h));
     if (!h) return FAILURE_RETURN;
     fe->hackrf = h;
-    h->antennaPower = antenna;
+    h->antennaPower = settings->antennaPower;
     h->queue = malloc(HACKRF_QUEUE_BYTES);
     if (!h->queue) goto failed;
     CONFIGURE(hackrf_init());
     h->initialized = 1;
-    if (serial[0]) {
-        CONFIGURE(hackrf_open_by_serial(serial, &h->device));
+    if (settings->serial[0]) {
+        CONFIGURE(hackrf_open_by_serial(settings->serial, &h->device));
     } else {
         devices = hackrf_device_list();
         if (!devices || devices->devicecount != 1) {
@@ -185,21 +202,23 @@ int OpenHackrfFrontend(TNGeneConfiguration *cfg, TRxFe *fe)
         }
     }
     CONFIGURE(hackrf_set_sample_rate_manual(h->device, 8183800, 1));
-    CONFIGURE(hackrf_set_baseband_filter_bandwidth(h->device, (uint32_t)bandwidth));
-    /* Native HackRF has exp(+j*2*pi*(RF-LO)*t). Classic's positive-sign NCO
-     * cancels a negative IF. LO=L1+38400, correction=-1 maps NCO Doppler back
-     * to physical RF/code Doppler without conjugating the input samples. */
-    CONFIGURE(hackrf_set_freq(h->device, UINT64_C(1575458400)));
-    CONFIGURE(hackrf_set_lna_gain(h->device, (uint32_t)lna));
-    CONFIGURE(hackrf_set_vga_gain(h->device, (uint32_t)vga));
-    CONFIGURE(hackrf_set_amp_enable(h->device, (uint8_t)amp));
+    CONFIGURE(hackrf_set_baseband_filter_bandwidth(h->device, (uint32_t)settings->bandwidthHz));
+    /* Native HackRF has exp(+j*2*pi*(RF-centre)*t). The positive-sign NCO
+     * uses centre-L1. correction=-1 maps NCO Doppler back to physical RF/code
+     * Doppler at zero or nonzero IF, without conjugating input samples. */
+    CONFIGURE(hackrf_set_freq(h->device, (uint64_t)settings->centerFrequencyHz));
+    CONFIGURE(hackrf_set_lna_gain(h->device, (uint32_t)settings->lnaGain));
+    CONFIGURE(hackrf_set_vga_gain(h->device, (uint32_t)settings->vgaGain));
+    CONFIGURE(hackrf_set_amp_enable(h->device, (uint8_t)settings->amplifier));
     SwrxLog(NGENE_LOG_SEVERITY_INFO,
-            "HackRF RX: fs 8183800 complex/s, LO 1575458400 Hz, RF-LO -38400 Hz, Classic NCO IF +38400 Hz");
+            "HackRF RX: fs %.0f complex/s, RF centre %d Hz, RF-centre %+.0f Hz, Classic NCO IF %+.0f Hz",
+            cfg->fs, settings->centerFrequencyHz, -cfg->fif, cfg->fif);
     SwrxLog(NGENE_LOG_SEVERITY_INFO,
             "HackRF: LNA %d dB, VGA %d dB, RF amp %d, antenna power %d, filter %d Hz",
-            lna, vga, amp, antenna, bandwidth);
+            settings->lnaGain, settings->vgaGain, settings->amplifier,
+            settings->antennaPower, settings->bandwidthHz);
     SwrxLog(NGENE_LOG_SEVERITY_INFO,
-            "HackRF CI8 input: sign of I and Q mapped to +/-1 for SiGe comparison; no real-IF conditioning");
+            "HackRF CI8 input: component DC removal, common IQ gain, signed levels -7..+7; no real-IF conditioning");
     return SUCCESS_RETURN;
 failed:
     CloseHackrfFrontend(fe);

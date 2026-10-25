@@ -23,6 +23,12 @@
 #define NGENE_FE_SIGE_V3        6
 #define NGENE_FE_HACKRF         7
 
+typedef struct HackrfConfigurationStruct {
+    int loaded;
+    int centerFrequencyHz, bandwidthHz, lnaGain, vgaGain, amplifier, antennaPower;
+    char serial[33];
+} THackrfConfiguration;
+
 /**
  * @struct usbFeParsStruct
  * @brief Contains parameters for one of the possible FEs.
