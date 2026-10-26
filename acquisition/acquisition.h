@@ -85,7 +85,7 @@ void UpdateCoarseThreshold(TNGeneConfiguration * cfg, TChannel * ch, int nonCohe
  * @details Called by main, it performs correlation over incoming samples in the buffer. Uses fixed code and carrier sequences. It perform a complete Galileo correlation (4 ms)
  * @param rx points to the receiver
  */
-void UpdateVariablesForConfirmationThresholds(TNGeneData * rx);
+void UpdateVariablesForConfirmationThresholds(TNGeneConfiguration *cfg, TNGeneData *rx);
 
 #ifndef DISABLE_CONFIRMATION_THRESHOLD
 /**

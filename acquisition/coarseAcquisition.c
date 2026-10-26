@@ -87,10 +87,13 @@ void InitCoarseAcquisition(TNGeneConfiguration *cfg, TAcqCommon *acqCommon, TCha
     // allocate arrays
     signalFftLen = 2 * acq->fftSize;
     acq->wideCompressed = NULL;
+    acq->wideNonCoherentSums = NULL;
+    acq->widePowerShift = 0;
     acq->fftHeadroomReported = 0;
     if (cfg->usedFrontEnd == NGENE_FE_HACKRF) {
         acq->wideCompressed = malloc(signalFftLen * sizeof(int32_t));
-        if (!acq->wideCompressed) errorsFound++;
+        acq->wideNonCoherentSums = calloc(acq->fftSize, sizeof(uint64_t));
+        if (!acq->wideCompressed || !acq->wideNonCoherentSums) errorsFound++;
     }
     posix_memalign((void **) &(acq->signalCompressed), POSIX_ALIGNMENT, signalFftLen * sizeof(short int));
     if (acq->signalCompressed == NULL)
@@ -116,6 +119,7 @@ void InitCoarseAcquisition(TNGeneConfiguration *cfg, TAcqCommon *acqCommon, TCha
 void DeinitCoarseAcquisition(TCoarseAcquisition *acq)
 {
     free(acq->wideCompressed);
+    free(acq->wideNonCoherentSums);
     free(acq->signalCompressed);
     free(acq->signalFft);
     free(acq->ifftOut);
@@ -198,13 +202,14 @@ TAcquisitionStatus PerformCoarseAcquisition(TNGeneConfiguration *cfg, TNGeneData
     unsigned int size2;
     double fc;
     int outputIndex;
-    unsigned int curMax;
+    uint64_t curMax;
     unsigned int curIndexMax;
     double codeRateNew;
     long long int elapsedSamples;
     long long int elapsedSamplesCorrect;
     int sampleCorrection;
     int effectiveFftGain = acq->fftGain, requestedFftGain = acq->fftGain;
+    int requestedIfftGain = acq->ifftGain;
 
     /* the code offset could require more samples then those available */
     if (((unsigned int) curDelay + ch->blocksize) > (firstBunchSize + secondBunchSize))
@@ -225,16 +230,15 @@ TAcquisitionStatus PerformCoarseAcquisition(TNGeneConfiguration *cfg, TNGeneData
     if (acq->dopplerIndex == FAKE_DOPPLER_INDEX) {
 	ch->carrierFrequency = fc = cfg->fif + (double) THRESHOLD_FAKE_DOPPLER;
 	ch->dopplerShift = (double) THRESHOLD_FAKE_DOPPLER;
-	ch->carrierPhase = GenerateCarrier(cfg, &(rx->fifTable), fc, ch->carrierPhase, ch->blocksize, rx->sinArray, rx->cosArray);
     } else {
 	ch->carrierFrequency = fc = cfg->fif + (double) acq->dopplers[acq->dopplerIndex];
 	ch->dopplerShift = (double) acq->dopplers[acq->dopplerIndex];
-	ch->carrierPhase = GenerateCarrier(cfg, &(rx->fifTable), fc, ch->carrierPhase, ch->blocksize, rx->sinArray, rx->cosArray);
     }
+    if (!rx->wideI) ch->carrierPhase = GenerateCarrier(cfg, &(rx->fifTable), fc, ch->carrierPhase, ch->blocksize, rx->sinArray, rx->cosArray);
     /* remove the carrier (and, for Galileo, also subcarrier) */
     if (rx->wideI) {
-        CarrierIqWide((TWideIq *)input1, size1, (TWideIq *)input2, size2,
-            rx->cosArray, rx->sinArray, ch->blocksize, rx->wideI, rx->wideQ);
+        ch->carrierPhase = MixHackrfInput(&rx->hackrfMixer, (THackrfIq8 *)input1, size1, (THackrfIq8 *)input2, size2,
+            ch->blocksize, fc, ch->carrierPhase, cfg->fs, rx->wideI, rx->wideQ);
     } else if (ch->satType == GALILEO_SAT && !cfg->nativeIq) {
 	GenerateSine(cfg, &(rx->fscTable), ch->codeRate, 0.0, ch->blocksize, rx->subcarrierArray);
 	CarrierRealWipeOff(input1, size1, input2, size2, rx->subcarrierArray, ch->blocksize, acqCom->demodulatedSin);
@@ -315,7 +319,7 @@ TAcquisitionStatus PerformCoarseAcquisition(TNGeneConfiguration *cfg, TNGeneData
         }
         if (requestedFftGain != acq->fftGain && !acq->fftHeadroomReported) {
             acq->fftHeadroomReported = 1;
-            SwrxLog(NGENE_LOG_SEVERITY_NOTE, "%s: FFT headroom recovered with %d extra shifts; amplitude restored in spectral product",
+            SwrxLog(NGENE_LOG_SEVERITY_NOTE, "%s: FFT headroom recovered with %d extra shifts; amplitude restored in 64-bit powers",
                 ch->prnName, acq->fftGain-requestedFftGain);
         }
     } else PerformFft(cfg, &(rx->fftTable), acq->signalCompressed, acq->signalFft, acq->log2FftSize, acq->fftGain);
@@ -327,8 +331,10 @@ TAcquisitionStatus PerformCoarseAcquisition(TNGeneConfiguration *cfg, TNGeneData
 	}
 #endif
     if (rx->wideI) {
+        /* Carry the block exponent through both transforms. Restoring it here
+         * would overflow the inverse transform at raw HackRF ADC amplitudes. */
         if (!ProductWideFft(acq->signalFft, acq->localCode, acq->signalFft,
-                acq->fftSize, acq->fftGain-requestedFftGain)) {
+                acq->fftSize, 0)) {
             SwrxLog(NGENE_LOG_SEVERITY_ERROR, "%s: spectral product exceeds int16 headroom", ch->prnName);
             return ACQUISITION_FAILURE;
         }
@@ -341,7 +347,21 @@ TAcquisitionStatus PerformCoarseAcquisition(TNGeneConfiguration *cfg, TNGeneData
 	}
 #endif
 	/* do ifft (since we call fft, the output time is reversed) */
-	PerformFft(cfg, &(rx->fftTable), acq->signalFft, acq->ifftOut, acq->log2FftSize, acq->ifftGain);
+    if (rx->wideI) {
+        for (;;) {
+            unsigned clipped;
+            if (PerformFftChecked(cfg, &rx->fftTable, acq->signalFft, acq->ifftOut,
+                    acq->log2FftSize, requestedIfftGain, &clipped) != SUCCESS_RETURN)
+                return ACQUISITION_FAILURE;
+            if (!clipped) break;
+            if (requestedIfftGain <= -acq->log2FftSize) {
+                SwrxLog(NGENE_LOG_SEVERITY_ERROR, "%s: cannot obtain unclipped inverse FFT", ch->prnName);
+                return ACQUISITION_FAILURE;
+            }
+            requestedIfftGain--;
+        }
+        acq->widePowerShift = acq->fftGain-requestedFftGain + acq->ifftGain-requestedIfftGain;
+    } else PerformFft(cfg, &(rx->fftTable), acq->signalFft, acq->ifftOut, acq->log2FftSize, acq->ifftGain);
 #ifdef RX_PROFILING
 	if (ch->satType == GPS_SAT) {
 	    StopProfilingUpdate(&(ch->gpsFftProfiling), 1);
@@ -352,20 +372,34 @@ TAcquisitionStatus PerformCoarseAcquisition(TNGeneConfiguration *cfg, TNGeneData
 	/* analyze the result */
 	if (acq->dopplerIndex == FAKE_DOPPLER_INDEX) {
 	    UpdateCoarseThreshold(cfg, ch, acq->numOfNonCoherentSums);
-	    unsigned int tmp = (acq->threshold >> acq->shiftsForNonCohSums);
+	    uint64_t tmp = (acq->threshold >> acq->shiftsForNonCohSums);
 	    if (acq->acqBinLog != NULL) {
-		fwrite(&tmp, sizeof(unsigned int), 1, acq->acqBinLog);
+            if (rx->wideI) fwrite(&tmp, sizeof(tmp), 1, acq->acqBinLog);
+            else { unsigned int legacy=(unsigned int)tmp; fwrite(&legacy,sizeof(legacy),1,acq->acqBinLog); }
 	    }
 	} else {
+        if (rx->wideI) {
+            if (!AccumulateWideFftPower(acq->ifftOut,acq->wideNonCoherentSums,acq->fftSize,
+                    acq->widePowerShift,acq->shiftsForNonCohSums,acq->nonCoherentSumsIndex==0)) {
+                SwrxLog(NGENE_LOG_SEVERITY_ERROR,"%s: unrepresentable acquisition power exponent",ch->prnName);
+                return ACQUISITION_FAILURE;
+            }
+        } else {
 	    ArrayAbs2(cfg, acq->ifftOut, acq->ifftAbs, acq->fftSize);
 	    if (acq->nonCoherentSumsIndex == 0) {
 		ArrayClean((char *) (acq->nonCoherentSums), acq->fftSize * sizeof(unsigned int));
 	    }
 	    RightShiftUnsignedInt(acq->ifftAbs, acq->ifftAbs, acq->fftSize, acq->shiftsForNonCohSums);
 	    ArrayAddUnsignedInt(acq->ifftAbs, acq->nonCoherentSums, acq->nonCoherentSums, acq->fftSize);
+        }
 	    acq->nonCoherentSumsIndex++;
 	    if (acq->nonCoherentSumsIndex >= acq->numOfNonCoherentSums) {
-		ArrayMax(acq->nonCoherentSums, &curMax, &curIndexMax, acq->fftSize);
+            if (rx->wideI) {
+                unsigned k; curMax=0; curIndexMax=0;
+                for (k=0;k<(unsigned)acq->fftSize;k++) if (acq->wideNonCoherentSums[k]>curMax) {
+                    curMax=acq->wideNonCoherentSums[k]; curIndexMax=k;
+                }
+            } else { unsigned int legacyMax; ArrayMax(acq->nonCoherentSums,&legacyMax,&curIndexMax,acq->fftSize); curMax=legacyMax; }
 		curIndexMax = acq->fftSize - curIndexMax;
 		if (curMax > acq->maximum) {
 		    /* a new peak has been found! */
@@ -374,10 +408,11 @@ TAcquisitionStatus PerformCoarseAcquisition(TNGeneConfiguration *cfg, TNGeneData
 		    acq->delayMax = (int) ((float) curIndexMax * ((ch->codeDuration * (float) ch->blocksize) / (float) acq->fftSize)) + curDelay;
 		    acq->discardedSamples = rx->buf.discardedSamples + ch->bufferOffset + ch->blocksize;
 		    SwrxLog(NGENE_LOG_SEVERITY_NOTE, "    %s: code delay %d", ch->prnName, curDelay);
-		    SwrxLog(NGENE_LOG_SEVERITY_NOTE, "    %s: max found %u at sample %u  with fd %f Hz", ch->prnName, acq->maximum, acq->delayMax, acq->dopplerMax);
+		    SwrxLog(NGENE_LOG_SEVERITY_NOTE, "    %s: max found %llu at sample %u  with fd %f Hz", ch->prnName, (unsigned long long)acq->maximum, acq->delayMax, acq->dopplerMax);
 		}
 		if (acq->acqBinLog != NULL) {
-		    fwrite(acq->nonCoherentSums, sizeof(unsigned int), acq->fftSize, acq->acqBinLog);
+                if (rx->wideI) fwrite(acq->wideNonCoherentSums,sizeof(uint64_t),acq->fftSize,acq->acqBinLog);
+                else fwrite(acq->nonCoherentSums, sizeof(unsigned int), acq->fftSize, acq->acqBinLog);
 		}
 	    }
 	}

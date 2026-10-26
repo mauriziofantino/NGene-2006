@@ -61,6 +61,7 @@ typedef struct NGeneDataStruct
 	char *cosArray;						/**< contains the cosine carrier at fs */
 	char *sinArray; 					/**< contains the sine carrier at fs */
     short *wideI, *wideQ; /**< HackRF full precision demodulated samples; NULL for legacy paths. */
+    THackrfMixer hackrfMixer; /**< HackRF unit-circle Q15 NCO coefficients. */
 	char *subcarrierArray; 				/**< contains the subcarrier used to wipe-off the BOC(1,1) in Galileo */
 	char *subcarrierArrayEarly; 		/**< contains the subcarrier used to wipe-off the BOC(1,1) in Galileo (Trk Early replica with low fs) */
 	char *subcarrierArrayLate; 			/**< contains the subcarrier used to wipe-off the BOC(1,1) in Galileo (Trk Late replica with low fs) */

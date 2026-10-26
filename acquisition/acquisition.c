@@ -27,6 +27,8 @@
 #include "sampleCompression.h"
 #include "fft.h"
 #include "mathFunctions.h"
+#include "inputProcessing.h"
+#include "hackrfThreshold.h"
 #include "nonCoherentSumsManager.h"
 
 /**
@@ -472,22 +474,24 @@ void UpdateCoarseThreshold(TNGeneConfiguration *cfg, TChannel *ch, int nonCohere
     avgFloat = (double) avg / (double) signalFftLen;
     avg2Float = (double) avg2 / (double) signalFftLen;
     variance = avg2Float - (avgFloat * avgFloat);
+    if (acqCoarse->wideCompressed)
+        variance = ldexp(variance, 2*acqCoarse->widePowerShift);
     if (ch->satType == GPS_SAT) {
-	acqCoarse->threshold = (unsigned int) FindAcquisitionThreshold(variance, nonCoherentSums, cfg->acqConfiguration.gpsFalseDetectionProb);
+	acqCoarse->threshold = (uint64_t) FindAcquisitionThreshold(variance, nonCoherentSums, cfg->acqConfiguration.gpsFalseDetectionProb);
 	acqConf->threshold = acqCoarse->threshold / THRESHOLD_COARSE_TO_CONFIRMATION_FACTOR;
-	SwrxLog(NGENE_LOG_SEVERITY_NOTE, "Set GPS threshold for coarse acquisition to %u", acqCoarse->threshold);
+	SwrxLog(NGENE_LOG_SEVERITY_NOTE, "Set GPS threshold for coarse acquisition to %llu", (unsigned long long)acqCoarse->threshold);
     } else if (ch->satType == GALILEO_SAT) {
-	acqCoarse->threshold = (unsigned int) FindAcquisitionThreshold(variance, nonCoherentSums, cfg->acqConfiguration.galileoFalseDetectionProb);
+	acqCoarse->threshold = (uint64_t) FindAcquisitionThreshold(variance, nonCoherentSums, cfg->acqConfiguration.galileoFalseDetectionProb);
 	acqConf->threshold = acqCoarse->threshold / THRESHOLD_COARSE_TO_CONFIRMATION_FACTOR;
-	SwrxLog(NGENE_LOG_SEVERITY_NOTE, "Set Galileo threshold for coarse acquisition to %u", acqCoarse->threshold);
+	SwrxLog(NGENE_LOG_SEVERITY_NOTE, "Set Galileo threshold for coarse acquisition to %llu", (unsigned long long)acqCoarse->threshold);
     } else {                    /* if(satType==EGNOS_SAT) */
-	acqCoarse->threshold = (unsigned int) FindAcquisitionThreshold(variance, nonCoherentSums, cfg->acqConfiguration.egnosFalseDetectionProb);
+	acqCoarse->threshold = (uint64_t) FindAcquisitionThreshold(variance, nonCoherentSums, cfg->acqConfiguration.egnosFalseDetectionProb);
 	acqConf->threshold = acqCoarse->threshold / THRESHOLD_COARSE_TO_CONFIRMATION_FACTOR;
-	SwrxLog(NGENE_LOG_SEVERITY_NOTE, "Set EGNOS threshold for coarse acquisition to %u", acqCoarse->threshold);
+	SwrxLog(NGENE_LOG_SEVERITY_NOTE, "Set EGNOS threshold for coarse acquisition to %llu", (unsigned long long)acqCoarse->threshold);
     }
 }
 
-void UpdateVariablesForConfirmationThresholds(TNGeneData *rx)
+void UpdateVariablesForConfirmationThresholds(TNGeneConfiguration *cfg,TNGeneData *rx)
 {
     TAcqCommon *acqCommon = &(rx->acqCommon);
     TThresholdManager *thr = &(acqCommon->thr);
@@ -495,6 +499,24 @@ void UpdateVariablesForConfirmationThresholds(TNGeneData *rx)
     double pi;
     double pq;
     int gpsBlocksize = thr->blocksize / 4;
+
+    if(rx->wideI) {
+        int64_t measured[4];
+        if(!MeasureHackrfConfirmationNoise(cfg,rx,measured)) return;
+        pi=(double)measured[0]/HACKRF_MIXER_SCALE; pq=(double)measured[1]/HACKRF_MIXER_SCALE;
+        PerformAverageWindow(&thr->averageCorrGps,pi);
+        PerformAverageWindow(&thr->averageCorr2Gps,pi*pi);
+        PerformAverageWindow(&thr->averageCorrGps,pq);
+        PerformAverageWindow(&thr->averageCorr2Gps,pq*pq);
+        pi=(double)measured[2]/HACKRF_MIXER_SCALE; pq=(double)measured[3]/HACKRF_MIXER_SCALE;
+        PerformAverageWindow(&thr->averageCorrGal,pi);
+        PerformAverageWindow(&thr->averageCorr2Gal,pi*pi);
+        PerformAverageWindow(&thr->averageCorrGal,pq);
+        PerformAverageWindow(&thr->averageCorr2Gal,pq*pq);
+        if(thr->numberOfEstimationsForConfirmation<THRESHOLD_NUMBER_OF_ESTIMATIONS)
+            thr->numberOfEstimationsForConfirmation++;
+        return;
+    }
 
     ArrayXor(inputSamples, thr->carrierCos, thr->demodulatedCos, thr->blocksize);
     ArrayXor(inputSamples, thr->carrierSin, thr->demodulatedSin, thr->blocksize);
@@ -536,18 +558,18 @@ void UpdateConfirmationThresholds(TNGeneConfiguration *cfg, TNGeneData *rx, TCha
 	    avg = GetAverageWindowValue(&(thr->averageCorrGal));
 	    avg2 = GetAverageWindowValue(&(thr->averageCorr2Gal));
 	    variance = avg2 - (avg * avg);
-	    conf->threshold = (unsigned int) FindAcquisitionThreshold(variance, conf->numOfNonCoherentSums, cfg->acqConfiguration.galileoFalseDetectionProb);
-	    SwrxLog(NGENE_LOG_SEVERITY_NOTE, "Set Galileo threshold for confirmation to %u", conf->threshold);
+	    conf->threshold = (uint64_t) FindAcquisitionThreshold(variance, conf->numOfNonCoherentSums, cfg->acqConfiguration.galileoFalseDetectionProb);
+	    SwrxLog(NGENE_LOG_SEVERITY_NOTE, "Set Galileo threshold for confirmation to %llu", (unsigned long long)conf->threshold);
 	} else {
 	    avg = GetAverageWindowValue(&(thr->averageCorrGps));
 	    avg2 = GetAverageWindowValue(&(thr->averageCorr2Gps));
 	    variance = avg2 - (avg * avg);
 	    if (ch->satType == GPS_SAT) {
-		conf->threshold = (unsigned int) FindAcquisitionThreshold(variance, conf->numOfNonCoherentSums, cfg->acqConfiguration.gpsFalseDetectionProb);
-		SwrxLog(NGENE_LOG_SEVERITY_NOTE, "Set GPS threshold for confirmation to %u", conf->threshold);
+		conf->threshold = (uint64_t) FindAcquisitionThreshold(variance, conf->numOfNonCoherentSums, cfg->acqConfiguration.gpsFalseDetectionProb);
+		SwrxLog(NGENE_LOG_SEVERITY_NOTE, "Set GPS threshold for confirmation to %llu", (unsigned long long)conf->threshold);
 	    } else {            /* if(ch->satType==EGNOS_SAT) */
-		conf->threshold = (unsigned int) FindAcquisitionThreshold(variance, conf->numOfNonCoherentSums, cfg->acqConfiguration.egnosFalseDetectionProb);
-		SwrxLog(NGENE_LOG_SEVERITY_NOTE, "Set EGNOS threshold for confirmation to %u", conf->threshold);
+		conf->threshold = (uint64_t) FindAcquisitionThreshold(variance, conf->numOfNonCoherentSums, cfg->acqConfiguration.egnosFalseDetectionProb);
+		SwrxLog(NGENE_LOG_SEVERITY_NOTE, "Set EGNOS threshold for confirmation to %llu", (unsigned long long)conf->threshold);
 	    }
 	}
     } else {

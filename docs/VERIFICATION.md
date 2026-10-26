@@ -36,7 +36,7 @@ rebuild using `build.cmd clean`. Both execute the following tests.
 | --- | --- |
 | HackRF native RX settings, cleanup, queue ordering, overflow, disconnect and shutdown (simulated hardware) | Passed |
 | EVO FFT port: 263,056 exact scalar comparisons, DFT, gains, guards and concurrency | Passed |
-| HackRF Q8 statistics, mixing, exact int32 MAC, compression, FFT exponent recovery and signed Doppler | Passed |
+| HackRF raw CI8, Q15 mixing, exact int32 MAC, uint64 powers, noise-window selection and signed zero-IF Doppler | Passed |
 | Carrier/PRN intrinsic optimization: 5,040 original-byte/phase preservation cases | Passed |
 | Legacy SiGe conversion preservation | Passed |
 | Native I/Q decoding, mixing and circular buffer | Passed |

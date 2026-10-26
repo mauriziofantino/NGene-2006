@@ -280,7 +280,7 @@ int main(int argc,char *argv[])
 		/* Update acquisition threshold */
 		if(ngene.rxCounter%INPUT_BUFFER_SIZE==0)
 		{
-			UpdateVariablesForConfirmationThresholds(&ngene);
+			UpdateVariablesForConfirmationThresholds(&ngeneCfg,&ngene);
 		}
 
 		/* Update the receiver execution counter:

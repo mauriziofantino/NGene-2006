@@ -6,21 +6,27 @@
 
 /* Shared numeric boundary, selected once by the frontend. Oscillator/code
  * generation and all receiver decisions remain in their original modules. */
-static inline void WipeOffReceiverInput(TNGeneConfiguration *cfg, TNGeneData *rx,
-    char *first, unsigned n1, char *second, unsigned n2, unsigned n)
+static inline double GenerateAndMixReceiverInput(TNGeneConfiguration *cfg, TNGeneData *rx,
+    char *first, unsigned n1, char *second, unsigned n2, unsigned n, double frequency, double phase)
 {
     if (rx->wideI)
-        CarrierIqWide((const TWideIq *)first, n1, (const TWideIq *)second, n2,
-            rx->cosArray, rx->sinArray, n, rx->wideI, rx->wideQ);
-    else
-        CarrierInputWipeOff(cfg->nativeIq, first, n1, second, n2,
-            rx->cosArray, rx->sinArray, n, rx->cosArray, rx->sinArray);
+        return MixHackrfInput(&rx->hackrfMixer, (const THackrfIq8 *)first, n1,
+            (const THackrfIq8 *)second, n2, n, frequency, phase, cfg->fs, rx->wideI, rx->wideQ);
+    phase=GenerateCarrier(cfg,&rx->fifTable,frequency,phase,n,rx->sinArray,rx->cosArray);
+    CarrierInputWipeOff(cfg->nativeIq, first, n1, second, n2,
+        rx->cosArray, rx->sinArray, n, rx->cosArray, rx->sinArray);
+    return phase;
 }
 
-/* Refinement/confirmation retain their integer integration accumulators.
- * Round once after the full dot product, rather than each ADC sample. */
-static inline int ReceiverPrompt(const short *wide, char *legacy, char *code, unsigned n)
+/* Keep HackRF integration in Q6 integers until the complete complex power. */
+static inline int64_t ReceiverPrompt(const short *wide, char *legacy, char *code, unsigned n)
 {
-    return wide ? (int)lroundf(CorrelateWide(wide, code, n)) : ArrayMac(legacy,code,n)+(int)(n/2);
+    return wide ? CorrelateWideInteger(wide,code,n) : ArrayMac(legacy,code,n)+(int)(n/2);
+}
+
+static inline uint64_t ReceiverPower(int wide, int64_t i, int64_t q)
+{
+    uint64_t power=(uint64_t)(i*i)+(uint64_t)(q*q);
+    return wide ? power/(HACKRF_MIXER_SCALE*HACKRF_MIXER_SCALE) : power;
 }
 #endif

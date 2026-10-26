@@ -84,11 +84,10 @@ void StartConfirmation(TChannel *ch)
 TAcquisitionStatus PerformConfirmation(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch, char *firstBunch, unsigned int firstBunchSize, char *secondBunch, unsigned int secondBunchSize)
 {
     TConfirmation *conf = &(ch->confirmation);
-    unsigned int p;
+    uint64_t p;
 
     /* generate and remove carrier */
-    ch->carrierPhase = GenerateCarrier(cfg, &(rx->fifTable), ch->carrierFrequency, ch->carrierPhase, ch->blocksize, rx->sinArray, rx->cosArray);
-    WipeOffReceiverInput(cfg, rx, firstBunch, firstBunchSize, secondBunch, secondBunchSize, ch->blocksize);
+    ch->carrierPhase = GenerateAndMixReceiverInput(cfg, rx, firstBunch, firstBunchSize, secondBunch, secondBunchSize, ch->blocksize, ch->carrierFrequency, ch->carrierPhase);
     /* code despreading */
     if (ch->satType == GALILEO_SAT) {
 	/* if Galileo, generate also the subcarrier */
@@ -104,7 +103,7 @@ TAcquisitionStatus PerformConfirmation(TNGeneConfiguration *cfg, TNGeneData *rx,
     /* analyze the result */
     conf->msCounter++;
     if (conf->msCounter == ch->codeDuration) {
-	p = (unsigned int) (conf->pI * conf->pI) + (unsigned int) (conf->pQ * conf->pQ);
+	p = ReceiverPower(rx->wideI!=NULL,conf->pI,conf->pQ);
 	conf->msCounter = 0;
 	conf->pI = 0;
 	conf->pQ = 0;
@@ -118,13 +117,13 @@ TAcquisitionStatus PerformConfirmation(TNGeneConfiguration *cfg, TNGeneData *rx,
 	    /* analyze the result */
 	    conf->tryCounter++;
 	    if (conf->p > (conf->threshold / conf->numOfNonCoherentSums)) {
-		SwrxLog(NGENE_LOG_SEVERITY_NOTE, "    %s: confirmation %u vs %u (success)", ch->prnName, p, conf->threshold / conf->numOfNonCoherentSums);
+		SwrxLog(NGENE_LOG_SEVERITY_NOTE, "    %s: confirmation %llu vs %llu (success)", ch->prnName, (unsigned long long)p, (unsigned long long)(conf->threshold / conf->numOfNonCoherentSums));
 		conf->successCounter++;
 		if (conf->successCounter >= conf->successesRequired) {
 		    return ACQUISITION_SUCCESS;
 		}
 	    } else {
-		SwrxLog(NGENE_LOG_SEVERITY_NOTE, "    %s: confirmation %u vs %u (failure)", ch->prnName, p, conf->threshold / conf->numOfNonCoherentSums);
+		SwrxLog(NGENE_LOG_SEVERITY_NOTE, "    %s: confirmation %llu vs %llu (failure)", ch->prnName, (unsigned long long)p, (unsigned long long)(conf->threshold / conf->numOfNonCoherentSums));
 		if ((conf->tryCounter >= conf->maxNumOfTries) || ((conf->maxNumOfTries - conf->tryCounter) < (conf->successesRequired - conf->successCounter))) {
 		    return ACQUISITION_FAILURE;
 		}

@@ -779,7 +779,7 @@ void CompleteConfiguration(TNGeneConfiguration *cfg)
 	SwrxLog(NGENE_LOG_SEVERITY_INFO, "Input samples: %s", cfg->nativeIq ?
 	        "native complex I/Q (one pair per sample)" : "real IF");
     if (cfg->usedFrontEnd == NGENE_FE_HACKRF)
-        SwrxLog(NGENE_LOG_SEVERITY_INFO, "HackRF precision: CI8 ADC, int16 Q8 I/Q ring/mixer, int32 SIMD correlation, controlled int16 FFT input");
+        SwrxLog(NGENE_LOG_SEVERITY_INFO, "HackRF precision: original CI8 ring, unit-circle Q15 NCO, int16 Q6 mixer, int32 SIMD correlation; no digital AGC or input limiter");
 	cfg->samplesPerMillisecond = cfg->fs/SECONDS_TO_MILLISECONDS;
 	cfg->samplesPerChip = cfg->fs/GPS_CODE_RATE;
 	cfg->pvtPeriodMilliseconds = (unsigned int)ceil(SECONDS_TO_MILLISECONDS/cfg->pvtConfiguration.pvtRate);

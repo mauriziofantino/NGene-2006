@@ -69,10 +69,11 @@ To compare the two live frontends without editing the selected configuration:
 
 HackRF uses 8,183,800 complex pairs/s. The supplied profile tunes exactly to GPS
 L1 (1,575,420,000 Hz); its signed NCO IF is derived from the configured RF centre.
-The SIMD adapter removes component DC and keeps fractional amplitude in an
-int16 Q8 complex ring, with int32 correlations and controlled FFT scaling.
-The existing +/-7 peak limiter remains; samples are no longer rounded to only
-15 integer levels. Tuning, gains and antenna power are in `configuration/HackRF.conf`.
+The ring keeps the original signed CI8 pairs, without digital gain or clipping.
+The separate HackRF SIMD path subtracts component DC and rotates with Q15 sine
+and cosine coefficients. Products retain Q6 fractions in int16 intermediates;
+correlations accumulate in int32 and acquisition powers in uint64.
+Tuning, gains and antenna power are in `configuration/HackRF.conf`.
 Live/replay findings and Doppler conventions are in [HACKRF.md](docs/HACKRF.md).
 
 To process the existing workspace recording without changing USB settings:

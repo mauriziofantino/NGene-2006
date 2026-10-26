@@ -194,7 +194,9 @@ int InitReceiver(TNGeneConfiguration *cfg, TNGeneData *rx)
     if (rx->sinArray == NULL)
 	errorsFound++;
     rx->wideI = rx->wideQ = NULL;
+    rx->hackrfMixer.coefficients = NULL;
     if (cfg->usedFrontEnd == NGENE_FE_HACKRF) {
+        if (!InitHackrfMixer(&rx->hackrfMixer)) errorsFound++;
         posix_memalign((void **)&rx->wideI, POSIX_ALIGNMENT, arraySize * sizeof(short));
         posix_memalign((void **)&rx->wideQ, POSIX_ALIGNMENT, arraySize * sizeof(short));
         if (!rx->wideI || !rx->wideQ) errorsFound++;
@@ -416,6 +418,7 @@ void DeinitReceiver(TNGeneConfiguration *cfg, TNGeneData *rx)
 	}
 	free(rx->cosArray);
     free(rx->wideI); free(rx->wideQ);
+    DeinitHackrfMixer(&rx->hackrfMixer);
 	free(rx->sinArray);
 	free(rx->subcarrierArray);
 	free(rx->subcarrierArrayEarly);

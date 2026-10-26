@@ -134,7 +134,7 @@ typedef struct CoarseAcquisitionStruct {
     float *dopplers;     /**< Doppler shifts to be explored (points to the AcqCommon structure) */
     int numDelays;     /**< Number of code delays to be explored */
     int *delays;     /**< Code delays to be explored (points to the AcqCommon structure) */
-    unsigned int threshold;     /**< Threshold used to test CAF (points to the AcqCommon structure) */
+    uint64_t threshold;     /**< CAF power threshold; full ADC range for HackRF. */
     short int *localCode;     /**< Pointer to the complex conjugate FFT of despreading code (points to the AcqCommon structure) */
     int compressedLength;     /**< The length of a compressed output from 1 ms input */
     /* algorithm parameters */
@@ -153,13 +153,15 @@ typedef struct CoarseAcquisitionStruct {
     /* samples */
     short int *signalCompressed;     /**< Array used to store the result of a compression */
     int32_t *wideCompressed; /**< HackRF window before the single FFT int16 conversion. */
+    uint64_t *wideNonCoherentSums; /**< HackRF powers with FFT exponents restored. */
+    unsigned widePowerShift; /**< Extra FFT/IFFT divisions for the current window. */
     unsigned int fftHeadroomReported; /**< One-time per-channel exponent diagnostic. */
     short int *signalFft;     /**< Array used to store the result of an FFT */
     short int *ifftOut;     /**< Array used to store the output of the IFFT */
     unsigned int *ifftAbs;     /**< Array used to store absolute values of the samples out of the IFFT */
     unsigned int *nonCoherentSums;     /**< Array used to store the output of the non coherent sums */
     /* maximum */
-    unsigned int maximum;     /**< Current maximum of the CAF */
+    uint64_t maximum;     /**< Current maximum of the CAF */
     float dopplerMax;     /**< Doppler used to obtain the maximum */
     int delayMax;     /**< Index of the sample corresponding to the maximum */
     unsigned long long int discardedSamples;     /**< Number of sample discarded from the input buffer when maximum is found */
@@ -176,10 +178,10 @@ typedef struct RefinementStruct {
     int indexBin;     /**< Index of the bin explored by the refinement */
     int msCounter;     /**< Index of the ms in the current correlation */
     int nonCoherentSumsIndex;     /**< Counts the current non coherent sums */
-    int pI;     /**< In-phase correlation */
-    int pQ;     /**< Quadrature correlation */
-    unsigned int p;     /**< Modulus of the correlation */
-    unsigned int maximum;     /**< Maximum correlation obtained (modulus) */
+    int64_t pI;     /**< In-phase correlation; Q6 for HackRF. */
+    int64_t pQ;     /**< Quadrature correlation; Q6 for HackRF. */
+    uint64_t p;     /**< Squared modulus in ADC amplitude units. */
+    uint64_t maximum;     /**< Maximum squared modulus. */
     int indexBinMax;     /**< Index of the bin for which the maximum has been found */
     unsigned long long int discardedSamples;     /**< Number of sample discarded from the input buffer when refinement starts */
 } TRefinement;
@@ -192,12 +194,12 @@ typedef struct ConfirmationStruct {
     int numOfNonCoherentSums;     /**< Number of non coherent sums */
     int successesRequired;     /**< M parameter for the current constellation */
     int maxNumOfTries;     /**< N parameter for the current constellation */
-    unsigned int threshold;     /**< Confirmation threshold for the current constellation */
+    uint64_t threshold;     /**< Confirmation power threshold for the current constellation. */
     int msCounter;     /**< Index of the ms in the current correlation */
     int nonCoherentSumsIndex;     /**< Counts the current non coherent sums */
-    int pI;     /**< In-phase correlation */
-    int pQ;     /**< Quadrature correlation */
-    unsigned int p;     /**< Modulus of the correlation */
+    int64_t pI;     /**< In-phase correlation; Q6 for HackRF. */
+    int64_t pQ;     /**< Quadrature correlation; Q6 for HackRF. */
+    uint64_t p;     /**< Squared modulus in ADC amplitude units. */
     int successCounter;     /**< Number of successes obtained up-to-now */
     int tryCounter;     /**< Number of attempts made up to now */
 } TConfirmation;

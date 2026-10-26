@@ -33,7 +33,7 @@ else()
     include(platform/linux/dependencies.cmake)
 endif()
 set_source_files_properties(asmFolder/complexInput.c asmFolder/wideInput.c
-    asmFolder/carrierTable.c asmFolder/prnTable.c PROPERTIES COMPILE_OPTIONS "${NGENE_OPTIMIZE}")
+    asmFolder/hackrfInput.c asmFolder/carrierTable.c asmFolder/prnTable.c PROPERTIES COMPILE_OPTIONS "${NGENE_OPTIMIZE}")
 
 include_directories(
     ${PROJECT_SOURCE_DIR}/secure
@@ -81,6 +81,7 @@ add_executable(ngene
     frontEnd/usbInterface.c
     frontEnd/manageUsbFrontEndConfiguration.c
     acquisition/acquisition.c
+    acquisition/hackrfThreshold.c
     acquisition/coarseAcquisition.c
     acquisition/confirmation.c
     acquisition/manageAcqConfiguration.c
@@ -157,6 +158,7 @@ add_executable(ngene
     asmFolder/carrierTable.c
     asmFolder/complexInput.c
     asmFolder/wideInput.c
+    asmFolder/hackrfInput.c
     asmFolder/prnTable.c
     asmFolder/sige.c
     asmFolder/sigeV3.c
@@ -201,7 +203,7 @@ if(NGENE_BUILD_PLATFORM_CHECKS)
     add_test(NAME fft_evo_classic_contract COMMAND ngene_check_fft)
     set_tests_properties(fft_evo_classic_contract PROPERTIES TIMEOUT 60)
     add_executable(ngene_check_wide_iq tools/check_wide_iq.c asmFolder/wideInput.c
-        utility/sampleCompression.c asmFolder/carrierTable.c)
+        asmFolder/hackrfInput.c acquisition/hackrfThreshold.c utility/sampleCompression.c asmFolder/carrierTable.c)
     target_link_libraries(ngene_check_wide_iq PRIVATE ngene_fft)
     add_test(NAME hackrf_full_precision COMMAND ngene_check_wide_iq)
     set_tests_properties(hackrf_full_precision PROPERTIES TIMEOUT 30)

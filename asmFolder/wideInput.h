@@ -1,19 +1,12 @@
-/* Fraction-preserving input boundary for HackRF. GNSS algorithms keep their
- * existing oscillator, code, integration, FFT size and amplitude conventions. */
+/* HackRF integer correlations and FFT boundary; independent of SiGe coding. */
 #ifndef NGENE_WIDE_INPUT_H
 #define NGENE_WIDE_INPUT_H
 #include <stdint.h>
 
-typedef struct { short i, q; } TWideIq;
-typedef char TWideIqLayoutCheck[sizeof(TWideIq)==4 ? 1 : -1];
+#include "hackrfInput.h"
 
-/* Q8 fixed-point: 256 integer units = 1 Classic amplitude unit. Keep the
- * existing +/-7 input limiter, with 1/256 spacing instead of integer rounding. */
-void AdaptIqWide(const unsigned char *raw, TWideIq *out, unsigned pairs);
-void CarrierIqWide(const TWideIq *first, unsigned count1,
-    const TWideIq *second, unsigned count2, const char *cosine, const char *sine,
-    unsigned count, short *real, short *imaginary);
-/* Input bounds +/-3584 and count <=16384 guarantee exact signed32 accumulation. */
+/* Signed32 dot products; convert to ADC amplitude units only after summing. */
+int32_t CorrelateWideInteger(const short *signal, const char *code, unsigned count);
 float CorrelateWide(const short *signal, const char *code, unsigned count);
 /* One pass over I/Q for the six early/prompt/late correlations. Output order:
  * early I/Q, prompt I/Q, late I/Q. Arithmetic is identical to CorrelateWide. */
@@ -32,5 +25,9 @@ int PackWideFft(const int32_t *input, short *output, unsigned count,
  * Restore FFT exponent BEFORE the historical /65536 and int16 narrowing. */
 int ProductWideFft(const short *signal, const short *code, short *out,
                    unsigned count, unsigned restoreShift);
+/* Restore the two transform exponents in uint64 powers, after all int16
+ * transforms. Noncoherent scaling keeps even endpoint powers within uint64. */
+int AccumulateWideFftPower(const short *input, uint64_t *sum, unsigned count,
+    unsigned restoreShift, unsigned nonCoherentShift, int reset);
 
 #endif

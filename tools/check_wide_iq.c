@@ -10,113 +10,118 @@
 #include "sampleCompression.h"
 #include "carrierTable.h"
 #include "ngeneConstants.h"
+#include "inputProcessing.h"
+#include "hackrfThreshold.h"
 
 char *ngeneXmmsBackup;
 int SwrxLog(int severity, const char *format, ...) { (void)severity; (void)format; return 0; }
 void CloseNGene(TNGeneConfiguration *cfg, int result) { (void)cfg; (void)result; abort(); }
 #define CHECK(x) do { if(!(x)) { fprintf(stderr,"Wide IQ failure line %d: %s\n",__LINE__,#x); return 1; } } while(0)
 
-static int Adapter(void)
+static int MixerAndMac(void)
 {
-    unsigned char raw[1026];
-    TWideIq out[514];
-    unsigned n, offset, k, pattern;
-    for(pattern=0;pattern<4;pattern++) for(offset=0;offset<16;offset++) for(n=1;n<=512;n++) {
-        double si=0,sq=0,ss=0,rms,gain=1;
-        if(2*n+offset>sizeof(raw)) continue;
-        for(k=0;k<n;k++) {
-            int i=pattern==0?(int)(k%256)-128:pattern==1?(int)(k%29)-12:pattern==2?127:((k==0)?-128:127);
-            int q=pattern==0?127-(int)(k%256):pattern==1?(int)((k*7)%31)-10:pattern==2?-128:127;
-            raw[offset+2*k]=(unsigned char)i; raw[offset+2*k+1]=(unsigned char)q;
-            si+=i; sq+=q; ss+=i*i+q*q;
+    THackrfMixer mixer={0};
+    unsigned char storage[2*16400+16];
+    short r[16400],q[16400]; char code[16400],early[16400],late[16400];
+    unsigned n,k,split,offset;
+    CHECK(InitHackrfMixer(&mixer));
+    CHECK(ReceiverPower(1,INT64_C(6400000),0)==UINT64_C(10000000000));
+    CHECK(ReceiverPower(1,INT64_C(6400000),INT64_C(-6400000))==UINT64_C(20000000000));
+    for(offset=0;offset<16;offset++) {
+        THackrfIq8 *input=(THackrfIq8 *)(storage+offset);
+        for(k=0;k<16400;k++) {
+            input[k].i=(int8_t)(k*19); input[k].q=(int8_t)(255-k*37);
+            code[k]=k%3?-1:0; early[k]=k&1?-1:0; late[k]=k&2?-1:0;
         }
-        si/=n; sq/=n;
-        rms=sqrt(fmax(0,ss/(2*n)-(si*si+sq*sq)/2));
-        if(rms>0) { while(rms<1.5 && gain<256) { rms*=2; gain*=2; }
-            while(rms>3 && gain>1.0/128) { rms*=0.5; gain*=0.5; } }
-        out[n].i=999;
-        AdaptIqWide(raw+offset,out,n);
-        CHECK(out[n].i==999);
-        for(k=0;k<n;k++) {
-            double ei=lround(((signed char)raw[offset+2*k]*256-lround(si*256))*gain);
-            double eq=lround(((signed char)raw[offset+2*k+1]*256-lround(sq*256))*gain);
-            CHECK(out[k].i==fmin(1792,fmax(-1792,ei)));
-            CHECK(out[k].q==fmin(1792,fmax(-1792,eq)));
-            if(pattern==0 && k && k%256 && abs(out[k].i)<1792 && abs(out[k-1].i)<1792) CHECK(out[k].i>out[k-1].i);
+        for(n=0;n<=(offset?128u:16384u);n=n<32?n+1:n+137) for(split=0;split<=n;split+=n/7+1) {
+            int64_t sumI=0,sumQ=0,totalI=0,totalQ=0;
+            int di=0,dq=0;
+            const double frequency=-2376.25,phase=1.234;
+            const double turn=2*M_PI;
+            uint32_t start=(uint32_t)(uint64_t)llround(phase*4294967296.0/turn);
+            uint32_t step=(uint32_t)(int64_t)llround(frequency/8183800*4294967296.0);
+            double out,expectedPhase=fmod(phase+turn*n*(frequency/8183800),turn);
+            for(k=0;k<n;k++) { sumI+=input[k].i; sumQ+=input[k].q; }
+            if(n) {
+                di=sumI>=0?(int)((sumI+n/2)/n):-(int)((-sumI+n/2)/n);
+                dq=sumQ>=0?(int)((sumQ+n/2)/n):-(int)((-sumQ+n/2)/n);
+            }
+            r[n]=q[n]=12345;
+            out=MixHackrfInput(&mixer,input,split,input+split,n-split,n,frequency,phase,8183800,r,q);
+            CHECK(r[n]==12345 && q[n]==12345);
+            if(expectedPhase<0) expectedPhase+=turn;
+            CHECK(fabs(out-expectedPhase)<2e-12);
+            for(k=0;k<n;k++) {
+                uint32_t p=start+k*step;
+                uint32_t packed=mixer.coefficients[(p+32768u)>>16];
+                int c=(int16_t)packed,s=(int16_t)(packed>>16);
+                int i=input[k].i-di,j=input[k].q-dq;
+                int ri=i*c-j*s,rq=i*s+j*c;
+                CHECK(r[k]==(ri+256-(ri<0))>>9);
+                CHECK(q[k]==(rq+256-(rq<0))>>9);
+                CHECK(abs(r[k])<23100 && abs(q[k])<23100);
+                totalI+=(code[k]?-1:1)*r[k]; totalQ+=(code[k]?-1:1)*q[k];
+            }
+            CHECK(CorrelateWide(r,code,n)==(float)totalI/HACKRF_MIXER_SCALE);
+            CHECK(CorrelateWide(q,code,n)==(float)totalQ/HACKRF_MIXER_SCALE);
+            {
+                float epl[6];
+                CorrelateWideEpl(r,q,early,code,late,n,epl);
+                CHECK(epl[0]==CorrelateWide(r,early,n) && epl[1]==CorrelateWide(q,early,n));
+                CHECK(epl[2]==CorrelateWide(r,code,n) && epl[3]==CorrelateWide(q,code,n));
+                CHECK(epl[4]==CorrelateWide(r,late,n) && epl[5]==CorrelateWide(q,late,n));
+            }
         }
     }
-    /* Full 16 ms radio blocks span several bounded SIMD statistic reductions. */
-    {
-        const unsigned length=131072;
-        unsigned char *large=malloc(2*length);
-        TWideIq *result=malloc(length*sizeof(*result));
-        CHECK(large && result);
-        for(k=0;k<length;k++) { large[2*k]=(unsigned char)(k%256); large[2*k+1]=(unsigned char)(255-k%256); }
-        AdaptIqWide(large,result,length);
-        for(k=0;k<length;k++) {
-            CHECK(result[k].i==((signed char)large[2*k]*256+128)/32);
-            CHECK(result[k].q==((signed char)large[2*k+1]*256+128)/32);
-        }
-        free(large); free(result);
-    }
+    /* Constant DC is removed at mixing; no integer ADC level is normalized. */
+    for(k=0;k<16384;k++) { ((THackrfIq8 *)storage)[k].i=127; ((THackrfIq8 *)storage)[k].q=-128; }
+    MixHackrfInput(&mixer,(THackrfIq8 *)storage,73,(THackrfIq8 *)storage+73,16384-73,
+        16384,0,0,8183800,r,q);
+    for(k=0;k<16384;k++) CHECK(r[k]==0 && q[k]==0);
+    DeinitHackrfMixer(&mixer);
     return 0;
 }
 
-static int MixerAndMac(void)
+static int ConfirmationNoise(void)
 {
-    TWideIq *input=malloc(16400*sizeof(TWideIq));
-    short *r=malloc(16400*sizeof(short)), *q=malloc(16400*sizeof(short));
-    char *c=malloc(16400),*s=malloc(16400),*code=malloc(16400);
-    unsigned n,k,split;
-    CHECK(input && r && q && c && s && code);
-    for(k=0;k<8200;k++) {
-        input[k].i=(short)(((int)(k%256)-128)*8);
-        input[k].q=(short)((127-(int)((k*19)%256))*8);
-        c[k]=k&1?-1:0; s[k]=k&2?-1:0; code[k]=k%3?-1:0;
+    TNGeneConfiguration cfg={0};
+    TNGeneData *rx=calloc(1,sizeof(*rx));
+    THackrfIq8 logical[32736],*ring=malloc(40000*sizeof(*ring));
+    char code[32736]; short i[8184],q[8184];
+    int64_t baseline[4],actual[4];
+    unsigned k,scale,tail;
+    uint32_t random=19;
+    CHECK(rx && ring && InitHackrfMixer(&rx->hackrfMixer));
+    cfg.fs=8183800; cfg.fif=0;
+    rx->wideI=i; rx->wideQ=q; rx->buf.buffer=(char *)ring; rx->buf.dim=40000;
+    rx->acqCommon.thr.code=code; rx->acqCommon.thr.blocksize=32736;
+    for(k=0;k<32736;k++) {
+        random=random*1664525u+1013904223u;
+        code[k]=random>>31?-1:0;
+        logical[k].i=(int8_t)(((int)((k/2*37)%63)-31)*(k&1?-1:1));
+        logical[k].q=(int8_t)(((int)((k/2*13)%63)-31)*(k&1?-1:1));
     }
-    for(n=1;n<=8184;n=n<32?n+1:n+137) for(split=0;split<=n;split+=n/7+1) {
-        double expectedR=0,expectedQ=0;
-        r[n]=q[n]=12345;
-        CarrierIqWide(input,split,input+split,n-split,c,s,n,r,q);
-        CHECK(r[n]==12345 && q[n]==12345);
-        for(k=0;k<n;k++) {
-            float ci=c[k]?-1:1,si=s[k]?-1:1;
-            CHECK(r[k]==input[k].i*ci-input[k].q*si);
-            CHECK(q[k]==input[k].i*si+input[k].q*ci);
-            expectedR+=(code[k]?-1:1)*r[k]; expectedQ+=(code[k]?-1:1)*q[k];
+    for(scale=0;scale<=2;scale++) for(tail=0;tail<2;tail++) {
+        rx->buf.tail=tail?34567:0;
+        rx->buf.fill1=40000-rx->buf.tail;
+        if(rx->buf.fill1>32736) rx->buf.fill1=32736;
+        rx->buf.fill2=32736-rx->buf.fill1;
+        for(k=0;k<32736;k++) {
+            ring[(rx->buf.tail+k)%40000].i=(int8_t)(logical[k].i*(int)scale);
+            ring[(rx->buf.tail+k)%40000].q=(int8_t)(logical[k].q*(int)scale);
         }
-        CHECK(CorrelateWide(r,code,n)==expectedR/256);
-        CHECK(CorrelateWide(q,code,n)==expectedQ/256);
-        {
-            float epl[6];
-            CorrelateWideEpl(r,q,c,code,s,n,epl);
-            CHECK(epl[0]==CorrelateWide(r,c,n)); CHECK(epl[1]==CorrelateWide(q,c,n));
-            CHECK(epl[2]==CorrelateWide(r,code,n)); CHECK(epl[3]==CorrelateWide(q,code,n));
-            CHECK(epl[4]==CorrelateWide(r,s,n)); CHECK(epl[5]==CorrelateWide(q,s,n));
+        CHECK(MeasureHackrfConfirmationNoise(&cfg,rx,actual));
+        if(!scale) for(k=0;k<4;k++) CHECK(actual[k]==0);
+        if(scale==1 && !tail) {
+            memcpy(baseline,actual,sizeof(baseline));
+            CHECK(baseline[0]!=0 || baseline[1]!=0);
         }
+        if(scale==1) CHECK(memcmp(baseline,actual,sizeof(baseline))==0);
+        if(scale==2) for(k=0;k<4;k++) CHECK(llabs(actual[k]-2*baseline[k])<=2*32736);
     }
-    /* The full two-ms workspace, with all IQ/oscillator rail combinations,
-     * must not saturate any signed16 mixer or signed32 correlation lane. */
-    for(split=0;split<16;split++) {
-        int iv=split&1?-1792:1792,qv=split&2?-1792:1792;
-        int cv=split&4?-1:1,sv=split&8?-1:1;
-        n=16384;
-        for(k=0;k<n;k++) {
-            input[k].i=(short)iv; input[k].q=(short)qv;
-            c[k]=cv<0?-1:0; s[k]=sv<0?-1:0; code[k]=0;
-        }
-        CarrierIqWide(input,73,input+73,n-73,c,s,n,r,q);
-        CHECK(CorrelateWide(r,code,n)==(iv*cv-qv*sv)*(double)n/256);
-        CHECK(CorrelateWide(q,code,n)==(iv*sv+qv*cv)*(double)n/256);
-        {
-            float epl[6];
-            CorrelateWideEpl(r,q,c,code,s,n,epl);
-            CHECK(epl[0]==CorrelateWide(r,c,n) && epl[1]==CorrelateWide(q,c,n));
-            CHECK(epl[2]==CorrelateWide(r,code,n) && epl[3]==CorrelateWide(q,code,n));
-            CHECK(epl[4]==CorrelateWide(r,s,n) && epl[5]==CorrelateWide(q,s,n));
-        }
-    }
-    free(input); free(r); free(q); free(c); free(s); free(code);
+    rx->buf.fill1=rx->buf.fill2=0;
+    CHECK(!MeasureHackrfConfirmationNoise(&cfg,rx,actual));
+    DeinitHackrfMixer(&rx->hackrfMixer); free(rx); free(ring);
     return 0;
 }
 
@@ -133,7 +138,7 @@ static int CompressionAndFft(void)
     for(mode=0;mode<2;mode++) for(n=0;n<3;n++) for(m=1024;m<=4096;m*=4) {
         for(k=0;k<inputs[n];k++) {
             a[k]=(char)((int)(k%15)-7); b[k]=(char)(7-(int)((k*3)%15));
-            boc[k]=k&1?-1:0; r[k]=a[k]*256; q[k]=b[k]*256;
+            boc[k]=k&1?-1:0; r[k]=a[k]*HACKRF_MIXER_SCALE; q[k]=b[k]*HACKRF_MIXER_SCALE;
             bc[k]=mode && boc[k]?-a[k]:a[k]; bs[k]=mode && boc[k]?-b[k]:b[k];
         }
         SampleCompression(0,0,bc,bs,inputs[n],legacy,m);
@@ -165,26 +170,46 @@ static int CompressionAndFft(void)
 
 static int Doppler(void)
 {
-    TNGeneConfiguration cfg={0}; TSinCosTable table={0};
-    TWideIq input[8184]; short r[8184],q[8184]; char c[8184],s[8184],code[8184]={0};
-    double powers[2]; int sign,trial; unsigned k;
+    TNGeneConfiguration cfg={0}; TSinCosTable old={0}; THackrfMixer mixer={0};
+    THackrfIq8 input[8184]; short r[8184],q[8184]; char c[8184],s[8184],code[8184];
+    const double frequencies[]={-2000,-5,-0.5,0,0.5,5,2000};
+    unsigned k,f,p;
     cfg.fs=8183800; cfg.ts=1/cfg.fs;
-    CHECK(InitCarrierTable(&cfg,&table,0)==SUCCESS_RETURN);
-    for(sign=-1;sign<=1;sign+=2) {
-        for(k=0;k<8184;k++) {
-            double phase=0.17+2*M_PI*sign*2000*k/cfg.fs;
-            input[k].i=(short)lround(512*cos(phase)); input[k].q=(short)lround(512*sin(phase));
-        }
-        for(trial=0;trial<2;trial++) {
-            double fd=(trial?1:-1)*sign*2000;
-            GenerateCarrier(&cfg,&table,fd,0,8184,s,c);
-            CarrierIqWide(input,73,input+73,8111,c,s,8184,r,q);
-            double re=CorrelateWide(r,code,8184),im=CorrelateWide(q,code,8184);
-            powers[trial]=re*re+im*im;
-        }
-        CHECK(powers[0]>100*powers[1]);
+    CHECK(InitHackrfMixer(&mixer));
+    CHECK(InitCarrierTable(&cfg,&old,0)==SUCCESS_RETURN);
+    for(k=0;k<8184;k++) code[k]=k&1?-1:0;
+    /* Reproduce the old zero-IF phase failure: for a purely real baseband
+     * signal, sign-only cosine/sine have equal power at EVERY NCO phase. */
+    for(p=0;p<32;p++) {
+        int64_t i=0,j=0;
+        GenerateCarrier(&cfg,&old,0,2*M_PI*p/32,8184,s,c);
+        for(k=0;k<8184;k++) { i+=c[k]?-64:64; j+=s[k]?-64:64; }
+        CHECK(i*i-j*j==0);
     }
-    DeinitCarrierTable(&table);
+    for(f=0;f<sizeof(frequencies)/sizeof(frequencies[0]);f++) for(p=0;p<32;p++) {
+        double phase=2*M_PI*p/32,fd=frequencies[f],pi,pq,metric;
+        for(k=0;k<8184;k++) {
+            double angle=phase+2*M_PI*fd*k/cfg.fs;
+            int bit=code[k]?-1:1;
+            input[k].i=(int8_t)(48+bit*lround(64*cos(angle)));
+            input[k].q=(int8_t)(-32+bit*lround(64*sin(angle)));
+        }
+        MixHackrfInput(&mixer,input,73,input+73,8111,8184,-fd,-phase,cfg.fs,r,q);
+        pi=CorrelateWide(r,code,8184); pq=CorrelateWide(q,code,8184);
+        metric=(pi*pi-pq*pq)/(pi*pi+pq*pq);
+        CHECK(metric>0.999);
+        /* Two rounded ADC components contribute at most sqrt(0.5) counts
+         * of radial error; keep that quantization separate from mixer error. */
+        CHECK(fabs(pi/8184-64)<0.75);
+        if(fabs(fd)==2000) {
+            double wrongI,wrongQ;
+            MixHackrfInput(&mixer,input,1,input+1,8183,8184,fd,-phase,cfg.fs,r,q);
+            wrongI=CorrelateWide(r,code,8184); wrongQ=CorrelateWide(q,code,8184);
+            CHECK(pi*pi+pq*pq>100*(wrongI*wrongI+wrongQ*wrongQ));
+        }
+    }
+    puts("Zero/near-zero IF: sign-only NCO PLL metric 0; Q15 unit-circle metric >0.999 for all phases and Doppler signs.");
+    DeinitCarrierTable(&old); DeinitHackrfMixer(&mixer);
     return 0;
 }
 
@@ -194,6 +219,7 @@ static int HeadroomAndProduct(void)
     int32_t input[8192]; short packed[8192],spectrum[8192],reference[8192],code[16384];
     unsigned k,n,restore,clipped=0;
     int requested=-4,effective;
+    uint64_t powers[4096];
     CHECK(InitFftTable(&cfg,&fft)==SUCCESS_RETURN);
     for(k=0;k<4096;k++) {
         double phase=2*M_PI*31*k/4096;
@@ -210,9 +236,43 @@ static int HeadroomAndProduct(void)
         CHECK(requested>-12);
     }
     CHECK(requested<-4);
+    /* Exercise the complete acquisition chain at full ADC-related amplitude.
+     * Carry the forward exponent through an independently checked inverse FFT;
+     * restoring it before that transform used to saturate the CAF. */
+    CHECK(ProductWideFft(spectrum,code,reference,4096,0));
+    {
+        int inverse=-4;
+        for(;;inverse--) {
+            CHECK(PerformFftChecked(&cfg,&fft,reference,packed,12,inverse,&clipped)==SUCCESS_RETURN);
+            if(!clipped) break;
+            CHECK(inverse>-12);
+        }
+        CHECK(AccumulateWideFftPower(packed,powers,4096,-4-requested-4-inverse,0,1));
+        /* Known tone and flat local-code spectrum: each CAF component has
+         * amplitude 1000 * 4096 / (16 * 64 * 16) = 250. */
+        {
+            uint64_t minimum=UINT64_MAX,maximum=0;
+            for(k=0;k<4096;k++) { if(powers[k]<minimum) minimum=powers[k]; if(powers[k]>maximum) maximum=powers[k]; }
+            printf("Scaled FFT/IFFT tone powers: %llu..%llu (ideal 62500)\n",(unsigned long long)minimum,(unsigned long long)maximum);
+        }
+        for(k=0;k<4096;k++) CHECK(llabs((int64_t)powers[k]-62500)<5000);
+    }
     CHECK(ProductWideFft(spectrum,code,spectrum,4096,-4-requested));
     CHECK(abs(spectrum[62]-4000)<30 && abs(spectrum[63])<30);
     DeinitFftTable(&fft);
+    for(n=1;n<=128;n++) for(restore=0;restore<=16;restore++) {
+        unsigned pass;
+        for(k=0;k<2*n;k++) packed[k]=k%3?-32768:32767;
+        for(pass=0;pass<8;pass++) {
+            CHECK(AccumulateWideFftPower(packed,powers,n,restore,3,pass==0));
+            for(k=0;k<n;k++) {
+                int64_t i=packed[2*k],q=packed[2*k+1];
+                uint64_t expected=(((uint64_t)(i*i+q*q)<<(2*restore))>>3)*(pass+1);
+                CHECK(powers[k]==expected);
+            }
+        }
+    }
+    CHECK(!AccumulateWideFftPower(packed,powers,1,17,0,1));
     /* Scalar int64 oracle, arbitrary tails, signed floor rounding, aliases and
      * PMADDWD's exceptional overflow endpoints. */
     for(restore=0;restore<=8;restore++) for(n=1;n<=128;n++) {
@@ -222,8 +282,9 @@ static int HeadroomAndProduct(void)
         packed[0]=packed[1]=code[0]=code[1]=-32768;
         for(k=0;k<2*n;k++) {
             unsigned bin=k/2,part=k%2;
-            int64_t value=((int64_t)packed[2*bin]*code[4*bin+2*part]+
-                           (int64_t)packed[2*bin+1]*code[4*bin+2*part+1])>>(16-restore);
+            int64_t value=(int64_t)packed[2*bin]*code[4*bin+2*part]+
+                           (int64_t)packed[2*bin+1]*code[4*bin+2*part+1];
+            value=(value+(INT64_C(1)<<(15-restore))-(value<0))>>(16-restore);
             if(value < -32768 || value > 32767) expectedOk=0;
             reference[k]=(short)(value < -32768?-32768:value > 32767?32767:value);
         }
@@ -242,9 +303,9 @@ int main(void)
     SetErrorMode(SEM_FAILCRITICALERRORS | SEM_NOGPFAULTERRORBOX);
 #endif
     CHECK(posix_memalign((void **)&ngeneXmmsBackup,16,128)==0);
-    result=Adapter() || MixerAndMac() || CompressionAndFft() || Doppler() || HeadroomAndProduct();
+    result=MixerAndMac() || ConfirmationNoise() || CompressionAndFft() || Doppler() || HeadroomAndProduct();
     free(ngeneXmmsBackup);
     if(result) return 1;
-    puts("CI8/Q8 precision, scalar/SIMD statistics/mixer/MAC, compression, FFT headroom recovery and signed zero-IF Doppler passed.");
+    puts("Raw CI8, Q15 unit-circle mixer, exact SIMD integer MAC, compression, FFT headroom recovery and signed zero-IF Doppler passed.");
     return 0;
 }

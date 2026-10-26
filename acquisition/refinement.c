@@ -88,7 +88,7 @@ TAcquisitionStatus PerformDopplerRefinement(TNGeneConfiguration *cfg, TNGeneData
 {
     TRefinement *ref = &(ch->refinement);
     double fcCorrection = (double) rx->acqCommon.dopplerRefSteps[ref->indexBin];
-    unsigned int p;
+    uint64_t p;
     double codeRateNew;
     double fd;
     long long int elapsedSamples;
@@ -96,8 +96,7 @@ TAcquisitionStatus PerformDopplerRefinement(TNGeneConfiguration *cfg, TNGeneData
     int sampleCorrection;
 
     /* generate and remove carrier */
-    ch->carrierPhase = GenerateCarrier(cfg, &(rx->fifTable), ch->carrierFrequency + fcCorrection, ch->carrierPhase, ch->blocksize, rx->sinArray, rx->cosArray);
-    WipeOffReceiverInput(cfg, rx, firstBunch, firstBunchSize, secondBunch, secondBunchSize, ch->blocksize);
+    ch->carrierPhase = GenerateAndMixReceiverInput(cfg, rx, firstBunch, firstBunchSize, secondBunch, secondBunchSize, ch->blocksize, ch->carrierFrequency + fcCorrection, ch->carrierPhase);
     /* code despreading */
     if (ch->satType == GALILEO_SAT) {
 	/* if Galileo, generate also the subcarrier */
@@ -113,7 +112,7 @@ TAcquisitionStatus PerformDopplerRefinement(TNGeneConfiguration *cfg, TNGeneData
     /* analyze the result */
     ref->msCounter++;
     if (ref->msCounter == ch->codeDuration) {
-	p = (unsigned int) (ref->pI * ref->pI) + (unsigned int) (ref->pQ * ref->pQ);
+	p = ReceiverPower(rx->wideI!=NULL,ref->pI,ref->pQ);
 	ref->msCounter = 0;
 	ref->pI = 0;
 	ref->pQ = 0;
@@ -130,7 +129,8 @@ TAcquisitionStatus PerformDopplerRefinement(TNGeneConfiguration *cfg, TNGeneData
 	    }
 
 	    if (ch->coarse.acqBinLog != NULL) {
-		fwrite(&(ref->p), sizeof(unsigned int), 1, ch->coarse.acqBinLog);
+		if(rx->wideI) fwrite(&ref->p,sizeof(ref->p),1,ch->coarse.acqBinLog);
+        else { unsigned int legacyPower=(unsigned int)ref->p; fwrite(&legacyPower,sizeof(legacyPower),1,ch->coarse.acqBinLog); }
 	    }
 	    ref->indexBin++;
 	    if (ref->indexBin >= rx->acqCommon.dopplerRefNumSteps) {
@@ -211,7 +211,7 @@ TAcquisitionStatus PerformCodeRefinement(TNGeneConfiguration *cfg, TNGeneData *r
     unsigned int size1;
     char *input2;
     unsigned int size2;
-    unsigned int p;
+    uint64_t p;
 
     /* the code offset could require more samples then those available */
     if (((unsigned int) curDelay + ch->blocksize) > (firstBunchSize + secondBunchSize))
@@ -231,8 +231,7 @@ TAcquisitionStatus PerformCodeRefinement(TNGeneConfiguration *cfg, TNGeneData *r
     }
 
     /* generate and remove carrier */
-    ch->carrierPhase = GenerateCarrier(cfg, &(rx->fifTable), ch->carrierFrequency, ch->carrierPhase, ch->blocksize, rx->sinArray, rx->cosArray);
-    WipeOffReceiverInput(cfg, rx, input1, size1, input2, size2, ch->blocksize);
+    ch->carrierPhase = GenerateAndMixReceiverInput(cfg, rx, input1, size1, input2, size2, ch->blocksize, ch->carrierFrequency, ch->carrierPhase);
     /* code despreading */
     if (ch->satType == GALILEO_SAT) {
 	/* if Galileo, generate also the subcarrier */
@@ -248,7 +247,7 @@ TAcquisitionStatus PerformCodeRefinement(TNGeneConfiguration *cfg, TNGeneData *r
     /* analyze the result */
     ref->msCounter++;
     if (ref->msCounter == ch->codeDuration) {
-	p = (unsigned int) (ref->pI * ref->pI) + (unsigned int) (ref->pQ * ref->pQ);
+	p = ReceiverPower(rx->wideI!=NULL,ref->pI,ref->pQ);
 	ref->msCounter = 0;
 	ref->pI = 0;
 	ref->pQ = 0;
@@ -265,7 +264,8 @@ TAcquisitionStatus PerformCodeRefinement(TNGeneConfiguration *cfg, TNGeneData *r
 	    }
 
 	    if (ch->coarse.acqBinLog != NULL) {
-		fwrite(&(ref->p), sizeof(unsigned int), 1, ch->coarse.acqBinLog);
+		if(rx->wideI) fwrite(&ref->p,sizeof(ref->p),1,ch->coarse.acqBinLog);
+        else { unsigned int legacyPower=(unsigned int)ref->p; fwrite(&legacyPower,sizeof(legacyPower),1,ch->coarse.acqBinLog); }
 	    }
 
 	    ref->indexBin++;

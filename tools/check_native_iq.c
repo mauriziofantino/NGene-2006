@@ -235,11 +235,11 @@ int main(void)
     }
     REQUIRE(consumed == 40 && wireIndex == sizeof(wire) && !ring.sigeIqHasPending);
     /* HackRF signed CI8 has no SiGe marker bits: preserve chronological I/Q,
-     * quantize every signed byte value, retain odd fragments and wrap pairs. */
+     * preserve every signed ADC byte, retain odd fragments and wrap pairs. */
     DeinitCircularBuffer(&ring);
     cfg.usedFrontEnd = NGENE_FE_HACKRF;
     REQUIRE(InitCircularBuffer(&cfg, &ring) == SUCCESS_RETURN);
-    REQUIRE(ring.sampleStride == sizeof(TWideIq));
+    REQUIRE(ring.sampleStride == sizeof(THackrfIq8));
     wireIndex = readCalls = consumed = iterations = 0;
     for (k = 0; k < 40; k++) {
         wire[2*k] = (unsigned char)((int)k - 20);
@@ -252,9 +252,9 @@ int main(void)
         take = ring.fill1 + ring.fill2;
         if (take > 3) take = 3;
         for (k = 0; k < take; k++) {
-            TWideIq value = ((TWideIq *)ring.buffer)[(ring.tail + k) % ring.dim];
-            REQUIRE(value.i >= -1792 && value.i <= 1792 && value.q >= -1792 && value.q <= 1792);
-            REQUIRE(value.i + value.q == 0);
+            THackrfIq8 value = ((THackrfIq8 *)ring.buffer)[(ring.tail + k) % ring.dim];
+            REQUIRE(value.i == (int)(consumed+k)-20);
+            REQUIRE(value.q == 60-(int)(consumed+k));
         }
         REQUIRE(DeleteFromCircularBuffer(&ring, take) == take);
         consumed += take;

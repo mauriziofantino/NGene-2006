@@ -56,7 +56,7 @@ SiGe marker-tagged bytes: replay it with `--frontend sige` instead.
 | Original transport | 16,367,600 marker-tagged bytes/s | 16,367,600 signed CI8 bytes/s |
 | Classic positive-sign NCO IF | +38,400 Hz, current setting | centre minus GPS L1; 0 in supplied profile |
 | RF centre setting | Fixed hardware frequency plan | Configurable; supplied profile 1,575,420,000 Hz |
-| Native component amplitude passed to the receiver | -1 or +1 | int16 Q8 (-1792..1792 = -7..+7), fractional levels retained |
+| Native component amplitude in the ring | -1 or +1 | original signed ADC byte (-128..127), no digital gain or limiter |
 | Existing Doppler correction | +1 | -1 |
 
 The [Colorado SiGe documentation](https://www.colorado.edu/lab/rf-satnav/resources/original-open-source-gpsgnss-sdr)
@@ -107,42 +107,36 @@ their synchronization or storage is destroyed. libhackrf owns its USB event
 thread; the SiGe USB event loop is not used for HackRF.
 
 `FillInputBuffer` reads complete I/Q pairs and retains incomplete pairs across
-odd reads. HackRF uses `TWideIq { short i, q; }`: four bytes per complex sample,
-with Q8 scaling (256 stored counts = one Classic amplitude unit). Ring indices
-still count time samples and retention remains 16 ms. USB/file data remain CI8.
-SiGe retains its existing two-byte complex ring and original byte DSP path.
+odd reads. HackRF uses `THackrfIq8 { int8_t i, q; }`: exactly two original ADC
+bytes per sample. Ring indices count complex time samples and retention remains
+16 ms. There is no input normalization, RMS target or +/-7 limiter. SiGe keeps
+its existing decoding and DSP path.
 
-`AdaptIqWide` computes separate I/Q means and combined centred RMS. Signed sums
-and energy use SSE2, with bounded int32 partial sums reduced into int64. Means
-are represented with eight fractional bits. SSE2 subtracts those means, applies
-one common power-of-two gain and retains Q8 fractions. The combined RMS target
-remains 1.5..3.0 Classic units where possible. Component values are still limited
-to +/-7, now stored as +/-1792, instead of being rounded to only 15 whole-unit
-levels. This preserves ADC spacing inside the existing limiter; it neither
-creates ADC information nor preserves samples intentionally limited as peaks.
-A constant input maps to zero. There is no automatic independent I/Q gain.
+`asmFolder/hackrfInput.c` implements a separate HackRF mixer. SSE2 sums the raw
+components, then subtracts the integer-rounded component means over the exact
+requested window, independently of USB chunks and physical ring splits. A
+65,536-entry table stores full sine/cosine coefficients in Q15. SSE2 PMADDWD
+performs the complex rotation, retaining six fractional bits in int16 output.
+This Q6 representation preserves fractional products; it is not a digital gain.
+Sums are int32 and completed powers are uint64. Only completed tracking
+correlations enter the existing floating-point discriminators. Per-sample
+mixing/correlation does not cast to float. PRN/BOC signs remain binary masks.
+The NCO frequency/phase update uses double once per block.
 
-Carrier rotation operates on eight int16 samples per SSE2 vector. Code
-correlation uses signed16 products and signed32 accumulation, with one Q8 scale
-conversion after the dot product. No byte saturation or half-LSB XOR packing is
-needed for HackRF. Existing PRN/BOC codes, square-wave carrier tables, Doppler
-conventions, integration periods, discriminators, thresholds and navigation/PVT
-algorithms are retained. Refinement/confirmation round only their completed
-correlations to their existing integer accumulators. These new intrinsic
-primitives compile with /O2; remaining historical inline-assembly sources retain /Od. Carrier/PRN generators
-now also use validated intrinsics and /O2.
+Compression retains Classic's sample groups in int32. A common exponent packs
+each complete complex window for the fixed-point FFT. Both forward and inverse
+transforms check stage saturation and retry from their original inputs if
+required. Extra transform exponents are carried to uint64 powers and the noise
+variance, rather than overflowing the inverse transform or a uint32 threshold.
+The HackRF spectral product rounds symmetrically to avoid the negative pedestal
+introduced by flooring every small spectral bin. SiGe's product and FFT
+rounding remain unchanged. FFT sizes, search bins, M/N tests and loop/PVT
+algorithms are retained. See [the tracking review](HACKRF_TRACKING_REVIEW.md).
 
-Compression uses the same NCO and sample groups as Classic. It accumulates into
-int32; Q8 cancels the historical compression multiplier of 256. A common exponent
-packs the complete complex window into int16, compensating in FFT gain. This
-includes all four milliseconds of a Galileo window, without separate I/Q gains.
-`PerformFftChecked` counts actual int32-to-int16 saturation at every FFT stage.
-When necessary acquisition retries from the original window with extra right
-shifts. A widened SSE2 spectral product restores that exponent **before** the
-historical /65536 rounding, preserving the amplitude convention used by existing
-thresholds. Unrepresentable input/product is reported, rather than silently
-wrapping. The original `PerformFft` API and SiGe arithmetic remain unchanged.
-This changes numeric representation and headroom, not FFT size or Doppler bins.
+HackRF acquisition binary logs now store coarse threshold/CAF powers and
+refinement powers as uint64 (the existing parameter headers are unchanged).
+Readers of those optional logs must select this width for HackRF. SiGe's
+corresponding binary fields retain their original uint32 layout.
 
 The RF frontends can still differ in analogue response/noise, oscillator error
 and interference, even with matching nominal digital settings.
@@ -202,14 +196,16 @@ eight-bit samples before input adaptation. The retained local captures are
 They are ignored by Git. Temporary receiver homes and diagnostic logs remain
 outside the repository. Replay tuning must match the capture metadata.
 
-## Q8 precision and FFT headroom checks (2026-10-25)
+## Historical Q8 precision and FFT headroom checks (2026-10-25)
 
-The Q8 path replaces the whole-unit HackRF quantization described in the earlier
+The previous Q8 path replaced the whole-unit HackRF quantization described in the earlier
 diagnosis. A trial without the existing peak limiter degraded replay results:
 the raw stream contains brief ADC-rail bursts even at moderate gain. Their
-origin has not been established. The production Q8 path therefore preserves the
+origin has not been established. That Q8 increment therefore preserved the
 limiter and increases fractional precision inside it; it does not claim to keep
-every saturated/outlier sample unchanged.
+every saturated/outlier sample unchanged. The current raw-CI8 path described
+above supersedes this normalization and limiter; the following measurements
+document that earlier version.
 
 Three-second raw captures at LNA32 and VGA48/52/56/58 measured centred component
 RMS of 11.76/16.92/25.26/31.40 ADC counts. ADC-rail fractions were approximately
