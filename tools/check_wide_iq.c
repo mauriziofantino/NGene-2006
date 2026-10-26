@@ -236,9 +236,20 @@ static int HeadroomAndProduct(void)
         CHECK(requested>-12);
     }
     CHECK(requested<-4);
+    CHECK(ProductWideFft(spectrum,code,spectrum,4096,-4-requested));
+    CHECK(abs(spectrum[62]-4000)<30 && abs(spectrum[63])<30);
     /* Exercise the complete acquisition chain at full ADC-related amplitude.
      * Carry the forward exponent through an independently checked inverse FFT;
-     * restoring it before that transform used to saturate the CAF. */
+     * use a constant to separate exponent errors from Classic's retained
+     * twiddle/floor quantization (covered by the separate FFT DFT fixture). */
+    for(k=0;k<4096;k++) { input[2*k]=1000; input[2*k+1]=0; }
+    requested=-4;
+    for(;;requested--) {
+        CHECK(PackWideFft(input,packed,4096,12,requested,&effective));
+        CHECK(PerformFftChecked(&cfg,&fft,packed,spectrum,12,effective,&clipped)==SUCCESS_RETURN);
+        if(!clipped) break;
+        CHECK(requested>-12);
+    }
     CHECK(ProductWideFft(spectrum,code,reference,4096,0));
     {
         int inverse=-4;
@@ -250,15 +261,8 @@ static int HeadroomAndProduct(void)
         CHECK(AccumulateWideFftPower(packed,powers,4096,-4-requested-4-inverse,0,1));
         /* Known tone and flat local-code spectrum: each CAF component has
          * amplitude 1000 * 4096 / (16 * 64 * 16) = 250. */
-        {
-            uint64_t minimum=UINT64_MAX,maximum=0;
-            for(k=0;k<4096;k++) { if(powers[k]<minimum) minimum=powers[k]; if(powers[k]>maximum) maximum=powers[k]; }
-            printf("Scaled FFT/IFFT tone powers: %llu..%llu (ideal 62500)\n",(unsigned long long)minimum,(unsigned long long)maximum);
-        }
         for(k=0;k<4096;k++) CHECK(llabs((int64_t)powers[k]-62500)<5000);
     }
-    CHECK(ProductWideFft(spectrum,code,spectrum,4096,-4-requested));
-    CHECK(abs(spectrum[62]-4000)<30 && abs(spectrum[63])<30);
     DeinitFftTable(&fft);
     for(n=1;n<=128;n++) for(restore=0;restore<=16;restore++) {
         unsigned pass;
@@ -273,7 +277,7 @@ static int HeadroomAndProduct(void)
         }
     }
     CHECK(!AccumulateWideFftPower(packed,powers,1,17,0,1));
-    /* Scalar int64 oracle, arbitrary tails, signed floor rounding, aliases and
+    /* Scalar int64 oracle, arbitrary tails, symmetric rounding, aliases and
      * PMADDWD's exceptional overflow endpoints. */
     for(restore=0;restore<=8;restore++) for(n=1;n<=128;n++) {
         int expectedOk=1,ok;
