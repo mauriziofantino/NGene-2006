@@ -69,7 +69,7 @@ void StartTracking(TNGeneConfiguration *cfg,TChannel *ch,TTracking *trk);
  * @param cosArray points to the samples demodulated using cosine
  * @param sinArray points to the samples demodulated using sine
  */
-void PerformAllTrackingCorrelations(TChannel *ch, TTracking *trk, char *cosArray, char *sinArray);
+void PerformAllTrackingCorrelations(TChannel *ch, TTracking *trk, char *cosArray, char *sinArray, const short *wideI, const short *wideQ);
 
 /**
  * @brief this function writes tracking logs in the high rate correlation file

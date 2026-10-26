@@ -15,6 +15,7 @@
 #include "channelDataStructure.h"
 #include "trackingDataStructure.h"
 #include "arrays.h"
+#include "inputProcessing.h"
 #include "tracking.h"
 #include "trackingDiscriminatorsLoops.h"
 #include "ioFunctions.h"
@@ -118,7 +119,7 @@ TTrackingStatus PerformGpsTracking(TNGeneConfiguration *cfg,TNGeneData *rx,TChan
 
 	/* carrier wipe-off */
 	ch->carrierPhase = GenerateCarrier(cfg,&(rx->fifTable),ch->carrierFrequency,ch->carrierPhase,ch->blocksize,rx->sinArray,rx->cosArray);
-	CarrierInputWipeOff(cfg->nativeIq, firstBunch,firstBunchSize,secondBunch,secondBunchSize,rx->cosArray,rx->sinArray,ch->blocksize,rx->cosArray,rx->sinArray);
+	WipeOffReceiverInput(cfg, rx, firstBunch, firstBunchSize, secondBunch, secondBunchSize, ch->blocksize);
 	ch->carrierFrequencyOld = ch->carrierFrequency;
 	ch->dopplerShiftOld = ch->dopplerShift;
 	/* code wipeoff */
@@ -134,7 +135,7 @@ TTrackingStatus PerformGpsTracking(TNGeneConfiguration *cfg,TNGeneData *rx,TChan
 	}
 
 	// correlation
-	PerformAllTrackingCorrelations(ch,trk,rx->cosArray,rx->sinArray);
+	PerformAllTrackingCorrelations(ch,trk,rx->cosArray,rx->sinArray,rx->wideI,rx->wideQ);
 
 	/* try to obtain bit synchronization (if not reached yet) */
 	CheckBitSynchronization(cfg,rx,ch,trk);

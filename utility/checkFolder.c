@@ -15,6 +15,33 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include "ngeneConstants.h"
+#include "checkFolder.h"
+
+const char *GetExecutableDirectory(void)
+{
+#ifdef NGENE_NATIVE_WINDOWS
+    return NgNativeHome();
+#else
+    static char directory[MAX_ROW_LENGTH];
+    ssize_t length;
+    char *last;
+    if (directory[0]) return directory;
+    length = readlink("/proc/self/exe", directory, sizeof(directory)-1);
+    if (length <= 0 || length >= (ssize_t)sizeof(directory)-1) {
+        directory[0] = '\0';
+        return NULL;
+    }
+    directory[length] = '\0';
+    last = strrchr(directory, '/');
+    if (!last) {
+        directory[0] = '\0';
+        return NULL;
+    }
+    if (last == directory) last[1] = '\0';
+    else *last = '\0';
+    return directory;
+#endif
+}
 
 int IsFolderExistent(char *folder)
 {

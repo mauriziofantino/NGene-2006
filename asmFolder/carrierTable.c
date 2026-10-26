@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <limits.h>
+#include <emmintrin.h>
 #include "ngeneConstants.h"
 #include "carrierTable.h"
 #include "ngeneConfiguration.h"
@@ -20,9 +21,6 @@
 #include "ioFunctions.h"
 #include "closeManager.h"
 
-
-/* global variable for the backup of XMM registers */
-extern char *ngeneXmmsBackup;
 
 int InitCarrierTable(TNGeneConfiguration *cfg, TSinCosTable *t, double f)
 {
@@ -95,15 +93,12 @@ unsigned int Generate_carrier_s8_r256_c32_simd(double f, unsigned int phase, TSi
 	unsigned int index;
 	unsigned int Phase;
 
-	s128 *sin_ptr, *cos_ptr;   /* pointers to output vectors */
+	__m128i v0,v1,v2,v3;
+    s128 *sin_ptr, *cos_ptr;   /* pointers to output vectors */
 	s128 *p, *p1;  /* table pointer */
 	char *p2, *sin_ptr2, *cos_ptr2; /* table pointer for the last row */
 
-	/* BACKUP */
-	movdqa_r2m(xmm0,ngeneXmmsBackup[XMM_REGISTER_SIZE*0]);
-	movdqa_r2m(xmm1,ngeneXmmsBackup[XMM_REGISTER_SIZE*1]);
-	movdqa_r2m(xmm2,ngeneXmmsBackup[XMM_REGISTER_SIZE*2]);
-	movdqa_r2m(xmm3,ngeneXmmsBackup[XMM_REGISTER_SIZE*3]);
+	/* SSE2 intrinsics: compiler owns registers and the Microsoft x64 ABI. */
 	/**/
 
 	/* input f is already normalized w.r.t. the sampling frequency */
@@ -135,14 +130,14 @@ unsigned int Generate_carrier_s8_r256_c32_simd(double f, unsigned int phase, TSi
 		index = (index<<2);  /* each row contains 64 samples (32 for sine and 32 for cosine: that is 4 variables of 16 bytes */
 		p1 = p+index;
 
-		movdqa_m2r(p1[0], xmm0);
-		movdqa_m2r(p1[1], xmm1);
-		movdqa_m2r(p1[2], xmm2);
-		movdqa_m2r(p1[3], xmm3);
-		movdqa_r2m(xmm0, sin_ptr[0]);
-		movdqa_r2m(xmm1, sin_ptr[1]);
-		movdqa_r2m(xmm2, cos_ptr[0]);
-		movdqa_r2m(xmm3, cos_ptr[1]);
+		v0 = _mm_load_si128((const __m128i *)&(p1[0]));
+		v1 = _mm_load_si128((const __m128i *)&(p1[1]));
+		v2 = _mm_load_si128((const __m128i *)&(p1[2]));
+		v3 = _mm_load_si128((const __m128i *)&(p1[3]));
+		_mm_store_si128((__m128i *)&(sin_ptr[0]), v0);
+		_mm_store_si128((__m128i *)&(sin_ptr[1]), v1);
+		_mm_store_si128((__m128i *)&(cos_ptr[0]), v2);
+		_mm_store_si128((__m128i *)&(cos_ptr[1]), v3);
 
 		Phase +=Tau;
 
@@ -150,14 +145,14 @@ unsigned int Generate_carrier_s8_r256_c32_simd(double f, unsigned int phase, TSi
 		index = (index<<2);
 		p1 = p+index;
 
-		movdqa_m2r(p1[0], xmm0);
-		movdqa_m2r(p1[1], xmm1);
-		movdqa_m2r(p1[2], xmm2);
-		movdqa_m2r(p1[3], xmm3);
-		movdqa_r2m(xmm0, sin_ptr[2]);
-		movdqa_r2m(xmm1, sin_ptr[3]);
-		movdqa_r2m(xmm2, cos_ptr[2]);
-		movdqa_r2m(xmm3, cos_ptr[3]);
+		v0 = _mm_load_si128((const __m128i *)&(p1[0]));
+		v1 = _mm_load_si128((const __m128i *)&(p1[1]));
+		v2 = _mm_load_si128((const __m128i *)&(p1[2]));
+		v3 = _mm_load_si128((const __m128i *)&(p1[3]));
+		_mm_store_si128((__m128i *)&(sin_ptr[2]), v0);
+		_mm_store_si128((__m128i *)&(sin_ptr[3]), v1);
+		_mm_store_si128((__m128i *)&(cos_ptr[2]), v2);
+		_mm_store_si128((__m128i *)&(cos_ptr[3]), v3);
 
 		Phase +=Tau;
 
@@ -165,14 +160,14 @@ unsigned int Generate_carrier_s8_r256_c32_simd(double f, unsigned int phase, TSi
 		index = (index<<2);
 		p1 = p+index;
 
-		movdqa_m2r(p1[0], xmm0);
-		movdqa_m2r(p1[1], xmm1);
-		movdqa_m2r(p1[2], xmm2);
-		movdqa_m2r(p1[3], xmm3);
-		movdqa_r2m(xmm0, sin_ptr[4]);
-		movdqa_r2m(xmm1, sin_ptr[5]);
-		movdqa_r2m(xmm2, cos_ptr[4]);
-		movdqa_r2m(xmm3, cos_ptr[5]);
+		v0 = _mm_load_si128((const __m128i *)&(p1[0]));
+		v1 = _mm_load_si128((const __m128i *)&(p1[1]));
+		v2 = _mm_load_si128((const __m128i *)&(p1[2]));
+		v3 = _mm_load_si128((const __m128i *)&(p1[3]));
+		_mm_store_si128((__m128i *)&(sin_ptr[4]), v0);
+		_mm_store_si128((__m128i *)&(sin_ptr[5]), v1);
+		_mm_store_si128((__m128i *)&(cos_ptr[4]), v2);
+		_mm_store_si128((__m128i *)&(cos_ptr[5]), v3);
 
 		Phase +=Tau;
 
@@ -180,14 +175,14 @@ unsigned int Generate_carrier_s8_r256_c32_simd(double f, unsigned int phase, TSi
 		index = (index<<2);
 		p1 = p+index;
 
-		movdqa_m2r(p1[0], xmm0);
-		movdqa_m2r(p1[1], xmm1);
-		movdqa_m2r(p1[2], xmm2);
-		movdqa_m2r(p1[3], xmm3);
-		movdqa_r2m(xmm0, sin_ptr[6]);
-		movdqa_r2m(xmm1, sin_ptr[7]);
-		movdqa_r2m(xmm2, cos_ptr[6]);
-		movdqa_r2m(xmm3, cos_ptr[7]);
+		v0 = _mm_load_si128((const __m128i *)&(p1[0]));
+		v1 = _mm_load_si128((const __m128i *)&(p1[1]));
+		v2 = _mm_load_si128((const __m128i *)&(p1[2]));
+		v3 = _mm_load_si128((const __m128i *)&(p1[3]));
+		_mm_store_si128((__m128i *)&(sin_ptr[6]), v0);
+		_mm_store_si128((__m128i *)&(sin_ptr[7]), v1);
+		_mm_store_si128((__m128i *)&(cos_ptr[6]), v2);
+		_mm_store_si128((__m128i *)&(cos_ptr[7]), v3);
 
 		Phase +=Tau;
 		sin_ptr+=8;
@@ -203,14 +198,14 @@ unsigned int Generate_carrier_s8_r256_c32_simd(double f, unsigned int phase, TSi
 		index = (index<<2);
 		p1 = p+index;
 
-		movdqa_m2r(p1[0], xmm0);
-		movdqa_m2r(p1[1], xmm1);
-		movdqa_m2r(p1[2], xmm2);
-		movdqa_m2r(p1[3], xmm3);
-		movdqa_r2m(xmm0, sin_ptr[0]);
-		movdqa_r2m(xmm1, sin_ptr[1]);
-		movdqa_r2m(xmm2, cos_ptr[0]);
-		movdqa_r2m(xmm3, cos_ptr[1]);
+		v0 = _mm_load_si128((const __m128i *)&(p1[0]));
+		v1 = _mm_load_si128((const __m128i *)&(p1[1]));
+		v2 = _mm_load_si128((const __m128i *)&(p1[2]));
+		v3 = _mm_load_si128((const __m128i *)&(p1[3]));
+		_mm_store_si128((__m128i *)&(sin_ptr[0]), v0);
+		_mm_store_si128((__m128i *)&(sin_ptr[1]), v1);
+		_mm_store_si128((__m128i *)&(cos_ptr[0]), v2);
+		_mm_store_si128((__m128i *)&(cos_ptr[1]), v3);
 
 		Phase +=Tau;
 		sin_ptr+=2;
@@ -235,11 +230,7 @@ unsigned int Generate_carrier_s8_r256_c32_simd(double f, unsigned int phase, TSi
 		Phase += Tau1;
 	}
 
-	/* RESTORE */
-	movdqa_m2r(ngeneXmmsBackup[XMM_REGISTER_SIZE*0],xmm0);
-	movdqa_m2r(ngeneXmmsBackup[XMM_REGISTER_SIZE*1],xmm1);
-	movdqa_m2r(ngeneXmmsBackup[XMM_REGISTER_SIZE*2],xmm2);
-	movdqa_m2r(ngeneXmmsBackup[XMM_REGISTER_SIZE*3],xmm3);
+	/* No shared XMM backup. */
 	/**/
 
 	return(Phase);
@@ -299,13 +290,12 @@ unsigned int Generate_sine_s8_r256_c32_simd(double f, unsigned int phase, TSinCo
 	unsigned int index;
 	unsigned int Phase;
 
-	s128 *sin_ptr;   /* pointer to output vector */
+	__m128i v0,v1;
+    s128 *sin_ptr;   /* pointer to output vector */
 	s128 *p, *p1;  /* table pointer */
 	char *p2, *sin_ptr2; /* table pointer for the last row */
 
-	/* BACKUP */
-	movdqa_r2m(xmm0,ngeneXmmsBackup[XMM_REGISTER_SIZE*0]);
-	movdqa_r2m(xmm1,ngeneXmmsBackup[XMM_REGISTER_SIZE*1]);
+	/* SSE2 intrinsics: compiler owns registers and the Microsoft x64 ABI. */
 	/**/
 
 	/* input f is already normalized w.r.t. the sampling frequency */
@@ -336,10 +326,10 @@ unsigned int Generate_sine_s8_r256_c32_simd(double f, unsigned int phase, TSinCo
 		index = (index<<2);  /* each row contains 64 samples (32 for sine and 32 for cosine: that is 4 variables of 16 bytes */
 		p1 = p+index;
 
-		movdqa_m2r(p1[0], xmm0);
-		movdqa_m2r(p1[1], xmm1);
-		movdqa_r2m(xmm0, sin_ptr[0]);
-		movdqa_r2m(xmm1, sin_ptr[1]);
+		v0 = _mm_load_si128((const __m128i *)&(p1[0]));
+		v1 = _mm_load_si128((const __m128i *)&(p1[1]));
+		_mm_store_si128((__m128i *)&(sin_ptr[0]), v0);
+		_mm_store_si128((__m128i *)&(sin_ptr[1]), v1);
 
 		Phase +=Tau;
 
@@ -347,10 +337,10 @@ unsigned int Generate_sine_s8_r256_c32_simd(double f, unsigned int phase, TSinCo
 		index = (index<<2);
 		p1 = p+index;
 
-		movdqa_m2r(p1[0], xmm0);
-		movdqa_m2r(p1[1], xmm1);
-		movdqa_r2m(xmm0, sin_ptr[2]);
-		movdqa_r2m(xmm1, sin_ptr[3]);
+		v0 = _mm_load_si128((const __m128i *)&(p1[0]));
+		v1 = _mm_load_si128((const __m128i *)&(p1[1]));
+		_mm_store_si128((__m128i *)&(sin_ptr[2]), v0);
+		_mm_store_si128((__m128i *)&(sin_ptr[3]), v1);
 
 		Phase +=Tau;
 
@@ -358,10 +348,10 @@ unsigned int Generate_sine_s8_r256_c32_simd(double f, unsigned int phase, TSinCo
 		index = (index<<2);
 		p1 = p+index;
 
-		movdqa_m2r(p1[0], xmm0);
-		movdqa_m2r(p1[1], xmm1);
-		movdqa_r2m(xmm0, sin_ptr[4]);
-		movdqa_r2m(xmm1, sin_ptr[5]);
+		v0 = _mm_load_si128((const __m128i *)&(p1[0]));
+		v1 = _mm_load_si128((const __m128i *)&(p1[1]));
+		_mm_store_si128((__m128i *)&(sin_ptr[4]), v0);
+		_mm_store_si128((__m128i *)&(sin_ptr[5]), v1);
 
 		Phase +=Tau;
 
@@ -369,10 +359,10 @@ unsigned int Generate_sine_s8_r256_c32_simd(double f, unsigned int phase, TSinCo
 		index = (index<<2);
 		p1 = p+index;
 
-		movdqa_m2r(p1[0], xmm0);
-		movdqa_m2r(p1[1], xmm1);
-		movdqa_r2m(xmm0, sin_ptr[6]);
-		movdqa_r2m(xmm1, sin_ptr[7]);
+		v0 = _mm_load_si128((const __m128i *)&(p1[0]));
+		v1 = _mm_load_si128((const __m128i *)&(p1[1]));
+		_mm_store_si128((__m128i *)&(sin_ptr[6]), v0);
+		_mm_store_si128((__m128i *)&(sin_ptr[7]), v1);
 
 		Phase +=Tau;
 		sin_ptr+=8;
@@ -387,10 +377,10 @@ unsigned int Generate_sine_s8_r256_c32_simd(double f, unsigned int phase, TSinCo
 		index = (index<<2);
 		p1 = p+index;
 
-		movdqa_m2r(p1[0], xmm0);
-		movdqa_m2r(p1[1], xmm1);
-		movdqa_r2m(xmm0, sin_ptr[0]);
-		movdqa_r2m(xmm1, sin_ptr[1]);
+		v0 = _mm_load_si128((const __m128i *)&(p1[0]));
+		v1 = _mm_load_si128((const __m128i *)&(p1[1]));
+		_mm_store_si128((__m128i *)&(sin_ptr[0]), v0);
+		_mm_store_si128((__m128i *)&(sin_ptr[1]), v1);
 
 		Phase +=Tau;
 		sin_ptr+=2;
@@ -412,9 +402,7 @@ unsigned int Generate_sine_s8_r256_c32_simd(double f, unsigned int phase, TSinCo
 		Phase += Tau1;
 	}
 
-	/* RESTORE */
-	movdqa_m2r(ngeneXmmsBackup[XMM_REGISTER_SIZE*0],xmm0);
-	movdqa_m2r(ngeneXmmsBackup[XMM_REGISTER_SIZE*1],xmm1);
+	/* No shared XMM backup. */
 	/**/
 
 	return(Phase);

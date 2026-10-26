@@ -2,6 +2,9 @@
  * Only hardware calls are simulated; no radio is required for CTest. */
 #include <hackrf.h>
 #include <stdarg.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
 #include "hackrfFrontend.h"
 #include "ioFunctions.h"
 #include "signalHandler.h"
@@ -120,15 +123,23 @@ static void VerifySettings(void)
         "[Center frequency (Hz)]\n0\n", "[Center frequency (Hz)]\n1575420000oops\n",
         "[LNA gain (dB)]\n", "[RF amplifier]\n0\n[RF amplifier]\n1\n"
     };
+#ifdef NGENE_NATIVE_WINDOWS
     char tempPath[MAX_PATH], folder[MAX_PATH], filename[MAX_PATH];
+#else
+    char folder[] = "/tmp/ngene-hackrf-XXXXXX", filename[256];
+#endif
     TRxFe fe;
     TNGeneConfiguration cfg;
     TUsbFePars pars;
     FILE *file;
     unsigned int k;
+#ifdef NGENE_NATIVE_WINDOWS
     REQUIRE(GetTempPathA(sizeof(tempPath), tempPath) != 0);
     REQUIRE(GetTempFileNameA(tempPath, "ngr", 0, folder) != 0);
     REQUIRE(DeleteFileA(folder) && CreateDirectoryA(folder, NULL));
+#else
+    REQUIRE(mkdtemp(folder) != NULL);
+#endif
     snprintf(filename, sizeof(filename), "%s/HackRF.conf", folder);
     for (k = 0; k < sizeof(invalid) / sizeof(invalid[0]); k++) {
         Initialize(&fe, &cfg, &pars);
@@ -151,7 +162,11 @@ static void VerifySettings(void)
     REQUIRE(cfg.fif == 0 && frequency == UINT64_C(1575420000));
     REQUIRE(StartHackrfFrontend(&fe) == SUCCESS_RETURN);
     Destroy(&fe);
+#ifdef NGENE_NATIVE_WINDOWS
     REQUIRE(DeleteFileA(filename) && RemoveDirectoryA(folder));
+#else
+    REQUIRE(unlink(filename) == 0 && rmdir(folder) == 0);
+#endif
 }
 int main(void)
 {

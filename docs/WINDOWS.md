@@ -1,7 +1,8 @@
 # Windows nativo: compilazione e configurazione
 
-Questo package usa soltanto Windows x64 nativo: Visual Studio clang-cl, Windows
+Il build Windows usa Windows x64 nativo: Visual Studio clang-cl, Windows
 SDK e runtime Microsoft. Non richiede Cygwin, MSYS2, MinGW, Bash o WSL.
+Il build [Linux](LINUX.md) usa un percorso separato e non modifica quello Windows.
 
 ## Comandi
 
@@ -27,8 +28,8 @@ Per pulire soltanto, senza ricompilare:
 registrazioni e cache delle dipendenze. Per ricompilare dopo la pulizia usare
 `build.cmd`.
 
-Entrambi i comandi individuano Visual Studio, preparano le dipendenze e lanciano
-sette test. Non serve definire `$cmake`, modificare PATH o aprire un terminale
+`build.cmd` individua Visual Studio, prepara le dipendenze e lancia nove test.
+Non serve definire `$cmake`, modificare PATH o aprire un terminale
 speciale. La pulizia conserva configurazioni, registrazioni e cache delle
 librerie. La prima build richiede Internet per scaricare le dipendenze.
 

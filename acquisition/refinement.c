@@ -18,6 +18,7 @@
 #include "carrierTable.h"
 #include "prnTable.h"
 #include "arrays.h"
+#include "inputProcessing.h"
 #include "spreadingCodes.h"
 
 void InitRefinement(TNGeneConfiguration *cfg, TRefinement *ref, TChannel *ch)
@@ -96,7 +97,7 @@ TAcquisitionStatus PerformDopplerRefinement(TNGeneConfiguration *cfg, TNGeneData
 
     /* generate and remove carrier */
     ch->carrierPhase = GenerateCarrier(cfg, &(rx->fifTable), ch->carrierFrequency + fcCorrection, ch->carrierPhase, ch->blocksize, rx->sinArray, rx->cosArray);
-    CarrierInputWipeOff(cfg->nativeIq, firstBunch, firstBunchSize, secondBunch, secondBunchSize, rx->cosArray, rx->sinArray, ch->blocksize, rx->cosArray, rx->sinArray);
+    WipeOffReceiverInput(cfg, rx, firstBunch, firstBunchSize, secondBunch, secondBunchSize, ch->blocksize);
     /* code despreading */
     if (ch->satType == GALILEO_SAT) {
 	/* if Galileo, generate also the subcarrier */
@@ -107,8 +108,8 @@ TAcquisitionStatus PerformDopplerRefinement(TNGeneConfiguration *cfg, TNGeneData
 	/* if Galileo, remove also the subcarrier */
 	ArrayXor(rx->subcarrierArray, rx->codeArray, rx->codeArray, ch->blocksize);
     }
-    ref->pI += (ArrayMac(rx->cosArray, rx->codeArray, ch->blocksize) + (ch->blocksize / 2));
-    ref->pQ += (ArrayMac(rx->sinArray, rx->codeArray, ch->blocksize) + (ch->blocksize / 2));
+    ref->pI += ReceiverPrompt(rx->wideI, rx->cosArray, rx->codeArray, ch->blocksize);
+    ref->pQ += ReceiverPrompt(rx->wideQ, rx->sinArray, rx->codeArray, ch->blocksize);
     /* analyze the result */
     ref->msCounter++;
     if (ref->msCounter == ch->codeDuration) {
@@ -231,7 +232,7 @@ TAcquisitionStatus PerformCodeRefinement(TNGeneConfiguration *cfg, TNGeneData *r
 
     /* generate and remove carrier */
     ch->carrierPhase = GenerateCarrier(cfg, &(rx->fifTable), ch->carrierFrequency, ch->carrierPhase, ch->blocksize, rx->sinArray, rx->cosArray);
-    CarrierInputWipeOff(cfg->nativeIq, input1, size1, input2, size2, rx->cosArray, rx->sinArray, ch->blocksize, rx->cosArray, rx->sinArray);
+    WipeOffReceiverInput(cfg, rx, input1, size1, input2, size2, ch->blocksize);
     /* code despreading */
     if (ch->satType == GALILEO_SAT) {
 	/* if Galileo, generate also the subcarrier */
@@ -242,8 +243,8 @@ TAcquisitionStatus PerformCodeRefinement(TNGeneConfiguration *cfg, TNGeneData *r
 	/* if Galileo, remove also the subcarrier */
 	ArrayXor(rx->subcarrierArray, rx->codeArray, rx->codeArray, ch->blocksize);
     }
-    ref->pI += (ArrayMac(rx->cosArray, rx->codeArray, ch->blocksize) + (ch->blocksize / 2));
-    ref->pQ += (ArrayMac(rx->sinArray, rx->codeArray, ch->blocksize) + (ch->blocksize / 2));
+    ref->pI += ReceiverPrompt(rx->wideI, rx->cosArray, rx->codeArray, ch->blocksize);
+    ref->pQ += ReceiverPrompt(rx->wideQ, rx->sinArray, rx->codeArray, ch->blocksize);
     /* analyze the result */
     ref->msCounter++;
     if (ref->msCounter == ch->codeDuration) {

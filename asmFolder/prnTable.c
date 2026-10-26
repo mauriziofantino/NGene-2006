@@ -14,6 +14,7 @@
 #include <string.h>
 #include <limits.h>
 #include <math.h>
+#include <emmintrin.h>
 #include "simd.h"
 #include "ngeneConfiguration.h"
 #include "prnTable.h"
@@ -23,47 +24,16 @@
 #include "ioFunctions.h"
 #include "arrays.h"
 
-/* global variable for the backup of XMM registers */
-extern char *ngeneXmmsBackup;
-
-void OversampleCode(char *code, int codeLen,s128 *oversampled)
+void OversampleCode(char *code,int codeLen,s128 *oversampled)
 {
-	int i;
-
-	/* BACKUP */
-	movdqa_r2m(xmm0,ngeneXmmsBackup[XMM_REGISTER_SIZE*0]);
-	/**/
-
-	for(i=0;i<codeLen;i++)
-	{
-		oversampled[i].b[0]  = code[i];
-		oversampled[i].b[1]  = code[i];
-		oversampled[i].b[2]  = code[i];
-		oversampled[i].b[3]  = code[i];
-		oversampled[i].b[4]  = code[i];
-		oversampled[i].b[5]  = code[i];
-		oversampled[i].b[6]  = code[i];
-		oversampled[i].b[7]  = code[i];
-		oversampled[i].b[8]  = code[i];
-		oversampled[i].b[9]  = code[i];
-		oversampled[i].b[10] = code[i];
-		oversampled[i].b[11] = code[i];
-		oversampled[i].b[12] = code[i];
-		oversampled[i].b[13] = code[i];
-		oversampled[i].b[14] = code[i];
-		oversampled[i].b[15] = code[i];
-		// Copy twice
-		movdqa_m2r(oversampled[i], xmm0);
-		movdqa_r2m(xmm0, oversampled[codeLen+i]);
-	}
-	movdqa_m2r(oversampled[0], xmm0);
-	movdqa_r2m(xmm0, oversampled[2*codeLen]);
-	
-	/* RESTORE */
-	movdqa_m2r(ngeneXmmsBackup[XMM_REGISTER_SIZE*0],xmm0);
+    int i;
+    for(i=0;i<codeLen;i++) {
+        __m128i row=_mm_set1_epi8(code[i]);
+        _mm_store_si128((__m128i *)(oversampled+i),row);
+        _mm_store_si128((__m128i *)(oversampled+codeLen+i),row);
+    }
+    _mm_store_si128((__m128i *)(oversampled+2*codeLen),_mm_set1_epi8(code[0]));
 }
-
-
 int InitPrnTable(TNGeneConfiguration *cfg,TPrnTable *t)
 {
 	int errorsFound = 0;
@@ -287,7 +257,7 @@ int GenerateCode(TNGeneConfiguration *cfg,TPrnTable *t,TSatConstellation prnCons
 	char *ptrOut = codeOut;
 	int index=n;
 	unsigned int index2;
-	s128 xmm0Backup;
+	__m128i row;
 
 	/* initialization */
 	if(prnConstellation==GPS_SAT)
@@ -361,15 +331,7 @@ int GenerateCode(TNGeneConfiguration *cfg,TPrnTable *t,TSatConstellation prnCons
 		nco -= t->ncoThreshold;
 	}
 	/**/
-	/* Starting from Ubuntu 18.04 64 bit, this function, when compiled in release,
-	 * avoids the receiver standard behaviour (it does not acquire signals!).
-	 * Analysis led to the conclusion that the variable codeRate loses its correct value
-	 * inside GenerateCode, probably because the compiler allocates it in the xmm0 register,
-	 * which is used for the copy of chip samples with movdqu.
-	 * To avoid this malfunctioning, the content of xmm0 is saved in the stack
-	 * before the main loop and restored after it.
-	 * It is faster than copying bytes with memcpy (which works also). */
-	movdqu_r2m(xmm0,xmm0Backup);
+	/* Intrinsics declare register use, so optimization preserves codeRate. */
 	while(index>=0)
 	{
 		if((nco+ncoChipShort)<t->ncoThreshold)
@@ -377,8 +339,8 @@ int GenerateCode(TNGeneConfiguration *cfg,TPrnTable *t,TSatConstellation prnCons
 			index2=0;
 			while(index2<t->chipLongLen)
 			{
-				movdqu_m2r(code[0],xmm0);
-				movdqu_r2m(xmm0, ptrOut[index2]);
+				row = _mm_loadu_si128((const __m128i *)code);
+				_mm_storeu_si128((__m128i *)(ptrOut+index2),row);
 				index2 += XMM_REGISTER_SIZE;
 			}
 			nco += ncoIncrementChipLong;
@@ -391,8 +353,8 @@ int GenerateCode(TNGeneConfiguration *cfg,TPrnTable *t,TSatConstellation prnCons
 			index2=0;
 			while(index2<t->chipShortLen)
 			{
-				movdqu_m2r(code[0],xmm0);
-				movdqu_r2m(xmm0, ptrOut[index2]);
+				row = _mm_loadu_si128((const __m128i *)code);
+				_mm_storeu_si128((__m128i *)(ptrOut+index2),row);
 				index2 += XMM_REGISTER_SIZE;
 			}
 			code += XMM_REGISTER_SIZE;
@@ -401,7 +363,7 @@ int GenerateCode(TNGeneConfiguration *cfg,TPrnTable *t,TSatConstellation prnCons
 			ptrOut += t->chipShortLen;
 		}
 	}
-	movdqu_m2r(xmm0Backup,xmm0);
+
 	/* update codePhase */
 	UpdateCodePhase(cfg,prnConstellation,codePhase,codePhaseFrac,n,codeRate);
 	return SUCCESS_RETURN;

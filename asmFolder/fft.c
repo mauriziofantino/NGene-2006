@@ -62,8 +62,8 @@ void DeinitFftTable(TFftTable *table)
     memset(table,0,sizeof(*table));
 }
 
-int PerformFft(TNGeneConfiguration *cfg, TFftTable *table, short *input,
-               short *output, unsigned log2Size, int gain)
+int PerformFftChecked(TNGeneConfiguration *cfg, TFftTable *table, short *input,
+               short *output, unsigned log2Size, int gain, unsigned *clipped)
 {
     unsigned n, stride, quarter, i, chunk, block, width, base, stage;
     unsigned scaledStages;
@@ -71,6 +71,7 @@ int PerformFft(TNGeneConfiguration *cfg, TFftTable *table, short *input,
     uintptr_t a=(uintptr_t)input, b=(uintptr_t)output;
     const short *tw;
     (void)cfg;
+    if (clipped) *clipped=0;
     if (!table || !table->reverse || !table->twiddles || !input || !output ||
         log2Size<3 || log2Size>table->maxLog2FftSize || log2Size>MAX_LOG2_FFT_SIZE ||
         gain>0 || gain<-(int)log2Size || ((a|b)&1u)) {
@@ -99,11 +100,11 @@ int PerformFft(TNGeneConfiguration *cfg, TFftTable *table, short *input,
     /* Stage scaling is determined by the absolute radix-2 stage, not by chunk.
      * This retains Classic's first -gain right shifts even across subtrees. */
     for (chunk=0;chunk<n;chunk+=block) {
-        FftFirstStagesSse2(output+2*chunk,block,scaledStages,bounded);
+        FftFirstStagesSse2(output+2*chunk,block,scaledStages,bounded,clipped);
         for (width=16,stage=4;width<=block;width*=2,stage++) {
             for (base=chunk;base<chunk+block;base+=width)
                 FftButterfliesSse2(output+2*base,output+2*base+width,
-                    tw+2*width-4,width/2,stage<=scaledStages,bounded);
+                    tw+2*width-4,width/2,stage<=scaledStages,bounded,clipped);
         }
     }
     for (width=2*block; width<=n; width*=2) {
@@ -111,7 +112,13 @@ int PerformFft(TNGeneConfiguration *cfg, TFftTable *table, short *input,
         for (i=width;i>1;i>>=1) stage++;
         for (base=0;base<n;base+=width)
             FftButterfliesSse2(output+2*base,output+2*base+width,
-                tw+2*width-4,width/2,stage<=scaledStages,bounded);
+                tw+2*width-4,width/2,stage<=scaledStages,bounded,clipped);
     }
     return SUCCESS_RETURN;
+}
+
+int PerformFft(TNGeneConfiguration *cfg, TFftTable *table, short *input,
+               short *output, unsigned log2Size, int gain)
+{
+    return PerformFftChecked(cfg,table,input,output,log2Size,gain,NULL);
 }

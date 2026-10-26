@@ -58,7 +58,7 @@
 #define NC_STR_TITLE 		"NGene2"
 #define NC_STR_LATITUDE		"Latitude"
 #define NC_STR_LONGITUDE	"Longitude"
-#define NC_STR_ALTITUDE		"Altitude [m]"
+#define NC_STR_ALTITUDE		"h WGS84 [m]"
 #define NC_STR_VELOCITY		"Velocity [km/h]"
 #define NC_STR_GDOP			"GDOP"
 #define NC_STR_STATUS		"Receiver status: "

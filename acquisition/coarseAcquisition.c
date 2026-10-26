@@ -86,6 +86,12 @@ void InitCoarseAcquisition(TNGeneConfiguration *cfg, TAcqCommon *acqCommon, TCha
     acq->acqBinLog = NULL;
     // allocate arrays
     signalFftLen = 2 * acq->fftSize;
+    acq->wideCompressed = NULL;
+    acq->fftHeadroomReported = 0;
+    if (cfg->usedFrontEnd == NGENE_FE_HACKRF) {
+        acq->wideCompressed = malloc(signalFftLen * sizeof(int32_t));
+        if (!acq->wideCompressed) errorsFound++;
+    }
     posix_memalign((void **) &(acq->signalCompressed), POSIX_ALIGNMENT, signalFftLen * sizeof(short int));
     if (acq->signalCompressed == NULL)
 	errorsFound++;
@@ -109,6 +115,7 @@ void InitCoarseAcquisition(TNGeneConfiguration *cfg, TAcqCommon *acqCommon, TCha
 
 void DeinitCoarseAcquisition(TCoarseAcquisition *acq)
 {
+    free(acq->wideCompressed);
     free(acq->signalCompressed);
     free(acq->signalFft);
     free(acq->ifftOut);
@@ -197,6 +204,7 @@ TAcquisitionStatus PerformCoarseAcquisition(TNGeneConfiguration *cfg, TNGeneData
     long long int elapsedSamples;
     long long int elapsedSamplesCorrect;
     int sampleCorrection;
+    int effectiveFftGain = acq->fftGain, requestedFftGain = acq->fftGain;
 
     /* the code offset could require more samples then those available */
     if (((unsigned int) curDelay + ch->blocksize) > (firstBunchSize + secondBunchSize))
@@ -224,7 +232,10 @@ TAcquisitionStatus PerformCoarseAcquisition(TNGeneConfiguration *cfg, TNGeneData
 	ch->carrierPhase = GenerateCarrier(cfg, &(rx->fifTable), fc, ch->carrierPhase, ch->blocksize, rx->sinArray, rx->cosArray);
     }
     /* remove the carrier (and, for Galileo, also subcarrier) */
-    if (ch->satType == GALILEO_SAT && !cfg->nativeIq) {
+    if (rx->wideI) {
+        CarrierIqWide((TWideIq *)input1, size1, (TWideIq *)input2, size2,
+            rx->cosArray, rx->sinArray, ch->blocksize, rx->wideI, rx->wideQ);
+    } else if (ch->satType == GALILEO_SAT && !cfg->nativeIq) {
 	GenerateSine(cfg, &(rx->fscTable), ch->codeRate, 0.0, ch->blocksize, rx->subcarrierArray);
 	CarrierRealWipeOff(input1, size1, input2, size2, rx->subcarrierArray, ch->blocksize, acqCom->demodulatedSin);
 	ArraySub(acqCom->demodulatedSin, rx->subcarrierArray, acqCom->demodulatedSin, ch->blocksize);
@@ -237,7 +248,7 @@ TAcquisitionStatus PerformCoarseAcquisition(TNGeneConfiguration *cfg, TNGeneData
 	ArraySub(acqCom->demodulatedCos, rx->cosArray, acqCom->demodulatedCos, ch->blocksize);
 	ArraySub(acqCom->demodulatedSin, rx->sinArray, acqCom->demodulatedSin, ch->blocksize);
     }
-    if (ch->satType == GALILEO_SAT && cfg->nativeIq) {
+    if (ch->satType == GALILEO_SAT && cfg->nativeIq && !rx->wideI) {
         /* The complex input has two components; remove BOC from both after
          * the input rotation. The remaining acquisition steps are unchanged. */
         GenerateSine(cfg, &(rx->fscTable), ch->codeRate, 0.0, ch->blocksize, rx->subcarrierArray);
@@ -255,7 +266,15 @@ TAcquisitionStatus PerformCoarseAcquisition(TNGeneConfiguration *cfg, TNGeneData
 	StartProfilingUpdate(&(ch->galileoSampleCompressionProfiling));
     }
 #endif
-    SampleCompression(0, 0, acqCom->demodulatedCos, acqCom->demodulatedSin, ch->blocksize, &(acq->signalCompressed[outputIndex]), acq->compressedLength);
+    if (rx->wideI) {
+        char *boc = NULL;
+        if (ch->satType == GALILEO_SAT) {
+            GenerateSine(cfg, &(rx->fscTable), ch->codeRate, 0.0, ch->blocksize, rx->subcarrierArray);
+            boc = rx->subcarrierArray;
+        }
+        CompressWide(rx->wideI, rx->wideQ, boc, ch->blocksize,
+            acq->wideCompressed + outputIndex, acq->compressedLength);
+    } else SampleCompression(0, 0, acqCom->demodulatedCos, acqCom->demodulatedSin, ch->blocksize, &(acq->signalCompressed[outputIndex]), acq->compressedLength);
 #ifdef RX_PROFILING
     if (ch->satType == GPS_SAT) {
 	StopProfilingUpdate(&(ch->gpsSampleCompressionProfiling), 1);
@@ -266,6 +285,7 @@ TAcquisitionStatus PerformCoarseAcquisition(TNGeneConfiguration *cfg, TNGeneData
     acq->msCounter++;
     if (acq->msCounter == ch->codeDuration) {
 	acq->msCounter = 0;
+
 	/* remove the code */
 #ifdef RX_PROFILING
 	if (ch->satType == GPS_SAT) {
@@ -274,7 +294,31 @@ TAcquisitionStatus PerformCoarseAcquisition(TNGeneConfiguration *cfg, TNGeneData
 	    StartProfilingUpdate(&(ch->galileoFftProfiling));
 	}
 #endif
-	PerformFft(cfg, &(rx->fftTable), acq->signalCompressed, acq->signalFft, acq->log2FftSize, acq->fftGain);
+    if (rx->wideI) {
+        for (;;) {
+            unsigned clipped;
+            if (!PackWideFft(acq->wideCompressed, acq->signalCompressed,
+                    acq->fftSize, acq->log2FftSize, requestedFftGain, &effectiveFftGain) ||
+                PerformFftChecked(cfg, &(rx->fftTable), acq->signalCompressed,
+                    acq->signalFft, acq->log2FftSize, effectiveFftGain, &clipped) != SUCCESS_RETURN) {
+                SwrxLog(NGENE_LOG_SEVERITY_ERROR, "%s: input exceeds representable FFT headroom", ch->prnName);
+                return ACQUISITION_FAILURE;
+            }
+            if (!clipped) break;
+            /* Retry from the original int32 window, never from clipped data.
+             * Restore this exponent in the widened spectral product below. */
+            if (requestedFftGain <= -acq->log2FftSize) {
+                SwrxLog(NGENE_LOG_SEVERITY_ERROR, "%s: cannot obtain unclipped signal FFT", ch->prnName);
+                return ACQUISITION_FAILURE;
+            }
+            requestedFftGain--;
+        }
+        if (requestedFftGain != acq->fftGain && !acq->fftHeadroomReported) {
+            acq->fftHeadroomReported = 1;
+            SwrxLog(NGENE_LOG_SEVERITY_NOTE, "%s: FFT headroom recovered with %d extra shifts; amplitude restored in spectral product",
+                ch->prnName, acq->fftGain-requestedFftGain);
+        }
+    } else PerformFft(cfg, &(rx->fftTable), acq->signalCompressed, acq->signalFft, acq->log2FftSize, acq->fftGain);
 #ifdef RX_PROFILING
 	if (ch->satType == GPS_SAT) {
 	    StopProfilingUpdate(&(ch->gpsFftProfiling), 1);
@@ -282,7 +326,13 @@ TAcquisitionStatus PerformCoarseAcquisition(TNGeneConfiguration *cfg, TNGeneData
 	    StopProfilingUpdate(&(ch->galileoFftProfiling), 1);
 	}
 #endif
-	ArrayProductComplex(cfg, acq->signalFft, acq->localCode, acq->signalFft, acq->fftSize);
+    if (rx->wideI) {
+        if (!ProductWideFft(acq->signalFft, acq->localCode, acq->signalFft,
+                acq->fftSize, acq->fftGain-requestedFftGain)) {
+            SwrxLog(NGENE_LOG_SEVERITY_ERROR, "%s: spectral product exceeds int16 headroom", ch->prnName);
+            return ACQUISITION_FAILURE;
+        }
+    } else ArrayProductComplex(cfg, acq->signalFft, acq->localCode, acq->signalFft, acq->fftSize);
 #ifdef RX_PROFILING
 	if (ch->satType == GPS_SAT) {
 	    StartProfilingUpdate(&(ch->gpsFftProfiling));

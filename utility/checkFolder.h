@@ -12,6 +12,10 @@
 #ifndef UTILITY_CHECKFOLDER_H_INCLUDED
 #define UTILITY_CHECKFOLDER_H_INCLUDED
 
+/** @brief Folder containing the running executable, or NULL on lookup failure.
+ * The returned storage is owned by the platform and must not be freed. */
+const char *GetExecutableDirectory(void);
+
 /**
  * @brief Check if the specified folder exists.
  *

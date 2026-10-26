@@ -1,6 +1,7 @@
 # CMake and compiled build artifacts
 /build/
 /ngene.exe
+/ngene
 /configuration/
 /otherData/
 /logs/

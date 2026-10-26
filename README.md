@@ -17,15 +17,18 @@ of the classic receiver unless a specific correction requires otherwise.
 - `utilityGnss/` contains GNSS-specific navigation and signal utilities.
 - `frontEnd/` and `asmFolder/` contain front-end interfaces and optimized signal code.
 - `osnma/` and `chimera/` contain authentication-related code.
-- `configuration/` contains the active receiver settings beside `ngene.exe`.
+- `configuration/` contains the active receiver settings beside the executable.
 - `otherData/` contains the active supporting data; output goes into `logs/`.
 - `sampleConfigurationFiles/` contains the templates used on the first build.
 - `libraries/` contains bundled dependencies.
 
 ## Build
 
-This package builds only native Windows x64 with Visual Studio clang-cl, Microsoft
-SDK and runtime. Install Visual Studio's C++ x64, Windows SDK, Clang and CMake
+The project supports **native Windows x64** (Visual Studio clang-cl, Microsoft SDK
+and runtime) and **Linux x86_64** (GCC or Clang). Both use the same receiver and SIMD
+sources. Windows does not require Cygwin, MinGW or WSL.
+
+On Windows, install Visual Studio's C++ x64, Windows SDK, Clang and CMake
 components once. From PowerShell in this folder:
 
 ```powershell
@@ -35,8 +38,24 @@ components once. From PowerShell in this folder:
 .\run.cmd            # Start the receiver with its configured input (USB by default)
 ```
 
-The build downloads and compiles its dependencies automatically. The executable is
-**`ngene.exe` in this folder**. The main configuration is always
+The Windows build downloads and compiles its dependencies automatically. The
+executable is **`ngene.exe` in this folder**.
+
+On Linux (Debian/Ubuntu), install the development packages once, then build:
+
+```sh
+sudo apt update
+sudo apt install build-essential cmake pkg-config libusb-1.0-0-dev libssl-dev libncurses-dev libhackrf-dev
+sh build.sh          # Compile, run tests and prepare configuration/data
+sh clean.sh          # Clean Linux compiled outputs without rebuilding
+sh build.sh clean    # Clean, rebuild and run tests
+sh run.sh            # Start the receiver
+```
+
+The Linux executable is **`ngene` in this folder**; intermediate files stay in
+`build/linux/`, separately from `build/windows-native/`. See [Linux instructions](docs/LINUX.md).
+
+On both platforms the main configuration is always
 **`configuration/GNSS_RX.conf` beside the executable**. No environment variables or
 user home directories select a different configuration. Builds preserve existing
 settings; `sampleConfigurationFiles/` is used only to fill missing files.
@@ -50,8 +69,10 @@ To compare the two live frontends without editing the selected configuration:
 
 HackRF uses 8,183,800 complex pairs/s. The supplied profile tunes exactly to GPS
 L1 (1,575,420,000 Hz); its signed NCO IF is derived from the configured RF centre.
-The input adapter removes component DC and retains signed levels -7..+7 with a
-shared I/Q gain. Tuning, gains and antenna power are in `configuration/HackRF.conf`.
+The SIMD adapter removes component DC and keeps fractional amplitude in an
+int16 Q8 complex ring, with int32 correlations and controlled FFT scaling.
+The existing +/-7 peak limiter remains; samples are no longer rounded to only
+15 integer levels. Tuning, gains and antenna power are in `configuration/HackRF.conf`.
 Live/replay findings and Doppler conventions are in [HACKRF.md](docs/HACKRF.md).
 
 To process the existing workspace recording without changing USB settings:
@@ -66,7 +87,7 @@ for configuration details and [verification](docs/VERIFICATION.md) for checks.
 
 The first [EVO FFT migration](docs/FFT_MIGRATION.md) ports the optimized SSE2
 codelets and scheduling while retaining Classic's gains and Q14 coefficients.
-`build.cmd` includes its numerical and concurrency regression check.
+Both build scripts include its numerical and concurrency regression check.
 
 ## Coding conventions and status
 

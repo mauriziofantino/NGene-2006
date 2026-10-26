@@ -218,7 +218,7 @@ int OpenHackrfFrontend(TNGeneConfiguration *cfg, TRxFe *fe)
             settings->lnaGain, settings->vgaGain, settings->amplifier,
             settings->antennaPower, settings->bandwidthHz);
     SwrxLog(NGENE_LOG_SEVERITY_INFO,
-            "HackRF CI8 input: component DC removal, common IQ gain, signed levels -7..+7; no real-IF conditioning");
+            "HackRF CI8 input: SIMD DC removal, common IQ gain, fractional Q8 levels, +/-7 peak limiter; no real-IF conditioning");
     return SUCCESS_RETURN;
 failed:
     CloseHackrfFrontend(fe);

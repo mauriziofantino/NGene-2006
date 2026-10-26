@@ -239,6 +239,7 @@ int main(void)
     DeinitCircularBuffer(&ring);
     cfg.usedFrontEnd = NGENE_FE_HACKRF;
     REQUIRE(InitCircularBuffer(&cfg, &ring) == SUCCESS_RETURN);
+    REQUIRE(ring.sampleStride == sizeof(TWideIq));
     wireIndex = readCalls = consumed = iterations = 0;
     for (k = 0; k < 40; k++) {
         wire[2*k] = (unsigned char)((int)k - 20);
@@ -250,14 +251,10 @@ int main(void)
         FillInputBuffer(&cfg, &ring, &frontend);
         take = ring.fill1 + ring.fill2;
         if (take > 3) take = 3;
-        for (k = 0; k < 2 * take; k++) {
-            unsigned int position = (ring.tail + k / 2) % ring.dim;
-            REQUIRE(ring.buffer[2 * position + k % 2] >= -7 &&
-                    ring.buffer[2 * position + k % 2] <= 7);
-            if (ring.buffer[2 * position + 1] != -ring.buffer[2 * position])
-                fprintf(stderr, "Pair mismatch consumed=%u offset=%u I=%d Q=%d wire=%u\n",
-                        consumed,k,ring.buffer[2*position],ring.buffer[2*position+1],wireIndex);
-            REQUIRE(ring.buffer[2 * position + 1] == -ring.buffer[2 * position]);
+        for (k = 0; k < take; k++) {
+            TWideIq value = ((TWideIq *)ring.buffer)[(ring.tail + k) % ring.dim];
+            REQUIRE(value.i >= -1792 && value.i <= 1792 && value.q >= -1792 && value.q <= 1792);
+            REQUIRE(value.i + value.q == 0);
         }
         REQUIRE(DeleteFromCircularBuffer(&ring, take) == take);
         consumed += take;

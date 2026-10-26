@@ -26,7 +26,7 @@ template also includes the row explicitly.
 (0..62 dB, step 2), RF amplifier, antenna power, baseband filter bandwidth, and
 an optional `Serial number` tag followed by the hexadecimal device serial.
 Without a serial, exactly one HackRF must be present. The supplied profile uses
-LNA 32 dB, VGA 48 dB, RF amplifier off, antenna power off, filter 5 MHz and centre
+LNA 32 dB, VGA 56 dB, RF amplifier off, antenna power off, filter 5 MHz and centre
 1,575,420,000 Hz (GPS L1). The antenna used in the live checks was externally
 powered or passive, so antenna power remains off. The first build copies a
 missing settings file without overwriting existing settings.
@@ -56,7 +56,7 @@ SiGe marker-tagged bytes: replay it with `--frontend sige` instead.
 | Original transport | 16,367,600 marker-tagged bytes/s | 16,367,600 signed CI8 bytes/s |
 | Classic positive-sign NCO IF | +38,400 Hz, current setting | centre minus GPS L1; 0 in supplied profile |
 | RF centre setting | Fixed hardware frequency plan | Configurable; supplied profile 1,575,420,000 Hz |
-| Native component amplitude passed to the receiver | -1 or +1 | Integer levels -7..+7 after DC removal/scaling |
+| Native component amplitude passed to the receiver | -1 or +1 | int16 Q8 (-1792..1792 = -7..+7), fractional levels retained |
 | Existing Doppler correction | +1 | -1 |
 
 The [Colorado SiGe documentation](https://www.colorado.edu/lab/rf-satnav/resources/original-open-source-gpsgnss-sdr)
@@ -106,34 +106,50 @@ stream. Disconnect/error releases blocked readers; stop joins callbacks before
 their synchronization or storage is destroyed. libhackrf owns its USB event
 thread; the SiGe USB event loop is not used for HackRF.
 
-`FillInputBuffer` reads complete I/Q pairs, retains an incomplete pair across
-odd fragments, and calls the SSE2 `AdaptIqClassic` input adapter over all complete
-pairs in that read before splitting the result across the ring. It estimates
-independent I/Q component means, subtracts them with Q8 precision, and applies
-one common power-of-two gain selected from the combined centred RMS. Where
-possible the scaled RMS lies between 1.5 and 3.0. Both components use the same
-gain: their relative amplitude and phase are preserved before quantization.
-Values are rounded to nearest (ties away from zero) and clipped to -7..+7,
-including zero. A constant input maps to zero, rather than to a synthetic carrier.
-This retains multiple amplitude levels; it does not retain all ADC precision.
+`FillInputBuffer` reads complete I/Q pairs and retains incomplete pairs across
+odd reads. HackRF uses `TWideIq { short i, q; }`: four bytes per complex sample,
+with Q8 scaling (256 stored counts = one Classic amplitude unit). Ring indices
+still count time samples and retention remains 16 ms. USB/file data remain CI8.
+SiGe retains its existing two-byte complex ring and original byte DSP path.
 
-The existing square-wave complex mixer then produces values at most +/-14;
-its balanced XOR packing stays in [-15,14]. Even the worst eight-byte partial
-MAC reduction stays in signed8 range. Feeding unscaled CI8 into this path would
-violate those limits. No mixer, correlator, FFT gain, threshold or tracking-loop
-algorithm was changed. This intrinsic-only input source is compiled with /O2;
-historical inline-assembly modules retain their previous flags.
+`AdaptIqWide` computes separate I/Q means and combined centred RMS. Signed sums
+and energy use SSE2, with bounded int32 partial sums reduced into int64. Means
+are represented with eight fractional bits. SSE2 subtracts those means, applies
+one common power-of-two gain and retains Q8 fractions. The combined RMS target
+remains 1.5..3.0 Classic units where possible. Component values are still limited
+to +/-7, now stored as +/-1792, instead of being rounded to only 15 whole-unit
+levels. This preserves ADC spacing inside the existing limiter; it neither
+creates ADC information nor preserves samples intentionally limited as peaks.
+A constant input maps to zero. There is no automatic independent I/Q gain.
 
-The existing 16 ms complex circular buffer stores I0,Q0,I1,Q1; indices count
-pairs. A generic `nativeIq` flag selects the same existing SIMD complex rotation
-for both frontends. Acquisition, confirmation, refinement, tracking, FFT, loop
-parameters and PVT algorithms retain their existing implementations. Hardware
-filters, gain/noise, quantization error and oscillator errors differ between the
-two radios even when the nominal digital parameters match.
+Carrier rotation operates on eight int16 samples per SSE2 vector. Code
+correlation uses signed16 products and signed32 accumulation, with one Q8 scale
+conversion after the dot product. No byte saturation or half-LSB XOR packing is
+needed for HackRF. Existing PRN/BOC codes, square-wave carrier tables, Doppler
+conventions, integration periods, discriminators, thresholds and navigation/PVT
+algorithms are retained. Refinement/confirmation round only their completed
+correlations to their existing integer accumulators. These new intrinsic
+primitives compile with /O2; remaining historical inline-assembly sources retain /Od. Carrier/PRN generators
+now also use validated intrinsics and /O2.
+
+Compression uses the same NCO and sample groups as Classic. It accumulates into
+int32; Q8 cancels the historical compression multiplier of 256. A common exponent
+packs the complete complex window into int16, compensating in FFT gain. This
+includes all four milliseconds of a Galileo window, without separate I/Q gains.
+`PerformFftChecked` counts actual int32-to-int16 saturation at every FFT stage.
+When necessary acquisition retries from the original window with extra right
+shifts. A widened SSE2 spectral product restores that exponent **before** the
+historical /65536 rounding, preserving the amplitude convention used by existing
+thresholds. Unrepresentable input/product is reported, rather than silently
+wrapping. The original `PerformFft` API and SiGe arithmetic remain unchanged.
+This changes numeric representation and headroom, not FFT size or Doppler bins.
+
+The RF frontends can still differ in analogue response/noise, oscillator error
+and interference, even with matching nominal digital settings.
 
 ## Verification and limits
 
-`build.cmd` passes seven tests. The new native RX fixture exercises production
+`build.cmd` runs nine tests. The new native RX fixture exercises production
 code against the official vendor ABI with hardware calls simulated: exact
 sample/tuning/gain settings, malformed settings, enumeration, failure cleanup,
 millions of ordered CI8 bytes with queue wrap and odd reads, invalid callback
@@ -185,3 +201,113 @@ eight-bit samples before input adaptation. The retained local captures are
 `recordings/hackrf-l1-ci8.raw` (exact L1, VGA48), with companion JSON metadata.
 They are ignored by Git. Temporary receiver homes and diagnostic logs remain
 outside the repository. Replay tuning must match the capture metadata.
+
+## Q8 precision and FFT headroom checks (2026-10-25)
+
+The Q8 path replaces the whole-unit HackRF quantization described in the earlier
+diagnosis. A trial without the existing peak limiter degraded replay results:
+the raw stream contains brief ADC-rail bursts even at moderate gain. Their
+origin has not been established. The production Q8 path therefore preserves the
+limiter and increases fractional precision inside it; it does not claim to keep
+every saturated/outlier sample unchanged.
+
+Three-second raw captures at LNA32 and VGA48/52/56/58 measured centred component
+RMS of 11.76/16.92/25.26/31.40 ADC counts. ADC-rail fractions were approximately
+0.22/0.29/0.31/0.36 percent. The existing complex 4096-point FFT also measured
+the raw DC component and strongest non-DC bins. These measurements select VGA56
+as a tested profile with more ADC use; they do not establish an optimum RF gain
+for every antenna/interference environment. Both the template and local settings
+now use LNA32/VGA56, exact L1, RF amplifier off and antenna power off.
+
+The retained 70.006-second VGA56 capture is
+`recordings/hackrf-l1-vga56-ci8.raw`, with companion JSON metadata. Its original
+CI8 samples measured RMS 24.95 counts. Replay comparisons use identical samples,
+configuration, ephemeris/code data and separate temporary receiver homes:
+
+| Capture / receiver | Previous byte path | Q8 path |
+| --- | --- | --- |
+| VGA48, 59.996 s, GPS PVT | 21 | 21 |
+| VGA48, Galileo FLL lock events / PVT | 3 / 0 | 1 / 0 |
+| VGA56, 70.006 s, GPS PVT | 29 | 29 |
+| VGA56, Galileo FLL lock events / PVT | 4 / 2 | 3 / 0 |
+
+Thus increased numerical precision is verified, but improved Galileo reception
+is **not** established; this short replay shows fewer locks/PVTs. Loop/search
+parameters were not retuned to hide that difference. On the VGA56 GPS capture,
+CPU time was 5.83 seconds for the byte path and 7.75 for Q8 (8.55 seconds wall
+time for 70 seconds of signal). These are single runs, not a capacity benchmark.
+The checked FFT recovered headroom without a reported unrepresentable input or
+spectral product. A strong synthetic tone separately proves detection, retry
+and exponent restoration against an independent expected result.
+
+Direct native USB checks with Q8 and VGA56 completed cleanly: an eight-GPS-channel
+90-second run produced **63 PVT solutions**; a separate eight-Galileo-channel
+90-second run produced four FLL-lock events and no PVT. Neither reported a queue,
+stream or numeric-headroom error. Both stopped through the normal console
+handler and returned the device to idle. These are finite checks, not proof of
+long-duration continuity or a universal advantage over SiGe.
+
+The SiGe recording still yields 23 PVT solutions. All 5,717 ordered log lines
+from receiver initialization through shutdown match the previous reference
+exactly after host timestamps are removed. The new test also checks every CI8
+code, mean/energy SIMD reductions over a full-size block, fractional tails,
+split-ring rotation, exact signed32 MACs, original compression groups, FFT
+exponents/saturation recovery, spectral-product overflow endpoints and both
+Doppler signs at zero IF. All nine native tests pass.
+
+## CPU and PVT follow-up (2026-10-26)
+
+The receiver now computes the six HackRF early/prompt/late correlations in one
+SSE2 pass. Its output is exactly equal to six independent signed32 dot products.
+Carrier and PRN generation also use SSE2 intrinsics with compiler-managed
+registers and /O2, replacing their incomplete inline-assembly register contracts.
+Tables, phase quantization, short/long code-chip selection, NCO increments and
+phase updates are unchanged. Other historical assembly sources retain /Od.
+The new preservation fixture checks 5,040 cases against hashes recorded before
+the conversion, including both frequency signs, phase wrapping, code/carrier
+tails, output guards, GPS/Galileo/EGNOS codes and both code representations.
+All bytes and returned phases match. The HackRF GPS RINEX file also remains
+byte-identical after these CPU optimizations.
+
+With profiling enabled in both builds, three alternating replay runs measured
+median total CPU time of **8.86 s before / 7.70 s after** for the same 70-second
+capture (about 13% lower). Individual after-runs ranged from 6.52 to 9.08 s, so
+this is not a deterministic speed guarantee. In the stage profiles, GPS tracking
+went from 9.97 to 7.54 microseconds per 1 ms channel block. The final build has
+profiling disabled. Its final GPS replay consumed 6.88 CPU seconds for 70 seconds
+of signal; SiGe consumed 5.05 for 48.55 seconds. Those captures have different
+satellite workloads and are not a controlled RF comparison. No live USB CPU
+measurement was possible in this follow-up because the radios were disconnected.
+
+The supplied approximate Maps point resolves to **44.243606 N, 7.396659 E**.
+Relative to that pin, the mean SiGe fix is about 5.2 m away horizontally, the
+70-second Q8 HackRF replay about 9.2 m, and the separate earlier 90-second live
+HackRF run about 4.5 m. These were not simultaneous captures, and an approximate
+map pin is not a surveyed antenna reference. They do not certify absolute errors.
+
+The initially observed 35.19 m difference in mean height between byte and Q8
+HackRF replays does not compare the same PVT input set: both use four satellites,
+but Q8 uses G16 where the byte replay uses G31. G31's navigation data become
+available later in Q8, and the existing minimum of ten carrier-smoothing updates
+excludes it through the end of the short capture. The diagnostics explicitly log
+`Discarded GPS 31 from PVT (CSM counter: 1)` through `10`. This selection policy,
+ephemeris parser and smoothing algorithm were not changed.
+
+Across 29 paired RINEX epochs, the 87 raw pseudoranges for common G18/G26/G29
+differ by **0.251 m RMS / 0.542 m maximum** after removing each epoch's common
+clock offset. Epoch times differ by at most 0.107 ms. This does not demonstrate a
+new tens-of-metres differential tracking bias on those satellites; it also does
+not exclude errors common to both receivers or their clock offsets. To control
+satellite selection, temporary manual configurations forced G18/G26/G29/G31.
+With smoothing disabled only in those diagnostic copies, 29 paired solutions
+had mean Q8-minus-byte differences of **-0.17 m E, -0.20 m N, -2.08 m U**;
+the maximum vertical difference was 14.6 m. Production loop, PVT and smoothing
+settings remain unchanged. The available short recordings cannot establish a
+long-term antenna-position bias.
+
+Receiver height is **WGS84 ellipsoidal h**. Ncurses now labels it `h WGS84 [m]`;
+the PVT values are not shifted. The receiver's existing coarse geoid model gives
+N approximately +48.49 m at this point, so its approximate sea-level height would
+be H=h-N. The user's roughly 950 m height did not specify a vertical datum;
+subtracting 48.49 m is therefore not treated as a measured accuracy correction.
+No horizontal or vertical constant was introduced to force a desired position.

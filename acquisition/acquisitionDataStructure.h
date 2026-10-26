@@ -12,6 +12,7 @@
 
 #ifndef ACQUISITION_DATA_STRUCTURE_H_INCLUDED
 #define ACQUISITION_DATA_STRUCTURE_H_INCLUDED
+#include <stdint.h>
 
 #include <stdio.h>
 #include "spreadingCodes.h"
@@ -151,6 +152,8 @@ typedef struct CoarseAcquisitionStruct {
     int nonCoherentSumsIndex;     /**< Counts the current non coherent sums */
     /* samples */
     short int *signalCompressed;     /**< Array used to store the result of a compression */
+    int32_t *wideCompressed; /**< HackRF window before the single FFT int16 conversion. */
+    unsigned int fftHeadroomReported; /**< One-time per-channel exponent diagnostic. */
     short int *signalFft;     /**< Array used to store the result of an FFT */
     short int *ifftOut;     /**< Array used to store the output of the IFFT */
     unsigned int *ifftAbs;     /**< Array used to store absolute values of the samples out of the IFFT */

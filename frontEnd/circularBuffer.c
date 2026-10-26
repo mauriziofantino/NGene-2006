@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 #include "circularBuffer.h"
 #include "ngeneConstants.h"
 #include "ioFunctions.h"
@@ -33,6 +34,8 @@ int InitCircularBuffer(TNGeneConfiguration *cfg, TCircularBuffer *buf)
 
     buf->dim = (unsigned int) ((cfg->fs * INPUT_BUFFER_SIZE) / SECONDS_TO_MILLISECONDS);
     buf->sampleStride = cfg->nativeIq ? 2 : 1;
+    if (cfg->usedFrontEnd == NGENE_FE_HACKRF) buf->sampleStride = sizeof(TWideIq);
+    buf->wideScratch = NULL;
     buf->sigeIqRaw = NULL;
     buf->sigeIqHasPending = buf->sigeIqSynchronized = 0;
     buf->sigeIqGeneration = 0;
@@ -46,6 +49,14 @@ int InitCircularBuffer(TNGeneConfiguration *cfg, TCircularBuffer *buf)
         if (buf->sigeIqRaw == NULL) {
             free(buf->buffer);
             buf->buffer = NULL;
+            return FAILURE_RETURN;
+        }
+    }
+    if (cfg->usedFrontEnd == NGENE_FE_HACKRF) {
+        buf->wideScratch = malloc((size_t)buf->dim * sizeof(TWideIq));
+        if (!buf->wideScratch) {
+            free(buf->buffer); free(buf->sigeIqRaw);
+            buf->buffer = NULL; buf->sigeIqRaw = NULL;
             return FAILURE_RETURN;
         }
     }
@@ -76,6 +87,8 @@ int InitCircularBuffer(TNGeneConfiguration *cfg, TCircularBuffer *buf)
 /* It is the opposite of the Initialize function. It destroy and clean everything */
 void DeinitCircularBuffer(TCircularBuffer *buf)
 {
+    free(buf->wideScratch);
+    buf->wideScratch = NULL;
     free(buf->sigeIqRaw);
     buf->sigeIqRaw = NULL;
     if (buf->buffer != NULL) {
@@ -201,11 +214,12 @@ int FillInputBuffer(TNGeneConfiguration *cfg, TCircularBuffer *buf, TRxFe *rxFe)
         if (bytes == prefix) return FAILURE_RETURN;
         pairs = bytes / 2;
         first = pairs < buf->free1 ? pairs : buf->free1;
-        /* Correct DC before narrowing; use common IQ gain across both ring
-         * segments. No modulation, conjugation, I/Q exchange or decimation. */
-        AdaptIqClassic(buf->sigeIqRaw, (char *)buf->sigeIqRaw, pairs, NULL);
-        memcpy(buf->buffer + 2 * buf->head, buf->sigeIqRaw, 2 * first);
-        memcpy(buf->buffer, buf->sigeIqRaw + 2 * first, 2 * (pairs - first));
+        /* Q8 preserves the ADC spacing without the old whole-unit rounding.
+         * The existing peak limiter remains at +/-7 Classic units. */
+        AdaptIqWide(buf->sigeIqRaw, buf->wideScratch, pairs);
+        memcpy(buf->buffer + buf->sampleStride * buf->head, buf->wideScratch,
+               sizeof(TWideIq) * first);
+        memcpy(buf->buffer, buf->wideScratch + first, sizeof(TWideIq) * (pairs - first));
         buf->sigeIqHasPending = bytes & 1;
         if (buf->sigeIqHasPending) buf->sigeIqPending = buf->sigeIqRaw[bytes - 1];
         if (InsertIntoCircularBuffer(buf, pairs) != SUCCESS_RETURN) return FAILURE_RETURN;
@@ -314,12 +328,18 @@ int CopyCircularBufferComponent(TCircularBuffer *buf, int neededSamples,
 {
     unsigned int k, start;
     if (neededSamples < 0 || (unsigned int)neededSamples > buf->dim ||
-        component >= buf->sampleStride) return FAILURE_RETURN;
+        component >= (buf->sampleStride == 1 ? 1u : 2u)) return FAILURE_RETURN;
     if (buf->sampleStride == 1)
         return CopyABunchOfContiguousSamples(buf, neededSamples, outputArray);
     start = (buf->head + buf->dim - neededSamples) % buf->dim;
     for (k = 0; k < (unsigned int)neededSamples; k++) {
-        outputArray[k] = buf->buffer[start * buf->sampleStride + component];
+        if (buf->sampleStride == sizeof(TWideIq)) {
+            /* Legacy real-valued GUI diagnostics only; receiver never uses
+             * this rounded display copy as signal-processing input. */
+            TWideIq value = ((TWideIq *)buf->buffer)[start];
+            long display = lroundf((component ? value.q : value.i)/256.0f);
+            outputArray[k] = (char)(display < -128 ? -128 : display > 127 ? 127 : display);
+        } else outputArray[k] = buf->buffer[start * buf->sampleStride + component];
         if (++start == buf->dim) start = 0;
     }
     return SUCCESS_RETURN;

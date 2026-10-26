@@ -71,5 +71,10 @@ void DeinitFftTable(TFftTable *t);
  */
 int PerformFft(TNGeneConfiguration *cfg,TFftTable *table,short *a,short *b,unsigned int log2Size,int gain);
 
+/* Identical arithmetic, optional count of saturated int32->int16 narrowing
+ * operations at every stage. Counter is reset per call, including errors. */
+int PerformFftChecked(TNGeneConfiguration *cfg,TFftTable *table,short *a,short *b,
+                     unsigned int log2Size,int gain,unsigned *clipped);
+
 
 #endif

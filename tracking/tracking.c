@@ -299,29 +299,43 @@ void StartTracking(TNGeneConfiguration *cfg,TChannel *ch,TTracking *trk)
 	StartTrackingStatusChecker(cfg,trk);
 }
 
-void PerformAllTrackingCorrelations(TChannel *ch, TTracking *trk, char *cosArray, char *sinArray)
+static float InputCorrelation(const short *wide, char *legacy, char *code, unsigned n)
+{ return wide ? CorrelateWide(wide,code,n) : (float)ArrayMac(legacy,code,n)+(float)n/2; }
+
+void PerformAllTrackingCorrelations(TChannel *ch, TTracking *trk, char *cosArray, char *sinArray, const short *wideI, const short *wideQ)
 {
 	int index;
+    float epl[6];
+    if (wideI) {
+        CorrelateWideEpl(wideI,wideQ,trk->earlyCode,trk->promptCode,trk->lateCode,ch->blocksize,epl);
+    } else {
+        epl[0]=InputCorrelation(NULL,cosArray,trk->earlyCode,ch->blocksize);
+        epl[1]=InputCorrelation(NULL,sinArray,trk->earlyCode,ch->blocksize);
+        epl[2]=InputCorrelation(NULL,cosArray,trk->promptCode,ch->blocksize);
+        epl[3]=InputCorrelation(NULL,sinArray,trk->promptCode,ch->blocksize);
+        epl[4]=InputCorrelation(NULL,cosArray,trk->lateCode,ch->blocksize);
+        epl[5]=InputCorrelation(NULL,sinArray,trk->lateCode,ch->blocksize);
+    }
 
-	trk->eI += ((float)ArrayMac(cosArray,trk->earlyCode,ch->blocksize)+((float)ch->blocksize/2))/(float)trk->integrationPeriod;
-	trk->eQ += ((float)ArrayMac(sinArray,trk->earlyCode,ch->blocksize)+((float)ch->blocksize/2))/(float)trk->integrationPeriod;
-	trk->pIForCno = ((float)ArrayMac(cosArray,trk->promptCode,ch->blocksize)+((float)ch->blocksize/2))/(float)trk->integrationPeriod;
+	trk->eI += epl[0]/(float)trk->integrationPeriod;
+	trk->eQ += epl[1]/(float)trk->integrationPeriod;
+	trk->pIForCno = epl[2]/(float)trk->integrationPeriod;
 	trk->pI += trk->pIForCno;
 	trk->pIForNav += trk->pIForCno;
-	trk->pQForCno = ((float)ArrayMac(sinArray,trk->promptCode,ch->blocksize)+((float)ch->blocksize/2))/(float)trk->integrationPeriod;
+	trk->pQForCno = epl[3]/(float)trk->integrationPeriod;
 	trk->pQ += trk->pQForCno;
-	trk->lI += ((float)ArrayMac(cosArray,trk->lateCode,ch->blocksize)+((float)ch->blocksize/2))/(float)trk->integrationPeriod;
-	trk->lQ += ((float)ArrayMac(sinArray,trk->lateCode,ch->blocksize)+((float)ch->blocksize/2))/(float)trk->integrationPeriod;
+	trk->lI += epl[4]/(float)trk->integrationPeriod;
+	trk->lQ += epl[5]/(float)trk->integrationPeriod;
 	for(index=0;index<trk->numberOfMulti;index++)
 	{
-		trk->multiI[index] += ((float)ArrayMac(cosArray,trk->multiCodes[index],ch->blocksize)+((float)ch->blocksize/2))/(float)trk->integrationPeriod;
-		trk->multiQ[index] += ((float)ArrayMac(sinArray,trk->multiCodes[index],ch->blocksize)+((float)ch->blocksize/2))/(float)trk->integrationPeriod;
+		trk->multiI[index] += InputCorrelation(wideI,cosArray,trk->multiCodes[index],ch->blocksize)/(float)trk->integrationPeriod;
+		trk->multiQ[index] += InputCorrelation(wideQ,sinArray,trk->multiCodes[index],ch->blocksize)/(float)trk->integrationPeriod;
 	}
 	#ifdef CSC_DISCRIMINATOR_FUNCTION
-	trk->vEI += ((float)ArrayMac(cosArray,trk->veryEarlyCode,ch->blocksize)+((float)ch->blocksize/2))/(float)trk->integrationPeriod;
-	trk->vEQ += ((float)ArrayMac(sinArray,trk->veryEarlyCode,ch->blocksize)+((float)ch->blocksize/2))/(float)trk->integrationPeriod;
-	trk->vLI += ((float)ArrayMac(cosArray,trk->veryLateCode,ch->blocksize)+((float)ch->blocksize/2))/(float)trk->integrationPeriod;
-	trk->vLQ += ((float)ArrayMac(sinArray,trk->veryLateCode,ch->blocksize)+((float)ch->blocksize/2))/(float)trk->integrationPeriod;
+	trk->vEI += InputCorrelation(wideI,cosArray,trk->veryEarlyCode,ch->blocksize)/(float)trk->integrationPeriod;
+	trk->vEQ += InputCorrelation(wideQ,sinArray,trk->veryEarlyCode,ch->blocksize)/(float)trk->integrationPeriod;
+	trk->vLI += InputCorrelation(wideI,cosArray,trk->veryLateCode,ch->blocksize)/(float)trk->integrationPeriod;
+	trk->vLQ += InputCorrelation(wideQ,sinArray,trk->veryLateCode,ch->blocksize)/(float)trk->integrationPeriod;
 	#endif
 }
 

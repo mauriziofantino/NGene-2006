@@ -20,6 +20,7 @@
 #include "prnTable.h"
 #include "carrierTable.h"
 #include "arrays.h"
+#include "inputProcessing.h"
 #include "acquisition.h"
 
 #ifndef DISABLE_CONFIRMATION_THRESHOLD
@@ -87,7 +88,7 @@ TAcquisitionStatus PerformConfirmation(TNGeneConfiguration *cfg, TNGeneData *rx,
 
     /* generate and remove carrier */
     ch->carrierPhase = GenerateCarrier(cfg, &(rx->fifTable), ch->carrierFrequency, ch->carrierPhase, ch->blocksize, rx->sinArray, rx->cosArray);
-    CarrierInputWipeOff(cfg->nativeIq, firstBunch, firstBunchSize, secondBunch, secondBunchSize, rx->cosArray, rx->sinArray, ch->blocksize, rx->cosArray, rx->sinArray);
+    WipeOffReceiverInput(cfg, rx, firstBunch, firstBunchSize, secondBunch, secondBunchSize, ch->blocksize);
     /* code despreading */
     if (ch->satType == GALILEO_SAT) {
 	/* if Galileo, generate also the subcarrier */
@@ -98,8 +99,8 @@ TAcquisitionStatus PerformConfirmation(TNGeneConfiguration *cfg, TNGeneData *rx,
 	/* if Galileo, remove also the subcarrier */
 	ArrayXor(rx->subcarrierArray, rx->codeArray, rx->codeArray, ch->blocksize);
     }
-    conf->pI += (ArrayMac(rx->cosArray, rx->codeArray, ch->blocksize) + (ch->blocksize / 2));
-    conf->pQ += (ArrayMac(rx->sinArray, rx->codeArray, ch->blocksize) + (ch->blocksize / 2));
+    conf->pI += ReceiverPrompt(rx->wideI, rx->cosArray, rx->codeArray, ch->blocksize);
+    conf->pQ += ReceiverPrompt(rx->wideQ, rx->sinArray, rx->codeArray, ch->blocksize);
     /* analyze the result */
     conf->msCounter++;
     if (conf->msCounter == ch->codeDuration) {

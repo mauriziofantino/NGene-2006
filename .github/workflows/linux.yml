@@ -1,0 +1,22 @@
+name: Linux build
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        compiler: [gcc, clang]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install development packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential clang cmake pkg-config libusb-1.0-0-dev libssl-dev libncurses-dev libhackrf-dev
+      - name: Build and check
+        env:
+          CC: ${{ matrix.compiler }}
+        run: sh build.sh
+      - name: Check executable
+        run: ./ngene --version

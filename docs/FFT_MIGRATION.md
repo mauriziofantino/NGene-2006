@@ -47,6 +47,13 @@ with incomplete inline-assembly clobbers retain `/Od`.
 Keeping Classic's table quantization also preserves compatibility with the
 existing cached `otherData/FFT_codes.dat`. Local-code gain `-6`, GPS signal gain
 `-4` (or `-3` at low sample rates), and return-transform gain `-1` are unchanged.
+
+The later HackRF Q8 boundary adds `PerformFftChecked`, with optional per-call
+counts of actual saturated narrowing operations. `PerformFft` delegates with a
+null counter and retains identical arithmetic. HackRF may retry a signal window
+with additional stage shifts; its widened spectral product restores the extra
+exponent before the original /65536 rounding. SiGe continues to use the original
+gain schedule. See [HACKRF.md](HACKRF.md) for the numerical and live checks.
 Importing EVO's fixed `1/N` scaling directly would change correlation amplitudes.
 This adapter makes that boundary explicit for subsequent convergence work.
 

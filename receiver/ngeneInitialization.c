@@ -16,6 +16,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <errno.h>
+#include <sys/stat.h>
 #include "ngeneConfiguration.h"
 #include "ngeneDataStructure.h"
 #include "ngeneConstants.h"
@@ -50,14 +52,14 @@
 
 void PreparePaths(TNGeneConfiguration *cfg, TNGeneData *rx)
 {
-    const char *homeFolder = NgNativeHome();
+    const char *homeFolder = GetExecutableDirectory();
     char cfgFilename[MAX_ROW_LENGTH];
     char tag[MAX_TAG_LEN];
     int parseReturn;
     char logFilename[MAX_ROW_LENGTH];
 
     if (!homeFolder || strlen(homeFolder) + 32 >= MAX_ROW_LENGTH) {
-        fprintf(stderr, "Cannot determine the folder containing ngene.exe.\n");
+        fprintf(stderr, "Cannot determine the folder containing the NGene executable.\n");
         exit(EXIT_FAILURE);
     }
     cfg->sudoer = FALSE_FLAG;
@@ -68,7 +70,11 @@ void PreparePaths(TNGeneConfiguration *cfg, TNGeneData *rx)
     /* check if the configuration folder does exist (only when -s is not specified) */
     if ((IsFolderExistent(cfg->configurationPath) == FALSE_FLAG) || (IsFolderExistent(cfg->otherDataPath) == FALSE_FLAG)){
 	fprintf(stderr, "Required folders are missing: %s and %s\n", cfg->configurationPath, cfg->otherDataPath);
+#ifdef NGENE_NATIVE_WINDOWS
 	fprintf(stderr, "Run build.cmd to prepare the configuration and data beside ngene.exe.\n");
+#else
+	fprintf(stderr, "Run sh build.sh to prepare the configuration and data beside ngene.\n");
+#endif
 	exit(EXIT_FAILURE);
     }
 
@@ -89,10 +95,17 @@ void PreparePaths(TNGeneConfiguration *cfg, TNGeneData *rx)
             exit(EXIT_FAILURE);
         }
         snprintf(cfg->dumpPath, sizeof(cfg->dumpPath), "%s/logs", homeFolder);
+#ifdef NGENE_NATIVE_WINDOWS
         if (!CreateDirectoryA(cfg->dumpPath, NULL) && GetLastError() != ERROR_ALREADY_EXISTS) {
             fprintf(stderr, "Cannot create log folder %s (Windows error %lu).\n", cfg->dumpPath, GetLastError());
             exit(EXIT_FAILURE);
         }
+#else
+        if (mkdir(cfg->dumpPath, 0755) != 0 && errno != EEXIST) {
+            fprintf(stderr, "Cannot create log folder %s: %s.\n", cfg->dumpPath, strerror(errno));
+            exit(EXIT_FAILURE);
+        }
+#endif
     }
     // else dumpPath already contains the folder!
     // set the current dumpPath
@@ -180,6 +193,12 @@ int InitReceiver(TNGeneConfiguration *cfg, TNGeneData *rx)
     posix_memalign((void **) &(rx->sinArray), POSIX_ALIGNMENT, arraySize * sizeof(char));
     if (rx->sinArray == NULL)
 	errorsFound++;
+    rx->wideI = rx->wideQ = NULL;
+    if (cfg->usedFrontEnd == NGENE_FE_HACKRF) {
+        posix_memalign((void **)&rx->wideI, POSIX_ALIGNMENT, arraySize * sizeof(short));
+        posix_memalign((void **)&rx->wideQ, POSIX_ALIGNMENT, arraySize * sizeof(short));
+        if (!rx->wideI || !rx->wideQ) errorsFound++;
+    }
     posix_memalign((void **) &(rx->subcarrierArray), POSIX_ALIGNMENT, arraySize * sizeof(char));
     if (rx->subcarrierArray == NULL)
 	errorsFound++;
@@ -396,6 +415,7 @@ void DeinitReceiver(TNGeneConfiguration *cfg, TNGeneData *rx)
 	    free(rx->codeLateArray);
 	}
 	free(rx->cosArray);
+    free(rx->wideI); free(rx->wideQ);
 	free(rx->sinArray);
 	free(rx->subcarrierArray);
 	free(rx->subcarrierArrayEarly);

@@ -18,6 +18,7 @@
 #include "ioFunctions.h"
 #include "osnmaUtilities.h"
 #include "mackList.h"
+#include "checkFolder.h"
 
 //***********************************************CHIMERA**************************
 
@@ -861,7 +862,7 @@ int LoadSectorPatternTable(TChimeraData *chimera)
 {
    int pattern, segment;
    char tablePath[32768];
-   const char *directory = NgNativeHome();
+   const char *directory = GetExecutableDirectory();
    FILE *sectorPatternFile;
    if (!directory || snprintf(tablePath,sizeof(tablePath),"%s/otherData/SectorPatternsTable",directory) >= sizeof(tablePath))
        return FAILURE_RETURN;
