@@ -1,6 +1,10 @@
 /* Preservation fixture recorded from the original Windows /Od generators.
  * Covers code/carrier bytes, lookahead, output guards and continuous NCO phase.
+ * Sample bytes are compared exactly on every platform. Phase uses the analytic
+ * tolerance: Linux evaluates the historical L-suffixed constants in extended
+ * precision, whereas native Windows long double has double precision.
  * No receiver loop/search constants are changed by intrinsic optimization. */
+#include <float.h>
 #include <math.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -37,6 +41,8 @@ int main(int argc,char **argv)
     unsigned a,b,c,d,e,n,k,cases=0;
     char *s,*co,*code;
     uint64_t carrierHash=UINT64_C(14695981039346656037),codeHash=carrierHash;
+    uint64_t carrierSamplesHash=carrierHash;
+    double maxPhaseError=0;
     int record=argc==2 && !strcmp(argv[1],"--record");
 #ifdef NGENE_NATIVE_WINDOWS
     SetErrorMode(SEM_FAILCRITICALERRORS|SEM_NOGPFAULTERRORBOX);
@@ -51,6 +57,7 @@ int main(int argc,char **argv)
             TSinCosTable table={0};
             CHECK(InitCarrierTable(&cfg,&table,bases[b])==SUCCESS_RETURN);
             carrierHash=Digest(carrierHash,table.table,table.tableSize);
+            carrierSamplesHash=Digest(carrierSamplesHash,table.table,table.tableSize);
             for(c=0;c<5;c++) for(d=0;d<5;d++) for(e=0;e<14;e++) {
                 double f=bases[b]+offsets[c],out,expected;
                 n=sizes[e]; memset(s,0x55,17000); memset(co,0x55,17000);
@@ -58,15 +65,20 @@ int main(int argc,char **argv)
                 expected=fmod(phases[d]+2*M_PI*n*f/cfg.fs,2*M_PI);
                 if(expected<0) expected+=2*M_PI;
                 CHECK(fabs(out-expected)<2e-12);
+                if(fabs(out-expected)>maxPhaseError) maxPhaseError=fabs(out-expected);
                 for(k=n;k<n+32;k++) CHECK(s[k]==0x55 && co[k]==0x55);
                 for(k=0;k<n;k++) CHECK((s[k]==0 || s[k]==-1) && (co[k]==0 || co[k]==-1));
                 carrierHash=Digest(carrierHash,s,n); carrierHash=Digest(carrierHash,co,n);
                 carrierHash=Digest(carrierHash,&out,sizeof(out));
+                carrierSamplesHash=Digest(carrierSamplesHash,s,n);
+                carrierSamplesHash=Digest(carrierSamplesHash,co,n);
                 memset(s,0x55,17000);
                 out=GenerateSine(&cfg,&table,f,phases[d],n,s);
                 CHECK(fabs(out-expected)<2e-12);
+                if(fabs(out-expected)>maxPhaseError) maxPhaseError=fabs(out-expected);
                 for(k=n;k<n+32;k++) CHECK(s[k]==0x55);
                 carrierHash=Digest(carrierHash,s,n); carrierHash=Digest(carrierHash,&out,sizeof(out));
+                carrierSamplesHash=Digest(carrierSamplesHash,s,n);
                 cases++;
             }
             DeinitCarrierTable(&table);
@@ -96,8 +108,15 @@ int main(int argc,char **argv)
     }
     printf("%u generator cases: carrier %016llx, code %016llx\n",cases,
         (unsigned long long)carrierHash,(unsigned long long)codeHash);
+    printf("Carrier sample bytes %016llx, max phase error %.3g rad\n",
+        (unsigned long long)carrierSamplesHash,maxPhaseError);
     if(!record) {
+        CHECK(carrierSamplesHash==UINT64_C(0x59d84d236984551a));
+#if defined(NGENE_NATIVE_WINDOWS) && LDBL_MANT_DIG == 53
+        /* Retain the original byte-for-byte double-phase Windows fixture too.
+         * Linux phase results need not have the same last bits as Windows. */
         CHECK(carrierHash==UINT64_C(0x1de1df372a432ed0));
+#endif
         CHECK(codeHash==UINT64_C(0xcf683d065183ee9d));
     }
     free(s); free(co); free(code); free(ngeneXmmsBackup);

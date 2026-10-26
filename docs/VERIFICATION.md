@@ -8,6 +8,26 @@ host because virtualization is unavailable. The Linux CI workflow builds and run
 the eight shared checks with both GCC and Clang on Ubuntu 24.04; the ninth check
 is specific to Windows. Linux live USB and replay have not yet been validated.
 
+A subsequent user Linux build linked successfully and passed seven of the eight
+checks. The carrier fixture failed because it hashed raw floating-point phase
+bytes from the Windows build. Enabling 80-bit long-double arithmetic and extended
+x87 precision in a temporary Windows diagnostic reproduced the exact reported
+Linux carrier hash `29923d5365946d96` (Windows: `1de1df372a432ed0`). Both executions
+produced identical carrier table/sample bytes, hash `59d84d236984551a`, and the
+same PRN hash `cf683d065183ee9d`. The check now requires exact carrier sample
+bytes on every platform and retains the existing per-case analytic phase bound
+of 2e-12 radians. The original combined Windows fixture is also retained for its
+native double-precision long-double format. No production NCO math is changed.
+The corrected test passes both the ordinary Windows build (all nine checks) and
+the temporary extended-precision diagnostic without disabling assertions. The
+updated check still needs to be rerun on the user's Linux host.
+
+Required GPS/Galileo PRN file reads now reject incomplete records before using
+their samples. Four temporary replay startup checks truncated each file in its
+first and second records; all four exited cleanly with the expected error and
+exit status 1. Valid template data retains its exact PRN fingerprint. EGNOS's
+existing missing-PRN zero-fill behavior is unchanged.
+
 The native Windows build uses Visual Studio clang-cl, Windows SDK
 and a statically linked Microsoft runtime. Build using `build.cmd`; clean and
 rebuild using `build.cmd clean`. Both execute the following tests.

@@ -24,6 +24,21 @@
 #include "ioFunctions.h"
 #include "arrays.h"
 
+/* Required GPS/Galileo records must be complete before they are oversampled.
+ * EGNOS intentionally retains its separate missing-PRN zero-fill policy. */
+static int ReadRequiredCode(TNGeneConfiguration *cfg, FILE *file, char *code,
+                            size_t length, const char *filename)
+{
+    if(fread(code, sizeof(char), length, file)==length)
+        return SUCCESS_RETURN;
+    SwrxLog(NGENE_LOG_SEVERITY_ERROR,
+        "Incomplete or unreadable PRN code block in %s (expected %u bytes)",
+        filename, (unsigned int)length);
+    fclose(file);
+    CloseNGene(cfg, EXIT_FAILURE);
+    return FAILURE_RETURN;
+}
+
 void OversampleCode(char *code,int codeLen,s128 *oversampled)
 {
     int i;
@@ -99,9 +114,11 @@ int InitPrnTable(TNGeneConfiguration *cfg,TPrnTable *t)
 	}
 	for(index=0;index<GPS_NUMBER_OF_PRNS;index++)
 	{
-		fread(code,sizeof(char),GPS_CODE_LEN,codeFile);
+		if(ReadRequiredCode(cfg,codeFile,code,GPS_CODE_LEN,filename)!=SUCCESS_RETURN)
+			return FAILURE_RETURN;
 		OversampleCode(code, GPS_CODE_LEN,t->gpsChipsOversampledBpsk[index]);
-		fread(code,sizeof(char),GPS_CODE_LEN,codeFile);
+		if(ReadRequiredCode(cfg,codeFile,code,GPS_CODE_LEN,filename)!=SUCCESS_RETURN)
+			return FAILURE_RETURN;
 		OversampleCode(code, GPS_CODE_LEN,t->gpsChipsOversampled[index]);
 	}
 	fclose(codeFile);
@@ -163,9 +180,11 @@ int InitPrnTable(TNGeneConfiguration *cfg,TPrnTable *t)
 	}
 	for(index=0;index<GALILEO_NUMBER_OF_PRNS;index++)
 	{
-		fread(code,sizeof(char),GALILEO_CODE_LEN,codeFile);
+		if(ReadRequiredCode(cfg,codeFile,code,GALILEO_CODE_LEN,filename)!=SUCCESS_RETURN)
+			return FAILURE_RETURN;
 		OversampleCode(code, GALILEO_CODE_LEN,t->galileoChipsOversampledBpsk[index]);
-		fread(code,sizeof(char),GALILEO_CODE_LEN,codeFile);
+		if(ReadRequiredCode(cfg,codeFile,code,GALILEO_CODE_LEN,filename)!=SUCCESS_RETURN)
+			return FAILURE_RETURN;
 		OversampleCode(code, GALILEO_CODE_LEN,t->galileoChipsOversampled[index]);
 	}
 	fclose(codeFile);
