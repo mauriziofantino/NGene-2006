@@ -47,7 +47,6 @@ include_directories(
     ${PROJECT_SOURCE_DIR}/osnma
     ${PROJECT_SOURCE_DIR}/chimera
     ${PROJECT_SOURCE_DIR}/utilityGnss/NeQuick
-    ${PROJECT_SOURCE_DIR}/guiSupport
     ${PROJECT_SOURCE_DIR}/receiver
     ${PROJECT_SOURCE_DIR}/asmFolder
     ${PROJECT_SOURCE_DIR}/libraries/libfec  # Correct inclusion of libfec
@@ -101,20 +100,17 @@ add_executable(ngene
     pvt/managePvtConfiguration.c
     pvt/pvtUtility.c
     pvt/receiverTime.c
-    utility/additionalLogs.c
     utility/checkFolder.c
     utility/ioFunctions.c
     utility/matrices.c
     utility/nmeaLog.c
     utility/rinexLog.c
-    utility/samplesHistogram.c
     utility/argvParser.c
     utility/closeManager.c
     utility/mathFunctions.c
     utility/ncursesApi.c
     utility/profilingSupport.c
     utility/sampleCompression.c
-    utility/samplesSpectrum.c
     osnma/base64.c
     osnma/cryptoFunctions.c
     osnma/dsmData.c
@@ -131,7 +127,6 @@ add_executable(ngene
     utilityGnss/fnavMessageParser.c
     utilityGnss/galileoMessageParser.c
     utilityGnss/gpsMessageParser.c
-    utilityGnss/ifenLog.c
     utilityGnss/manageNavMsgConfiguration.c
     utilityGnss/navigationMessage.c
     utilityGnss/navigationMessageParser.c
@@ -150,9 +145,6 @@ add_executable(ngene
     utilityGnss/NeQuick/neqCalcEpstParams.c
     utilityGnss/NeQuick/neqGetNeOnVertRay.c
     utilityGnss/NeQuick/neqUtils.c
-    guiSupport/commModule.c
-    guiSupport/guiInterfaceFunctions.c
-    guiSupport/threadutils.c
     asmFolder/arrays.c
     asmFolder/data_shift.c
     asmFolder/carrierTable.c

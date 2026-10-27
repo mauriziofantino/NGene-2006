@@ -86,7 +86,6 @@ int main(int argc,char **argv)
         {
             TPrnTable table={0};
             snprintf(cfg.otherDataPath,sizeof(cfg.otherDataPath),"%s",NGENE_TEST_DATA_DIRECTORY);
-            cfg.allGalileoPrnsEnabled=1;
             CHECK(InitPrnTable(&cfg,&table)==SUCCESS_RETURN);
             for(b=0;b<10;b++) for(c=0;c<2;c++) for(d=0;d<4;d++) for(e=0;e<14;e++) {
                 double len=sats[b]==GALILEO_SAT?4092:1023;

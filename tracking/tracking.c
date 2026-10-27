@@ -31,7 +31,6 @@ int InitTracking(TNGeneConfiguration *cfg,TNGeneData *rx,TChannel *ch)
 {
 	TTracking *trk = &(ch->tracking);
 	TTrkConfiguration *trkCfg = &(cfg->trkConfiguration);
-	TGuiConfiguration *guiCfg = &(cfg->guiParameters);
 
 	#ifdef CSC_DISCRIMINATOR_FUNCTION
 	int veryEarlyDisp = 0;
@@ -89,15 +88,12 @@ int InitTracking(TNGeneConfiguration *cfg,TNGeneData *rx,TChannel *ch)
 	{
 		earlyDisp = NearestInteger((cfg->manuallyConfiguredChannels[ch->chIndex].spacing*cfg->fs)/(2.0*GPS_CODE_RATE));
 		#ifdef CSC_DISCRIMINATOR_FUNCTION
-		veryEarlyDisp = NearestInteger((guiCfg->manuallyConfiguredChannels[ch->chIndex].veryEarlyVeryLateSpacing*cfg->fs)/(2.0*GPS_CODE_RATE));
+		veryEarlyDisp = NearestInteger((cfg->manuallyConfiguredChannels[ch->chIndex].veryEarlyVeryLateSpacing*cfg->fs)/(2.0*GPS_CODE_RATE));
 		#endif
 		trk->spacing = cfg->manuallyConfiguredChannels[ch->chIndex].spacing/2.0;
 	}
-	if(guiCfg->multipleCorrelatorsFlag==TRUE_FLAG)
-	{
-		multipleCorrMaxDisp = (int)(guiCfg->numberOfMultipleCorrelators/2)*guiCfg->multipleCorrelatorsSpacing;
-	}
-	else if (trkCfg->multipleCorrelatorsFlag==TRUE_FLAG)
+
+	if (trkCfg->multipleCorrelatorsFlag==TRUE_FLAG)
 	{
 		if(ch->satType==GPS_SAT)
 		{
@@ -604,7 +600,7 @@ TTrackingPflcStatus CorrectPllFalseLock(TNGeneConfiguration *cfg,TNGeneData *rx,
 		}
 		return PFLC_FINISHED;
 	}
-		
+
 	return PFLC_RUNNING;
 }
 

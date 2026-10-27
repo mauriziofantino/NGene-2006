@@ -246,64 +246,6 @@ void ManageLogSplitter(TNGeneConfiguration *cfg,TNGeneData *rx)
 			}
 		}
 	}
-	// navigation message (ifen)
-	if(GetFilenameFromFilePointer(rx->ifenLogGps,filename)==TRUE_FLAG)
-	{
-		fclose(rx->ifenLogGps);
-		sprintf(path,"%s/%s",cfg->dumpPathCurrent,filename);
-		rx->ifenLogGps = fopen(path,"w");
-		if(rx->ifenLogGps!=NULL)
-		{
-			fprintf(rx->ifenLogGps,"# FILE_VERSION = 1\n");
-			fprintf(rx->ifenLogGps,"# NAV_TYPE = GPS_L1_NAV\n");
-			fprintf(rx->ifenLogGps,"# BIT_TYPE = MESSAGE_BITS\n");
-			fprintf(rx->ifenLogGps,"# FRAME_LENGTH_BITS = 300\n");
-			fprintf(rx->ifenLogGps,"# FRAME_LENGTH_TIME = 6\n");
-			fprintf(rx->ifenLogGps,"# BIT_ORDER = MSB_FIRST\n");
-			if(rx->ifenLogGpsTime>=0)
-			{
-				fprintf(rx->ifenLogGps,"# START_TIME_TAG = %lld\n",rx->ifenLogGpsTime);
-			}
-		}
-	}
-	if(GetFilenameFromFilePointer(rx->ifenLogGal,filename)==TRUE_FLAG)
-	{
-		fclose(rx->ifenLogGal);
-		sprintf(path,"%s/%s",cfg->dumpPathCurrent,filename);
-		rx->ifenLogGal = fopen(path,"w");
-		if(rx->ifenLogGal!=NULL)
-		{
-			fprintf(rx->ifenLogGal,"# FILE_VERSION = 1\n");
-			fprintf(rx->ifenLogGal,"# NAV_TYPE = GAL_E1_INAV\n");
-			fprintf(rx->ifenLogGal,"# BIT_TYPE = MESSAGE_SYMBOLS\n");
-			fprintf(rx->ifenLogGal,"# FRAME_LENGTH_BITS = 250\n");
-			fprintf(rx->ifenLogGal,"# FRAME_LENGTH_TIME = 1\n");
-			fprintf(rx->ifenLogGal,"# BIT_ORDER = MSB_FIRST\n");
-			if(rx->ifenLogGalTime>=0)
-			{
-				fprintf(rx->ifenLogGal,"# START_TIME_TAG = %lld\n",rx->ifenLogGalTime);
-			}
-		}
-	}
-	if(GetFilenameFromFilePointer(rx->ifenLogFNav,filename)==TRUE_FLAG)
-	{
-		fclose(rx->ifenLogFNav);
-		sprintf(path,"%s/%s",cfg->dumpPathCurrent,filename);
-		rx->ifenLogFNav = fopen(path,"w");
-		if(rx->ifenLogFNav!=NULL)
-		{
-			fprintf(rx->ifenLogFNav,"# FILE_VERSION = 1\n");
-			fprintf(rx->ifenLogFNav,"# NAV_TYPE = GAL_E5_FNAV\n");
-			fprintf(rx->ifenLogFNav,"# BIT_TYPE = MESSAGE_SYMBOLS\n");
-			fprintf(rx->ifenLogFNav,"# FRAME_LENGTH_BITS = 500\n");
-			fprintf(rx->ifenLogFNav,"# FRAME_LENGTH_TIME = 10\n");
-			fprintf(rx->ifenLogFNav,"# BIT_ORDER = MSB_FIRST\n");
-			if(rx->ifenLogFNavTime>=0)
-			{
-				fprintf(rx->ifenLogFNav,"# START_TIME_TAG = %lld\n",rx->ifenLogFNavTime);
-			}
-		}
-	}
 	// almanac -> nothing to do, yuma almanac is saved only at the receiver de-initialization
 	// OSNMA
 	if(GetFilenameFromFilePointer(rx->osnmaData.parsLogFile,filename)==TRUE_FLAG)

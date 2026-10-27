@@ -32,9 +32,6 @@ void CloseNGene(TNGeneConfiguration *cfg,int returnValue)
 			break;
 		case RX_UI_TEXT:
 			break;
-		case RX_UI_GUI:
-			sleep(GUI_CLIENT_TIMEOUT);
-			break;
 	}
 
 	exit(returnValue);

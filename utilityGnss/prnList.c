@@ -76,20 +76,7 @@ int CreatePrnList(TPrnList *ptr,int gpsEnabled,int galileoEnabled,int egnosEnabl
     			}
     		}
     	}
-    	else
-    	{
-			#ifdef MAXIMUM_SUPPORTED_GALILEO_PRN
-    		for(index=BASE_PRN;index<=MAXIMUM_SUPPORTED_GALILEO_PRN;index++)
-			#else
-    		for(index=BASE_PRN;index<=GALILEO_NUMBER_OF_PRNS;index++)
-			#endif
-    		{
-    			if(InsertElementIntoPrnList(GALILEO_SAT,index,ptr)!=SUCCESS_RETURN)
-    			{
-    				return FAILURE_RETURN;
-    			}
-    		}
-    	}
+        else return FAILURE_RETURN; /* No implicit simulator/all-PRN search. */
     }
     return SUCCESS_RETURN;
 }

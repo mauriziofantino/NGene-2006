@@ -1,0 +1,1094 @@
+{
+    "date":  "2026-10-27",
+    "platform":  "Windows x64, Intel Core i7-1355U, Visual Studio clang-cl",
+    "notes":  "Single controlled runs; wall includes scheduling and initialization. Changed workloads do not establish CPU speedup or accuracy improvement.",
+    "recordings":  [
+                       {
+                           "file":  "recordings/native-ab.raw",
+                           "bytes":  794615808,
+                           "sha256":  "FA0BDD1330E0F22D8B83F12ED288E7C5D167F700150A4A9511E69ECD306365B8"
+                       },
+                       {
+                           "file":  "recordings/hackrf-l1-vga56-ci8.raw",
+                           "bytes":  1145831424,
+                           "sha256":  "2529932E264C8BE17C1412FC20992DC15348AB91E3304000AB82D4D69ED0178E"
+                       }
+                   ],
+    "runs":  [
+                 {
+                     "variant":  "baseline-sige-list",
+                     "directory":  "build\\profile-20261027-093126-508\\run-1",
+                     "frontend":  "sige",
+                     "input":  "native-ab.raw",
+                     "inputBytes":  794615808,
+                     "executableSha256":  "F2F3E0A9E019B04FFC4F34FA8A9CE5F9D2D45A7589BE2361DEE7BD449A1A045B",
+                     "wallSeconds":  10.2572175,
+                     "cpuSeconds":  9.171875,
+                     "exitCode":  0,
+                     "pvtFixes":  0,
+                     "trackingLostMessages":  0,
+                     "extendedProfile":  [
+                                             {
+                                                 "Target name":  "Receiver loop (including input waits)",
+                                                 "Number of executions":  "1",
+                                                 "Total time [s]":  "9.187899",
+                                                 "Time per execution [us]":  "9187898.599994",
+                                                 "Maximum timed interval [us]":  "9187898.599994"
+                                             },
+                                             {
+                                                 "Target name":  "Receiver iteration",
+                                                 "Number of executions":  "48540",
+                                                 "Total time [s]":  "9.176525",
+                                                 "Time per execution [us]":  "189.050779",
+                                                 "Maximum timed interval [us]":  "4955.900004"
+                                             },
+                                             {
+                                                 "Target name":  "Input fill including wait and conversion",
+                                                 "Number of executions":  "3237",
+                                                 "Total time [s]":  "0.325481",
+                                                 "Time per execution [us]":  "100.550201",
+                                                 "Maximum timed interval [us]":  "2236.100001"
+                                             },
+                                             {
+                                                 "Target name":  "Processing excluding input fill",
+                                                 "Number of executions":  "48540",
+                                                 "Total time [s]":  "8.846283",
+                                                 "Time per execution [us]":  "182.247285",
+                                                 "Maximum timed interval [us]":  "4955.700002"
+                                             },
+                                             {
+                                                 "Target name":  "All channel managers",
+                                                 "Number of executions":  "48540",
+                                                 "Total time [s]":  "8.752711",
+                                                 "Time per execution [us]":  "180.319555",
+                                                 "Maximum timed interval [us]":  "4950.299997"
+                                             },
+                                             {
+                                                 "Target name":  "State power on",
+                                                 "Number of executions":  "329257",
+                                                 "Total time [s]":  "0.021778",
+                                                 "Time per execution [us]":  "0.066143",
+                                                 "Maximum timed interval [us]":  "64.300002"
+                                             },
+                                             {
+                                                 "Target name":  "State coarse acquisition",
+                                                 "Number of executions":  "121964",
+                                                 "Total time [s]":  "4.813029",
+                                                 "Time per execution [us]":  "39.462706",
+                                                 "Maximum timed interval [us]":  "3233.100004"
+                                             },
+                                             {
+                                                 "Target name":  "State code refinement",
+                                                 "Number of executions":  "4131",
+                                                 "Total time [s]":  "0.022467",
+                                                 "Time per execution [us]":  "5.438732",
+                                                 "Maximum timed interval [us]":  "96.099997"
+                                             },
+                                             {
+                                                 "Target name":  "State Doppler refinement",
+                                                 "Number of executions":  "32572",
+                                                 "Total time [s]":  "0.167837",
+                                                 "Time per execution [us]":  "5.152785",
+                                                 "Maximum timed interval [us]":  "248.400000"
+                                             },
+                                             {
+                                                 "Target name":  "State confirmation",
+                                                 "Number of executions":  "118",
+                                                 "Total time [s]":  "0.001019",
+                                                 "Time per execution [us]":  "8.633898",
+                                                 "Maximum timed interval [us]":  "62.100000"
+                                             },
+                                             {
+                                                 "Target name":  "State tracking",
+                                                 "Number of executions":  "337138",
+                                                 "Total time [s]":  "3.663572",
+                                                 "Time per execution [us]":  "10.866683",
+                                                 "Maximum timed interval [us]":  "4149.699998"
+                                             }
+                                         ]
+                 },
+                 {
+                     "variant":  "headless-sige-list",
+                     "directory":  "build\\profile-20261027-093138-276\\run-1",
+                     "frontend":  "sige",
+                     "input":  "native-ab.raw",
+                     "inputBytes":  794615808,
+                     "executableSha256":  "8BCED92AECC11FC4EC89A62BA45C234F505EECA011C96ADC00189D1907B0CBE5",
+                     "wallSeconds":  10.072646599999999,
+                     "cpuSeconds":  9.125,
+                     "exitCode":  0,
+                     "pvtFixes":  0,
+                     "trackingLostMessages":  0,
+                     "extendedProfile":  [
+                                             {
+                                                 "Target name":  "Receiver loop (including input waits)",
+                                                 "Number of executions":  "1",
+                                                 "Total time [s]":  "9.245508",
+                                                 "Time per execution [us]":  "9245507.899999",
+                                                 "Maximum timed interval [us]":  "9245507.899999",
+                                                 "Advanced channel samples":  "0"
+                                             },
+                                             {
+                                                 "Target name":  "Receiver iteration",
+                                                 "Number of executions":  "48540",
+                                                 "Total time [s]":  "9.233851",
+                                                 "Time per execution [us]":  "190.231794",
+                                                 "Maximum timed interval [us]":  "10170.300004",
+                                                 "Advanced channel samples":  "0"
+                                             },
+                                             {
+                                                 "Target name":  "Input fill including wait and conversion",
+                                                 "Number of executions":  "3237",
+                                                 "Total time [s]":  "0.327739",
+                                                 "Time per execution [us]":  "101.247668",
+                                                 "Maximum timed interval [us]":  "853.799997",
+                                                 "Advanced channel samples":  "0"
+                                             },
+                                             {
+                                                 "Target name":  "Processing excluding input fill",
+                                                 "Number of executions":  "48540",
+                                                 "Total time [s]":  "8.901893",
+                                                 "Time per execution [us]":  "183.392925",
+                                                 "Maximum timed interval [us]":  "10170.199996",
+                                                 "Advanced channel samples":  "0"
+                                             },
+                                             {
+                                                 "Target name":  "All channel managers",
+                                                 "Number of executions":  "48540",
+                                                 "Total time [s]":  "8.818327",
+                                                 "Time per execution [us]":  "181.671335",
+                                                 "Maximum timed interval [us]":  "10166.799999",
+                                                 "Advanced channel samples":  "0"
+                                             },
+                                             {
+                                                 "Target name":  "GPS State power on",
+                                                 "Number of executions":  "162827",
+                                                 "Total time [s]":  "0.010588",
+                                                 "Time per execution [us]":  "0.065023",
+                                                 "Maximum timed interval [us]":  "378.600002",
+                                                 "Advanced channel samples":  "1332510696"
+                                             },
+                                             {
+                                                 "Target name":  "GPS State coarse acquisition",
+                                                 "Number of executions":  "1755",
+                                                 "Total time [s]":  "0.163733",
+                                                 "Time per execution [us]":  "93.295442",
+                                                 "Maximum timed interval [us]":  "501.299997",
+                                                 "Advanced channel samples":  "14392030"
+                                             },
+                                             {
+                                                 "Target name":  "GPS State code refinement",
+                                                 "Number of executions":  "816",
+                                                 "Total time [s]":  "0.003308",
+                                                 "Time per execution [us]":  "4.053431",
+                                                 "Maximum timed interval [us]":  "79.500001",
+                                                 "Advanced channel samples":  "6678043"
+                                             },
+                                             {
+                                                 "Target name":  "GPS State Doppler refinement",
+                                                 "Number of executions":  "6434",
+                                                 "Total time [s]":  "0.026799",
+                                                 "Time per execution [us]":  "4.165232",
+                                                 "Maximum timed interval [us]":  "280.100001",
+                                                 "Advanced channel samples":  "52638180"
+                                             },
+                                             {
+                                                 "Target name":  "GPS State confirmation",
+                                                 "Number of executions":  "24",
+                                                 "Total time [s]":  "0.000290",
+                                                 "Time per execution [us]":  "12.087501",
+                                                 "Maximum timed interval [us]":  "65.100001",
+                                                 "Advanced channel samples":  "196411"
+                                             },
+                                             {
+                                                 "Target name":  "GPS State tracking",
+                                                 "Number of executions":  "216464",
+                                                 "Total time [s]":  "2.050702",
+                                                 "Time per execution [us]":  "9.473640",
+                                                 "Maximum timed interval [us]":  "2594.800004",
+                                                 "Advanced channel samples":  "1771498875"
+                                             },
+                                             {
+                                                 "Target name":  "Galileo State power on",
+                                                 "Number of executions":  "118932",
+                                                 "Total time [s]":  "0.007417",
+                                                 "Time per execution [us]":  "0.062365",
+                                                 "Maximum timed interval [us]":  "109.200002",
+                                                 "Advanced channel samples":  "973274016"
+                                             },
+                                             {
+                                                 "Target name":  "Galileo State coarse acquisition",
+                                                 "Number of executions":  "119631",
+                                                 "Total time [s]":  "4.570041",
+                                                 "Time per execution [us]":  "38.201139",
+                                                 "Maximum timed interval [us]":  "3685.700001",
+                                                 "Advanced channel samples":  "979110375"
+                                             },
+                                             {
+                                                 "Target name":  "Galileo State code refinement",
+                                                 "Number of executions":  "3264",
+                                                 "Total time [s]":  "0.019326",
+                                                 "Time per execution [us]":  "5.921078",
+                                                 "Maximum timed interval [us]":  "153.200002",
+                                                 "Advanced channel samples":  "26711993"
+                                             },
+                                             {
+                                                 "Target name":  "Galileo State Doppler refinement",
+                                                 "Number of executions":  "25735",
+                                                 "Total time [s]":  "0.138452",
+                                                 "Time per execution [us]":  "5.379918",
+                                                 "Maximum timed interval [us]":  "461.500000",
+                                                 "Advanced channel samples":  "210552858"
+                                             },
+                                             {
+                                                 "Target name":  "Galileo State confirmation",
+                                                 "Number of executions":  "84",
+                                                 "Total time [s]":  "0.000610",
+                                                 "Time per execution [us]":  "7.263094",
+                                                 "Maximum timed interval [us]":  "34.500001",
+                                                 "Advanced channel samples":  "687441"
+                                             },
+                                             {
+                                                 "Target name":  "Galileo State tracking",
+                                                 "Number of executions":  "120674",
+                                                 "Total time [s]":  "1.687722",
+                                                 "Time per execution [us]":  "13.985797",
+                                                 "Maximum timed interval [us]":  "9923.300000",
+                                                 "Advanced channel samples":  "987572007"
+                                             },
+                                             {
+                                                 "Target name":  "EGNOS State power on",
+                                                 "Number of executions":  "47498",
+                                                 "Total time [s]":  "0.004180",
+                                                 "Time per execution [us]":  "0.088006",
+                                                 "Maximum timed interval [us]":  "164.900004",
+                                                 "Advanced channel samples":  "388707264"
+                                             },
+                                             {
+                                                 "Target name":  "EGNOS State coarse acquisition",
+                                                 "Number of executions":  "578",
+                                                 "Total time [s]":  "0.067002",
+                                                 "Time per execution [us]":  "115.920934",
+                                                 "Maximum timed interval [us]":  "351.200004",
+                                                 "Advanced channel samples":  "4743723"
+                                             },
+                                             {
+                                                 "Target name":  "EGNOS State code refinement",
+                                                 "Number of executions":  "51",
+                                                 "Total time [s]":  "0.000389",
+                                                 "Time per execution [us]":  "7.625490",
+                                                 "Maximum timed interval [us]":  "10.900003",
+                                                 "Advanced channel samples":  "417397"
+                                             },
+                                             {
+                                                 "Target name":  "EGNOS State Doppler refinement",
+                                                 "Number of executions":  "403",
+                                                 "Total time [s]":  "0.002960",
+                                                 "Time per execution [us]":  "7.344169",
+                                                 "Maximum timed interval [us]":  "54.500000",
+                                                 "Advanced channel samples":  "3289864"
+                                             },
+                                             {
+                                                 "Target name":  "EGNOS State confirmation",
+                                                 "Number of executions":  "10",
+                                                 "Total time [s]":  "0.000095",
+                                                 "Time per execution [us]":  "9.530001",
+                                                 "Maximum timed interval [us]":  "17.500002",
+                                                 "Advanced channel samples":  "81839"
+                                             }
+                                         ]
+                 },
+                 {
+                     "variant":  "baseline-hackrf-list",
+                     "directory":  "build\\profile-20261027-093149-470\\run-1",
+                     "frontend":  "hackrf",
+                     "input":  "hackrf-l1-vga56-ci8.raw",
+                     "inputBytes":  1145831424,
+                     "executableSha256":  "F2F3E0A9E019B04FFC4F34FA8A9CE5F9D2D45A7589BE2361DEE7BD449A1A045B",
+                     "wallSeconds":  17.6580708,
+                     "cpuSeconds":  16.546875,
+                     "exitCode":  0,
+                     "pvtFixes":  0,
+                     "trackingLostMessages":  0,
+                     "extendedProfile":  [
+                                             {
+                                                 "Target name":  "Receiver loop (including input waits)",
+                                                 "Number of executions":  "1",
+                                                 "Total time [s]":  "16.837529",
+                                                 "Time per execution [us]":  "16837528.999997",
+                                                 "Maximum timed interval [us]":  "16837528.999997"
+                                             },
+                                             {
+                                                 "Target name":  "Receiver iteration",
+                                                 "Number of executions":  "69998",
+                                                 "Total time [s]":  "16.819248",
+                                                 "Time per execution [us]":  "240.281835",
+                                                 "Maximum timed interval [us]":  "2829.199999"
+                                             },
+                                             {
+                                                 "Target name":  "Input fill including wait and conversion",
+                                                 "Number of executions":  "4668",
+                                                 "Total time [s]":  "0.486654",
+                                                 "Time per execution [us]":  "104.253320",
+                                                 "Maximum timed interval [us]":  "1476.500001"
+                                             },
+                                             {
+                                                 "Target name":  "Processing excluding input fill",
+                                                 "Number of executions":  "69998",
+                                                 "Total time [s]":  "16.324970",
+                                                 "Time per execution [us]":  "233.220518",
+                                                 "Maximum timed interval [us]":  "2829.199999"
+                                             },
+                                             {
+                                                 "Target name":  "All channel managers",
+                                                 "Number of executions":  "69998",
+                                                 "Total time [s]":  "16.007110",
+                                                 "Time per execution [us]":  "228.679534",
+                                                 "Maximum timed interval [us]":  "2828.599994"
+                                             },
+                                             {
+                                                 "Target name":  "State power on",
+                                                 "Number of executions":  "826176",
+                                                 "Total time [s]":  "0.066455",
+                                                 "Time per execution [us]":  "0.080436",
+                                                 "Maximum timed interval [us]":  "133.000001"
+                                             },
+                                             {
+                                                 "Target name":  "State coarse acquisition",
+                                                 "Number of executions":  "70580",
+                                                 "Total time [s]":  "8.244083",
+                                                 "Time per execution [us]":  "116.804800",
+                                                 "Maximum timed interval [us]":  "2791.799998"
+                                             },
+                                             {
+                                                 "Target name":  "State code refinement",
+                                                 "Number of executions":  "22864",
+                                                 "Total time [s]":  "0.519624",
+                                                 "Time per execution [us]":  "22.726715",
+                                                 "Maximum timed interval [us]":  "333.399999"
+                                             },
+                                             {
+                                                 "Target name":  "State Doppler refinement",
+                                                 "Number of executions":  "186121",
+                                                 "Total time [s]":  "4.247540",
+                                                 "Time per execution [us]":  "22.821390",
+                                                 "Maximum timed interval [us]":  "944.699997"
+                                             },
+                                             {
+                                                 "Target name":  "State confirmation",
+                                                 "Number of executions":  "414",
+                                                 "Total time [s]":  "0.010823",
+                                                 "Time per execution [us]":  "26.143720",
+                                                 "Maximum timed interval [us]":  "111.299996"
+                                             },
+                                             {
+                                                 "Target name":  "State tracking",
+                                                 "Number of executions":  "83811",
+                                                 "Total time [s]":  "2.811969",
+                                                 "Time per execution [us]":  "33.551307",
+                                                 "Maximum timed interval [us]":  "1055.799999"
+                                             }
+                                         ]
+                 },
+                 {
+                     "variant":  "headless-hackrf-list",
+                     "directory":  "build\\profile-20261027-093208-049\\run-1",
+                     "frontend":  "hackrf",
+                     "input":  "hackrf-l1-vga56-ci8.raw",
+                     "inputBytes":  1145831424,
+                     "executableSha256":  "8BCED92AECC11FC4EC89A62BA45C234F505EECA011C96ADC00189D1907B0CBE5",
+                     "wallSeconds":  19.9594411,
+                     "cpuSeconds":  18.734375,
+                     "exitCode":  0,
+                     "pvtFixes":  0,
+                     "trackingLostMessages":  0,
+                     "extendedProfile":  [
+                                             {
+                                                 "Target name":  "Receiver loop (including input waits)",
+                                                 "Number of executions":  "1",
+                                                 "Total time [s]":  "19.090930",
+                                                 "Time per execution [us]":  "19090929.999998",
+                                                 "Maximum timed interval [us]":  "19090929.999998",
+                                                 "Advanced channel samples":  "0"
+                                             },
+                                             {
+                                                 "Target name":  "Receiver iteration",
+                                                 "Number of executions":  "69998",
+                                                 "Total time [s]":  "19.073626",
+                                                 "Time per execution [us]":  "272.488160",
+                                                 "Maximum timed interval [us]":  "10386.800001",
+                                                 "Advanced channel samples":  "0"
+                                             },
+                                             {
+                                                 "Target name":  "Input fill including wait and conversion",
+                                                 "Number of executions":  "4668",
+                                                 "Total time [s]":  "0.571529",
+                                                 "Time per execution [us]":  "122.435583",
+                                                 "Maximum timed interval [us]":  "3504.200002",
+                                                 "Advanced channel samples":  "0"
+                                             },
+                                             {
+                                                 "Target name":  "Processing excluding input fill",
+                                                 "Number of executions":  "69998",
+                                                 "Total time [s]":  "18.495627",
+                                                 "Time per execution [us]":  "264.230794",
+                                                 "Maximum timed interval [us]":  "10386.800001",
+                                                 "Advanced channel samples":  "0"
+                                             },
+                                             {
+                                                 "Target name":  "All channel managers",
+                                                 "Number of executions":  "69998",
+                                                 "Total time [s]":  "18.105879",
+                                                 "Time per execution [us]":  "258.662799",
+                                                 "Maximum timed interval [us]":  "10382.100001",
+                                                 "Advanced channel samples":  "0"
+                                             },
+                                             {
+                                                 "Target name":  "GPS State power on",
+                                                 "Number of executions":  "444602",
+                                                 "Total time [s]":  "0.034760",
+                                                 "Time per execution [us]":  "0.078183",
+                                                 "Maximum timed interval [us]":  "619.600003",
+                                                 "Advanced channel samples":  "3638508192"
+                                             },
+                                             {
+                                                 "Target name":  "GPS State coarse acquisition",
+                                                 "Number of executions":  "1292",
+                                                 "Total time [s]":  "0.516855",
+                                                 "Time per execution [us]":  "400.042570",
+                                                 "Maximum timed interval [us]":  "917.800004",
+                                                 "Advanced channel samples":  "10671702"
+                                             },
+                                             {
+                                                 "Target name":  "GPS State code refinement",
+                                                 "Number of executions":  "3400",
+                                                 "Total time [s]":  "0.088707",
+                                                 "Time per execution [us]":  "26.090382",
+                                                 "Maximum timed interval [us]":  "303.599998",
+                                                 "Advanced channel samples":  "27825189"
+                                             },
+                                             {
+                                                 "Target name":  "GPS State Doppler refinement",
+                                                 "Number of executions":  "26807",
+                                                 "Total time [s]":  "0.708028",
+                                                 "Time per execution [us]":  "26.412053",
+                                                 "Maximum timed interval [us]":  "3123.899995",
+                                                 "Advanced channel samples":  "219325786"
+                                             },
+                                             {
+                                                 "Target name":  "GPS State confirmation",
+                                                 "Number of executions":  "72",
+                                                 "Total time [s]":  "0.002187",
+                                                 "Time per execution [us]":  "30.379167",
+                                                 "Maximum timed interval [us]":  "59.999998",
+                                                 "Advanced channel samples":  "589232"
+                                             },
+                                             {
+                                                 "Target name":  "GPS State tracking",
+                                                 "Number of executions":  "83811",
+                                                 "Total time [s]":  "3.275609",
+                                                 "Time per execution [us]":  "39.083278",
+                                                 "Maximum timed interval [us]":  "4337.300001",
+                                                 "Advanced channel samples":  "685892223"
+                                             },
+                                             {
+                                                 "Target name":  "Galileo State power on",
+                                                 "Number of executions":  "312308",
+                                                 "Total time [s]":  "0.028160",
+                                                 "Time per execution [us]":  "0.090167",
+                                                 "Maximum timed interval [us]":  "1621.500000",
+                                                 "Advanced channel samples":  "2555838648"
+                                             },
+                                             {
+                                                 "Target name":  "Galileo State coarse acquisition",
+                                                 "Number of executions":  "69016",
+                                                 "Total time [s]":  "8.149749",
+                                                 "Time per execution [us]":  "118.084918",
+                                                 "Maximum timed interval [us]":  "4444.500002",
+                                                 "Advanced channel samples":  "565405420"
+                                             },
+                                             {
+                                                 "Target name":  "Galileo State code refinement",
+                                                 "Number of executions":  "19413",
+                                                 "Total time [s]":  "0.569402",
+                                                 "Time per execution [us]":  "29.330943",
+                                                 "Maximum timed interval [us]":  "1941.199997",
+                                                 "Advanced channel samples":  "158872395"
+                                             },
+                                             {
+                                                 "Target name":  "Galileo State Doppler refinement",
+                                                 "Number of executions":  "158911",
+                                                 "Total time [s]":  "4.480812",
+                                                 "Time per execution [us]":  "28.196993",
+                                                 "Maximum timed interval [us]":  "10181.500002",
+                                                 "Advanced channel samples":  "1299955357"
+                                             },
+                                             {
+                                                 "Target name":  "Galileo State confirmation",
+                                                 "Number of executions":  "336",
+                                                 "Total time [s]":  "0.010452",
+                                                 "Time per execution [us]":  "31.107143",
+                                                 "Maximum timed interval [us]":  "91.700000",
+                                                 "Advanced channel samples":  "2749759"
+                                             },
+                                             {
+                                                 "Target name":  "EGNOS State power on",
+                                                 "Number of executions":  "69266",
+                                                 "Total time [s]":  "0.005873",
+                                                 "Time per execution [us]":  "0.084793",
+                                                 "Maximum timed interval [us]":  "114.399998",
+                                                 "Advanced channel samples":  "566848392"
+                                             },
+                                             {
+                                                 "Target name":  "EGNOS State coarse acquisition",
+                                                 "Number of executions":  "272",
+                                                 "Total time [s]":  "0.114760",
+                                                 "Time per execution [us]":  "421.912500",
+                                                 "Maximum timed interval [us]":  "908.399998",
+                                                 "Advanced channel samples":  "2246885"
+                                             },
+                                             {
+                                                 "Target name":  "EGNOS State code refinement",
+                                                 "Number of executions":  "51",
+                                                 "Total time [s]":  "0.001344",
+                                                 "Time per execution [us]":  "26.347059",
+                                                 "Maximum timed interval [us]":  "45.200002",
+                                                 "Advanced channel samples":  "417389"
+                                             },
+                                             {
+                                                 "Target name":  "EGNOS State Doppler refinement",
+                                                 "Number of executions":  "403",
+                                                 "Total time [s]":  "0.010182",
+                                                 "Time per execution [us]":  "25.265260",
+                                                 "Maximum timed interval [us]":  "76.600001",
+                                                 "Advanced channel samples":  "3289869"
+                                             },
+                                             {
+                                                 "Target name":  "EGNOS State confirmation",
+                                                 "Number of executions":  "6",
+                                                 "Total time [s]":  "0.000171",
+                                                 "Time per execution [us]":  "28.450001",
+                                                 "Maximum timed interval [us]":  "44.399996",
+                                                 "Advanced channel samples":  "49104"
+                                             }
+                                         ]
+                 },
+                 {
+                     "variant":  "headless-hackrf-gps-only",
+                     "directory":  "build\\profile-20261027-093228-988\\run-1",
+                     "frontend":  "hackrf",
+                     "input":  "hackrf-l1-vga56-ci8.raw",
+                     "inputBytes":  1145831424,
+                     "executableSha256":  "8BCED92AECC11FC4EC89A62BA45C234F505EECA011C96ADC00189D1907B0CBE5",
+                     "wallSeconds":  23.592579399999998,
+                     "cpuSeconds":  19.28125,
+                     "exitCode":  0,
+                     "pvtFixes":  29,
+                     "trackingLostMessages":  0,
+                     "extendedProfile":  [
+                                             {
+                                                 "Target name":  "Receiver loop (including input waits)",
+                                                 "Number of executions":  "1",
+                                                 "Total time [s]":  "22.806363",
+                                                 "Time per execution [us]":  "22806362.899995",
+                                                 "Maximum timed interval [us]":  "22806362.899995",
+                                                 "Advanced channel samples":  "0"
+                                             },
+                                             {
+                                                 "Target name":  "Receiver iteration",
+                                                 "Number of executions":  "70001",
+                                                 "Total time [s]":  "22.780878",
+                                                 "Time per execution [us]":  "325.436465",
+                                                 "Maximum timed interval [us]":  "22295.299997",
+                                                 "Advanced channel samples":  "0"
+                                             },
+                                             {
+                                                 "Target name":  "Input fill including wait and conversion",
+                                                 "Number of executions":  "4668",
+                                                 "Total time [s]":  "0.747536",
+                                                 "Time per execution [us]":  "160.140488",
+                                                 "Maximum timed interval [us]":  "21767.400001",
+                                                 "Advanced channel samples":  "0"
+                                             },
+                                             {
+                                                 "Target name":  "Processing excluding input fill",
+                                                 "Number of executions":  "70001",
+                                                 "Total time [s]":  "22.034136",
+                                                 "Time per execution [us]":  "314.768869",
+                                                 "Maximum timed interval [us]":  "16240.400000",
+                                                 "Advanced channel samples":  "0"
+                                             },
+                                             {
+                                                 "Target name":  "All channel managers",
+                                                 "Number of executions":  "70001",
+                                                 "Total time [s]":  "21.646245",
+                                                 "Time per execution [us]":  "309.227651",
+                                                 "Maximum timed interval [us]":  "16238.000004",
+                                                 "Advanced channel samples":  "0"
+                                             },
+                                             {
+                                                 "Target name":  "GPS State power on",
+                                                 "Number of executions":  "26936",
+                                                 "Total time [s]":  "0.002111",
+                                                 "Time per execution [us]":  "0.078364",
+                                                 "Maximum timed interval [us]":  "84.600004",
+                                                 "Advanced channel samples":  "220378752"
+                                             },
+                                             {
+                                                 "Target name":  "GPS State coarse acquisition",
+                                                 "Number of executions":  "12728",
+                                                 "Total time [s]":  "5.656223",
+                                                 "Time per execution [us]":  "444.392167",
+                                                 "Maximum timed interval [us]":  "16043.800002",
+                                                 "Advanced channel samples":  "104738429"
+                                             },
+                                             {
+                                                 "Target name":  "GPS State code refinement",
+                                                 "Number of executions":  "18904",
+                                                 "Total time [s]":  "0.456385",
+                                                 "Time per execution [us]":  "24.142250",
+                                                 "Maximum timed interval [us]":  "10221.500001",
+                                                 "Advanced channel samples":  "154707802"
+                                             },
+                                             {
+                                                 "Target name":  "GPS State Doppler refinement",
+                                                 "Number of executions":  "149355",
+                                                 "Total time [s]":  "3.382603",
+                                                 "Time per execution [us]":  "22.648076",
+                                                 "Maximum timed interval [us]":  "11051.000001",
+                                                 "Advanced channel samples":  "1221766405"
+                                             },
+                                             {
+                                                 "Target name":  "GPS State confirmation",
+                                                 "Number of executions":  "1268",
+                                                 "Total time [s]":  "0.036773",
+                                                 "Time per execution [us]":  "29.000789",
+                                                 "Maximum timed interval [us]":  "2283.600006",
+                                                 "Advanced channel samples":  "10377046"
+                                             },
+                                             {
+                                                 "Target name":  "GPS State tracking",
+                                                 "Number of executions":  "350817",
+                                                 "Total time [s]":  "12.039465",
+                                                 "Time per execution [us]":  "34.318363",
+                                                 "Maximum timed interval [us]":  "14278.000002",
+                                                 "Advanced channel samples":  "2871015319"
+                                             }
+                                         ]
+                 },
+                 {
+                     "variant":  "budget-hackrf-profile",
+                     "directory":  "build\\profile-20261027-093656-203\\run-1",
+                     "frontend":  "hackrf",
+                     "input":  "hackrf-l1-vga56-ci8.raw",
+                     "inputBytes":  1145831424,
+                     "executableSha256":  "354DA93C42FF7F1528F72A40D08C6A9680CCD7C6472B37A2405708216293F83D",
+                     "wallSeconds":  21.3898588,
+                     "cpuSeconds":  20.34375,
+                     "exitCode":  0,
+                     "pvtFixes":  29,
+                     "trackingLostMessages":  0,
+                     "extendedProfile":  [
+                                             {
+                                                 "Target name":  "Receiver loop (including input waits)",
+                                                 "Number of executions":  "1",
+                                                 "Total time [s]":  "20.502551",
+                                                 "Time per execution [us]":  "20502551.399994",
+                                                 "Maximum timed interval [us]":  "20502551.399994",
+                                                 "Advanced channel samples":  "0"
+                                             },
+                                             {
+                                                 "Target name":  "Receiver iteration",
+                                                 "Number of executions":  "69997",
+                                                 "Total time [s]":  "20.484316",
+                                                 "Time per execution [us]":  "292.645628",
+                                                 "Maximum timed interval [us]":  "14816.199997",
+                                                 "Advanced channel samples":  "0"
+                                             },
+                                             {
+                                                 "Target name":  "Input fill including wait and conversion",
+                                                 "Number of executions":  "4668",
+                                                 "Total time [s]":  "0.608320",
+                                                 "Time per execution [us]":  "130.317138",
+                                                 "Maximum timed interval [us]":  "834.200000",
+                                                 "Advanced channel samples":  "0"
+                                             },
+                                             {
+                                                 "Target name":  "Processing excluding input fill",
+                                                 "Number of executions":  "69997",
+                                                 "Total time [s]":  "19.869186",
+                                                 "Time per execution [us]":  "283.857681",
+                                                 "Maximum timed interval [us]":  "14816.299998",
+                                                 "Advanced channel samples":  "0"
+                                             },
+                                             {
+                                                 "Target name":  "All channel managers",
+                                                 "Number of executions":  "69997",
+                                                 "Total time [s]":  "19.533892",
+                                                 "Time per execution [us]":  "279.067559",
+                                                 "Maximum timed interval [us]":  "14813.200003",
+                                                 "Advanced channel samples":  "0"
+                                             },
+                                             {
+                                                 "Target name":  "GPS State power on",
+                                                 "Number of executions":  "119636",
+                                                 "Total time [s]":  "0.011465",
+                                                 "Time per execution [us]":  "0.095830",
+                                                 "Maximum timed interval [us]":  "66.699999",
+                                                 "Advanced channel samples":  "979035552"
+                                             },
+                                             {
+                                                 "Target name":  "GPS State coarse acquisition",
+                                                 "Number of executions":  "8348",
+                                                 "Total time [s]":  "3.243757",
+                                                 "Time per execution [us]":  "388.566950",
+                                                 "Maximum timed interval [us]":  "3338.199997",
+                                                 "Advanced channel samples":  "68933383"
+                                             },
+                                             {
+                                                 "Target name":  "GPS State code refinement",
+                                                 "Number of executions":  "20400",
+                                                 "Total time [s]":  "0.447730",
+                                                 "Time per execution [us]":  "21.947529",
+                                                 "Maximum timed interval [us]":  "620.199993",
+                                                 "Advanced channel samples":  "166950966"
+                                             },
+                                             {
+                                                 "Target name":  "GPS State Doppler refinement",
+                                                 "Number of executions":  "160962",
+                                                 "Total time [s]":  "3.510289",
+                                                 "Time per execution [us]":  "21.808188",
+                                                 "Maximum timed interval [us]":  "4049.500007",
+                                                 "Advanced channel samples":  "1316682460"
+                                             },
+                                             {
+                                                 "Target name":  "GPS State confirmation",
+                                                 "Number of executions":  "306",
+                                                 "Total time [s]":  "0.007240",
+                                                 "Time per execution [us]":  "23.659804",
+                                                 "Maximum timed interval [us]":  "55.099998",
+                                                 "Advanced channel samples":  "2504243"
+                                             },
+                                             {
+                                                 "Target name":  "GPS State tracking",
+                                                 "Number of executions":  "250324",
+                                                 "Total time [s]":  "6.691116",
+                                                 "Time per execution [us]":  "26.729823",
+                                                 "Maximum timed interval [us]":  "13759.400004",
+                                                 "Advanced channel samples":  "2048601121"
+                                             },
+                                             {
+                                                 "Target name":  "Galileo State power on",
+                                                 "Number of executions":  "491276",
+                                                 "Total time [s]":  "0.040399",
+                                                 "Time per execution [us]":  "0.082232",
+                                                 "Maximum timed interval [us]":  "52.200005",
+                                                 "Advanced channel samples":  "4020480024"
+                                             },
+                                             {
+                                                 "Target name":  "Galileo State coarse acquisition",
+                                                 "Number of executions":  "15442",
+                                                 "Total time [s]":  "1.625159",
+                                                 "Time per execution [us]":  "105.242754",
+                                                 "Maximum timed interval [us]":  "3714.300001",
+                                                 "Advanced channel samples":  "126530100"
+                                             },
+                                             {
+                                                 "Target name":  "Galileo State code refinement",
+                                                 "Number of executions":  "5984",
+                                                 "Total time [s]":  "0.156489",
+                                                 "Time per execution [us]":  "26.151203",
+                                                 "Maximum timed interval [us]":  "602.900000",
+                                                 "Advanced channel samples":  "48971923"
+                                             },
+                                             {
+                                                 "Target name":  "Galileo State Doppler refinement",
+                                                 "Number of executions":  "47186",
+                                                 "Total time [s]":  "1.172667",
+                                                 "Time per execution [us]":  "24.852015",
+                                                 "Maximum timed interval [us]":  "3288.600004",
+                                                 "Advanced channel samples":  "386013210"
+                                             },
+                                             {
+                                                 "Target name":  "Galileo State confirmation",
+                                                 "Number of executions":  "88",
+                                                 "Total time [s]":  "0.002751",
+                                                 "Time per execution [us]":  "31.256818",
+                                                 "Maximum timed interval [us]":  "202.900002",
+                                                 "Advanced channel samples":  "720173"
+                                             },
+                                             {
+                                                 "Target name":  "EGNOS State power on",
+                                                 "Number of executions":  "48933",
+                                                 "Total time [s]":  "0.004233",
+                                                 "Time per execution [us]":  "0.086506",
+                                                 "Maximum timed interval [us]":  "13.199999",
+                                                 "Advanced channel samples":  "400459488"
+                                             },
+                                             {
+                                                 "Target name":  "EGNOS State coarse acquisition",
+                                                 "Number of executions":  "5252",
+                                                 "Total time [s]":  "2.112334",
+                                                 "Time per execution [us]":  "402.196078",
+                                                 "Maximum timed interval [us]":  "1275.600000",
+                                                 "Advanced channel samples":  "43414782"
+                                             },
+                                             {
+                                                 "Target name":  "EGNOS State code refinement",
+                                                 "Number of executions":  "1751",
+                                                 "Total time [s]":  "0.043835",
+                                                 "Time per execution [us]":  "25.034209",
+                                                 "Maximum timed interval [us]":  "194.299995",
+                                                 "Advanced channel samples":  "14330704"
+                                             },
+                                             {
+                                                 "Target name":  "EGNOS State Doppler refinement",
+                                                 "Number of executions":  "13855",
+                                                 "Total time [s]":  "0.342109",
+                                                 "Time per execution [us]":  "24.692126",
+                                                 "Maximum timed interval [us]":  "500.900001",
+                                                 "Advanced channel samples":  "112952007"
+                                             },
+                                             {
+                                                 "Target name":  "EGNOS State confirmation",
+                                                 "Number of executions":  "206",
+                                                 "Total time [s]":  "0.005733",
+                                                 "Time per execution [us]":  "27.828156",
+                                                 "Maximum timed interval [us]":  "73.700001",
+                                                 "Advanced channel samples":  "1685880"
+                                             }
+                                         ]
+                 },
+                 {
+                     "variant":  "budget-sige-profile",
+                     "directory":  "build\\profile-20261027-093718-670\\run-1",
+                     "frontend":  "sige",
+                     "input":  "native-ab.raw",
+                     "inputBytes":  794615808,
+                     "executableSha256":  "354DA93C42FF7F1528F72A40D08C6A9680CCD7C6472B37A2405708216293F83D",
+                     "wallSeconds":  15.5804542,
+                     "cpuSeconds":  14.65625,
+                     "exitCode":  0,
+                     "pvtFixes":  23,
+                     "trackingLostMessages":  0,
+                     "extendedProfile":  [
+                                             {
+                                                 "Target name":  "Receiver loop (including input waits)",
+                                                 "Number of executions":  "1",
+                                                 "Total time [s]":  "14.817051",
+                                                 "Time per execution [us]":  "14817050.600002",
+                                                 "Maximum timed interval [us]":  "14817050.600002",
+                                                 "Advanced channel samples":  "0"
+                                             },
+                                             {
+                                                 "Target name":  "Receiver iteration",
+                                                 "Number of executions":  "48542",
+                                                 "Total time [s]":  "14.803917",
+                                                 "Time per execution [us]":  "304.971299",
+                                                 "Maximum timed interval [us]":  "4916.200000",
+                                                 "Advanced channel samples":  "0"
+                                             },
+                                             {
+                                                 "Target name":  "Input fill including wait and conversion",
+                                                 "Number of executions":  "3237",
+                                                 "Total time [s]":  "0.403967",
+                                                 "Time per execution [us]":  "124.796694",
+                                                 "Maximum timed interval [us]":  "1500.900005",
+                                                 "Advanced channel samples":  "0"
+                                             },
+                                             {
+                                                 "Target name":  "Processing excluding input fill",
+                                                 "Number of executions":  "48542",
+                                                 "Total time [s]":  "14.394045",
+                                                 "Time per execution [us]":  "296.527650",
+                                                 "Maximum timed interval [us]":  "4915.800004",
+                                                 "Advanced channel samples":  "0"
+                                             },
+                                             {
+                                                 "Target name":  "All channel managers",
+                                                 "Number of executions":  "48542",
+                                                 "Total time [s]":  "14.288398",
+                                                 "Time per execution [us]":  "294.351248",
+                                                 "Maximum timed interval [us]":  "4911.500000",
+                                                 "Advanced channel samples":  "0"
+                                             },
+                                             {
+                                                 "Target name":  "GPS State power on",
+                                                 "Number of executions":  "60185",
+                                                 "Total time [s]":  "0.016522",
+                                                 "Time per execution [us]":  "0.274517",
+                                                 "Maximum timed interval [us]":  "177.700000",
+                                                 "Advanced channel samples":  "492488568"
+                                             },
+                                             {
+                                                 "Target name":  "GPS State coarse acquisition",
+                                                 "Number of executions":  "76351",
+                                                 "Total time [s]":  "8.846613",
+                                                 "Time per execution [us]":  "115.867682",
+                                                 "Maximum timed interval [us]":  "3498.099999",
+                                                 "Advanced channel samples":  "624932496"
+                                             },
+                                             {
+                                                 "Target name":  "GPS State code refinement",
+                                                 "Number of executions":  "2312",
+                                                 "Total time [s]":  "0.014680",
+                                                 "Time per execution [us]":  "6.349395",
+                                                 "Maximum timed interval [us]":  "77.100005",
+                                                 "Advanced channel samples":  "18921137"
+                                             },
+                                             {
+                                                 "Target name":  "GPS State Doppler refinement",
+                                                 "Number of executions":  "18232",
+                                                 "Total time [s]":  "0.118514",
+                                                 "Time per execution [us]":  "6.500340",
+                                                 "Maximum timed interval [us]":  "504.699994",
+                                                 "Advanced channel samples":  "149141648"
+                                             },
+                                             {
+                                                 "Target name":  "GPS State confirmation",
+                                                 "Number of executions":  "41",
+                                                 "Total time [s]":  "0.000371",
+                                                 "Time per execution [us]":  "9.036586",
+                                                 "Maximum timed interval [us]":  "36.400001",
+                                                 "Advanced channel samples":  "335530"
+                                             },
+                                             {
+                                                 "Target name":  "GPS State tracking",
+                                                 "Number of executions":  "231215",
+                                                 "Total time [s]":  "2.389733",
+                                                 "Time per execution [us]":  "10.335544",
+                                                 "Maximum timed interval [us]":  "3028.699997",
+                                                 "Advanced channel samples":  "1892217696"
+                                             },
+                                             {
+                                                 "Target name":  "Galileo State power on",
+                                                 "Number of executions":  "290446",
+                                                 "Total time [s]":  "0.023558",
+                                                 "Time per execution [us]":  "0.081111",
+                                                 "Maximum timed interval [us]":  "197.100002",
+                                                 "Advanced channel samples":  "2376944592"
+                                             },
+                                             {
+                                                 "Target name":  "Galileo State coarse acquisition",
+                                                 "Number of executions":  "33950",
+                                                 "Total time [s]":  "1.416368",
+                                                 "Time per execution [us]":  "41.719249",
+                                                 "Maximum timed interval [us]":  "1544.400002",
+                                                 "Advanced channel samples":  "277883863"
+                                             },
+                                             {
+                                                 "Target name":  "Galileo State code refinement",
+                                                 "Number of executions":  "1632",
+                                                 "Total time [s]":  "0.015596",
+                                                 "Time per execution [us]":  "9.556434",
+                                                 "Maximum timed interval [us]":  "294.000005",
+                                                 "Advanced channel samples":  "13355989"
+                                             },
+                                             {
+                                                 "Target name":  "Galileo State Doppler refinement",
+                                                 "Number of executions":  "12869",
+                                                 "Total time [s]":  "0.122253",
+                                                 "Time per execution [us]":  "9.499821",
+                                                 "Maximum timed interval [us]":  "274.499995",
+                                                 "Advanced channel samples":  "105276316"
+                                             },
+                                             {
+                                                 "Target name":  "Galileo State confirmation",
+                                                 "Number of executions":  "36",
+                                                 "Total time [s]":  "0.000459",
+                                                 "Time per execution [us]":  "12.744445",
+                                                 "Maximum timed interval [us]":  "66.300003",
+                                                 "Advanced channel samples":  "294617"
+                                             },
+                                             {
+                                                 "Target name":  "Galileo State tracking",
+                                                 "Number of executions":  "49403",
+                                                 "Total time [s]":  "0.715160",
+                                                 "Time per execution [us]":  "14.476042",
+                                                 "Maximum timed interval [us]":  "1621.200005",
+                                                 "Advanced channel samples":  "404303837"
+                                             },
+                                             {
+                                                 "Target name":  "EGNOS State power on",
+                                                 "Number of executions":  "1597",
+                                                 "Total time [s]":  "0.000067",
+                                                 "Time per execution [us]":  "0.041891",
+                                                 "Maximum timed interval [us]":  "2.100001",
+                                                 "Advanced channel samples":  "13061664"
+                                             },
+                                             {
+                                                 "Target name":  "EGNOS State coarse acquisition",
+                                                 "Number of executions":  "408",
+                                                 "Total time [s]":  "0.020822",
+                                                 "Time per execution [us]":  "51.035294",
+                                                 "Maximum timed interval [us]":  "163.400000",
+                                                 "Advanced channel samples":  "3353204"
+                                             },
+                                             {
+                                                 "Target name":  "EGNOS State code refinement",
+                                                 "Number of executions":  "34",
+                                                 "Total time [s]":  "0.000121",
+                                                 "Time per execution [us]":  "3.555883",
+                                                 "Maximum timed interval [us]":  "3.900001",
+                                                 "Advanced channel samples":  "278266"
+                                             },
+                                             {
+                                                 "Target name":  "EGNOS State Doppler refinement",
+                                                 "Number of executions":  "269",
+                                                 "Total time [s]":  "0.000964",
+                                                 "Time per execution [us]":  "3.584386",
+                                                 "Maximum timed interval [us]":  "7.000002",
+                                                 "Advanced channel samples":  "2193242"
+                                             },
+                                             {
+                                                 "Target name":  "EGNOS State confirmation",
+                                                 "Number of executions":  "5",
+                                                 "Total time [s]":  "0.000059",
+                                                 "Time per execution [us]":  "11.800000",
+                                                 "Maximum timed interval [us]":  "31.899996",
+                                                 "Advanced channel samples":  "40920"
+                                             },
+                                             {
+                                                 "Target name":  "EGNOS State tracking",
+                                                 "Number of executions":  "46229",
+                                                 "Total time [s]":  "0.511546",
+                                                 "Time per execution [us]":  "11.065489",
+                                                 "Maximum timed interval [us]":  "2121.100006",
+                                                 "Advanced channel samples":  "378328997"
+                                             }
+                                         ]
+                 },
+                 {
+                     "variant":  "production-sige",
+                     "directory":  "build\\profile-20261027-094307-216\\run-1",
+                     "frontend":  "sige",
+                     "input":  "native-ab.raw",
+                     "inputBytes":  794615808,
+                     "executableSha256":  "7C54DB2A1E03C39D4227C53BE494453CB0283CE012AFD79E23D1F6DAA102480D",
+                     "wallSeconds":  15.2540213,
+                     "cpuSeconds":  14.03125,
+                     "exitCode":  0,
+                     "pvtFixes":  23,
+                     "trackingLostMessages":  0,
+                     "extendedProfile":  [
+
+                                         ]
+                 },
+                 {
+                     "variant":  "production-hackrf",
+                     "directory":  "build\\profile-20261027-094323-506\\run-1",
+                     "frontend":  "hackrf",
+                     "input":  "hackrf-l1-vga56-ci8.raw",
+                     "inputBytes":  1145831424,
+                     "executableSha256":  "7C54DB2A1E03C39D4227C53BE494453CB0283CE012AFD79E23D1F6DAA102480D",
+                     "wallSeconds":  24.903345299999998,
+                     "cpuSeconds":  23.515625,
+                     "exitCode":  0,
+                     "pvtFixes":  29,
+                     "trackingLostMessages":  0,
+                     "extendedProfile":  [
+
+                                         ]
+                 }
+             ]
+}

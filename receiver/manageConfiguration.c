@@ -37,9 +37,7 @@
 #include "checkFolder.h"
 #include "timeConversions.h"
 
-
 /* Compare the active configuration version with the bundled template version. */
-
 
 /**
  * @def VERSION_INDEX_LEN
@@ -52,59 +50,6 @@
  * @brief Name of the file where the version of the configuration is written.
  */
 #define VERSION_INDEX_FILENAME "rxver.dat"
-
-
-void InitGuiConfiguration(TNGeneConfiguration *cfg)
-{
-	TGuiConfiguration *guiCfg = &(cfg->guiParameters);
-
-	/* Channel parameters */
-	guiCfg->automaticConfigurationFlag = TRUE_FLAG;
-	guiCfg->gpsCoherentAcqIntTime = 0;
-	guiCfg->galileoCoherentTrkIntTime = 0;
-	guiCfg->galileoCoherentAcqIntTime = 0;
-	guiCfg->egnosCoherentAcqIntTime = 0;
-	guiCfg->numberOfExcludedPrns = 0;
-	guiCfg->excludedPrns.head = NULL;
-	guiCfg->manuallyConfiguredChannels = NULL;
-	/* IF ANALYSIS and LOG PARAMETERS */
-	guiCfg->spectrumSamples = 0;
-	guiCfg->spectrumWindows = 0;
-	guiCfg->spectrumOverlap = 0;
-	guiCfg->spectrumZeroPadding = 0;
-	guiCfg->spectrumWeightFunction = 0;
-	guiCfg->histSamples = 0;
-	guiCfg->histBits = 0;
-	guiCfg->outputPathLength = 0;
-	guiCfg->outputPath = NULL;
-	guiCfg->ifGenerationFlag = FALSE_FLAG;
-	/* MULTIPLE CORRELATION PARAMETERS */
-	guiCfg->multipleCorrelatorsFlag = FALSE_FLAG;
-	guiCfg->numberOfMultipleCorrelators = 0;
-	guiCfg->multipleCorrelatorsSpacing = 0;
-}
-
-
-void DeleteGuiConfiguration(TNGeneConfiguration *cfg)
-{
-	TGuiConfiguration *guiCfg = &(cfg->guiParameters);
-
-	if((guiCfg->automaticConfigurationFlag==TRUE_FLAG)&&(guiCfg->numberOfExcludedPrns>0))
-	{
-		DestroyPrnList(&guiCfg->excludedPrns);
-		guiCfg->numberOfExcludedPrns = 0;
-	}
-	if((guiCfg->automaticConfigurationFlag==FALSE_FLAG)&&(guiCfg->manuallyConfiguredChannels!=NULL))
-	{
-		free(guiCfg->manuallyConfiguredChannels);
-		guiCfg->manuallyConfiguredChannels=NULL;
-	}
-	if((guiCfg->outputPathLength>0)&&(guiCfg->outputPath!=NULL))
-	{
-		free(guiCfg->outputPath);
-		guiCfg->outputPath=NULL;
-	}
-}
 
 #ifndef DISABLE_CONFIGURATION_CHECK
 int ConfigurationFilesValid(TNGeneConfiguration *cfg)
@@ -162,7 +107,6 @@ int ConfigurationFilesValid(TNGeneConfiguration *cfg)
 }
 #endif
 
-
 int ManageLogsConfiguration(TNGeneConfiguration *cfg)
 {
 	TNGeneLogConfiguration *logCfg = &(cfg->logConfiguration);
@@ -181,10 +125,10 @@ int ManageLogsConfiguration(TNGeneConfiguration *cfg)
 		SwrxLog(NGENE_LOG_SEVERITY_INFO,"Error while parsing configuration file <%s>: tag <%s> not found. Default value used.",cfgFilename,tag);
 		logCfg->enableAcqLog = FALSE_FLAG;
 	}
-	else 
+	else
 	{
 		logCfg->enableAcqLog = (logCfg->enableAcqLog>0) ? TRUE_FLAG : FALSE_FLAG;
-	}	
+	}
 
 	/* tracking */
 	strcpy(tag, "Enable Tracking Log");
@@ -193,10 +137,10 @@ int ManageLogsConfiguration(TNGeneConfiguration *cfg)
 		SwrxLog(NGENE_LOG_SEVERITY_INFO,"Error while parsing configuration file <%s>: tag <%s> not found. Default value used.",cfgFilename,tag);
 		logCfg->enableTrkLog = FALSE_FLAG;
 	}
-	else 
+	else
 	{
 		logCfg->enableTrkLog = (logCfg->enableTrkLog>0) ? TRUE_FLAG : FALSE_FLAG;
-	}	
+	}
 
 	/* navigation message in custom format */
 	strcpy(tag, "Enable Navigation Message Log");
@@ -205,21 +149,9 @@ int ManageLogsConfiguration(TNGeneConfiguration *cfg)
 		SwrxLog(NGENE_LOG_SEVERITY_INFO,"Error while parsing configuration file <%s>: tag <%s> not found. Default value used.",cfgFilename,tag);
 		logCfg->enableNavMesgLog = FALSE_FLAG;
 	}
-	else 
-	{
-		logCfg->enableNavMesgLog = (logCfg->enableNavMesgLog>0) ? TRUE_FLAG : FALSE_FLAG;
-	}
-	
-	/* navigation message in IFEN format */
-	strcpy(tag, "Enable Navigation Message IFEN Log");
-	if(GetVal(cfgFilename,tag,(void *)&(logCfg->enableNavMesgIfenLog),F_INTEGER,1) == FAILURE_RETURN)
-	{
-		SwrxLog(NGENE_LOG_SEVERITY_INFO,"Error while parsing configuration file <%s>: tag <%s> not found. Default value used.",cfgFilename,tag);
-		logCfg->enableNavMesgIfenLog = FALSE_FLAG;
-	}
 	else
 	{
-		logCfg->enableNavMesgIfenLog = (logCfg->enableNavMesgIfenLog>0) ? TRUE_FLAG : FALSE_FLAG;
+		logCfg->enableNavMesgLog = (logCfg->enableNavMesgLog>0) ? TRUE_FLAG : FALSE_FLAG;
 	}
 
 	/* YUMA almanac */
@@ -229,11 +161,11 @@ int ManageLogsConfiguration(TNGeneConfiguration *cfg)
 		SwrxLog(NGENE_LOG_SEVERITY_INFO,"Error while parsing configuration file <%s>: tag <%s> not found. Default value used.",cfgFilename,tag);
 		logCfg->enableAlmanacLog = FALSE_FLAG;
 	}
-	else 
+	else
 	{
 		logCfg->enableAlmanacLog = (logCfg->enableAlmanacLog>0) ? TRUE_FLAG : FALSE_FLAG;
 	}
-	
+
 	/* OSNMA */
 	strcpy(tag, "Enable OSNMA Log");
 	if(GetVal(cfgFilename,tag,(void *)&(logCfg->enableOsnmaLog),F_INTEGER,1) == FAILURE_RETURN)
@@ -241,7 +173,7 @@ int ManageLogsConfiguration(TNGeneConfiguration *cfg)
 		SwrxLog(NGENE_LOG_SEVERITY_INFO,"Error while parsing configuration file <%s>: tag <%s> not found. Default value used.",cfgFilename,tag);
 		logCfg->enableOsnmaLog = FALSE_FLAG;
 	}
-	else 
+	else
 	{
 		logCfg->enableOsnmaLog = (logCfg->enableOsnmaLog>0) ? TRUE_FLAG : FALSE_FLAG;
 	}
@@ -257,8 +189,6 @@ int ManageLogsConfiguration(TNGeneConfiguration *cfg)
 		logCfg->enableOsnmaSimpleLog = (logCfg->enableOsnmaSimpleLog>0) ? TRUE_FLAG : FALSE_FLAG;
 	}
 
-
-	
 	/* PVT */
 	strcpy(tag, "Enable PVT Text Log");
 	if(GetVal(cfgFilename,tag,(void *)&(logCfg->enablePvtTextLog),F_INTEGER,1) == FAILURE_RETURN)
@@ -266,7 +196,7 @@ int ManageLogsConfiguration(TNGeneConfiguration *cfg)
 		SwrxLog(NGENE_LOG_SEVERITY_INFO,"Error while parsing configuration file <%s>: tag <%s> not found. Default value used.",cfgFilename,tag);
 		logCfg->enablePvtTextLog = FALSE_FLAG;
 	}
-	else 
+	else
 	{
 		logCfg->enablePvtTextLog = (logCfg->enablePvtTextLog>0) ? TRUE_FLAG : FALSE_FLAG;
 	}
@@ -277,7 +207,7 @@ int ManageLogsConfiguration(TNGeneConfiguration *cfg)
 		SwrxLog(NGENE_LOG_SEVERITY_INFO,"Error while parsing configuration file <%s>: tag <%s> not found. Default value used.",cfgFilename,tag);
 		logCfg->enablePvtBinLog = FALSE_FLAG;
 	}
-	else 
+	else
 	{
 		logCfg->enablePvtBinLog = (logCfg->enablePvtBinLog>0) ? TRUE_FLAG : FALSE_FLAG;
 	}
@@ -288,11 +218,11 @@ int ManageLogsConfiguration(TNGeneConfiguration *cfg)
 		SwrxLog(NGENE_LOG_SEVERITY_INFO,"Error while parsing configuration file <%s>: tag <%s> not found. Default value used.",cfgFilename,tag);
 		logCfg->enableGgtoLog = FALSE_FLAG;
 	}
-	else 
+	else
 	{
 		logCfg->enableGgtoLog = (logCfg->enableGgtoLog>0) ? TRUE_FLAG : FALSE_FLAG;
 	}
-	
+
 	/* RINEX */
 	ManageRinexConfiguration(cfg,cfgFilename);
 
@@ -301,7 +231,6 @@ int ManageLogsConfiguration(TNGeneConfiguration *cfg)
 
 	return SUCCESS_RETURN;
 }
-
 
 int ParseConfigurationFiles(TNGeneConfiguration *cfg)
 {
@@ -386,7 +315,7 @@ int ParseConfigurationFiles(TNGeneConfiguration *cfg)
 		memcpy(cfg->sampleFilename,string,strlen(string));
 		cfg->sampleFilename[strlen(string)]='\0';
 		#ifndef FAKE_OSNMA_RECEIVER
-		if(cfg->userInterface!=RX_UI_GUI)
+
 		{
 			SwrxLog(NGENE_LOG_SEVERITY_IMPORTANT_INFO,"Running off-line mode from file <%s>",cfg->sampleFilename);
 		}
@@ -435,20 +364,6 @@ int ParseConfigurationFiles(TNGeneConfiguration *cfg)
 		cfg->receiverClockEmulation = FALSE_FLAG;
 		cfg->receiverClockError = 0;
 	}
-	strcpy(tag, "Enable all Galileo PRNs");
-	if(GetVal(cfgFilename,tag,(void *)&(cfg->allGalileoPrnsEnabled),F_INTEGER,1) == FAILURE_RETURN)
-	{
-		cfg->allGalileoPrnsEnabled = FALSE_FLAG;
-	}
-	if(cfg->allGalileoPrnsEnabled>0)
-	{
-		cfg->allGalileoPrnsEnabled = TRUE_FLAG;
-	}
-	else
-	{
-		cfg->allGalileoPrnsEnabled = FALSE_FLAG;
-	}
-
 	/*******************************************************************/
 	/* Channel parameters */
 	strcpy(tag, "Automatic Configuration");
@@ -537,8 +452,7 @@ int ParseConfigurationFiles(TNGeneConfiguration *cfg)
 	ManageUsbFeConfiguration(cfg);
 	/* Navigation Message */
 	ManageNavigationMessageConfiguration(cfg);
-	/* Init GUI configuration with dummy values */
-	InitGuiConfiguration(cfg);
+
 	/* Manage NCurses */
 	cfg->ncursesDataInitialized = FALSE_FLAG;
 	/* Manage NGene2 logs configuration */
@@ -550,27 +464,17 @@ int ParseConfigurationFiles(TNGeneConfiguration *cfg)
 	return SUCCESS_RETURN;
 }
 
-
 void PlotConfiguration(TNGeneConfiguration *cfg)
 {
 	TPvtConfiguration *pvtCfg = &(cfg->pvtConfiguration);
 	TTrkConfiguration *trkCfg = &(cfg->trkConfiguration);
 	TAcqConfiguration *acqCfg = &(cfg->acqConfiguration);
 	TWarmStartConfiguration *warmCfg = &(cfg->warmConfiguration);
-	TGuiConfiguration *guiCfg = &(cfg->guiParameters);
-	int index;
-	TPrnListElement *excludedPrn;
-	char msg[MAX_ROW_LENGTH];
 
 	if(cfg->verbose==FALSE_FLAG)
 	{
 		return;
 	}
-
-	if(cfg->userInterface==RX_UI_GUI)
-		SwrxLog( NGENE_LOG_SEVERITY_NOTE, "%s current configuration received from port %u", cfg->progname,cfg->guiComPort);
-	else
-		SwrxLog( NGENE_LOG_SEVERITY_NOTE, "%s current configuration read from folder %s", cfg->progname,cfg->configurationPath);
 
 	if(cfg->inputMethod==USB_FRONTEND)
 		SwrxLog( NGENE_LOG_SEVERITY_NOTE, "Input from USB front-end");
@@ -663,46 +567,7 @@ void PlotConfiguration(TNGeneConfiguration *cfg)
 		SwrxLog( NGENE_LOG_SEVERITY_NOTE, "     known date & time %d/%d/%d %d:%d:%d",warmCfg->warmDay,warmCfg->warmMonth,warmCfg->warmYear,warmCfg->warmHour,warmCfg->warmMinute,warmCfg->warmSecond);
 	}
 
-	/* GUI */
-	if(cfg->userInterface==RX_UI_GUI)
-	{
-		SwrxLog( NGENE_LOG_SEVERITY_NOTE, "**** GUI specific parameters");
-		if(guiCfg->automaticConfigurationFlag==TRUE_FLAG)
-		{
-			SwrxLog( NGENE_LOG_SEVERITY_NOTE, "  ** Automatic configuration");
-			if(guiCfg->numberOfExcludedPrns>0)
-			{
-				SwrxLog( NGENE_LOG_SEVERITY_NOTE, "  ** PRNs excluded from elaboration");
-				excludedPrn = guiCfg->excludedPrns.head;
-				while(excludedPrn!=NULL)
-				{
-					FromPrnToString(excludedPrn->prnConstellation, excludedPrn->prn, msg);
-					SwrxLog( NGENE_LOG_SEVERITY_NOTE, "     %s",msg);
-					excludedPrn = excludedPrn->nextPrn;
-				}
-			}
-		}
-		else
-		{
-			SwrxLog( NGENE_LOG_SEVERITY_NOTE, "  ** Manual configuration");
-			for(index=0;index<cfg->numberOfChannels;index++)
-			{
-				FromPrnToString(guiCfg->manuallyConfiguredChannels[index].satType, guiCfg->manuallyConfiguredChannels[index].satId, msg);
-				SwrxLog( NGENE_LOG_SEVERITY_NOTE, "     ch. %2d  %s",index,msg);
-			}
-		}
-		SwrxLog( NGENE_LOG_SEVERITY_NOTE, "  ** SPECTRUM size %d",guiCfg->spectrumSamples);
-		SwrxLog( NGENE_LOG_SEVERITY_NOTE, "              zero padding %d",guiCfg->spectrumZeroPadding);
-		SwrxLog( NGENE_LOG_SEVERITY_NOTE, "              windows %d",guiCfg->spectrumWindows);
-		SwrxLog( NGENE_LOG_SEVERITY_NOTE, "              overlap %d",guiCfg->spectrumOverlap);
-		if(guiCfg->multipleCorrelatorsFlag==TRUE_FLAG)
-		{
-			SwrxLog( NGENE_LOG_SEVERITY_NOTE, "  ** Multiple correlators");
-			SwrxLog( NGENE_LOG_SEVERITY_NOTE, "     %d correlators spaced by %d samples",guiCfg->numberOfMultipleCorrelators,guiCfg->multipleCorrelatorsSpacing);
-		}
-	}
 }
-
 
 void DeleteConfiguration(TNGeneConfiguration *cfg)
 {
@@ -724,11 +589,9 @@ void DeleteConfiguration(TNGeneConfiguration *cfg)
 		}
 		DeleteWarmStartConfiguration(cfg);
 		DeleteUsbFeConfiguration(cfg);
-		DeleteGuiConfiguration(cfg);
 		cfg->configurationValid=FALSE_FLAG;
 	}
 }
-
 
 void CompleteConfiguration(TNGeneConfiguration *cfg)
 {
@@ -829,4 +692,3 @@ void CompleteConfiguration(TNGeneConfiguration *cfg)
 	// apply fs limitations to the acqusition configuration
 	CompleteAcqConfiguration(cfg);
 }
-

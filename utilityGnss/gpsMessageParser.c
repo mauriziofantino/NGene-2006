@@ -23,7 +23,6 @@
 #include "gpsMessageParser.h"
 #include "timeConversions.h"
 #include "rinexLog.h"
-#include "ifenLog.h"
 #include "mackList.h"
 #include "osnmaUtilities.h"
 
@@ -334,7 +333,7 @@ int ParseGpsSubframe4(TNGeneData *rx,TGpsParser *parser)
 	int health;
 	int dataId;
 	int index;
-	
+
 	dataId = ExtractField(parser->subframe,GPS_SUBF45_DATAID_FIRST_BYTE_IDX,GPS_SUBF45_DATAID_LAST_BYTE_IDX,GPS_SUBF45_DATAID_BITS_OF_FIRST_BYTE,GPS_SUBF45_DATAID_BITS_OF_LAST_BYTE);
 	pageId = ExtractField(parser->subframe,GPS_SUBF45_PAGEID_FIRST_BYTE_IDX,GPS_SUBF45_PAGEID_LAST_BYTE_IDX,GPS_SUBF45_PAGEID_BITS_OF_FIRST_BYTE,GPS_SUBF45_PAGEID_BITS_OF_LAST_BYTE);
 
@@ -983,21 +982,15 @@ void ParseGpsMessage(TNGeneConfiguration *cfg,TNGeneData *rx,TChannel *ch,float 
 					if((navMsg->wnValid==TRUE_FLAG) && (ch->newNavMsgInformation==TRUE_FLAG))
 					{
 						RinexSaveGpsNav(cfg,&(rx->rinexGps),ch,navMsg);
-						if(cfg->userInterface!=RX_UI_GUI)
+
 						{
-							// if the GUI is not used, reset here the flag to avoid saving twice the same navigation data
-							// otherwise, the flag is reset by SendNavigationMessageInformation
 							ch->newNavMsgInformation = FALSE_FLAG;
 						}
 					}
 					RinexAddGpsIono(cfg,&(rx->rinexGps),navMsg);
 					RinexAddGput(cfg,&(rx->rinexGps),navMsg);
 				}
-				/* optional IFEN format log */
-				if((navMsg->towValid==TRUE_FLAG) && (navMsg->wnValid==TRUE_FLAG))
-				{
-					SaveGpsL1CaBitsInIfenLog(rx->ifenLogGps,&(rx->ifenLogGpsTime),navMsg->wn,navMsg->tow-GPS_SUBFRAME_DURATION,ch->satId,parser->subframe);
-				}
+
 				/* save a frame for Galileo OSNMA cross-authentication
 				   save in the MACK list when an entire frame is available,
 				   time is valid (both WN and TOW), IODc and IODE are coherent */

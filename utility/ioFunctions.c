@@ -54,25 +54,6 @@ int ParsePath(char *line, int *vid, int *pid, char *filename, int workFromFile)
 }
 
 
-int MsgToGuiUpdate(const char *msg, char *msgToGui)
-{
-	int len;
-	unsigned char c = ' ';
-
-	len = strlen(msg);
-	if(len>MAX_MSG_LENGTH)
-	{
-		len=MAX_MSG_LENGTH;
-	}
-	memcpy(msgToGui,msg,len);
-	if(len<(MAX_MSG_LENGTH-1))
-	{
-		memset(&msgToGui[len],c,MAX_MSG_LENGTH-1-len);
-	}
-	msgToGui[MAX_MSG_LENGTH-1]='\0';
-	return 0;
-}
-
 /**
  * @def TAG_STRING_LEN
  * @brief number of char in the tagString variable in SwrxLog
@@ -85,7 +66,6 @@ static unsigned int swrxLog_verbose;
 static FILE *swrxLog_stdlog;
 static pthread_mutex_t *swrxLog_stdLogMutexPtr;
 static TUserInterface swrxLog_userInterface;
-static char *swrxLog_msgToGui;
 static TNCursesData *swrxLog_ncursesData;
 static int swrxLog_ncursesDataInitialized;
 
@@ -96,7 +76,6 @@ void InitSwrxLog(TNGeneConfiguration *cfg,TNGeneData *rx)
 	swrxLog_stdlog = cfg->stdlog;
 	swrxLog_stdLogMutexPtr = &(cfg->stdLogMutex);
 	swrxLog_userInterface = cfg->userInterface;
-	swrxLog_msgToGui = cfg->msgToGui;
 	swrxLog_ncursesData = &(rx->ncursesData);
 	swrxLog_ncursesDataInitialized = cfg->ncursesDataInitialized;
 }
@@ -183,14 +162,7 @@ int SwrxLog(int severity, const char *format, ...)
 			fflush(stdout);
 		}
 	}
-	if(swrxLog_userInterface==RX_UI_GUI)
-	{
-		if((severity==NGENE_LOG_SEVERITY_ERROR)||(severity==NGENE_LOG_SEVERITY_WARNING)||(severity==NGENE_LOG_SEVERITY_IMPORTANT_INFO))
-		{
-			/* If error or warning, send the message to the GUI */
-			MsgToGuiUpdate(logString,swrxLog_msgToGui);
-		}
-	}
+
 	if((swrxLog_userInterface==RX_UI_NCURSES) && (swrxLog_ncursesDataInitialized==TRUE_FLAG))
 	{
 		if((severity==NGENE_LOG_SEVERITY_ERROR)||(severity==NGENE_LOG_SEVERITY_WARNING)||(severity==NGENE_LOG_SEVERITY_IMPORTANT_INFO))
@@ -277,7 +249,7 @@ int GetVal(char *fileName, char *fieldName, void *variable, TFieldType fieldType
 								return FAILURE_RETURN;
 							}
 							break;
-							
+
 						case F_EXP:
 							if(!fscanf(fin,"%le", &((double *)variable)[cnt]))
 							{

@@ -191,7 +191,7 @@ int InitPrnTable(TNGeneConfiguration *cfg,TPrnTable *t)
 	/* Manage real Galileo satellites */
 	t->numberOfRealGalileoSat = 0;
 	t->prnOfRealGalileoSat = NULL;
-	if(cfg->allGalileoPrnsEnabled==FALSE_FLAG)
+	if(cfg->numberOfGalileoChannels>0)
 	{
 		filename[0] = '\0';
 		strcat(filename, cfg->otherDataPath);
@@ -199,7 +199,8 @@ int InitPrnTable(TNGeneConfiguration *cfg,TPrnTable *t)
 		codeFile = fopen(filename,"r");
 		if(codeFile==NULL)
 		{
-			cfg->allGalileoPrnsEnabled = TRUE_FLAG; /* cannot use the list of all real satellites */
+			SwrxLog(NGENE_LOG_SEVERITY_ERROR,"Cannot read Galileo PRN search list %s",filename);
+			return FAILURE_RETURN;
 		}
 		else
 		{
@@ -207,8 +208,18 @@ int InitPrnTable(TNGeneConfiguration *cfg,TPrnTable *t)
 			{
 				if((row[0]!='#') && (sscanf(row,"%d",&prn)==1))
 				{
+					if(prn<BASE_PRN || prn>GALILEO_NUMBER_OF_PRNS) {
+						fclose(codeFile);
+						SwrxLog(NGENE_LOG_SEVERITY_ERROR,"Invalid Galileo PRN %d in %s",prn,filename);
+						return FAILURE_RETURN;
+					}
 					t->numberOfRealGalileoSat++;
 				}
+			}
+			if(t->numberOfRealGalileoSat==0) {
+				fclose(codeFile);
+				SwrxLog(NGENE_LOG_SEVERITY_ERROR,"Empty Galileo PRN search list %s",filename);
+				return FAILURE_RETURN;
 			}
 			t->prnOfRealGalileoSat = (int *)malloc(t->numberOfRealGalileoSat*sizeof(int));
 			if(t->prnOfRealGalileoSat==NULL)

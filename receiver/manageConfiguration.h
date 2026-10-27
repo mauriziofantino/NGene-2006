@@ -71,12 +71,7 @@ void CompleteConfiguration(TNGeneConfiguration *cfg);
  */
 void DeleteConfiguration(TNGeneConfiguration *cfg);
 
-/**
- * @brief Frees memory allocated for parameters from the GUI.
- *
- * @param cfg points to the receiver configuration
- */
-void DeleteGuiConfiguration(TNGeneConfiguration *cfg);
+
 
 /**
  * @brief Read the configuration parameters for the NGene2 logs

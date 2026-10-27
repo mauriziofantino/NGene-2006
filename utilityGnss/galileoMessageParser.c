@@ -28,7 +28,6 @@
 #include "reedSolomon.h"
 #include "rinexLog.h"
 #include "osnmaManagement.h"
-#include "ifenLog.h"
 #include "navigationMessage.h"
 
 
@@ -452,7 +451,7 @@ int ParseGalWord00(TGalParser *parser)
 		}
 		fprintf(parser->galParseLogFile,"\n");
 	}
-	
+
 	return SUCCESS_RETURN;
 }
 
@@ -481,7 +480,7 @@ int ParseGalWord01(TGalParser *parser)
 		fprintf(parser->galParseLogFile,"    sqrtA: %.20e\n", eph->sqrtA);
 		fprintf(parser->galParseLogFile,"\n");
 	}
-	
+
 	return SUCCESS_RETURN;
 }
 
@@ -510,7 +509,7 @@ int ParseGalWord02(TGalParser *parser)
 		fprintf(parser->galParseLogFile,"    iDot: %.20g\n", eph->iDot);
 		fprintf(parser->galParseLogFile,"\n");
 	}
-	
+
 	return SUCCESS_RETURN;
 }
 
@@ -545,7 +544,7 @@ int ParseGalWord03(TGalParser *parser)
 		fprintf(parser->galParseLogFile,"    SISA: %d\n", eph->sisa);
 		fprintf(parser->galParseLogFile,"\n");
 	}
-	
+
 	return SUCCESS_RETURN;
 }
 
@@ -582,7 +581,7 @@ int ParseGalWord04(TGalParser *parser)
 		fprintf(parser->galParseLogFile,"    a_f2: %.20g\n", clk->af[2]);
 		fprintf(parser->galParseLogFile,"\n");
 	}
-	
+
 	return SUCCESS_RETURN;
 }
 
@@ -649,7 +648,7 @@ int ParseGalWord05(TNGeneData *rx,TGalParser *parser)
 		fprintf(parser->galParseLogFile,"    E1b DVS: %d\n", (int)eph->galileoDataValidity);
 		fprintf(parser->galParseLogFile,"\n");
 	}
-	
+
 	return SUCCESS_RETURN;
 }
 
@@ -669,8 +668,8 @@ int ParseGalWord06(TGalParser *parser)
 	gnss2Utc->wnLsf = ExtractField(dataBytes,GAL_TYPE6_WNLSF_FIRST_BYTE_IDX,GAL_TYPE6_WNLSF_LAST_BYTE_IDX,GAL_TYPE6_WNLSF_BITS_OF_FIRST_BYTE,GAL_TYPE6_WNLSF_BITS_OF_LAST_BYTE);
 	gnss2Utc->dn = ExtractField(dataBytes,GAL_TYPE6_DN_FIRST_BYTE_IDX,GAL_TYPE6_DN_LAST_BYTE_IDX,GAL_TYPE6_DN_BITS_OF_FIRST_BYTE,GAL_TYPE6_DN_BITS_OF_LAST_BYTE);
 	gnss2Utc->dtLsf = ExtractTwoCompField(dataBytes,GAL_TYPE6_DTLSF_FIRST_BYTE_IDX,GAL_TYPE6_DTLSF_LAST_BYTE_IDX,GAL_TYPE6_DTLSF_BITS_OF_FIRST_BYTE,GAL_TYPE6_DTLSF_BITS_OF_LAST_BYTE,GAL_TYPE6_DTLSF_BITS_FIELD_DIM);
-	/* WN is not available, so problems with the week change can occur 
-	   Try to avoid them updating also WN if possible 
+	/* WN is not available, so problems with the week change can occur
+	   Try to avoid them updating also WN if possible
 	   if tow<navMsg->tow means that the time went back, so a week change occurred */
 	tow = ExtractField(dataBytes,GAL_TYPE6_TOW_FIRST_BYTE_IDX,GAL_TYPE6_TOW_LAST_BYTE_IDX,GAL_TYPE6_TOW_BITS_OF_FIRST_BYTE,GAL_TYPE6_TOW_BITS_OF_LAST_BYTE);
 	if((navMsg->towValid==TRUE_FLAG) && (navMsg->wnValid==TRUE_FLAG) && (tow<navMsg->tow))
@@ -715,7 +714,7 @@ int ParseGalWord06(TGalParser *parser)
 			fprintf(parser->galParseLogFile,"    (WN: %d)\n", navMsg->wn);
 		fprintf(parser->galParseLogFile, "\n");
 	}
-	
+
 	return SUCCESS_RETURN;
 }
 
@@ -740,7 +739,7 @@ int ParseGalWord07(TNGeneData *rx,TGalParser *parser,int tow)
 		fprintf(parser->galParseLogFile,"    almWNa %d\n", wna);
 		fprintf(parser->galParseLogFile,"    almToa %.20g\n", toa);
 	}
-	
+
 	/* parse the almanac */
 	svIdCur = ExtractField(dataBytes,GAL_TYPE7_SVID1_FIRST_BYTE_IDX,GAL_TYPE7_SVID1_LAST_BYTE_IDX,GAL_TYPE7_SVID1_BITS_OF_FIRST_BYTE,GAL_TYPE7_SVID1_BITS_OF_LAST_BYTE);
 	if((svIdCur<BASE_PRN) || (svIdCur>GALILEO_NUMBER_OF_PRNS))
@@ -750,7 +749,7 @@ int ParseGalWord07(TNGeneData *rx,TGalParser *parser,int tow)
 			fprintf(parser->galParseLogFile,"WORD 7: DUMMY ALMANAC (1/2)\n");
 			fprintf(parser->galParseLogFile,"\n");
 		}
-		
+
 		parser->almSvIdPrev = GAL_SVID_FOR_DUMMY_ALMANAC;
 		parser->almSvIdPrevTime = INVALID_VALUE;
 		return SUCCESS_RETURN;
@@ -787,7 +786,7 @@ int ParseGalWord07(TNGeneData *rx,TGalParser *parser,int tow)
 		fprintf(parser->galParseLogFile,"    almM0 %.20g\n", almCur->meanAnomaly0);
 		fprintf(parser->galParseLogFile,"\n");
 	}
-	
+
 	return SUCCESS_RETURN;
 }
 
@@ -800,14 +799,14 @@ int ParseGalWord08(TNGeneData *rx,TGalParser *parser,int tow)
 	TGnssAlmanac *almPrev;
 	TGnssAlmanac *almCur;
 	int ioda;
-	
+
 	ioda = ExtractField(dataBytes,GAL_TYPE8_IODA_FIRST_BYTE_IDX,GAL_TYPE8_IODA_LAST_BYTE_IDX,GAL_TYPE8_IODA_BITS_OF_FIRST_BYTE,GAL_TYPE8_IODA_BITS_OF_LAST_BYTE);
 	if(parser->galParseLogFile!=NULL)
 	{
 		fprintf(parser->galParseLogFile,"WORD 8:\n");
 		fprintf(parser->galParseLogFile,"    almIODa %d\n", ioda);
 	}
-	
+
 	/* parse the first part of the word */
 	/* check reception of word 7 */
 	if((parser->almSvIdPrev!=INVALID_PRN) && (parser->almSvIdPrev!=GAL_SVID_FOR_DUMMY_ALMANAC) && (parser->almSvIdPrevTime==tow-2))
@@ -1570,8 +1569,6 @@ void ParseGalMessage(TNGeneConfiguration *cfg,TNGeneData *rx,TChannel *ch,float 
 	TNavigationMessage *navMsg = parser->navMsg;
 	unsigned char symbol = (corr > 0.0) ? parser->polarityCorrection : (parser->polarityCorrection^0x01);
 	TParseResult parseResult;
-	int wn;
-	int tow;
 
 	/* count the received symbol */
 	parser->bitIndexTotal++;
@@ -1606,14 +1603,7 @@ void ParseGalMessage(TNGeneConfiguration *cfg,TNGeneData *rx,TChannel *ch,float 
 			parseResult = DecodeGalEvenPagePart(parser,symbol);
 			if(parseResult!=DECODING_ON_GOING)
 			{
-				// IFEN format log
-				if((navMsg->wnValid==TRUE_FLAG) && (navMsg->towValid==TRUE_FLAG) && (parser->synchronizationSuccess==TRUE_FLAG))
-				{
-					// do it when synchronization is confirmed and time is valid
-					wn = navMsg->wn;
-					tow = navMsg->tow + ((parser->bitIndexTotal*GALILEO_BIT_DURATION)/SECONDS_TO_MILLISECONDS) - GAL_PAGE_PART_DURATION;
-					SaveGalileoINavSymbolsInIfenLog(rx->ifenLogGal,&(rx->ifenLogGalTime),wn,tow,ch->satId,parser->pagePart);
-				}
+
 				//
 				parser->status=PREAMBLE_2;
 			}
@@ -1628,14 +1618,7 @@ void ParseGalMessage(TNGeneConfiguration *cfg,TNGeneData *rx,TChannel *ch,float 
 			parseResult = DecodeGalOddPagePart(cfg,rx,chIndex,parser,symbol);
 			if(parseResult!=DECODING_ON_GOING)
 			{
-				// IFEN format log
-				if((navMsg->wnValid==TRUE_FLAG) && (navMsg->towValid==TRUE_FLAG) && (parser->synchronizationSuccess==TRUE_FLAG))
-				{
-					// do it when synchronization is confirmed and time is valid
-					wn = navMsg->wn;
-					tow = navMsg->tow + ((parser->bitIndexTotal*GALILEO_BIT_DURATION)/SECONDS_TO_MILLISECONDS) - GAL_PAGE_PART_DURATION;
-					SaveGalileoINavSymbolsInIfenLog(rx->ifenLogGal,&(rx->ifenLogGalTime),wn,tow,ch->satId,parser->pagePart);
-				}
+
 				if(parseResult==DECODING_2_SUCCESSFUL)
 				{
 					parser->synchronizationSuccess=TRUE_FLAG;
@@ -1675,10 +1658,8 @@ void ParseGalMessage(TNGeneConfiguration *cfg,TNGeneData *rx,TChannel *ch,float 
 					if((navMsg->wnValid==TRUE_FLAG) && (ch->newNavMsgInformation==TRUE_FLAG))
 					{
 						RinexSaveGalNav(cfg,&(rx->rinexGal),ch,navMsg);
-						if(cfg->userInterface!=RX_UI_GUI)
+
 						{
-							// if the GUI is not used, reset here the flag to avoid saving twice the same navigation data
-							// otherwise, the flag is reset by SendNavigationMessageInformation
 							ch->newNavMsgInformation = FALSE_FLAG;
 						}
 					}

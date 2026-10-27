@@ -7,7 +7,7 @@
  *
  * @version 1.0.0
  *
- * @brief Handle the signal communication from GUI, OS and USERS
+ * @brief Handle operating-system and user stop signals
  *
  * @note This file is based on Linux standard functions (see man sigaction)
  *
@@ -15,7 +15,7 @@
 
 #include <signal.h>
 #include <pthread.h>
-#include "commModule.h"
+
 #include "ioFunctions.h"
 #include "ngeneConfiguration.h"
 #include "ngeneConstants.h"
@@ -24,13 +24,6 @@
 #ifndef NGENE_NATIVE_WINDOWS
 struct sigaction action;	///< The receiver must be able to catch a signal
 #endif
-
-/** Mutex for the status variable */
-extern pthread_mutex_t status_mutex;
-/** Condition on status for threads synchronization */
-extern pthread_cond_t status_cond;
-/** The current status of the Communication module */
-extern enum ComStatus_t status;
 
 static TNGeneConfiguration *signalHandlerCfg;
 static int *signalHandlerRun;
@@ -43,14 +36,8 @@ static BOOL WINAPI NgConsoleHandler(DWORD event)
         event != CTRL_CLOSE_EVENT && event != CTRL_SHUTDOWN_EVENT) return FALSE;
     ngeneStopRequested = 1;
     if (signalHandlerRun) InterlockedExchange((LONG *)signalHandlerRun, FALSE_FLAG);
-    /* A console callback runs on a Windows thread, not in a CRT signal
-     * context. Wake the GUI startup wait as well as the receiver loop. */
-    if (signalHandlerCfg && signalHandlerCfg->userInterface == RX_UI_GUI) {
-        pthread_mutex_lock(&status_mutex);
-        status = EXITING;
-        pthread_cond_broadcast(&status_cond);
-        pthread_mutex_unlock(&status_mutex);
-    }
+
+
     return TRUE;
 }
 #endif
@@ -121,13 +108,7 @@ void SignalHandler(int signol)
     		break;
     }
 
-    if(signalHandlerCfg->userInterface==RX_UI_GUI)
-    {
-    	pthread_mutex_lock(&status_mutex);
-    	status = EXITING;
-    	pthread_cond_broadcast(&status_cond);
-    	pthread_mutex_unlock(&status_mutex);
-    }
+
 
     return;
 #endif

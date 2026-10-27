@@ -24,8 +24,6 @@
 #include "navigationMessageDataStructure.h"
 #include "egnosCorrectionsDataStructure.h"
 #include "pvtDataStructure.h"
-#include "samplesHistogram.h"
-#include "samplesSpectrum.h"
 #include "ncursesDataStructure.h"
 #include "rinexDataStructure.h"
 #include "osnmaDataStructures.h"
@@ -47,12 +45,6 @@
 typedef struct NGeneDataStruct
 {
 	int dataValid;						/**< if FALSE_FLAG, the de-initialization function has already been executed */
-	/**/
-	void *bytesFromGui;					/**< memory used to write parameters received from the GUI. NULL if GUI is not selected */
-	int bytesToGuiSize;					/**< size (n. of bytes) of bytesToGui. Zero if GUI is not selected */
-	void *bytesToGui;					/**< memory used to write data to be transmitted to the GUI. NULL if GUI is not selected */
-	char msgToGui[MAX_ROW_LENGTH];		/**< next text message to be sent to the GUI */
-	char msgToGuiOld[MAX_ROW_LENGTH];	/**< last text message already sent to the GUI */
 	/**/
 	unsigned long long int rxCounter;   /**< counts the execution cycles of the receiver (about, the number of ms from the start ) */
 	char *codeArray;					/**< contains the despreading code at fs */
@@ -99,21 +91,12 @@ typedef struct NGeneDataStruct
 	TPvtResults pvtResults; 			/**< This structure contains the results of the PVT computation */
 	/* Other logs */
 	TLogSplitter logSplitter;           /**< Used to manage the splitting of the receiver logs */
-	TSamplesHistogram samplesHistogram; /**< This structure is used to evaluate the histogram of the input samples */
-	TSamplesSpectrum samplesSpectrum; 	/**< This structure is used to evaluate the spectrum of the input samples */
-	char *ephemeridesPacketToGui;		/**< These bytes store the ephemerides packet to be sent to the GUI */
 	FILE *trkCorrelatorsFile; 			/**< File where all the correlations from tracking are saved */
 	FILE *trkMultiCorrelatorsFile;      /**< File where all the multiple correlations from tracking are saved */
 	TRinexLog rinexGps;					/**< Variable used to save the RINEX navigation file for the GPS navigation message (and ALL the observation data) */
 	TRinexLog rinexGal;					/**< Variable used to save the RINEX navigation file for the Galileo navigation message */
 	FILE *nmeaFile;                     /**< File where the NMEA sentences are saved */
 	char *trkLogArray;                  /**< Array used to write the tracking related logs */
-	FILE *ifenLogGps;                   /**< File with the log of the GPS navigation message in IFEN format */
-	long long int ifenLogGpsTime;       /**< Time of the first subframe saved in ifenLogGps (WN+TOW in seconds) */
-	FILE *ifenLogGal;                   /**< File with the log of the Galileo navigation message in IFEN format */
-	long long int ifenLogGalTime;       /**< Time of the first page part saved in ifenLogGal (WN+TOW in seconds) */
-	FILE *ifenLogFNav;                  /**< File with the log of the Galileo F/NAV navigation message in IFEN format */
-	long long int ifenLogFNavTime;      /**< Time of the first page part saved in ifenLogFNav (WN+TOW in seconds) */
 	TNCursesData ncursesData;			/**< Variables used to manage the NCurses interface */
 	#ifdef RX_PROFILING
 	TProfilingSupport pvtProfiling; /**< profiling of the PVT */

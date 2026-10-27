@@ -30,7 +30,6 @@
 #include "osnmaManagement.h"
 #include "osnmaUtilities.h"
 #include "mackList.h"
-#include "ifenLog.h"
 
 
 int InitFNavParser(TNGeneConfiguration *cfg,TChannel *ch)
@@ -498,14 +497,7 @@ void ParseFNavMessage(TNGeneData *rx,TChannel *ch,float corr)
 		parseResult = DecodeFNavPage(rx,parser,symbol);
 		if(parseResult==DECODING_1_SUCCESSFUL)
 		{
-			// IFEN format log
-			if((navMsg->wnValid==TRUE_FLAG) && (navMsg->towValid==TRUE_FLAG) && (parser->synchronizationSuccess==TRUE_FLAG))
-			{
-				// do it when synchronization is confirmed and time is valid
-				wn = navMsg->wn;
-				tow = navMsg->tow + ((parser->bitIndexTotal*GALILEO_E5A_BIT_DURATION)/SECONDS_TO_MILLISECONDS) - FNAV_PAGE_DURATION;
-				SaveGalileoFNavSymbolsInIfenLog(rx->ifenLogFNav,&(rx->ifenLogFNavTime),wn,tow,ch->satId,parser->page);
-			}
+
 		}
 		if(parseResult!=DECODING_ON_GOING)
 		{

@@ -42,7 +42,6 @@ int HandleCmdLine(int argc, char *argv[], TNGeneConfiguration *cfg)
     		{"ncurses", 0, 0, 'n'},
             {"input", 1, 0, 'i'},
             {"frontend", 1, 0, 'f'},
-    		{"port", 1, 0, 'p'},
     		{"googleEarth", 1, 0, 'g'},
     		{"logfile", 1, 0, 'l'},
     		{"verbose", 0, 0, 'v'},
@@ -52,11 +51,10 @@ int HandleCmdLine(int argc, char *argv[], TNGeneConfiguration *cfg)
     // and its relative help output
     const char *optsHelp[] = {
     		"Print the actual version of NGene receiver.",
-    		"Use the textual interface (No GUI).",
-    		"Use the ncurses terminal interface.",
+            "Use the textual interface.",
+            "Use the ncurses terminal interface (default).",
             "Process the specified recording instead of USB (configuration unchanged).",
             "Select sige or hackrf for this run (configuration unchanged).",
-    		"Set the COM port for the communication with the GUI (default 4999).",
     		"Record the receiver output as a GoogleEarth file.",
     		"Log all the operation a logging file.",
     		"Verbose output.",
@@ -68,8 +66,7 @@ int HandleCmdLine(int argc, char *argv[], TNGeneConfiguration *cfg)
     int i;
 
     /* Setting default values for the flags */
-    cfg->userInterface = RX_UI_GUI;
-    cfg->guiComPort = DEFAULT_GUI_TCP_PORT; // GUI COM PORT
+    cfg->userInterface = RX_UI_NCURSES;
     cfg->stdlog = stdout;
     pthread_mutex_init(&(cfg->stdLogMutex),NULL);
     cfg->logFilename[0] = '\0';
@@ -82,7 +79,7 @@ int HandleCmdLine(int argc, char *argv[], TNGeneConfiguration *cfg)
     /* Parse options */
     while (1)
     {
-        i = getopt_long(argc, argv, "Vtni:f:p:g:l:vcrh", opts, NULL);
+        i = getopt_long(argc, argv, "Vtni:f:g:l:vcrh", opts, NULL);
     	if(i == -1)
     	{
     		break;
@@ -100,9 +97,6 @@ int HandleCmdLine(int argc, char *argv[], TNGeneConfiguration *cfg)
     			break;
     		case 'n':
     			cfg->userInterface = RX_UI_NCURSES;
-    			break;
-    		case 'p':
-    			sscanf(optarg, "%u", &cfg->guiComPort);
     			break;
             case 'i':
                 cfg->inputFileOverride = optarg;

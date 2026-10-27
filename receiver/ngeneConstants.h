@@ -29,7 +29,7 @@
 /**
  * @def FAKE_CHIMERA_RECEIVER
  * @brief Se definito, il ricevitore non esegue l'elaborazione del segnale a IF ma solo
- *        del messaggio di navigazione Chimera 
+ *        del messaggio di navigazione Chimera
  */
 //#define FAKE_CHIMERA_RECEIVER
 
@@ -53,9 +53,6 @@
 #ifdef MONITOR_INTERMEDIATE_BUFFER
 #define CRITICAL_THRESHOLD 0
 #endif
-
-/* Specific constants are included here */
-#include "guiConstants.h"
 
 /* Other receiver constants follow */
 /**
@@ -113,12 +110,6 @@
  */
 #define MAX_ROW_LENGTH 512
 
-/**
- * @def MAX_MSG_LENGTH
- * @brief MAX_MSG_LENGTH is maximum length for a text message in the output to GUI
- *                       It must have a value multiple of 4 (due to alignment problems with client)
- */
-#define MAX_MSG_LENGTH  64
 
 /**
  * @def PRN_NAME_LENGTH
@@ -127,18 +118,7 @@
  */
 #define PRN_NAME_LENGTH 12
 
-/**
- * @def STATUS_LENGTH
- * @brief Number of character used to represent the status of current channel
- *        It must have a value multiple of 4 (due to alignment problems with client)
- */
-#define STATUS_LENGTH 	12
 
-/**
- * @def RX_BUFFER_LEN
- * @brief Size of the buffers used to communicate with the GUI
- */
-#define RX_BUFFER_LEN 65536
 
 /**
  * @define INVALID_VALUE

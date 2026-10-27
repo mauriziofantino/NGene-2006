@@ -38,7 +38,6 @@
 /* Acquisition scheduling */
 int InitChannelScheduler(TNGeneConfiguration *cfg,TChannelScheduler *chSch,int numOfRealGalileoPrns,int *realGalileoPrns)
 {
-	int satId;
 	int gpsEnabled = TRUE_FLAG;
 	int galileoEnabled = TRUE_FLAG;
 	int egnosEnabled = TRUE_FLAG;
@@ -52,25 +51,6 @@ int InitChannelScheduler(TNGeneConfiguration *cfg,TChannelScheduler *chSch,int n
 		egnosEnabled=FALSE_FLAG;
 	if(CreatePrnList(&(chSch->prnList),gpsEnabled,galileoEnabled,egnosEnabled,numOfRealGalileoPrns,realGalileoPrns)!=SUCCESS_RETURN)
 		return FAILURE_RETURN;
-	/* Apply exclusion list (if present) */
-	if(cfg->guiParameters.numberOfExcludedPrns>0)
-	{
-		do
-		{
-			satId = GetNextAvailableFromPrnList(GPS_SAT, &(cfg->guiParameters.excludedPrns));
-			DeleteElementFromPrnList(GPS_SAT,satId,&(chSch->prnList));
-		} while(satId!=INVALID_PRN);
-		do
-		{
-			satId = GetNextAvailableFromPrnList(GALILEO_SAT, &(cfg->guiParameters.excludedPrns));
-			DeleteElementFromPrnList(GALILEO_SAT,satId,&(chSch->prnList));
-		} while(satId!=INVALID_PRN);
-		do
-		{
-			satId = GetNextAvailableFromPrnList(EGNOS_SAT, &(cfg->guiParameters.excludedPrns));
-			DeleteElementFromPrnList(EGNOS_SAT,satId,&(chSch->prnList));
-		} while(satId!=INVALID_PRN);
-	}
 	/* No channels in acquisition at the start */
 	#ifdef MAXIMUM_NUMBER_OF_CHANNELS_IN_ACQUISITION
 	chSch->maximumNumberOfChannelsInAcquisition = 1;
@@ -82,6 +62,7 @@ int InitChannelScheduler(TNGeneConfiguration *cfg,TChannelScheduler *chSch,int n
 	chSch->maximumNumberOfChannelsInAcquisition = 4;
 	#endif
 	chSch->channelsInAcquisition = 0;
+	chSch->galileoChannelsInAcquisition = 0;
 	/* No channels in tracking at the start */
 	chSch->channelsInTracking = 0;
 	chSch->gpsChannelsInTracking = 0;
@@ -122,6 +103,11 @@ int GetNextPrnForAcquisition(TNGeneConfiguration *cfg,TWarmStartData *warmData,T
 	/* budget for acquisition is finished */
 	if(chSch->channelsInAcquisition>=chSch->maximumNumberOfChannelsInAcquisition)
 		return INVALID_PRN;
+	/* Keep search capacity available to GPS while its channels are still empty.
+	 * Galileo-only reception retains the full acquisition budget. */
+	if(ch->satType==GALILEO_SAT && cfg->numberOfGpsChannels>chSch->gpsChannelsInTracking &&
+	   chSch->galileoChannelsInAcquisition>=1)
+		return INVALID_PRN;
 
 	/* find the suitable PRN */
 	if(cfg->automaticConfigurationFlag==FALSE_FLAG)
@@ -129,6 +115,7 @@ int GetNextPrnForAcquisition(TNGeneConfiguration *cfg,TWarmStartData *warmData,T
 		/* if manual configuration is active,
 		 * PRN is allocated by the user regardless of PRN list or visibility */
 		chSch->channelsInAcquisition++;
+		if(ch->satType==GALILEO_SAT) chSch->galileoChannelsInAcquisition++;
 		return cfg->manuallyConfiguredChannels[ch->chIndex].satId;
 	}
 	else
@@ -146,6 +133,7 @@ int GetNextPrnForAcquisition(TNGeneConfiguration *cfg,TWarmStartData *warmData,T
 		if(satId!=INVALID_PRN)
 		{
 			chSch->channelsInAcquisition++;
+			if(ch->satType==GALILEO_SAT) chSch->galileoChannelsInAcquisition++;
 		}
 	}
 	return satId;
@@ -164,6 +152,7 @@ void FreeAcquisitionSpotAfterAcquisitionSuccess(TNGeneData *rx,TChannelScheduler
 		chSch->egnosChannelsInTracking++;
 
 	chSch->channelsInAcquisition--;
+	if(ch->satType==GALILEO_SAT) chSch->galileoChannelsInAcquisition--;
 	FindAndOccupyInPrnList(ch->satType,ch->satId,&(rx->acqCommon.nonCohManager.testedPrns));
 }
 
@@ -217,6 +206,7 @@ void FreeAcquisitionSpotAfterAcquisitionFailure(TNGeneConfiguration *cfg,TChanne
 	ResetChannelVariables(cfg,ch);
 	/**/
 	chSch->channelsInAcquisition--;
+	if(ch->satType==GALILEO_SAT) chSch->galileoChannelsInAcquisition--;
 }
 
 void ReleaseTracking(TNGeneConfiguration *cfg,TChannelScheduler *chSch,TChannel *ch)
@@ -559,7 +549,7 @@ void DoChannelManager(TNGeneConfiguration *cfg,TNGeneData *rx,TChannel *ch,char 
 				StopProfilingUpdate(&(ch->galileoDopplerRefinementProfiling),1);
 			}
 			else if (ch->satType==GALILEO_SAT && ch->refinement.msCounter!=0)
-			{				
+			{
 				TotalTimeProfilingUpdate(&(ch->galileoDopplerRefinementProfiling));
 			}
 			#endif
@@ -586,7 +576,7 @@ void DoChannelManager(TNGeneConfiguration *cfg,TNGeneData *rx,TChannel *ch,char 
 				StopProfilingUpdate(&(ch->galileoCodeRefinementProfiling),1);
 			}
 			else if (ch->satType==GALILEO_SAT && ch->refinement.msCounter!=0)
-			{				
+			{
 				TotalTimeProfilingUpdate(&(ch->galileoCodeRefinementProfiling));
 			}
 			#endif
@@ -630,7 +620,7 @@ void DoChannelManager(TNGeneConfiguration *cfg,TNGeneData *rx,TChannel *ch,char 
 				StopProfilingUpdate(&(ch->galileoConfirmationProfiling),1);
 			}
 			else if (ch->satType==GALILEO_SAT && ch->confirmation.msCounter!=0)
-			{				
+			{
 				TotalTimeProfilingUpdate(&(ch->galileoConfirmationProfiling));
 			}
 			#endif

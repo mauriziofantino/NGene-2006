@@ -90,6 +90,13 @@ The first [EVO FFT migration](docs/FFT_MIGRATION.md) ports the optimized SSE2
 codelets and scheduling while retaining Classic's gains and Q14 coefficients.
 Both build scripts include its numerical and concurrency regression check.
 
+The operational receiver uses ncurses or text output; Java GUI and IFEN-specific
+support have been removed. Mixed acquisition reserves GPS search capacity while
+Galileo searches continue. The [optimization report](OPTIMIZATION_REPORT.md)
+records profiling, replay results, accuracy limits and the proposed distribution
+of work across cores. [LOGBOOK.md](LOGBOOK.md) preserves the session context;
+optional development instrumentation is isolated in `development/profiling/`.
+
 ## Coding conventions and status
 
 The adjacent NGene evolution project documents the supplied ESA BSSC(2000)1 Issue 1

@@ -38,7 +38,6 @@
 #include "egnosCorrections.h"
 #include "pvt.h"
 #include "ncursesApi.h"
-#include "additionalLogs.h"
 #include "viterbi.h"
 #include "reedSolomon.h"
 #include "tracking.h"
@@ -115,7 +114,6 @@ void PreparePaths(TNGeneConfiguration *cfg, TNGeneData *rx)
     InitLogSplitter(cfg, rx);
 
     /* prepare log */
-    cfg->msgToGui = rx->msgToGui;
     cfg->ncursesData = NULL;
     cfg->ncursesDataInitialized = FALSE_FLAG;
     // Open the log file in the folder specified by cfg->dumpPath!
@@ -137,16 +135,6 @@ void PreparePaths(TNGeneConfiguration *cfg, TNGeneData *rx)
 
 int PreliminaryInitialization(TNGeneConfiguration *cfg, TNGeneData *rx)
 {
-    /* Memory devoted to GUI-receiver communication */
-    if (cfg->userInterface != RX_UI_GUI) {
-	rx->bytesFromGui = NULL;
-	rx->bytesToGuiSize = 0;
-	rx->bytesToGui = NULL;
-    }
-    /* log messages */
-    memset(rx->msgToGui, '\0', MAX_ROW_LENGTH);
-    memset(rx->msgToGuiOld, '\0', MAX_ROW_LENGTH);
-
     /* NCurses must be initialized after the number of channels is known!!! */
 
     /* prepare the management of generic text logs through the SwrxLog function */
@@ -289,12 +277,6 @@ int InitReceiver(TNGeneConfiguration *cfg, TNGeneData *rx)
 	InitChannel(cfg, rx, ch);
     }
 	/*** logs ****/
-    /* ephemerides for the GUI */
-    if (cfg->userInterface == RX_UI_GUI) {
-	rx->ephemeridesPacketToGui = (char *) malloc(GUI_EPHEMERIDES_PACKET_SIZE * sizeof(char));
-    } else {
-	rx->ephemeridesPacketToGui = NULL;
-    }
     if (cfg->logConfiguration.enableTrkLog == TRUE_FLAG) {
 	filename[0] = '\0';
 	strcat(filename, cfg->dumpPathCurrent);
@@ -328,69 +310,6 @@ int InitReceiver(TNGeneConfiguration *cfg, TNGeneData *rx)
     } else {
 	rx->trkLogArray = (char *) malloc(((2 * cfg->trkConfiguration.numberOfMultipleCorrelators) + 4) * sizeof(float));
     }
-    /* histogram and spectrum for the GUI */
-    if (cfg->userInterface == RX_UI_GUI) {
-	InitHistogram(&(rx->samplesHistogram), cfg->guiParameters.histBits, cfg->guiParameters.histSamples);
-	InitSamplesSpectrum(cfg, &(rx->samplesSpectrum));
-    }
-    /* Navigation message RINEX files */
-    InitRinexLog(&(rx->rinexGps));
-    InitRinexLog(&(rx->rinexGal));
-    /* NMEA */
-    rx->nmeaFile = NULL;
-    /* Navigation messages in IFEN format */
-    if ((cfg->logConfiguration.enableNavMesgIfenLog == TRUE_FLAG) && (cfg->numberOfGpsChannels > 0)) {
-	filename[0] = '\0';
-	strcat(filename, cfg->dumpPathCurrent);
-	strcat(filename, "/navigationMessage_GPS.txt");
-	rx->ifenLogGps = fopen(filename, "w");
-	if (rx->ifenLogGps != NULL) {
-	    fprintf(rx->ifenLogGps, "# FILE_VERSION = 1\n");
-	    fprintf(rx->ifenLogGps, "# NAV_TYPE = GPS_L1_NAV\n");
-	    fprintf(rx->ifenLogGps, "# BIT_TYPE = MESSAGE_BITS\n");
-	    fprintf(rx->ifenLogGps, "# FRAME_LENGTH_BITS = 300\n");
-	    fprintf(rx->ifenLogGps, "# FRAME_LENGTH_TIME = 6\n");
-	    fprintf(rx->ifenLogGps, "# BIT_ORDER = MSB_FIRST\n");
-	}
-    } else {
-	rx->ifenLogGps = NULL;
-    }
-    if ((cfg->logConfiguration.enableNavMesgIfenLog == TRUE_FLAG) && (cfg->numberOfGalileoChannels > 0)) {
-	filename[0] = '\0';
-	strcat(filename, cfg->dumpPathCurrent);
-	strcat(filename, "/navigationMessage_GAL.txt");
-	rx->ifenLogGal = fopen(filename, "w");
-	if (rx->ifenLogGal != NULL) {
-	    fprintf(rx->ifenLogGal, "# FILE_VERSION = 1\n");
-	    fprintf(rx->ifenLogGal, "# NAV_TYPE = GAL_E1_INAV\n");
-	    fprintf(rx->ifenLogGal, "# BIT_TYPE = MESSAGE_SYMBOLS\n");
-	    fprintf(rx->ifenLogGal, "# FRAME_LENGTH_BITS = 250\n");
-	    fprintf(rx->ifenLogGal, "# FRAME_LENGTH_TIME = 1\n");
-	    fprintf(rx->ifenLogGal, "# BIT_ORDER = MSB_FIRST\n");
-	}
-    } else {
-	rx->ifenLogGal = NULL;
-    }
-    if ((cfg->logConfiguration.enableNavMesgIfenLog == TRUE_FLAG) && (cfg->numberOfGalileoE5aChannels > 0)) {
-	filename[0] = '\0';
-	strcat(filename, cfg->dumpPathCurrent);
-	strcat(filename, "/navigationMessage_FNAV.txt");
-	rx->ifenLogFNav = fopen(filename, "w");
-	if (rx->ifenLogFNav != NULL) {
-	    fprintf(rx->ifenLogFNav, "# FILE_VERSION = 1\n");
-	    fprintf(rx->ifenLogFNav, "# NAV_TYPE = GAL_E5_FNAV\n");
-	    fprintf(rx->ifenLogFNav, "# BIT_TYPE = MESSAGE_SYMBOLS\n");
-	    fprintf(rx->ifenLogFNav, "# FRAME_LENGTH_BITS = 500\n");
-	    fprintf(rx->ifenLogFNav, "# FRAME_LENGTH_TIME = 10\n");
-	    fprintf(rx->ifenLogFNav, "# BIT_ORDER = MSB_FIRST\n");
-	}
-    } else {
-	rx->ifenLogFNav = NULL;
-    }
-    rx->ifenLogGpsTime = -1;	// not valid
-    rx->ifenLogGalTime = -1;	// not valid
-    rx->ifenLogFNavTime = -1;	// not valid
-
     /* finish */
     rx->dataValid = TRUE_FLAG;
 #ifdef RX_PROFILING
@@ -441,9 +360,7 @@ void DeinitReceiver(TNGeneConfiguration *cfg, TNGeneData *rx)
 	    DenitChannel(&(rx->channelArray[index]));
 	}
 	free(rx->channelArray);
-	if (rx->ephemeridesPacketToGui != NULL) {
-	    free(rx->ephemeridesPacketToGui);
-	}
+
 	if (rx->trkCorrelatorsFile != NULL) {
 	    fclose(rx->trkCorrelatorsFile);
 	}
@@ -457,22 +374,10 @@ void DeinitReceiver(TNGeneConfiguration *cfg, TNGeneData *rx)
 	    fclose(rx->nmeaFile);
 	    rx->nmeaFile = NULL;
 	}
-	if (rx->ifenLogGps != NULL) {
-	    fclose(rx->ifenLogGps);
-	    rx->ifenLogGps = NULL;
-	}
-	if (rx->ifenLogGal != NULL) {
-	    fclose(rx->ifenLogGal);
-	    rx->ifenLogGal = NULL;
-	}
-	if (rx->ifenLogFNav != NULL) {
-	    fclose(rx->ifenLogFNav);
-	    rx->ifenLogFNav = NULL;
-	}
-	if (cfg->userInterface == RX_UI_GUI) {
-	    DeinitHistogram(&(rx->samplesHistogram));
-	    DeinitSamplesSpectrum(&(rx->samplesSpectrum));
-	}
+
+
+
+
 	rx->dataValid = FALSE_FLAG;
 	SwrxLog(NGENE_LOG_SEVERITY_NOTE, "Receiver deinitialized!");
 	/* NCurses */

@@ -144,6 +144,7 @@ typedef struct ChannelSchedulerStruct
 	TPrnList prnList;				/**< list of PRNs for channel allocation */
 	int maximumNumberOfChannelsInAcquisition;	/**< Maximum number of channels in acquisition */
 	int channelsInAcquisition;		/**< number of channels in acquisition */
+	int galileoChannelsInAcquisition; /**< Long Galileo searches cannot occupy every mixed-mode acquisition slot. */
 	int channelsInTracking;			/**< number of channels in tracking */
 	int gpsChannelsInTracking;		/**< how many GPS channels are in tracking */
 	int egnosChannelsInTracking;	/**< how many EGNOS channels are in tracking */

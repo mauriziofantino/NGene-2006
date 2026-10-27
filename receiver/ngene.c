@@ -36,9 +36,9 @@ char *ngeneXmmsBackup;
 #include "manageConfiguration.h"
 #include "argvParser.h"
 #include "ioFunctions.h"
-#include "guiInterfaceFunctions.h"
+
 #include "ngeneInitialization.h"
-#include "commModule.h"
+
 #include "closeManager.h"
 #include "signalHandler.h"
 #include "circularBuffer.h"
@@ -47,7 +47,7 @@ char *ngeneXmmsBackup;
 #include "usbInterface.h"
 #include "pvt.h"
 #include "warmStart.h"
-#include "additionalLogs.h"
+
 #include "ncursesApi.h"
 #include "osnmaDataStructures.h"
 #include "mackList.h"
@@ -56,36 +56,26 @@ char *ngeneXmmsBackup;
 #include "receiverTime.h"
 #include "manageLogs.h"
 
-
-int ComInitFunction(void);
-int ComTerminateFunction(void);
-int StartGuiCommunication(void);
-int StopGuiCommunication(void);
 void ManageFrontEndThreadInitialization(void);
 void ManageFrontEndThreadDeinitialization(void);
-
 
 static TNGeneConfiguration ngeneCfg; /**< Contains all the receiver configuration! */
 static TNGeneData ngene;             /**< Contains all the receiver data! */
 static TRxFe ngeneFe;				 /**< Contains all the information about the input (USB front-end or binary file) */
-
 
 static TFrontEndThreadFunctionParameters feThFuncParam;
 static pthread_t threadFrontEnd;
 //int stopFrontEndFlag = FALSE_FLAG; 	/**< Flag to stop the thread handling the front-end (threadFrontEnd) */
 //int stopReceiverFlag = FALSE_FLAG; 	/**< Flag to stop the receiver, in case a USB error occurs */
 
-
 /**
  * @def TIMEOUT_FOR_RX_OUTPUT
- * @brief The RX output is sent to user interface (Java GUI, ncurses or txt)
+ * @brief The RX output is sent to user interface (ncurses or text)
  *        when a new PVT estimation is available.
  *        If PVT is not available, the output is sent after this timeout occurred.
  *        The value is in milliseconds.
  */
 #define TIMEOUT_FOR_RX_OUTPUT   10
-
-
 
 int main(int argc,char *argv[])
 {
@@ -100,9 +90,7 @@ int main(int argc,char *argv[])
 	unsigned int samplesToBeDiscarded;
 	unsigned int samplesDiscarded;
 	unsigned int samplesDiscardedTotal = 0;
-	int dataSize;
 	int stopReceiverFlagLocal=FALSE_FLAG;
-	int maxPriority=0;
 	unsigned long long int rxCounterLastOutput = 0;
 	#ifdef OSNMA_PROFILING
 	int numberOfMacsVerified=0;
@@ -121,7 +109,7 @@ int main(int argc,char *argv[])
 	#ifdef MONITOR_INTERMEDIATE_BUFFER
 	float percentageIntermediateBufferFull=0.0;
 	#endif
-	
+
 	/* prepare the XMM registers' backup */
 	posix_memalign((void **)&(ngeneXmmsBackup),POSIX_ALIGNMENT,NUM_XMM_REGISTERS*POSIX_ALIGNMENT*sizeof(char));
 	if(ngeneXmmsBackup==NULL)
@@ -129,11 +117,10 @@ int main(int argc,char *argv[])
 		fprintf(stderr,"Malloc returned a NULL pointer in main");
 		exit(EXIT_FAILURE);
 	}
-	
+
 	#ifdef TEST_PVT_ACCURACY
 	double totalTime, timer;
 	time_t start, stop;
-
 
 	timer=atoi(argv[6]);
 	time(&start);
@@ -155,33 +142,15 @@ int main(int argc,char *argv[])
 	feThFuncParam.ngeneConfiguration = &ngeneCfg;
 	feThFuncParam.ngeneFrontEnd = &ngeneFe;
 
-	/* Try to get maximum priority */
-	if(ngeneCfg.inputMethod==USB_FRONTEND) 
-	{
-		maxPriority= sched_get_priority_max(SCHED_FIFO);
-		SetCpuPriorityAndPolicy(1, SCHED_FIFO, maxPriority);
-	}
-
-	/* Start communication with GUI */
-	if(ngeneCfg.userInterface==RX_UI_GUI)
-	{
-		if(StartGuiCommunication()==FAILURE_RETURN)
-			CloseNGene(&ngeneCfg,EXIT_FAILURE);
-	}
-	else
-	{
-		CompleteConfiguration(&ngeneCfg);
-		PlotConfiguration(&ngeneCfg);
-		InitReceiver(&ngeneCfg,&ngene);
-		if(ngeneCfg.inputMethod==USB_FRONTEND)
-		{
-			ManageFrontEndThreadInitialization();
-		}
-		else
-		{
-			InitializeRxFrontEnd(&ngeneCfg,&ngeneFe);
-			StartRxFrontEnd(&ngeneCfg,&ngeneFe);
-		}
+	CompleteConfiguration(&ngeneCfg);
+	PlotConfiguration(&ngeneCfg);
+	if(InitReceiver(&ngeneCfg,&ngene)!=SUCCESS_RETURN)
+		CloseNGene(&ngeneCfg,EXIT_FAILURE);
+	if(ngeneCfg.inputMethod==USB_FRONTEND)
+		ManageFrontEndThreadInitialization();
+	else {
+		InitializeRxFrontEnd(&ngeneCfg,&ngeneFe);
+		StartRxFrontEnd(&ngeneCfg,&ngeneFe);
 	}
 	StartListeningSignals(&ngeneCfg,&run);
 
@@ -194,8 +163,7 @@ int main(int argc,char *argv[])
 	#ifdef OSNMA_PROFILING
 	StartProfilingUpdate(&(ngene.osnmaData.mainLoop));
 	#endif
-	while(((ngeneCfg.userInterface!=RX_UI_GUI) && (run==TRUE_FLAG)) ||
-		  ((ngeneCfg.userInterface==RX_UI_GUI) && ((run==TRUE_FLAG) && (ComGetStatus() == RUNNING))))
+	while(run==TRUE_FLAG)
 	{
 		/* Read input samples when needed */
 		#ifdef RX_PROFILING
@@ -204,16 +172,21 @@ int main(int argc,char *argv[])
 		samplesNeeded = GetMaximumNumberOfSamplesNeeded(&ngeneCfg,&ngene);
 		if(samplesNeeded>(ngene.buf.fill1+ngene.buf.fill2))
 		{
+
 			FillInputBuffer(&ngeneCfg,&(ngene.buf),&ngeneFe);
+
 		}
 		/* Executes elaboration required by each channel */
+
 		for(index=0;index<ngeneCfg.numberOfChannels;index++)
 		{
+
 			ch = &(ngene.channelArray[index]);
 			GetSamplePointersForChannel(ch,&(ngene.buf),&firstBunchOfSamples,&firstBunchSize,&secondBunchOfSamples,&secondBunchSize);
-			DoChannelManager(&ngeneCfg,&ngene,ch,firstBunchOfSamples,firstBunchSize,secondBunchOfSamples,secondBunchSize);
-		}
 
+			DoChannelManager(&ngeneCfg,&ngene,ch,firstBunchOfSamples,firstBunchSize,secondBunchOfSamples,secondBunchSize);
+
+		}
 
 		//***OSNMA: TESLA and MAC verification****************************
 		/* Checks about OSNMA */
@@ -317,18 +290,7 @@ int main(int argc,char *argv[])
 		/* Update the list of visible satellites (for the optional warm start) */
 		UpdateVisibilityList(&ngeneCfg,&ngene);
 
-		/* Send output to the GUI */
-		/* Histogram */
-		if(ngene.samplesHistogram.histogramSent==FALSE_FLAG)
-		{
-			EvaluateAndSendSamplesHistogram(&ngene);
-		}
-		/* Spectrum */
-		if(ngene.samplesSpectrum.spectrumSent==FALSE_FLAG)
-		{
-			EvaluateAndSendSamplesSpectrum(&ngeneCfg,&ngene);
-		}
-		/* Main outputs (GUI, NCurses) */
+		/* Console output */
 		// execute when a new PVT result is available or
 		// a PVT period (plus some margin) is expired
 		if(((ngene.pvtResults.pvtValid==TRUE_FLAG) && (ngene.pvtResults.pvtPlotted==FALSE_FLAG)) ||
@@ -346,18 +308,7 @@ int main(int argc,char *argv[])
 				rxCounterLastOutput = ngene.rxCounter - TIMEOUT_FOR_RX_OUTPUT;
 			}
 			// In function of the selected interface
-			if(ngeneCfg.userInterface==RX_UI_GUI)
-			{
-				// Java GUI
-				ComLockDataArea();
-				dataSize = UpdateDataPacket(&ngene.bytesToGuiSize,&ngene.bytesToGui,&ngeneCfg,&ngene);
-				ComUnlockDataArea();
-				ComSendData(ngene.bytesToGui,dataSize);
-				SendNavigationMessageInformation(&ngeneCfg,&ngene);
-				ngene.samplesHistogram.histogramSent = FALSE_FLAG;
-				ngene.samplesSpectrum.spectrumSent = FALSE_FLAG;
-			}
-			else if(ngeneCfg.userInterface==RX_UI_NCURSES)
+			if(ngeneCfg.userInterface==RX_UI_NCURSES)
 			{
 				// -n
 				NcCompleteLog(&ngeneCfg,&ngene);
@@ -437,39 +388,23 @@ int main(int argc,char *argv[])
 		{
 			SwrxLog(NGENE_LOG_SEVERITY_INFO,"NGene main thread exiting with run=%d and stopReceiverFlagLocal=%d",run,stopReceiverFlagLocal);
 
-			/* If CTRL-C, run is FALSE and receiver always halts;
-			 * if GUI is selected, the GUI timeout is waited. */
-			/* If FE is not able to supply more data, and GUI is selected, receiver pauses;
-			 * if FE is not able to supply more data, and GUI is not selected, receiver ends. */
-			if(ngeneCfg.userInterface==RX_UI_GUI)
+			/* Deinitialize the Front-end thread */
+			if(ngeneCfg.inputMethod==USB_FRONTEND)
 			{
-				stopReceiverFlagLocal=FALSE_FLAG;
-				if(run==FALSE_FLAG)
-				{
-					ManageFrontEndThreadDeinitialization();
-				}
-				sleep(GUI_CLIENT_TIMEOUT);
+				ManageFrontEndThreadDeinitialization();
 			}
 			else
 			{
-				/* Deinitialize the Front-end thread */
-				if(ngeneCfg.inputMethod==USB_FRONTEND)
-				{
-					ManageFrontEndThreadDeinitialization();
-				}
-				else
-				{
-					StopRxFrontEnd(&ngeneFe);
-					DeinitializeRxFrontEnd(&ngeneCfg,&ngeneFe);
-				}
-				/* Sleep in order to allow the user a last look of the NCURSES interface */
-				if(ngeneCfg.userInterface==RX_UI_NCURSES)
-				{
-					sleep(NCURSES_SLEEP);
-				}
-				/* Terminate the execution cycle */
-				run=FALSE_FLAG;
+				StopRxFrontEnd(&ngeneFe);
+				DeinitializeRxFrontEnd(&ngeneCfg,&ngeneFe);
 			}
+			/* Sleep in order to allow the user a last look of the NCURSES interface */
+			if(ngeneCfg.userInterface==RX_UI_NCURSES)
+			{
+				sleep(NCURSES_SLEEP);
+			}
+			/* Terminate the execution cycle */
+			run=FALSE_FLAG;
 		}
 		loopCyclesCounter++;
 	}
@@ -493,145 +428,12 @@ int main(int argc,char *argv[])
 	        maximumIterationTime * 1000.0);
 	#endif
 	/* Deinitialize the receiver */
-	if(ngeneCfg.userInterface==RX_UI_GUI)
-	{
-		StopGuiCommunication();
-	}
+
 	DeinitReceiver(&ngeneCfg,&ngene);
 	DeinitializeRxFrontEnd(&ngeneCfg,&ngeneFe);
 	DeleteConfiguration(&ngeneCfg);
 	free(ngeneXmmsBackup);
 	return 0;
-}
-
-/**
- * @brief ComInitFunction is used to initialize the receiver.
- *
- * @details If the GUI is used, ComInitFunction is executed when the GUI sends the start command.
- *          If the GUI is not used, terminates immediately.
- *
- * @return SUCCESS_RETURN when the desired value is read, FAILURE_RETURN otherwise
- */
-int ComInitFunction(void)
-{
-	if(ngeneCfg.userInterface!=RX_UI_GUI)
-	{
-		return FAILURE_RETURN;
-	}
-	LoadGuiConfigurationIntoReceiver(ngene.bytesFromGui,&ngeneCfg);
-	CompleteConfiguration(&ngeneCfg);
-	PlotConfiguration(&ngeneCfg);
-	InitReceiver(&ngeneCfg,&ngene);
-	if(ngeneCfg.inputMethod==USB_FRONTEND)
-	{
-		ManageFrontEndThreadInitialization();
-	}
-	else
-	{
-		InitializeRxFrontEnd(&ngeneCfg,&ngeneFe);
-		StartRxFrontEnd(&ngeneCfg,&ngeneFe);
-	}
-
-	return SUCCESS_RETURN;
-}
-
-/**
- * @brief ComTerminateFunction is used to de-initialize the receiver.
- *
- * @details If the GUI is used, ComTerminateFunction is executed when the GUI sends the stop command.
- *          If the GUI is not used, terminates immediately.
- *
- * @return SUCCESS_RETURN when the desired value is read, FAILURE_RETURN otherwise
- */
-int ComTerminateFunction(void)
-{
-	SwrxLog(NGENE_LOG_SEVERITY_INFO,"NGene executes ComTerminateFunction");
-
-	if(ngeneCfg.userInterface!=RX_UI_GUI)
-	{
-		return FAILURE_RETURN;
-	}
-	fprintf(stdout,"\nGUI stopped NGene GNSS Software Receiver\n");
-	fprintf(stdout,"[Press 'CTRL-c' to exit]\n");
-	fprintf(stdout,"Waiting for client...\n\n");
-	fflush(stdout);
-	// SendLogFiles(&ngeneCfg,&ngene);
-	DeinitReceiver(&ngeneCfg,&ngene);
-	if(ngeneCfg.inputMethod==USB_FRONTEND)
-	{
-		ManageFrontEndThreadDeinitialization();
-	}
-	else
-	{
-		StopRxFrontEnd(&ngeneFe);
-		DeinitializeRxFrontEnd(&ngeneCfg,&ngeneFe);
-	}
-	DeleteGuiConfiguration(&ngeneCfg);
-	return SUCCESS_RETURN;
-}
-
-/**
- * @brief StartGuiCommunication
- *
- * @details Performs all operations needed to start the communication with the GUI.
- *
- * @return SUCCESS_RETURN when the desired value is read, FAILURE_RETURN otherwise
- */
-int StartGuiCommunication(void)
-{
-	if(ngeneCfg.userInterface!=RX_UI_GUI)
-	{
-		return FAILURE_RETURN;
-	}
-	fprintf(stdout,"\nNGene GNSS Software Receiver started\n");
-	fprintf(stdout,"[Press 'CTRL-c' to exit]\n");
-	fprintf(stdout,"Waiting for client...\n\n");
-	fflush(stdout);
-	/* Prepare buffers for communication with GUI */
-	ngene.bytesFromGui = malloc(RX_BUFFER_LEN);
-	ngene.bytesToGuiSize = RX_BUFFER_LEN;
-	ngene.bytesToGui = malloc(RX_BUFFER_LEN);
-	if((ngene.bytesFromGui==NULL) || (ngene.bytesToGui==NULL))
-	{
-		return FAILURE_RETURN;
-	}
-	/* Graphical UI - Java GUI */
-	ComSetPort(ngeneCfg.guiComPort);
-	ComSetInitFunction(ComInitFunction);	/* this function is executed when receiver passes from  standby state to start state
-	    									   (performs the initialization of receiver parameters) */
-	ComSetTerminateFunction(ComTerminateFunction);	/* this function is executed when receiver passes from  start state to standby state
-	    											   (performs the de-initialization of receiver parameters) */
-	ComSetConfigBuffer((void **)&(ngene.bytesFromGui));	/* the thread that manages communications with Java GUI writes parameters to the memory
-	    												   pointed by ngene.bytesFromGui */
-	ComStart();		/* starts threads that manage rx/tx from/to Java GUI */
-
-	if(ComGetStatus()!=RUNNING)
-	{
-		/* Verify status of the communication module, if initialization failed, receiver terminates */
-		return FAILURE_RETURN;
-	}
-	return SUCCESS_RETURN;
-}
-
-int StopGuiCommunication(void)
-{
-	if(ngeneCfg.userInterface!=RX_UI_GUI)
-	{
-		return FAILURE_RETURN;
-	}
-	if(ngene.bytesFromGui!=NULL)
-	{
-		free(ngene.bytesFromGui);
-		ngene.bytesFromGui=NULL;
-	}
-	if(ngene.bytesToGui!=NULL)
-	{
-		free(ngene.bytesToGui);
-		ngene.bytesToGui=NULL;
-		ngene.bytesToGuiSize=0;
-	}
-	ComStop();
-	return SUCCESS_RETURN;
 }
 
 void ManageFrontEndThreadInitialization(void)
