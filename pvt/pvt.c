@@ -408,8 +408,6 @@ int TimeForANewPvt(TNGeneConfiguration *cfg,TNGeneData *rx)
 	return TRUE_FLAG;
 }
 
-
-
 #define MAXIMUM_EPH_AGE   12200
 #define MAXIMUM_REDCED_AGE  600
 
@@ -822,7 +820,6 @@ int VerifyTransmissionTime(TPvtData *pvtData)
 		return FALSE_FLAG;
 	}
 }
-
 
 void ComputeSatsPositions(TNGeneConfiguration *cfg,TNGeneData *rx,TPvtData *pvtData,TPvtResults *pvtRes)
 {
@@ -1690,9 +1687,9 @@ void PrintPvtResults(TNGeneConfiguration *cfg,TNGeneData *rx,int performedPvt)
 		}
 		fprintf(pvtRes->kmlFile, "<Point>\n");
 		fprintf(pvtRes->kmlFile, "<coordinates>\n");
-		fprintf(pvtRes->kmlFile,"%f, ", pvtRes->geodPosition[0]);
-		fprintf(pvtRes->kmlFile,"%f, ", pvtRes->geodPosition[1]);
-		fprintf(pvtRes->kmlFile,"%f\n", pvtRes->geodPosition[2]);
+		fprintf(pvtRes->kmlFile,"%.20f, ", pvtRes->geodPosition[0]);
+		fprintf(pvtRes->kmlFile,"%.20f, ", pvtRes->geodPosition[1]);
+		fprintf(pvtRes->kmlFile,"%.20f\n", pvtRes->geodPosition[2]);
 		fprintf(pvtRes->kmlFile, "</coordinates>\n");
 		fprintf(pvtRes->kmlFile, "</Point>\n");
 		fprintf(pvtRes->kmlFile, "</Placemark>\n");
