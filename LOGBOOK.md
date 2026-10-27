@@ -1,5 +1,64 @@
 # Logbook NGene Classic
 
+## 27 ottobre 2026 — Diagnosi RF e verifica acquisizione per satellite
+
+L'utente conferma configurazione Linux identica al repository: 8 GPS, 8 Galileo,
+1 EGNOS. Il 73% e' la percentuale del processo in top/htop; normalmente esprime
+0.73 CPU logiche, ma questo non dimostra equivalenza col vecchio 13% SiGe.
+
+Vincolo chiarito: mantenere la logica della catena di acquisizione del singolo
+satellite della prima versione SiGe IF. Non si riferisce allo scheduling delle
+costellazioni. La proposta di togliere la quota Galileo era un fraintendimento:
+**non e' stata applicata**, lo scheduling resta quello di HEAD.
+
+Confronto effettivamente eseguito col primo commit `efcdb86`, disponibile nel
+repository (non con una cartella esterna Old NGene Code):
+
+- Stesse fasi coarse FFT -> raffinamento Doppler -> raffinamento codice ->
+  conferma M-su-N -> tracking; stessi criteri e avanzamenti dei bin.
+- `manageAcqConfiguration.c`, `nonCoherentSumsManager.c`, `acqConfiguration.h`
+  e il file campione `Acquisition.conf` senza differenze dal primo commit.
+- Cambiati ingresso/mixer I/Q, aritmetica e scaling HackRF. La stima del rumore
+  di conferma HackRF usa campioni I/Q reali, mentre il ramo storico SiGe usa
+  ancora i vecchi carrier. Non affermare che le soglie siano identiche.
+- Nessuna nuova modifica a fasi, griglie, integrazioni o conferma in questa
+  diagnosi. L'unico intervento DSP corrente interrompe le FFT HackRF gia'
+  saturate che il ciclo di scaling scarterebbe comunque. Output accettati
+  identici verificati con riferimento scalare e replay completo.
+
+Registrazione `recordings/diagnosi/hackrf-l1-ci8.raw`: hash verificato,
+1,964,112,000 byte, 120 s a 8,183,800 campioni complessi/s. Oltre il 65% di
+ciascuna componente e' esattamente a fondo scala. Una sonda indipendente in
+double (senza DSP/ring del ricevitore) rileva un salto comune della fase codice
+GPS 5/7 intorno a 77.073 s, circa 350 campioni modulo periodo. Non quantifica
+campioni persi assoluti e non identifica il responsabile hardware/USB.
+Il replay perde il lock comune dopo circa 1 s, anche solo GPS. Il ring reale
+preserva tutti i byte in due modalita' di lettura: nessuna corruzione riprodotta
+in questi percorsi. Questo non assolve la catena live.
+
+Log Linux live: 137 fix, zero perdite finali, due warning PLL recuperati;
+interruzione USB con coda massima 295662/1048576 byte (28.2%), non overflow
+applicativo. L'errore di stop successivo e' secondario. Questo log e la cattura
+RF sono sessioni diverse. Causa USB ancora aperta.
+
+Ground truth WGS84 dell'utente: lat 45.06538716666666, lon 7.659323472222223,
+h ellissoidica 311.9349 m; offset rispetto al riferimento antenna non fornito.
+RMS orizzontale/verticale: live 7.612/8.496 m (137 fix), replay misto
+7.413/18.158 m (40 fix), solo GPS 2.778/7.346 m (63 fix). Campioni temporali e
+satelliti diversi: non concludere che Galileo sia difettoso da questi numeri.
+
+FFT: microbenchmark alternato nello stesso processo, mediana 173.945 ->
+103.823 us per ricerca di scaling (-40.3% per quel kernel). I tempi completi
+sono molto variabili e anche contraddittori fra sessioni: nessuna percentuale
+di accelerazione complessiva affidabile. I 928 eventi GNSS ordinati dei replay
+misti prima/dopo coincidono, inclusi 40 fix e 14 perdite. Verifiche scalari FFT
+su 263056 casi; build finale normale senza profiling, 9/9 test.
+
+Strumenti e risultati ripetibili in `development/profiling/diagnosi-20261027/`
+e nel README del laboratorio. Il report accanto al README contiene il dettaglio.
+Nessuna strumentazione aggiuntiva e' rimasta nel main. Il nuovo lavoro non
+introduce worker DSP: il parallelismo produttivo resta un intervento successivo.
+
 ## 26-27 ottobre 2026 — Profiling, semplificazione e budget acquisizione
 
 Richieste: indagare tracking che torna in acquisizione e possibile problema USB;

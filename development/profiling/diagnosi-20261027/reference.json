@@ -1,0 +1,12 @@
+{
+    "datum":  "WGS84",
+    "latitudeDms":  "45 03 55.3938 N",
+    "longitudeDms":  "7 39 33.5645 E",
+    "latitudeDegrees":  45.06538716666666,
+    "longitudeDegrees":  7.6593234722222228,
+    "ellipsoidalHeightMetres":  311.9349,
+    "latitudeSdMetres":  0.0003,
+    "longitudeSdMetres":  0.0003,
+    "heightSdMetres":  0.0016,
+    "antennaReferenceOffsetProvided":  false
+}

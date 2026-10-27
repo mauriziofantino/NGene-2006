@@ -1,8 +1,10 @@
 # NGene Classic — ottimizzazioni, profiling e distribuzione del carico
 
-**Periodo:** 26-27 ottobre 2026. **Stato finale:** build Windows operativa senza
-profiling aggiuntivo, 9/9 test superati, replay misti con 23 fix SiGe e 29 fix
-HackRF. Nessun pool DSP concorrente attivato in questo intervento.
+**Periodo:** 26-27 ottobre 2026. Build Windows operativa senza profiling
+aggiuntivo, 9/9 test superati. Nessun pool DSP concorrente attivato.
+Le sezioni 1-9 descrivono il primo intervento (23 fix SiGe e 29 HackRF su
+registrazioni precedenti); le sezioni 10-13 aggiungono la diagnosi dei nuovi
+file Linux, il profiling FFT e il confronto con l'acquisizione SiGe IF.
 
 ## 1. Risultato e significato delle misure
 
@@ -321,3 +323,203 @@ Le misure selezionate, profili di stato e hash sono conservati in
 cartelle `build/profile-*`; il file JSON ne conserva i riferimenti. Per ripetere
 le misure usare [le istruzioni del laboratorio](development/profiling/README.md).
 Per riprendere il lavoro in una sessione futura leggere [LOGBOOK.md](LOGBOOK.md).
+
+## 10. Acquisizione del singolo satellite: confronto con SiGe IF
+
+Su richiesta dell'utente, il riferimento e' il primo sorgente del repository,
+commit `efcdb86` (Add NGene Classic source). Questo confronto e' stato eseguito;
+non va confuso con quello, precedentemente fornito dall'utente, con una cartella
+esterna `CODE/Old NGene Code`.
+
+| Passo | Stato attuale rispetto al riferimento |
+| --- | --- |
+| Finestra campioni e rimozione portante | Stesso ruolo; aggiunti stride e mixer complesso per I/Q |
+| Galileo: rimozione sottoportante BOC | Conservata; applicata alle due componenti nei nuovi percorsi |
+| Compressione, FFT, prodotto col codice e trasformata inversa | Stessa struttura; backend FFT e dinamica numerica aggiornati |
+| Bin fuori ricerca per la soglia coarse | Conservato (`FAKE_DOPPLER_INDEX`) |
+| Somme non coerenti e ricerca massimo | Stessi contatori, ordine ritardo/Doppler e numero di somme; accumulo HackRF a 64 bit |
+| Decisione coarse e propagazione fase codice | Stessa condizione massimo/soglia e correzione temporale |
+| Raffinamento Doppler, poi codice | Stessi passi, contatori, massimi e transizioni |
+| Conferma M-su-N | Stessi M/N, conteggio dei tentativi e successi, condizioni successo/fallimento |
+| Ingresso nel tracking | Stessa transizione dopo conferma |
+
+`acquisition/manageAcqConfiguration.c`, `nonCoherentSumsManager.c`,
+`acqConfiguration.h` e `sampleConfigurationFiles/configuration/Acquisition.conf`
+sono senza differenze dal riferimento. Il diff del manager non introduce nuove
+transizioni nella catena del singolo tentativo. Non sono state aggiunte somme
+coerenti fra periodi, nuove griglie, ricerca anticipata al primo picco o nuove
+condizioni di conferma durante questa diagnosi.
+
+**La realizzazione numerica HackRF non e' identica alla vecchia SiGe IF.**
+Oltre al mixer complesso, usa compressione larga, FFT con tentativi di scaling
+senza clipping, potenze/somme a 64 bit ed esponenti ripristinati. Queste differenze
+gestiscono ampiezze ADC diverse; possono cambiare i valori rispetto a una catena
+che satura o quantizza diversamente. Anche alcuni tipi condivisi sono stati
+allargati: non si promette identita' binaria in caso di overflow storico.
+
+La differenza piu' rilevante per le decisioni e' la **stima del rumore per la
+soglia di conferma**. `MeasureHackrfConfirmationNoise` miscela e correla campioni
+I/Q del ring. Il ramo non-wide mantiene il calcolo storico con i carrier; la
+variabile demodulata non e' quella correlata per stimarne la varianza. La funzione
+statistica `FindAcquisitionThreshold`, le probabilita' configurate e la regola
+M-su-N restano le stesse, ma l'ingresso della stima HackRF e' diverso. Per questo
+dire semplicemente "soglie invariate" sarebbe inesatto. Nessun ulteriore
+intervento a questa stima e' stato fatto nel lavoro corrente; la sua equivalenza
+statistica richiede una verifica dedicata di sensibilita' e falsi allarmi.
+
+Vincolo dell'utente per il seguito: conservare la logica di acquisizione per
+satellite della SiGe IF. FFT e mixer possono essere ottimizzati, dichiarando
+separatamente ogni differenza numerica o di stima delle soglie. La precisazione
+non riguarda lo scheduling fra costellazioni: la quota Galileo resta attiva,
+nessun rollback e' stato eseguito.
+
+## 11. Diagnosi dei file Linux del 27 ottobre
+
+Configurazione confermata dall'utente: 8 GPS, 8 Galileo, 1 EGNOS, file identici
+al repository. Host Linux: Xeon E3-1241 v3, 4 core / 8 CPU logiche, Gentoo
+6.18.2. Gli output dichiarano libhackrf/tools 2024.02.1 e firmware n_260928,
+API 1.13. Queste versioni sono un dato diagnostico, non una causa dimostrata.
+
+### Interruzione nel log live
+
+`ngene-live.log` contiene 137 fix validi fra Rx 34000 e 169544 ms, due warning
+PLL Galileo recuperati, zero perdite finali di tracking e zero hard restart.
+Termina con interruzione dello stream HackRF, uscita del thread frontend e
+errore di stop RX `Input/Output Error (-1000)`. Il massimo della coda e'
+295662 / 1048576 byte, **28.2%**: qui il log non dimostra un overflow della
+coda applicativa. Il messaggio "cannot stop the Front End" viene dopo
+l'interruzione e non identifica l'evento iniziale.
+
+Servono evidenze Linux/USB contemporanee all'evento per attribuirlo al percorso
+fisico, al driver, alla libreria o al dispositivo. Il replay non verifica queste
+componenti. Non e' stato introdotto un riavvio trasparente che nasconda i gap.
+
+### Cattura RF indipendente
+
+`hackrf-l1-ci8.raw`: 1964112000 byte, 982056000 campioni complessi CI8,
+8.1838 MS/s, 120 secondi. SHA-256 verificato:
+`90C65DD542DE8EEE1B411FE60DF6CE24E12374B6C82261FF5FEEF213491168B1`.
+La cattura inizia alle 09:15:52 UTC, dopo la sessione del log live. Il tool
+termina con exit code 0 senza errore riportato; cio' non prova continuita' RF.
+Impostazioni: centro 1575420000 Hz, filtro 5 MHz, LNA 32, VGA 56, amp 0,
+antenna power 0.
+
+La scansione di tutto il file trova il **65.151% di I e 65.292% di Q esattamente
+a -128 o +127**, RMS centrato medio 111.445 conteggi. E' una forte saturazione
+gia' nel dato registrato, prima del mixer software; non se ne recupera
+l'informazione cambiando FFT. Nessuna variazione macroscopica dell'ampiezza
+intorno al salto descritto sotto. La saturazione non dimostra, da sola, la causa
+di tutte le perdite. Prova hardware successiva utile: ridurre VGA da 56 a 32,
+conservare le altre condizioni e confrontare distribuzione ADC e continuita'.
+
+Il replay misto produce 40 fix e 14 perdite di tracking concentrate attorno a
+78.2-78.8 s. Il replay solo GPS produce 63 fix e 8 perdite nello stesso tratto.
+Il fenomeno quindi si riproduce senza callback USB e senza Galileo.
+
+Un controllo indipendente, con mixer e matched filter in double, senza mixer,
+FFT, ring o tracking del ricevitore, individua un salto comune della fase codice
+dei GPS 7 e 5 intorno a **77.073 s**. La variazione e' circa 350-353 campioni,
+43 microsecondi modulo il periodo del codice; i picchi restano riconoscibili
+prima e dopo. Il salto precede di circa un secondo le perdite dichiarate dal
+tracking ed e' presente nel file RF stesso. Il CI8 non contiene timestamp o
+contatori: non consente di ricavare il numero assoluto di campioni mancanti o
+di assegnare la causa a firmware/USB/clock.
+
+Il controllo del ring reale (`FillInputBuffer` e percorso di lettura produzione),
+con confronto byte per byte contro un secondo lettore del file, preserva tutti
+i 1964112000 byte sia con letture intere sia frammentate e attraversamenti del
+ring. Esclude corruzioni riprodotte in questi due percorsi, non ogni possibile
+problema di concorrenza o continuita' live.
+
+### Accuratezza rispetto alla ground truth
+
+Riferimento WGS84: latitudine 45.06538716666666 gradi, longitudine
+7.659323472222223 gradi, quota ellissoidica 311.9349 m. SD fornite:
+0.0003/0.0003/0.0016 m. L'offset fra riferimento rilevato e antenna non e'
+stato fornito. Conversione geodetica -> ECEF -> ENU al riferimento, usando le
+coordinate arrotondate dei log testuali; nessuna correzione delle soluzioni
+verso la posizione nota.
+
+| Sessione | Fix | Bias E/N/U [m] | RMS orizzontale [m] | P95 orizzontale [m] | RMS verticale [m] |
+| --- | ---: | --- | ---: | ---: | ---: |
+| Live Linux 8/8/1 | 137 | +1.965 / +2.455 / +7.185 | 7.612 | 14.688 | 8.496 |
+| Replay RF 8/8/1 | 40 | +0.089 / -1.060 / -5.559 | 7.413 | 10.511 | 18.158 |
+| Replay RF 8/0/0 | 63 | +1.581 / +1.315 / +5.948 | 2.778 | 4.344 | 7.346 |
+
+Il misto parte con geometria debole (GDOP circa 26, 4 GPS e 2 Galileo).
+Le due configurazioni non usano gli stessi satelliti o le stesse epoche valide;
+il live e la cattura sono sessioni RF diverse. Questi risultati non isolano
+un difetto Galileo ne' dimostrano un miglioramento di accuratezza del codice.
+CSV, statistiche complete e grafici ENU/quota sono conservati negli
+[artefatti diagnostici](development/profiling/diagnosi-20261027/).
+
+## 12. Ottimizzazione FFT e costo CPU
+
+Il percorso HackRF prova guadagni FFT successivi finche' ottiene una trasformata
+senza clipping. Prima completava anche le trasformate gia' saturate, per poi
+scartarle. `PerformFftTrial` termina appena un kernel segnala clipping. Il
+chiamante scarta tutto l'output parziale e riparte dalla finestra originale.
+La sequenza dei guadagni, la trasformata accettata, il ripristino degli esponenti
+e le decisioni GNSS restano identici. SiGe continua a usare `PerformFft`.
+`PerformFftChecked` mantiene il comportamento completo per chi necessita
+dell'output e del conteggio integrale delle saturazioni.
+
+La verifica FFT contro riferimento scalare copre 263056 casi, flag di clipping,
+output esatto quando accettato, protezioni dei buffer e input immutabile.
+Il replay misto completo prima/dopo produce gli stessi **928 eventi GNSS
+ordinati**, inclusi 40 fix e 14 perdite, esclusi timestamp, percorsi di startup
+e righe di profiling. SiGe sul file precedente conserva 23 fix e zero perdite.
+
+Microbenchmark con la prima finestra RF, sei batch alternati nello stesso
+processo: mediana per ricerca di scaling **173.945 -> 103.823 us (-40.3%)**,
+stesso guadagno accettato (-9) e output esatto. Questo risultato riguarda
+quel kernel e quella finestra, non l'intero ricevitore.
+
+Profiling temporaneo sul replay completo, stessa sequenza di eventi:
+
+| Voce | Prima [s] | Dopo [s] |
+| --- | ---: | ---: |
+| GPS coarse | 37.768 | 27.408 |
+| Galileo coarse | 16.270 | 13.261 |
+| EGNOS coarse | 27.264 | 18.563 |
+| CPU processo (strumentato) | 111.609 | 87.109 |
+| Wall (strumentato) | 117.924 | 99.156 |
+
+**I tempi completi variano troppo per dichiarare uno speedup complessivo
+affidabile.** Il baseline normale precedente aveva CPU 52.781 s / wall 54.714 s;
+il replay normale successivo CPU 87.719 s / wall 95.704 s, pur con eventi GNSS
+identici. Nel confronto alternato A/B/B/A su 15 s RF, CPU prima 8.313 e 15.469 s,
+dopo 6.000 e 5.750 s: anche qui il baseline varia molto. Concorrenza e stato
+dell'host influenzano la misura; i valori Windows non stimano direttamente il
+carico sullo Xeon Linux. Non attribuire una riduzione stabile del 40% al processo.
+
+Il 73% segnalato dall'utente e' letto in top/htop per il processo: nella
+normalizzazione usuale equivale a circa 0.73 CPU logiche (circa 9.1% aggregato
+su 8 CPU logiche). Modalita' di visualizzazione e denominatore vanno conservati
+nel confronto col vecchio 13%. Anche a parita' di scala, front-end IF e I/Q,
+ampiezze ADC, canali e fasi di acquisizione producono carichi diversi: il divario
+non e' stato spiegato o risolto interamente da queste misure.
+
+## 13. Produzione e ripetibilita' della diagnosi
+
+La patch di profiling esteso e' stata rimossa dopo il confronto; build normale
+con `NGENE_RX_PROFILING=OFF`, 9/9 verifiche. Il main e il supporto profiling
+non hanno differenze rispetto a HEAD. Nessun nuovo logger per campione o worker
+sperimentale resta in produzione. L'intervento operativo di questa diagnosi
+riguarda solo FFT/contratto e le due chiamate del coarse HackRF.
+
+Ultima ricompilazione normale e verifica 9/9, SHA-256 eseguibile:
+`B961455BC429F22B61911CF1E2099DFBD84D51ED8F2979C7076CC67A1FADAD33`.
+Gli hash dei binari effettivamente usati nei singoli replay restano in
+`runs.json`; non sostituirli con quello di una ricompilazione successiva.
+
+Gli strumenti indipendenti, i benchmark e gli analizzatori sono conservati in
+`development/profiling/`, esclusi da CMake. I risultati derivati e i riferimenti
+ai log completi locali sono in `diagnosi-20261027/runs.json`. I vecchi risultati
+23/29 fix delle sezioni precedenti si riferiscono ad altri file RF.
+
+Restano da risolvere: origine dell'interruzione USB live e del salto nel file;
+prova RF con livelli non saturati; verifica statistica della stima soglie
+HackRF; benchmark Linux ripetuto in condizioni confrontabili; separazione dei
+dati prima di introdurre il pool multicore. Conservare nel frattempo la catena
+di acquisizione per satellite chiarita nella sezione 10.

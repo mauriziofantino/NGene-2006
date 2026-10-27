@@ -62,8 +62,8 @@ void DeinitFftTable(TFftTable *table)
     memset(table,0,sizeof(*table));
 }
 
-int PerformFftChecked(TNGeneConfiguration *cfg, TFftTable *table, short *input,
-               short *output, unsigned log2Size, int gain, unsigned *clipped)
+static int PerformFftCore(TNGeneConfiguration *cfg, TFftTable *table, short *input,
+               short *output, unsigned log2Size, int gain, unsigned *clipped, int abortOnClip)
 {
     unsigned n, stride, quarter, i, chunk, block, width, base, stage;
     unsigned scaledStages;
@@ -101,20 +101,38 @@ int PerformFftChecked(TNGeneConfiguration *cfg, TFftTable *table, short *input,
      * This retains Classic's first -gain right shifts even across subtrees. */
     for (chunk=0;chunk<n;chunk+=block) {
         FftFirstStagesSse2(output+2*chunk,block,scaledStages,bounded,clipped);
+        if (abortOnClip && *clipped) return SUCCESS_RETURN;
         for (width=16,stage=4;width<=block;width*=2,stage++) {
-            for (base=chunk;base<chunk+block;base+=width)
+            for (base=chunk;base<chunk+block;base+=width) {
                 FftButterfliesSse2(output+2*base,output+2*base+width,
                     tw+2*width-4,width/2,stage<=scaledStages,bounded,clipped);
+                if (abortOnClip && *clipped) return SUCCESS_RETURN;
+            }
         }
     }
     for (width=2*block; width<=n; width*=2) {
         stage=0;
         for (i=width;i>1;i>>=1) stage++;
-        for (base=0;base<n;base+=width)
+        for (base=0;base<n;base+=width) {
             FftButterfliesSse2(output+2*base,output+2*base+width,
                 tw+2*width-4,width/2,stage<=scaledStages,bounded,clipped);
+            if (abortOnClip && *clipped) return SUCCESS_RETURN;
+        }
     }
     return SUCCESS_RETURN;
+}
+
+int PerformFftChecked(TNGeneConfiguration *cfg, TFftTable *table, short *input,
+               short *output, unsigned log2Size, int gain, unsigned *clipped)
+{
+    return PerformFftCore(cfg,table,input,output,log2Size,gain,clipped,0);
+}
+
+int PerformFftTrial(TNGeneConfiguration *cfg, TFftTable *table, short *input,
+               short *output, unsigned log2Size, int gain, unsigned *clipped)
+{
+    if (!clipped) return FAILURE_RETURN;
+    return PerformFftCore(cfg,table,input,output,log2Size,gain,clipped,1);
 }
 
 int PerformFft(TNGeneConfiguration *cfg, TFftTable *table, short *input,

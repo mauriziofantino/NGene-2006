@@ -68,7 +68,7 @@ static void Reference(const short *input, short *output, unsigned bits, int gain
 
 static void Compare(TFftTable *table, const short *input, unsigned bits, int gain, unsigned skew)
 {
-    unsigned n=1u<<bits, i;
+    unsigned n=1u<<bits, i, clipped, trialClipped;
     size_t count=2u*n+24;
     short *source=malloc(count*sizeof(short)), *workspace=malloc(count*sizeof(short));
     short *expected=malloc(2u*n*sizeof(short));
@@ -78,13 +78,16 @@ static void Compare(TFftTable *table, const short *input, unsigned bits, int gai
     a=source+1+skew; b=workspace+8-skew;
     memcpy(a,input,2u*n*sizeof(short));
     Reference(input,expected,bits,gain);
-    CHECK(PerformFft(NULL,table,a,b,bits,gain)==SUCCESS_RETURN);
+    CHECK(PerformFftChecked(NULL,table,a,b,bits,gain,&clipped)==SUCCESS_RETURN);
     for (i=0;i<2*n;i++) {
         if (b[i]!=expected[i]) {
             fprintf(stderr,"N=%u gain=%d component=%u actual=%d reference=%d\n",n,gain,i,b[i],expected[i]);
             CHECK(b[i]==expected[i]);
         }
     }
+    CHECK(PerformFftTrial(NULL,table,a,b,bits,gain,&trialClipped)==SUCCESS_RETURN);
+    CHECK((trialClipped!=0)==(clipped!=0));
+    if (!trialClipped) CHECK(memcmp(b,expected,2u*n*sizeof(short))==0);
     CHECK(memcmp(a,input,2u*n*sizeof(short))==0);
     for (i=0;i<count;i++) {
         if (i<1+skew || i>=1+skew+2*n) CHECK(source[i]==23130);
@@ -187,6 +190,7 @@ int main(void)
     CHECK(PerformFft(NULL,&table,input,input+32,15,0)==FAILURE_RETURN);
     CHECK(PerformFft(NULL,&table,input,input+32,3,1)==FAILURE_RETURN);
     CHECK(PerformFft(NULL,&table,input,input+32,3,INT_MIN)==FAILURE_RETURN);
+    CHECK(PerformFftTrial(NULL,&table,input,input+32,3,0,NULL)==FAILURE_RETURN);
     {
         TParallelCase cases[2]; pthread_t threads[2];
         for (pattern=0;pattern<2;pattern++) {

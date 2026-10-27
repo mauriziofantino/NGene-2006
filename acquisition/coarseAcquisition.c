@@ -303,7 +303,7 @@ TAcquisitionStatus PerformCoarseAcquisition(TNGeneConfiguration *cfg, TNGeneData
             unsigned clipped;
             if (!PackWideFft(acq->wideCompressed, acq->signalCompressed,
                     acq->fftSize, acq->log2FftSize, requestedFftGain, &effectiveFftGain) ||
-                PerformFftChecked(cfg, &(rx->fftTable), acq->signalCompressed,
+                PerformFftTrial(cfg, &(rx->fftTable), acq->signalCompressed,
                     acq->signalFft, acq->log2FftSize, effectiveFftGain, &clipped) != SUCCESS_RETURN) {
                 SwrxLog(NGENE_LOG_SEVERITY_ERROR, "%s: input exceeds representable FFT headroom", ch->prnName);
                 return ACQUISITION_FAILURE;
@@ -350,7 +350,7 @@ TAcquisitionStatus PerformCoarseAcquisition(TNGeneConfiguration *cfg, TNGeneData
     if (rx->wideI) {
         for (;;) {
             unsigned clipped;
-            if (PerformFftChecked(cfg, &rx->fftTable, acq->signalFft, acq->ifftOut,
+            if (PerformFftTrial(cfg, &rx->fftTable, acq->signalFft, acq->ifftOut,
                     acq->log2FftSize, requestedIfftGain, &clipped) != SUCCESS_RETURN)
                 return ACQUISITION_FAILURE;
             if (!clipped) break;

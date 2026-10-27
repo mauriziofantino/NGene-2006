@@ -1,0 +1,8 @@
+"Line","Message"
+"23423","[Tue Oct 27 10:12:08 2026] NOTE   : Channel 15 Galileo2 found a problem with PLL lock at sample 347991292, trk counter 2163"
+"23784","[Tue Oct 27 10:12:09 2026] NOTE   : Channel 15 Galileo2 again locked at sample 353228913, trk counter 2803, after a PLL lock problem"
+"38368","[Tue Oct 27 10:12:57 2026] NOTE   : Channel  9 Galileo7 found a problem with PLL lock at sample 746065915, trk counter 1083"
+"38369","[Tue Oct 27 10:12:57 2026] NOTE   : Channel  9 Galileo7 again locked at sample 746098650, trk counter 1087, after a PLL lock problem"
+"40215","[Tue Oct 27 10:14:16 2026] ERROR  : HackRF RX stopped: USB stream interrupted (queue high-water 295662/1048576 bytes)"
+"40220","[Tue Oct 27 10:14:16 2026] ERROR  : HackRF stop RX: Input/Output Error (-1000)"
+"40221","[Tue Oct 27 10:14:16 2026] ERROR  : Front End: cannot stop the Front End"

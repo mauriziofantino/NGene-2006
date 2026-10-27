@@ -1,0 +1,124 @@
+{
+    "recording":  "recordings/diagnosi/hackrf-l1-ci8.raw",
+    "sha256":  "90C65DD542DE8EEE1B411FE60DF6CE24E12374B6C82261FF5FEEF213491168B1",
+    "bytes":  1964112000,
+    "sampleRate":  8183800,
+    "seconds":  120,
+    "liveLog":  "recordings/diagnosi/ngene-live.log",
+    "configurationConfirmedByUser":  "8 GPS + 8 Galileo + 1 EGNOS, repository settings",
+    "liveHackrfLibrary":  "2024.02.1",
+    "liveFirmware":  "n_260928 API 1.13",
+    "firstIndependentCommonCodePhaseChangeSeconds":  77.073,
+    "runs":  [
+                 {
+                     "name":  "baseline",
+                     "directory":  "build/profile-20261027-122009-215",
+                     "wallSeconds":  54.7144227,
+                     "cpuSeconds":  52.78125,
+                     "exitCode":  0,
+                     "executableSha256":  "7C54DB2A1E03C39D4227C53BE494453CB0283CE012AFD79E23D1F6DAA102480D",
+                     "inputBytes":  1964112000,
+                     "pvtFixes":  40,
+                     "trackingLost":  14
+                 },
+                 {
+                     "name":  "gpsOnly",
+                     "directory":  "build/profile-20261027-122522-961",
+                     "wallSeconds":  28.928494099999998,
+                     "cpuSeconds":  26.515625,
+                     "exitCode":  0,
+                     "executableSha256":  "7C54DB2A1E03C39D4227C53BE494453CB0283CE012AFD79E23D1F6DAA102480D",
+                     "inputBytes":  1964112000,
+                     "pvtFixes":  63,
+                     "trackingLost":  8
+                 },
+                 {
+                     "name":  "profileBefore",
+                     "directory":  "build/profile-20261027-144719-922",
+                     "wallSeconds":  117.9239224,
+                     "cpuSeconds":  111.609375,
+                     "exitCode":  0,
+                     "executableSha256":  "0BC2F057F232969D9343DE891984E82E4BEFF0FE1642CC137F5F6C45688040EE",
+                     "inputBytes":  1964112000,
+                     "pvtFixes":  40,
+                     "trackingLost":  14
+                 },
+                 {
+                     "name":  "profileAfter",
+                     "directory":  "build/profile-20261027-145038-034",
+                     "wallSeconds":  99.155577,
+                     "cpuSeconds":  87.109375,
+                     "exitCode":  0,
+                     "executableSha256":  "2D04DEE43AA85AC33237B1A4C9A0E68EDF43A53903B226F6987BDD2DB8D4077B",
+                     "inputBytes":  1964112000,
+                     "pvtFixes":  40,
+                     "trackingLost":  14
+                 },
+                 {
+                     "name":  "productionAfter",
+                     "directory":  "build/profile-20261027-150144-773",
+                     "wallSeconds":  95.7039267,
+                     "cpuSeconds":  87.71875,
+                     "exitCode":  0,
+                     "executableSha256":  "CEC005489870F3E604B51C248AC9C01059D0B10D9B163C4083B3727B0A61B2B2",
+                     "inputBytes":  1964112000,
+                     "pvtFixes":  40,
+                     "trackingLost":  14
+                 },
+                 {
+                     "name":  "sigeRegression",
+                     "directory":  "build/profile-20261027-150321-554",
+                     "wallSeconds":  15.4623242,
+                     "cpuSeconds":  13.40625,
+                     "exitCode":  0,
+                     "executableSha256":  "CEC005489870F3E604B51C248AC9C01059D0B10D9B163C4083B3727B0A61B2B2",
+                     "inputBytes":  794615808,
+                     "pvtFixes":  23,
+                     "trackingLost":  0
+                 },
+                 {
+                     "name":  "shortBefore1",
+                     "directory":  "build/profile-20261027-150513-378",
+                     "wallSeconds":  9.0986773,
+                     "cpuSeconds":  8.3125,
+                     "exitCode":  0,
+                     "executableSha256":  "7C54DB2A1E03C39D4227C53BE494453CB0283CE012AFD79E23D1F6DAA102480D",
+                     "inputBytes":  245514000,
+                     "pvtFixes":  0,
+                     "trackingLost":  0
+                 },
+                 {
+                     "name":  "shortAfter1",
+                     "directory":  "build/profile-20261027-150523-361",
+                     "wallSeconds":  6.7315787,
+                     "cpuSeconds":  6,
+                     "exitCode":  0,
+                     "executableSha256":  "CEC005489870F3E604B51C248AC9C01059D0B10D9B163C4083B3727B0A61B2B2",
+                     "inputBytes":  245514000,
+                     "pvtFixes":  0,
+                     "trackingLost":  0
+                 },
+                 {
+                     "name":  "shortAfter2",
+                     "directory":  "build/profile-20261027-150530-793",
+                     "wallSeconds":  6.5205296,
+                     "cpuSeconds":  5.75,
+                     "exitCode":  0,
+                     "executableSha256":  "CEC005489870F3E604B51C248AC9C01059D0B10D9B163C4083B3727B0A61B2B2",
+                     "inputBytes":  245514000,
+                     "pvtFixes":  0,
+                     "trackingLost":  0
+                 },
+                 {
+                     "name":  "shortBefore2",
+                     "directory":  "build/profile-20261027-150537-953",
+                     "wallSeconds":  16.8452232,
+                     "cpuSeconds":  15.46875,
+                     "exitCode":  0,
+                     "executableSha256":  "7C54DB2A1E03C39D4227C53BE494453CB0283CE012AFD79E23D1F6DAA102480D",
+                     "inputBytes":  245514000,
+                     "pvtFixes":  0,
+                     "trackingLost":  0
+                 }
+             ]
+}

@@ -76,5 +76,11 @@ int PerformFft(TNGeneConfiguration *cfg,TFftTable *table,short *a,short *b,unsig
 int PerformFftChecked(TNGeneConfiguration *cfg,TFftTable *table,short *a,short *b,
                      unsigned int log2Size,int gain,unsigned *clipped);
 
+/* Acquisition scaling trial: stop after a kernel reports saturation. With
+ * *clipped==0 the output is bit-identical to PerformFftChecked; otherwise the
+ * partial output must be discarded. A non-NULL counter is required. */
+int PerformFftTrial(TNGeneConfiguration *cfg,TFftTable *table,short *a,short *b,
+                    unsigned int log2Size,int gain,unsigned *clipped);
+
 
 #endif

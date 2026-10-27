@@ -49,3 +49,39 @@ USB live. Usare un CSV nuovo a ogni esecuzione.
 
 Il report completo e le questioni aperte sono in [OPTIMIZATION_REPORT.md](../../OPTIMIZATION_REPORT.md)
 e [LOGBOOK.md](../../LOGBOOK.md).
+
+## Diagnosi RF del 27 ottobre
+
+Risultati derivati, ground truth, hash e riferimenti alle esecuzioni sono in
+[diagnosi-20261027](diagnosi-20261027/README.md). Nessuno degli strumenti seguenti
+e' incluso nella build operativa. Comandi dalla radice, PowerShell:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File development/profiling/build-diagnostic-tools.ps1
+& build/diagnostic-tools/check-hackrf-ring.exe recordings/diagnosi/hackrf-l1-ci8.raw
+& build/diagnostic-tools/bench-fft-trials.exe recordings/diagnosi/hackrf-l1-ci8.raw
+& build/diagnostic-tools/probe-gps-code-phase.exe recordings/diagnosi/hackrf-l1-ci8.raw otherData/GPS_codes.dat 7 1030 77 77.1 0.001
+& build/diagnostic-tools/probe-gps-code-phase.exe recordings/diagnosi/hackrf-l1-ci8.raw otherData/GPS_codes.dat 5 -2900 77 77.1 0.001
+& development/profiling/measure-ci8.ps1 -InputFile recordings/diagnosi/hackrf-l1-ci8.raw -OutputDirectory build/iq-analysis
+& development/profiling/analyze-gnss-log.ps1 -LogFile recordings/diagnosi/ngene-live.log -OutputDirectory build/position-analysis -ReferenceLatitude 45.06538716666666 -ReferenceLongitude 7.659323472222223 -ReferenceHeight 311.9349
+```
+
+`check-hackrf-ring` confronta tutto il flusso del ring produzione con un lettore
+indipendente, con due sequenze di lettura. `bench-fft-trials` alterna nello stesso
+processo il completamento delle FFT sature e l'interruzione anticipata,
+verificando guadagno accettato e output identici.
+
+`probe-gps-code-phase` usa un matched filter e mixer indipendenti in double;
+legge solo i chip GPS dal file del progetto. Finestra e frequenza campionamento
+sono specifiche di questa registrazione (8184 campioni / 8.1838 MS/s). Il segno
+della frequenza NCO segue la rotazione del programma, non una convenzione
+Doppler universale. Prima misura un ritardo sintetico noto. Un salto della fase
+modulo 1 ms non fornisce il numero assoluto di campioni persi.
+
+`measure-ci8.ps1` calcola distribuzioni, saturazione e finestre di un secondo.
+`analyze-gnss-log.ps1` produce fix ENU, eventi e statistiche. Conta i fix validi
+dal blocco di posizione, non dal numero di invocazioni PVT nel profiling.
+`plot-gnss-errors.ps1` esporta scatter ENU e errori di quota PNG usando gli array
+PowerShell `-CsvFiles @('file1.csv','file2.csv') -Labels @('serie1','serie2')` e
+`-OutputDirectory build/figures`. Il live e il replay vanno etichettati come
+sessioni RF diverse.
