@@ -32,10 +32,11 @@ $taskLines = [IO.File]::ReadAllLines($taskLog)
 foreach ($taskLine in $taskLines) {
     $taskLineNumber++
     if ($taskLine -match 'PVT COUNTER\s+(\d+)') {
-        $taskEpoch = [ordered]@{ Counter=[int]$Matches[1]; RxMs=$null; GpsWeek=$null; GpsTow=$null; GpsSatellites=0; GalileoSatellites=0; Gdop=$null; Host=''; Utc='' }
+        $taskEpoch = [ordered]@{ Counter=[int]$Matches[1]; RxMs=$null; GpsWeek=$null; GpsTow=$null; GpsSatellites=0; GalileoSatellites=0; Gdop=$null; Host=''; Utc=''; Solver='' }
         if ($taskLine -match '^\[([^\]]+)\]') { $taskEpoch.Host = $Matches[1] }
     }
     if ($null -ne $taskEpoch) {
+        if ($taskLine -match 'PVT RESULTS \((LS|KF)\)') { $taskEpoch.Solver=$Matches[1] }
         if ($taskLine -match '# RX\s*:\s*(\d+)') { $taskEpoch.RxMs = [long]$Matches[1] }
         if ($taskLine -match '# GPS\s+WN\s*:\s*(\d+)\s+TOW\s*:\s*([\d.]+)') { $taskEpoch.GpsWeek=[int]$Matches[1]; $taskEpoch.GpsTow=Number $Matches[2] }
         if ($taskLine -match '# UTC\s+(\d+/\d+/\d+\s+[\d:.]+)') { $taskEpoch.Utc = $Matches[1] }
@@ -50,7 +51,7 @@ foreach ($taskLine in $taskLines) {
             $taskNorth=-[Math]::Sin($taskPhi)*[Math]::Cos($taskLambda)*$taskDx-[Math]::Sin($taskPhi)*[Math]::Sin($taskLambda)*$taskDy+[Math]::Cos($taskPhi)*$taskDz
             $taskUp=[Math]::Cos($taskPhi)*[Math]::Cos($taskLambda)*$taskDx+[Math]::Cos($taskPhi)*[Math]::Sin($taskLambda)*$taskDy+[Math]::Sin($taskPhi)*$taskDz
             $taskFixes.Add([pscustomobject]@{
-                Counter=$taskEpoch.Counter; Host=$taskEpoch.Host; Utc=$taskEpoch.Utc; RxMs=$taskEpoch.RxMs; GpsWeek=$taskEpoch.GpsWeek; GpsTow=$taskEpoch.GpsTow
+                Counter=$taskEpoch.Counter; Solver=$taskEpoch.Solver; Host=$taskEpoch.Host; Utc=$taskEpoch.Utc; RxMs=$taskEpoch.RxMs; GpsWeek=$taskEpoch.GpsWeek; GpsTow=$taskEpoch.GpsTow
                 GpsSatellites=$taskEpoch.GpsSatellites; GalileoSatellites=$taskEpoch.GalileoSatellites; Gdop=$taskEpoch.Gdop
                 Latitude=$taskLat; Longitude=$taskLon; Height=$taskHeight
                 East=$taskEast; North=$taskNorth; Up=$taskUp; HeightError=$taskHeight-$ReferenceHeight
@@ -90,6 +91,8 @@ $taskSummary=[ordered]@{
     InputLog=$taskLog;Reference=[ordered]@{Latitude=$ReferenceLatitude;Longitude=$ReferenceLongitude;EllipsoidalHeight=$ReferenceHeight}
     Method='WGS84 ECEF difference rotated to ENU at reference. Population SD; nearest-rank P95. Positions parsed from rounded text output.'
     AllFixes=(Statistics $taskAll);Last60Seconds=(Statistics $taskLast60)
+    MeasurementSolutions=(Statistics @($taskAll | Where-Object {($_.GpsSatellites+$_.GalileoSatellites) -gt 0}))
+    PredictionOnlySolutions=(Statistics @($taskAll | Where-Object {($_.GpsSatellites+$_.GalileoSatellites) -eq 0}))
     TrackingLost=([regex]::Matches($taskWholeText,'tracking lost')).Count
     PllWarnings=([regex]::Matches($taskWholeText,'found a problem with PLL lock')).Count
     RecoveredLocks=([regex]::Matches($taskWholeText,'again locked')).Count

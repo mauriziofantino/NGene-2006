@@ -97,8 +97,15 @@
  * @brief Earth's universal gravitational parameter [m^3/s^2]
  */
 #define GM		(3.986004418000000e+14)
+#define GPS_GM (3.986005e14)
+#define GALILEO_GM GM
 
 #define F_CONST	(-4.442807309000000e-10)
+#define GPS_F_CONST (-4.442807633e-10)
+#define GALILEO_F_CONST F_CONST
+
+/* Upper bound on the RMS spatial uncertainty of a predicted KF position [m]. */
+#define KF_MAX_POSITION_SIGMA 100.0
 
 /**
  * @def OMEGAE_DOT

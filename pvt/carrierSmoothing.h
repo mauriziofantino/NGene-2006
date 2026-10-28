@@ -90,6 +90,6 @@ void PerformCarrierSmoothing(TNGeneConfiguration *cfg,TPvtData *pvtData,TPvtResu
  *
  * @param pvtRes points to the structure containing results of the PVT
  */
-void UpdateCumulatedBiases(TPvtResults *pvtRes);
+void UpdateCumulatedBiases(TPvtResults *pvtRes,const TPvtData *data);
 
 #endif /* CARRIER_SMOOTHING_H_INCLUDED */

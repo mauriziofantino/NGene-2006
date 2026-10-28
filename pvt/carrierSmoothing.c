@@ -120,11 +120,6 @@ void PerformCarrierSmoothing(TNGeneConfiguration *cfg,TPvtData *pvtData,TPvtResu
 		return;
 	}
 
-	if((pvtData->pvtAlgorithm==KALMAN_BASED_PVT) && ((pvtData->numOfGalileoOpChannels==0) || (pvtData->numOfGpsOpChannels==0)))
-	{
-		ClearCsmData(cfg,pvtData,pvtRes);
-	}
-
 	for(chIdx=0;chIdx<pvtData->numOfOperativeChannels;chIdx++)
 	{
 		pvtCh = &(pvtData->pvtChArray[chIdx]);
@@ -178,7 +173,7 @@ void PerformCarrierSmoothing(TNGeneConfiguration *cfg,TPvtData *pvtData,TPvtResu
 		csmData->csmCounter++;
 		/* update the CSM  */
 		/* set the posSigma for Kalman filter */
-		if((pvtData->csmTransient==FALSE_FLAG) && (csmData->csmCounter<CSM_TRANSIENT_LENGTH))
+		if(csmData->csmCounter<CSM_TRANSIENT_LENGTH)
 		{
 			pvtCh->posSigma2 = KF_POS_SIGMA2_HIGH_VALUE;
 		}
@@ -203,8 +198,9 @@ void PerformCarrierSmoothing(TNGeneConfiguration *cfg,TPvtData *pvtData,TPvtResu
 }
 
 
-void UpdateCumulatedBiases(TPvtResults *pvtRes)
+void UpdateCumulatedBiases(TPvtResults *pvtRes,const TPvtData *data)
 {
-	pvtRes->clockBiasGpsCumulated += pvtRes->clockBiasGps;
-	pvtRes->clockBiasGalileoCumulated += pvtRes->clockBiasGalileo;
+	/* Only clocks rebased from observations changed the measurement origin. */
+	if(data->numOfGpsOpChannels>0) pvtRes->clockBiasGpsCumulated += pvtRes->clockBiasGps;
+	if(data->numOfGalileoOpChannels>0) pvtRes->clockBiasGalileoCumulated += pvtRes->clockBiasGalileo;
 }

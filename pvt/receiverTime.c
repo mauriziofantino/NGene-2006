@@ -14,6 +14,7 @@
 #include "receiverTime.h"
 #include "timeConstants.h"
 #include "timeConversions.h"
+#include "gnssTimeMath.h"
 
 
 void ResetReferenceRxTime(TNGeneData *rx)
@@ -69,13 +70,9 @@ void SetReferenceRxTime(TNGeneData *rx,int defaultLeapSeconds)
 			rxGpsTime->referenceValid = TRUE_FLAG;
 			rxGpsTime->referenceUpdated = TRUE_FLAG;
 			rxGpsTime->referenceSample = referenceSample;
-			rxGpsTime->referenceWn = ch->gpsParser->navMsg->wn;
+			rxGpsTime->referenceWn = pvtCh->wn;
 			rxGpsTime->referenceTow = pvtCh->transmissionTime + (pvtCh->pseudorangeRaw/SPEED_OF_LIGHT) - (pvtRes->clockBiasGps/SPEED_OF_LIGHT);
-			if(rxGpsTime->referenceTow > SECONDS_IN_A_WEEK)
-			{
-				rxGpsTime->referenceWn++;
-				rxGpsTime->referenceTow -= SECONDS_IN_A_WEEK;
-			}
+			NormalizeGnssTime(&rxGpsTime->referenceWn,&rxGpsTime->referenceTow);
 		}
 	}
 	/* Galileo */
@@ -93,13 +90,9 @@ void SetReferenceRxTime(TNGeneData *rx,int defaultLeapSeconds)
 			rxGalTime->referenceValid = TRUE_FLAG;
 			rxGalTime->referenceUpdated = TRUE_FLAG;
 			rxGalTime->referenceSample = referenceSample;
-			rxGalTime->referenceWn = ch->galParser->navMsg->wn;
+			rxGalTime->referenceWn = pvtCh->wn;
 			rxGalTime->referenceTow = pvtCh->transmissionTime + (pvtCh->pseudorangeRaw/SPEED_OF_LIGHT) - (pvtRes->clockBiasGalileo/SPEED_OF_LIGHT);
-			if(rxGalTime->referenceTow > SECONDS_IN_A_WEEK)
-			{
-				rxGalTime->referenceWn++;
-				rxGalTime->referenceTow -= SECONDS_IN_A_WEEK;
-			}
+			NormalizeGnssTime(&rxGalTime->referenceWn,&rxGalTime->referenceTow);
 		}
 	}
 	/* UTC */
@@ -191,11 +184,7 @@ void PredictRxTime(TNGeneConfiguration *cfg,TNGeneData *rx)
 		deltaTime = (double)deltaSample/cfg->fs;
 		pvtData->rxUtcWn = rxTime->referenceWn;
 		pvtData->rxUtcTow = rxTime->referenceTow + deltaTime + (deltaTime*(pvtRes->clockDrift/SPEED_OF_LIGHT));
-		if(pvtData->rxUtcTow>SECONDS_IN_A_WEEK)
-		{
-			pvtData->rxUtcWn++;
-			pvtData->rxUtcTow -= SECONDS_IN_A_WEEK;
-		}
+		NormalizeGnssTime(&pvtData->rxUtcWn,&pvtData->rxUtcTow);
 		pvtData->rxUtcTimeValid = TRUE_FLAG;
 	}
 	rxTime = &(pvtRes->rxGpsTime);
@@ -205,11 +194,7 @@ void PredictRxTime(TNGeneConfiguration *cfg,TNGeneData *rx)
 		deltaTime = (double)deltaSample/cfg->fs;
 		pvtData->rxGpsWn = rxTime->referenceWn;
 		pvtData->rxGpsTow = rxTime->referenceTow + deltaTime + (deltaTime*(pvtRes->clockDrift/SPEED_OF_LIGHT));
-		if(pvtData->rxGpsTow>SECONDS_IN_A_WEEK)
-		{
-			pvtData->rxGpsWn++;
-			pvtData->rxGpsTow -= SECONDS_IN_A_WEEK;
-		}
+		NormalizeGnssTime(&pvtData->rxGpsWn,&pvtData->rxGpsTow);
 		pvtData->rxGpsTimeValid = TRUE_FLAG;
 	}
 	rxTime = &(pvtRes->rxGalTime);
@@ -219,11 +204,7 @@ void PredictRxTime(TNGeneConfiguration *cfg,TNGeneData *rx)
 		deltaTime = (double)deltaSample/cfg->fs;
 		pvtData->rxGalWn = rxTime->referenceWn;
 		pvtData->rxGalTow = rxTime->referenceTow + deltaTime + (deltaTime*(pvtRes->clockDrift/SPEED_OF_LIGHT));
-		if(pvtData->rxGalTow>SECONDS_IN_A_WEEK)
-		{
-			pvtData->rxGalWn++;
-			pvtData->rxGalTow -= SECONDS_IN_A_WEEK;
-		}
+		NormalizeGnssTime(&pvtData->rxGalWn,&pvtData->rxGalTow);
 		pvtData->rxGalTimeValid = TRUE_FLAG;
 	}
 }

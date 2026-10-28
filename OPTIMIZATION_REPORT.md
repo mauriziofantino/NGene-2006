@@ -1,5 +1,12 @@
 # NGene Classic — ottimizzazioni, profiling e distribuzione del carico
 
+**Aggiornamento 28 ottobre:** implementate e verificate le correzioni dell'audit
+pseudorange/PVT, inclusa la regressione DOP e la gestione misure Kalman.
+Dettagli, limiti e risultati nella
+[sezione finale dell'audit](PSEUDORANGE_PVT_AUDIT.md#5-correzioni-implementate-e-verifiche-finali):
+10/10 CTest e 43/43 confronti sintetici. Restano le perdite RF, distinte dagli
+scarti PVT e dalle epoche KF di sola previsione.
+
 **Periodo:** 26-27 ottobre 2026. Build Windows operativa senza profiling
 aggiuntivo, 9/9 test superati. Nessun pool DSP concorrente attivato.
 Le sezioni 1-9 descrivono il primo intervento (23 fix SiGe e 29 HackRF su
@@ -583,3 +590,38 @@ puo' allungare il recupero del fix, ma non comanda direttamente il lock RF.
 Risultati completi in `development/profiling/diagnosi-20261027/pvt-qr-mixed/`
 e `pvt-qr-gps/`; riferimenti e hash delle esecuzioni nei rispettivi `run.json`.
 I tempi sono replay Windows concorrenti, non un benchmark di carico Linux.
+
+## 15. Correzioni definitive dopo l'audit esteso, 28 ottobre
+
+L'implementazione successiva corregge WN/TOW, GGTO, costanti GPS/Galileo,
+health GPS, derivata orbitale al perigeo, clock rate e rotazione delle
+osservabili. Aggiorna i minimi dopo le esclusioni e separa il DOP geometrico
+dalla validita' di Kalman con poche misure. LS mantiene QR, controlla la
+convergenza e usa la quota nel modello tropo condiviso; KF risolve l'innovazione
+con Cholesky, conserva Joseph e controlla covarianza/varianze/incertezza.
+
+Lo smoothing non viene piu' cancellato ad ogni epoca KF singola costellazione
+o su un comune reset PVT soft. Le previsioni sono limitate a 100 m di sigma
+spaziale formale, con DOP esplicitamente indisponibile e qualita' NMEA zero in
+assenza di osservazioni. Dieci buffer inutilizzati dell'inversa sono eliminati.
+Il main non contiene strumentazione sperimentale aggiuntiva.
+
+Verifiche sul binario finale: **10/10 test della build e 43/43 confronti
+sintetici**, replay misto LS/KF, GPS-only LS/KF e SiGe. Profiling OFF.
+Misto: 40 soluzioni con misure in entrambi i metodi, piu' 12 previsioni KF.
+GPS-only: 63 LS contro 64 con misure + 12 previsioni KF. Prima delle correzioni,
+la configurazione KF GPS produceva 43 output, tutti LS, perche' ricadeva su LS.
+SiGe conserva 23 soluzioni e zero perdite. I conteggi non sono un confronto di
+sensibilita' RF o una misura di speedup CPU.
+
+Nel confronto sulle 43 epoche GPS comuni vecchio/nuovo, stesso numero di GPS,
+RMS orizzontale 4.291 -> 2.654 m e verticale 7.793 -> 7.460 m. Il confronto
+comprende tutti i cambiamenti, non dimostra un vantaggio universale di KF.
+Le 14 perdite RF miste e le 8 GPS-only rimangono. Nessun hard restart PVT nei
+replay finali; USB/live non risolto da queste prove.
+
+Il dettaglio e' nella [sezione 5 dell'audit](PSEUDORANGE_PVT_AUDIT.md#5-correzioni-implementate-e-verifiche-finali).
+Risultati e hash in `development/profiling/pvt-fixes-20261028/results.json`.
+Binario finale SHA-256:
+`6685EEED311091EE9A1EFABF34ECF6DDC3AB532B2BC4BD63BDFEBE684F9E69AB`.
+Backup precedente locale: `build/pvt-before-fixes/`.

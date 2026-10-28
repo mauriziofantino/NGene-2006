@@ -49,6 +49,7 @@ typedef struct PvtChannelStruct
 	int wn; 					/**< Week Number */
 	double transmissionTime; 	/**< Transmission time [s] */
 	double satClkCorr;       	/**< Correction of the satellite clock [s] */
+	double satClkDrift;         /**< Satellite clock derivative [s/s] */
 	double deltaPseudorange;	/**< Doppler frequency [Hz] */
 	double pseudorangeRaw; 	 	/**< Raw pseudorange [m] */
 	double pseudorange; 		/**< Pseudorange after clock correction [m] */
@@ -153,15 +154,6 @@ typedef struct KalmanFilterDataStruct
 	double stateAPosteriori[KF_MULTI_STATES*1];
 	/* Variables used for matrix inversion */
 	double *matrixL;
-	double *matrixD;
-	double *matrixU;
-	double *matrixUt; /**< matrixU_Transpose */
-	double *matrixIL;
-	double *matrixID;
-	double *matrixIU;
-	double *matrixIUt; /**< matrixIU_Transpose */
-	double *matrixIUD;
-	double *matrixDet;
 	/* Variables used in Kalman Filter prediction and Kalman Filter routine */
 	double xPred[KF_MULTI_STATES*1]; /**< xPredictedState */
 	double pPriori[KF_MULTI_STATES*KF_MULTI_STATES];
@@ -175,7 +167,6 @@ typedef struct KalmanFilterDataStruct
 	double *hPpriori; /**< hObservationMatrix_By_PAPrioriCovariance */
 	double *hPprioriHt; /**< hObservationMatrix_By_PAPrioriCovariance_By_HObservationMatrix_Transpose */
 	double *hPprioriHtR; /**< hObservationMatrix_By_PAPrioriCovariance_By_HObservationMatrix_Transpose_Plus_RObservationNoiseCovariance */
-	double *invHPprioriHtR; /**< inverseOf_HObservationMatrix_By_PAPrioriCovariance_By_HObservationMatrix_Transpose_Plus_RObservationNoiseCovariance */
 	double xCurr[KF_MULTI_STATES*1]; /**< xCurrentEstimState */
 	double *hXpred; /**< hObservationMatrix_By_XPredictedState */
 	double *zcurrHXpred; /**< zCurrentMeasurement_Minus_HObservationMatrix_By_XPredictedState */
@@ -317,6 +308,7 @@ typedef struct PvtResultsStruct
 	double clockBiasGalileoCumulated;	/**< clockBiasGalileoBias accumulated over consecutive executions [m] */
 	double clockDrift;			/**< Drift of the receiver clock [m/s] */
 	double dop[5]; 				/**< GDOP, PDOP, HDOP, VDOP, TDOP */
+	int dopValid;               /**< Geometric DOP available at this epoch */
 	TReceiverTime rxGpsTime;	/**< Estimated GPS time of the receiver */
 	TReceiverTime rxGalTime;	/**< Estimated Galileo time of the receiver */
 	int utcFromGps;				/**< If TRUE_FLAG, UTC is found from the GPS time */

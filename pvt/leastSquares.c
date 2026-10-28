@@ -12,6 +12,7 @@
 
 #include <stdlib.h>
 #include <math.h>
+#include <string.h>
 #include "ngeneDataStructure.h"
 #include "ngeneConfiguration.h"
 #include "pvtDataStructure.h"
@@ -143,12 +144,12 @@ int PerformLeastSquares(TNGeneConfiguration *cfg,TNGeneData *rx)
 	int iter;
 	int chIdx;
 	int nCh = pvtData->numOfOperativeChannels;
-	double rho2 = 0;
-	double travelTime = 0;
 	double topoXRotate[3*1];
 	double geomRange;
 	double aCorrectRow[1*3];
 	double prod;
+	double geod[3],angle,vs[3];
+	int converged=FALSE_FLAG,k;
 
 	/* Initializations */
 	ClearLeastSquaresData(cfg,lsData);
@@ -191,25 +192,19 @@ int PerformLeastSquares(TNGeneConfiguration *cfg,TNGeneData *rx)
 				lsData->xRotate[(0*nCh) + chIdx] = lsData->x[(0*nCh) + chIdx];
 				lsData->xRotate[(1*nCh) + chIdx] = lsData->x[(1*nCh) + chIdx];
 				lsData->xRotate[(2*nCh) + chIdx] = lsData->x[(2*nCh) + chIdx];
-				pvtCh->tropoCorrection = 0.0; /* PROSA: 2.0 */
 			}
 			else
 			{
-				rho2 = pow((lsData->x[(0*nCh)+chIdx] - lsData->pos[0]), 2.0) +
-					   pow((lsData->x[(1*nCh)+chIdx] - lsData->pos[1]), 2.0) +
-					   pow((lsData->x[(2*nCh)+chIdx] - lsData->pos[2]), 2.0);
-				travelTime = sqrt(rho2)/ SPEED_OF_LIGHT;
-				EarthCorrection(travelTime,lsData->x,lsData->xRotate,nCh,chIdx);
-				topoXRotate[0] = lsData->xRotate[(0*nCh)+chIdx];
-				topoXRotate[1] = lsData->xRotate[(1*nCh)+chIdx];
-				topoXRotate[2] = lsData->xRotate[(2*nCh)+chIdx];
+				RotateSatellitePosition(satStatus->ecefSatPos,lsData->pos,topoXRotate);
+				for(k=0;k<3;k++) lsData->xRotate[k*nCh+chIdx]=topoXRotate[k];
 				satStatus->ecefSatPosRot[0] = topoXRotate[0];
 				satStatus->ecefSatPosRot[1] = topoXRotate[1];
 				satStatus->ecefSatPosRot[2] = topoXRotate[2];
 				Topocent(lsData->pos,topoXRotate,lsData->el);
 				satStatus->elevation = lsData->el[0] * DEGREE_TO_RADIAN;
 				satStatus->azimuth = lsData->el[1] * DEGREE_TO_RADIAN;
-				pvtCh->tropoCorrection = Tropo(sin(satStatus->elevation), 0.0, 1013.0, 293.0, 50.0, 0.0, 0.0, 0.0);
+				Ecef2Geod(lsData->pos,geod);
+				pvtCh->tropoCorrection = -TropoHopfieldModel(satStatus->elevation,geod[2]);
 			}
 			/* Calculate geometric range */
 			geomRange = sqrt((lsData->xRotate[(0*nCh)+chIdx]-lsData->pos[0]) * (lsData->xRotate[(0*nCh)+chIdx]-lsData->pos[0]) +
@@ -236,7 +231,13 @@ int PerformLeastSquares(TNGeneConfiguration *cfg,TNGeneData *rx)
 		if(!SmallLeastSquares(lsData->a,lsData->b,nCh,curSize,lsData->sol,NULL))
 			return FAILURE_RETURN;
 		MatrixSum(lsData->pos,curSize,1,lsData->sol,curSize,1,lsData->pos);
+		if(iter>0) {
+			converged=TRUE_FLAG;
+			for(k=0;k<curSize;k++) if(!isfinite(lsData->pos[k]) || fabs(lsData->sol[k])>1e-4) converged=FALSE_FLAG;
+			if(converged) break;
+		}
 	}
+	if(!converged) return FAILURE_RETURN;
 	/* Compute the velocity and the clock drift */
 	for(chIdx=0;chIdx<nCh;chIdx++)
 	{
@@ -247,15 +248,18 @@ int PerformLeastSquares(TNGeneConfiguration *cfg,TNGeneData *rx)
 		lsData->distVect[2] = lsData->xRotate[(2*nCh)+chIdx] - lsData->pos[2];
 		MatrixProduct(lsData->distVect,1,3,lsData->distVect,3,1,&(lsData->distance));
 		lsData->distance = sqrt(lsData->distance);
+		if(!isfinite(lsData->distance) || lsData->distance<=0) return FAILURE_RETURN;
 		aCorrectRow[0] = lsData->ac[(4*chIdx)+0] = lsData->distVect[0]/lsData->distance;
 		aCorrectRow[1] = lsData->ac[(4*chIdx)+1] = lsData->distVect[1]/lsData->distance;
 		aCorrectRow[2] = lsData->ac[(4*chIdx)+2] = lsData->distVect[2]/lsData->distance;
 		lsData->ac[(4*chIdx)+3] = 1.0;
-		lsData->satVel[0] = satStatus->ecefSatVel[0];
-		lsData->satVel[1] = satStatus->ecefSatVel[1];
-		lsData->satVel[2] = satStatus->ecefSatVel[2];
+		angle=OMEGAE_DOT*lsData->distance/SPEED_OF_LIGHT;
+		memcpy(vs,satStatus->ecefSatVel,sizeof(vs));
+		lsData->satVel[0] = cos(angle)*vs[0]+sin(angle)*vs[1];
+		lsData->satVel[1] = -sin(angle)*vs[0]+cos(angle)*vs[1];
+		lsData->satVel[2] = vs[2];
 		MatrixProduct(aCorrectRow,1,3,lsData->satVel,3,1,&prod);
-		lsData->satRadialVelAndDoppler[chIdx] = SPEED_OF_LIGHT / L1_FREQUENCY * pvtCh->deltaPseudorange + prod;
+		lsData->satRadialVelAndDoppler[chIdx] = SPEED_OF_LIGHT / L1_FREQUENCY * pvtCh->deltaPseudorange + prod-SPEED_OF_LIGHT*pvtCh->satClkDrift;
 	}
 	if(!SmallLeastSquares(lsData->ac,lsData->satRadialVelAndDoppler,nCh,4,lsData->userVel,NULL))
 		return FAILURE_RETURN;

@@ -22,6 +22,7 @@
 #include "closeManager.h"
 #include "gpsMessageParser.h"
 #include "timeConversions.h"
+#include "gnssTimeMath.h"
 #include "rinexLog.h"
 #include "mackList.h"
 #include "osnmaUtilities.h"
@@ -187,7 +188,7 @@ int ParseGpsSubframe1(TGpsParser *parser)
 	navMsg->wn += parser->wnCorrection;
 	navMsg->wnValid=TRUE_FLAG;
 	health = ExtractField(parser->subframe,GPS_SUBF1_HEALTH_FIRST_BYTE_IDX,GPS_SUBF1_HEALTH_LAST_BYTE_IDX,GPS_SUBF1_HEALTH_BITS_OF_FIRST_BYTE,GPS_SUBF1_HEALTH_BITS_OF_LAST_BYTE);
-	if((health & 0x020)==0)
+	if(GpsL1CaHealthy((unsigned)health))
 	{
 		eph->health = SIGNAL_OK;
 	}
@@ -469,49 +470,49 @@ int ParseGpsSubframe4(TNGeneData *rx,TGpsParser *parser)
 	{
 		alm=&(rx->gpsNavigationMessage[25-BASE_PRN].almanac);
 		health = ExtractField(parser->subframe,GPS_SUBF4_HEALTH25_FIRST_BYTE_IDX,GPS_SUBF4_HEALTH25_LAST_BYTE_IDX,GPS_SUBF4_HEALTH25_BITS_OF_FIRST_BYTE,GPS_SUBF4_HEALTH25_BITS_OF_LAST_BYTE);
-		if((health & 0x020)==0)
+		if(GpsL1CaHealthy((unsigned)health))
 			alm->health = SIGNAL_OK;
 		else
 			alm->health = SIGNAL_OUT_OF_SERVICE;
 		alm=&(rx->gpsNavigationMessage[26-BASE_PRN].almanac);
 		health = ExtractField(parser->subframe,GPS_SUBF4_HEALTH26_FIRST_BYTE_IDX,GPS_SUBF4_HEALTH26_LAST_BYTE_IDX,GPS_SUBF4_HEALTH26_BITS_OF_FIRST_BYTE,GPS_SUBF4_HEALTH26_BITS_OF_LAST_BYTE);
-		if((health & 0x020)==0)
+		if(GpsL1CaHealthy((unsigned)health))
 			alm->health = SIGNAL_OK;
 		else
 			alm->health = SIGNAL_OUT_OF_SERVICE;
 		alm=&(rx->gpsNavigationMessage[27-BASE_PRN].almanac);
 		health = ExtractField(parser->subframe,GPS_SUBF4_HEALTH27_FIRST_BYTE_IDX,GPS_SUBF4_HEALTH27_LAST_BYTE_IDX,GPS_SUBF4_HEALTH27_BITS_OF_FIRST_BYTE,GPS_SUBF4_HEALTH27_BITS_OF_LAST_BYTE);
-		if((health & 0x020)==0)
+		if(GpsL1CaHealthy((unsigned)health))
 			alm->health = SIGNAL_OK;
 		else
 			alm->health = SIGNAL_OUT_OF_SERVICE;
 		alm=&(rx->gpsNavigationMessage[28-BASE_PRN].almanac);
 		health = ExtractField(parser->subframe,GPS_SUBF4_HEALTH28_FIRST_BYTE_IDX,GPS_SUBF4_HEALTH28_LAST_BYTE_IDX,GPS_SUBF4_HEALTH28_BITS_OF_FIRST_BYTE,GPS_SUBF4_HEALTH28_BITS_OF_LAST_BYTE);
-		if((health & 0x020)==0)
+		if(GpsL1CaHealthy((unsigned)health))
 			alm->health = SIGNAL_OK;
 		else
 			alm->health = SIGNAL_OUT_OF_SERVICE;
 		alm=&(rx->gpsNavigationMessage[29-BASE_PRN].almanac);
 		health = ExtractField(parser->subframe,GPS_SUBF4_HEALTH29_FIRST_BYTE_IDX,GPS_SUBF4_HEALTH29_LAST_BYTE_IDX,GPS_SUBF4_HEALTH29_BITS_OF_FIRST_BYTE,GPS_SUBF4_HEALTH29_BITS_OF_LAST_BYTE);
-		if((health & 0x020)==0)
+		if(GpsL1CaHealthy((unsigned)health))
 			alm->health = SIGNAL_OK;
 		else
 			alm->health = SIGNAL_OUT_OF_SERVICE;
 		alm=&(rx->gpsNavigationMessage[30-BASE_PRN].almanac);
 		health = ExtractField(parser->subframe,GPS_SUBF4_HEALTH30_FIRST_BYTE_IDX,GPS_SUBF4_HEALTH30_LAST_BYTE_IDX,GPS_SUBF4_HEALTH30_BITS_OF_FIRST_BYTE,GPS_SUBF4_HEALTH30_BITS_OF_LAST_BYTE);
-		if((health & 0x020)==0)
+		if(GpsL1CaHealthy((unsigned)health))
 			alm->health = SIGNAL_OK;
 		else
 			alm->health = SIGNAL_OUT_OF_SERVICE;
 		alm=&(rx->gpsNavigationMessage[31-BASE_PRN].almanac);
 		health = ExtractField(parser->subframe,GPS_SUBF4_HEALTH31_FIRST_BYTE_IDX,GPS_SUBF4_HEALTH31_LAST_BYTE_IDX,GPS_SUBF4_HEALTH31_BITS_OF_FIRST_BYTE,GPS_SUBF4_HEALTH31_BITS_OF_LAST_BYTE);
-		if((health & 0x020)==0)
+		if(GpsL1CaHealthy((unsigned)health))
 			alm->health = SIGNAL_OK;
 		else
 			alm->health = SIGNAL_OUT_OF_SERVICE;
 		alm=&(rx->gpsNavigationMessage[32-BASE_PRN].almanac);
 		health = ExtractField(parser->subframe,GPS_SUBF4_HEALTH32_FIRST_BYTE_IDX,GPS_SUBF4_HEALTH32_LAST_BYTE_IDX,GPS_SUBF4_HEALTH32_BITS_OF_FIRST_BYTE,GPS_SUBF4_HEALTH32_BITS_OF_LAST_BYTE);
-		if((health & 0x020)==0)
+		if(GpsL1CaHealthy((unsigned)health))
 			alm->health = SIGNAL_OK;
 		else
 			alm->health = SIGNAL_OUT_OF_SERVICE;
@@ -610,145 +611,145 @@ int ParseGpsSubframe5(TNGeneData *rx,TGpsParser *parser)
 		//alm->wna = ExtractField(parser->subframe,GPS_SUBF5_WN_FIRST_BYTE_IDX,GPS_SUBF5_WN_LAST_BYTE_IDX,GPS_SUBF5_WN_BITS_OF_FIRST_BYTE,GPS_SUBF5_WN_BITS_OF_LAST_BYTE);
 		alm=&(rx->gpsNavigationMessage[1-BASE_PRN].almanac);
 		health = ExtractField(parser->subframe,GPS_SUBF5_HEALTH01_FIRST_BYTE_IDX,GPS_SUBF5_HEALTH01_LAST_BYTE_IDX,GPS_SUBF5_HEALTH01_BITS_OF_FIRST_BYTE,GPS_SUBF5_HEALTH01_BITS_OF_LAST_BYTE);
-		if((health & 0x020)==0)
+		if(GpsL1CaHealthy((unsigned)health))
 			alm->health = SIGNAL_OK;
 		else
 			alm->health = SIGNAL_OUT_OF_SERVICE;
 		alm=&(rx->gpsNavigationMessage[2-BASE_PRN].almanac);
 		health = ExtractField(parser->subframe,GPS_SUBF5_HEALTH02_FIRST_BYTE_IDX,GPS_SUBF5_HEALTH02_LAST_BYTE_IDX,GPS_SUBF5_HEALTH02_BITS_OF_FIRST_BYTE,GPS_SUBF5_HEALTH02_BITS_OF_LAST_BYTE);
-		if((health & 0x020)==0)
+		if(GpsL1CaHealthy((unsigned)health))
 			alm->health = SIGNAL_OK;
 		else
 			alm->health = SIGNAL_OUT_OF_SERVICE;
 		alm=&(rx->gpsNavigationMessage[3-BASE_PRN].almanac);
 		health = ExtractField(parser->subframe,GPS_SUBF5_HEALTH03_FIRST_BYTE_IDX,GPS_SUBF5_HEALTH03_LAST_BYTE_IDX,GPS_SUBF5_HEALTH03_BITS_OF_FIRST_BYTE,GPS_SUBF5_HEALTH03_BITS_OF_LAST_BYTE);
-		if((health & 0x020)==0)
+		if(GpsL1CaHealthy((unsigned)health))
 			alm->health = SIGNAL_OK;
 		else
 			alm->health = SIGNAL_OUT_OF_SERVICE;
 		alm=&(rx->gpsNavigationMessage[4-BASE_PRN].almanac);
 		health = ExtractField(parser->subframe,GPS_SUBF5_HEALTH04_FIRST_BYTE_IDX,GPS_SUBF5_HEALTH04_LAST_BYTE_IDX,GPS_SUBF5_HEALTH04_BITS_OF_FIRST_BYTE,GPS_SUBF5_HEALTH04_BITS_OF_LAST_BYTE);
-		if((health & 0x020)==0)
+		if(GpsL1CaHealthy((unsigned)health))
 			alm->health = SIGNAL_OK;
 		else
 			alm->health = SIGNAL_OUT_OF_SERVICE;
 		alm=&(rx->gpsNavigationMessage[5-BASE_PRN].almanac);
 		health = ExtractField(parser->subframe,GPS_SUBF5_HEALTH05_FIRST_BYTE_IDX,GPS_SUBF5_HEALTH05_LAST_BYTE_IDX,GPS_SUBF5_HEALTH05_BITS_OF_FIRST_BYTE,GPS_SUBF5_HEALTH05_BITS_OF_LAST_BYTE);
-		if((health & 0x020)==0)
+		if(GpsL1CaHealthy((unsigned)health))
 			alm->health = SIGNAL_OK;
 		else
 			alm->health = SIGNAL_OUT_OF_SERVICE;
 		alm=&(rx->gpsNavigationMessage[6-BASE_PRN].almanac);
 		health = ExtractField(parser->subframe,GPS_SUBF5_HEALTH06_FIRST_BYTE_IDX,GPS_SUBF5_HEALTH06_LAST_BYTE_IDX,GPS_SUBF5_HEALTH06_BITS_OF_FIRST_BYTE,GPS_SUBF5_HEALTH06_BITS_OF_LAST_BYTE);
-		if((health & 0x020)==0)
+		if(GpsL1CaHealthy((unsigned)health))
 			alm->health = SIGNAL_OK;
 		else
 			alm->health = SIGNAL_OUT_OF_SERVICE;
 		alm=&(rx->gpsNavigationMessage[7-BASE_PRN].almanac);
 		health = ExtractField(parser->subframe,GPS_SUBF5_HEALTH07_FIRST_BYTE_IDX,GPS_SUBF5_HEALTH07_LAST_BYTE_IDX,GPS_SUBF5_HEALTH07_BITS_OF_FIRST_BYTE,GPS_SUBF5_HEALTH07_BITS_OF_LAST_BYTE);
-		if((health & 0x020)==0)
+		if(GpsL1CaHealthy((unsigned)health))
 			alm->health = SIGNAL_OK;
 		else
 			alm->health = SIGNAL_OUT_OF_SERVICE;
 		alm=&(rx->gpsNavigationMessage[8-BASE_PRN].almanac);
 		health = ExtractField(parser->subframe,GPS_SUBF5_HEALTH08_FIRST_BYTE_IDX,GPS_SUBF5_HEALTH08_LAST_BYTE_IDX,GPS_SUBF5_HEALTH08_BITS_OF_FIRST_BYTE,GPS_SUBF5_HEALTH08_BITS_OF_LAST_BYTE);
-		if((health & 0x020)==0)
+		if(GpsL1CaHealthy((unsigned)health))
 			alm->health = SIGNAL_OK;
 		else
 			alm->health = SIGNAL_OUT_OF_SERVICE;
 		alm=&(rx->gpsNavigationMessage[9-BASE_PRN].almanac);
 		health = ExtractField(parser->subframe,GPS_SUBF5_HEALTH09_FIRST_BYTE_IDX,GPS_SUBF5_HEALTH09_LAST_BYTE_IDX,GPS_SUBF5_HEALTH09_BITS_OF_FIRST_BYTE,GPS_SUBF5_HEALTH09_BITS_OF_LAST_BYTE);
-		if((health & 0x020)==0)
+		if(GpsL1CaHealthy((unsigned)health))
 			alm->health = SIGNAL_OK;
 		else
 			alm->health = SIGNAL_OUT_OF_SERVICE;
 		alm=&(rx->gpsNavigationMessage[10-BASE_PRN].almanac);
 		health = ExtractField(parser->subframe,GPS_SUBF5_HEALTH10_FIRST_BYTE_IDX,GPS_SUBF5_HEALTH10_LAST_BYTE_IDX,GPS_SUBF5_HEALTH10_BITS_OF_FIRST_BYTE,GPS_SUBF5_HEALTH10_BITS_OF_LAST_BYTE);
-		if((health & 0x020)==0)
+		if(GpsL1CaHealthy((unsigned)health))
 			alm->health = SIGNAL_OK;
 		else
 			alm->health = SIGNAL_OUT_OF_SERVICE;
 		alm=&(rx->gpsNavigationMessage[11-BASE_PRN].almanac);
 		health = ExtractField(parser->subframe,GPS_SUBF5_HEALTH11_FIRST_BYTE_IDX,GPS_SUBF5_HEALTH11_LAST_BYTE_IDX,GPS_SUBF5_HEALTH11_BITS_OF_FIRST_BYTE,GPS_SUBF5_HEALTH11_BITS_OF_LAST_BYTE);
-		if((health & 0x020)==0)
+		if(GpsL1CaHealthy((unsigned)health))
 			alm->health = SIGNAL_OK;
 		else
 			alm->health = SIGNAL_OUT_OF_SERVICE;
 		alm=&(rx->gpsNavigationMessage[12-BASE_PRN].almanac);
 		health = ExtractField(parser->subframe,GPS_SUBF5_HEALTH12_FIRST_BYTE_IDX,GPS_SUBF5_HEALTH12_LAST_BYTE_IDX,GPS_SUBF5_HEALTH12_BITS_OF_FIRST_BYTE,GPS_SUBF5_HEALTH12_BITS_OF_LAST_BYTE);
-		if((health & 0x020)==0)
+		if(GpsL1CaHealthy((unsigned)health))
 			alm->health = SIGNAL_OK;
 		else
 			alm->health = SIGNAL_OUT_OF_SERVICE;
 		alm=&(rx->gpsNavigationMessage[13-BASE_PRN].almanac);
 		health = ExtractField(parser->subframe,GPS_SUBF5_HEALTH13_FIRST_BYTE_IDX,GPS_SUBF5_HEALTH13_LAST_BYTE_IDX,GPS_SUBF5_HEALTH13_BITS_OF_FIRST_BYTE,GPS_SUBF5_HEALTH13_BITS_OF_LAST_BYTE);
-		if((health & 0x020)==0)
+		if(GpsL1CaHealthy((unsigned)health))
 			alm->health = SIGNAL_OK;
 		else
 			alm->health = SIGNAL_OUT_OF_SERVICE;
 		alm=&(rx->gpsNavigationMessage[14-BASE_PRN].almanac);
 		health = ExtractField(parser->subframe,GPS_SUBF5_HEALTH14_FIRST_BYTE_IDX,GPS_SUBF5_HEALTH14_LAST_BYTE_IDX,GPS_SUBF5_HEALTH14_BITS_OF_FIRST_BYTE,GPS_SUBF5_HEALTH14_BITS_OF_LAST_BYTE);
-		if((health & 0x020)==0)
+		if(GpsL1CaHealthy((unsigned)health))
 			alm->health = SIGNAL_OK;
 		else
 			alm->health = SIGNAL_OUT_OF_SERVICE;
 		alm=&(rx->gpsNavigationMessage[15-BASE_PRN].almanac);
 		health = ExtractField(parser->subframe,GPS_SUBF5_HEALTH15_FIRST_BYTE_IDX,GPS_SUBF5_HEALTH15_LAST_BYTE_IDX,GPS_SUBF5_HEALTH15_BITS_OF_FIRST_BYTE,GPS_SUBF5_HEALTH15_BITS_OF_LAST_BYTE);
-		if((health & 0x020)==0)
+		if(GpsL1CaHealthy((unsigned)health))
 			alm->health = SIGNAL_OK;
 		else
 			alm->health = SIGNAL_OUT_OF_SERVICE;
 		alm=&(rx->gpsNavigationMessage[16-BASE_PRN].almanac);
 		health = ExtractField(parser->subframe,GPS_SUBF5_HEALTH16_FIRST_BYTE_IDX,GPS_SUBF5_HEALTH16_LAST_BYTE_IDX,GPS_SUBF5_HEALTH16_BITS_OF_FIRST_BYTE,GPS_SUBF5_HEALTH16_BITS_OF_LAST_BYTE);
-		if((health & 0x020)==0)
+		if(GpsL1CaHealthy((unsigned)health))
 			alm->health = SIGNAL_OK;
 		else
 			alm->health = SIGNAL_OUT_OF_SERVICE;
 		alm=&(rx->gpsNavigationMessage[17-BASE_PRN].almanac);
 		health = ExtractField(parser->subframe,GPS_SUBF5_HEALTH17_FIRST_BYTE_IDX,GPS_SUBF5_HEALTH17_LAST_BYTE_IDX,GPS_SUBF5_HEALTH17_BITS_OF_FIRST_BYTE,GPS_SUBF5_HEALTH17_BITS_OF_LAST_BYTE);
-		if((health & 0x020)==0)
+		if(GpsL1CaHealthy((unsigned)health))
 			alm->health = SIGNAL_OK;
 		else
 			alm->health = SIGNAL_OUT_OF_SERVICE;
 		alm=&(rx->gpsNavigationMessage[18-BASE_PRN].almanac);
 		health = ExtractField(parser->subframe,GPS_SUBF5_HEALTH18_FIRST_BYTE_IDX,GPS_SUBF5_HEALTH18_LAST_BYTE_IDX,GPS_SUBF5_HEALTH18_BITS_OF_FIRST_BYTE,GPS_SUBF5_HEALTH18_BITS_OF_LAST_BYTE);
-		if((health & 0x020)==0)
+		if(GpsL1CaHealthy((unsigned)health))
 			alm->health = SIGNAL_OK;
 		else
 			alm->health = SIGNAL_OUT_OF_SERVICE;
 		alm=&(rx->gpsNavigationMessage[19-BASE_PRN].almanac);
 		health = ExtractField(parser->subframe,GPS_SUBF5_HEALTH19_FIRST_BYTE_IDX,GPS_SUBF5_HEALTH19_LAST_BYTE_IDX,GPS_SUBF5_HEALTH19_BITS_OF_FIRST_BYTE,GPS_SUBF5_HEALTH19_BITS_OF_LAST_BYTE);
-		if((health & 0x020)==0)
+		if(GpsL1CaHealthy((unsigned)health))
 			alm->health = SIGNAL_OK;
 		else
 			alm->health = SIGNAL_OUT_OF_SERVICE;
 		alm=&(rx->gpsNavigationMessage[20-BASE_PRN].almanac);
 		health = ExtractField(parser->subframe,GPS_SUBF5_HEALTH20_FIRST_BYTE_IDX,GPS_SUBF5_HEALTH20_LAST_BYTE_IDX,GPS_SUBF5_HEALTH20_BITS_OF_FIRST_BYTE,GPS_SUBF5_HEALTH20_BITS_OF_LAST_BYTE);
-		if((health & 0x020)==0)
+		if(GpsL1CaHealthy((unsigned)health))
 			alm->health = SIGNAL_OK;
 		else
 			alm->health = SIGNAL_OUT_OF_SERVICE;
 		alm=&(rx->gpsNavigationMessage[21-BASE_PRN].almanac);
 		health = ExtractField(parser->subframe,GPS_SUBF5_HEALTH21_FIRST_BYTE_IDX,GPS_SUBF5_HEALTH21_LAST_BYTE_IDX,GPS_SUBF5_HEALTH21_BITS_OF_FIRST_BYTE,GPS_SUBF5_HEALTH21_BITS_OF_LAST_BYTE);
-		if((health & 0x020)==0)
+		if(GpsL1CaHealthy((unsigned)health))
 			alm->health = SIGNAL_OK;
 		else
 			alm->health = SIGNAL_OUT_OF_SERVICE;
 		alm=&(rx->gpsNavigationMessage[22-BASE_PRN].almanac);
 		health = ExtractField(parser->subframe,GPS_SUBF5_HEALTH22_FIRST_BYTE_IDX,GPS_SUBF5_HEALTH22_LAST_BYTE_IDX,GPS_SUBF5_HEALTH22_BITS_OF_FIRST_BYTE,GPS_SUBF5_HEALTH22_BITS_OF_LAST_BYTE);
-		if((health & 0x020)==0)
+		if(GpsL1CaHealthy((unsigned)health))
 			alm->health = SIGNAL_OK;
 		else
 			alm->health = SIGNAL_OUT_OF_SERVICE;
 		alm=&(rx->gpsNavigationMessage[23-BASE_PRN].almanac);
 		health = ExtractField(parser->subframe,GPS_SUBF5_HEALTH23_FIRST_BYTE_IDX,GPS_SUBF5_HEALTH23_LAST_BYTE_IDX,GPS_SUBF5_HEALTH23_BITS_OF_FIRST_BYTE,GPS_SUBF5_HEALTH23_BITS_OF_LAST_BYTE);
-		if((health & 0x020)==0)
+		if(GpsL1CaHealthy((unsigned)health))
 			alm->health = SIGNAL_OK;
 		else
 			alm->health = SIGNAL_OUT_OF_SERVICE;
 		alm=&(rx->gpsNavigationMessage[24-BASE_PRN].almanac);
 		health = ExtractField(parser->subframe,GPS_SUBF5_HEALTH24_FIRST_BYTE_IDX,GPS_SUBF5_HEALTH24_LAST_BYTE_IDX,GPS_SUBF5_HEALTH24_BITS_OF_FIRST_BYTE,GPS_SUBF5_HEALTH24_BITS_OF_LAST_BYTE);
-		if((health & 0x020)==0)
+		if(GpsL1CaHealthy((unsigned)health))
 			alm->health = SIGNAL_OK;
 		else
 			alm->health = SIGNAL_OUT_OF_SERVICE;
@@ -822,6 +823,9 @@ int ParseGpsSubframe(TNGeneData *rx,TGpsParser *parser)
 		return FAILURE_RETURN;
 	}
 	rx->gpsLastDecodedSubframe=subFrameIndex;
+	/* HOW denotes the next subframe. Subframe 1 supplies its own new WN. */
+	if(subFrameIndex!=1 && navMsg->wnValid && navMsg->tow<towOld-SECONDS_IN_A_WEEK/2)
+		navMsg->wn++;
 	rx->gpsLastDecodedPage=(((navMsg->tow-6)/(GPS_SUBFRAME_DURATION*5))%25)+1;
 
 	/* Save for Galileo OSNMA cross-authentication

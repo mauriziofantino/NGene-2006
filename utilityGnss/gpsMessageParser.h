@@ -35,6 +35,15 @@
  */
 #define GPS_MAXIMUM_ECCENTRICITY	0.03
 
+/* IS-GPS-200N table 20-VIII. Health of other bands does not by itself
+ * invalidate L1 C/A; reject bad LNAV, dead/unmodulated L1, or unknown mixtures. */
+static inline int GpsL1CaHealthy(unsigned health)
+{
+    unsigned signal=health&31;
+    return !(health&32) && signal!=2 && signal!=3 && signal!=23 &&
+        signal!=24 && signal!=28 && signal!=31;
+}
+
 /**
  * @def GPS_MAXIMUM_T0T
  * @brief This is the maximum value for GPS TOT (from Tsui table 5.11)

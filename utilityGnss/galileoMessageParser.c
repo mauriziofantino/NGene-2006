@@ -21,6 +21,7 @@
 #include "navigationMessageParser.h"
 #include "ngeneConstants.h"
 #include "timeConstants.h"
+#include "gnssTimeMath.h"
 #include "ioFunctions.h"
 #include "closeManager.h"
 #include "viterbi.h"
@@ -1058,7 +1059,7 @@ int ParseGalWord10(TNGeneData *rx,TGalParser *parser,int tow)
 		// if possible, adjust WN taking into account truncation (6 bits!)
 		if(navMsg->wnValid==TRUE_FLAG)
 		{
-			gal2Gps->wn0G = (navMsg->wn & 0xffffffc0) | (gal2Gps->wn0G & 0x0000003f);
+			gal2Gps->wn0G = UnrollGnssWeek(gal2Gps->wn0G,navMsg->wn,64);
 			navMsg->gal2GpsCompleted = TRUE_FLAG;
 		}
 	}

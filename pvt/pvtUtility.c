@@ -125,7 +125,7 @@ void ComputeSatPositionFromAlmanac(TSatConstellation satType,TNavigationMessage 
 	TGnssAlmanac *alm = &(navMesg->almanac);
 	double dt, time, satClkCorr;
 	double a, tk, n0, n, m, e, ii, eOld, dE, nu, phi, u, r, i, omega;
-	double tak, xpk, ypk, takdot, ekdot, ukdot, rkdot, ikdot, xpkdot, ypkdot, omegak, omegakdot;
+	double xpk, ypk, takdot, ekdot, ukdot, rkdot, ikdot, xpkdot, ypkdot, omegak, omegakdot;
 	double xkdot, ykdot, zkdot;
 	// fake variables
 	double deltaN = 0.0;
@@ -152,7 +152,7 @@ void ComputeSatPositionFromAlmanac(TSatConstellation satType,TNavigationMessage 
 	/* compute sat position */
 	a = alm->sqrtA * alm->sqrtA;
 	tk = CheckT(time, alm->toa);
-	n0 = sqrt(GM / (a * a * a));
+	n0 = sqrt((satType==GPS_SAT?GPS_GM:GALILEO_GM) / (a * a * a));
 	n = n0 + deltaN;
 	m = alm->meanAnomaly0 + n * tk;
 	m = fmod(m + TWICE_M_PI,TWICE_M_PI);
@@ -184,8 +184,7 @@ void ComputeSatPositionFromAlmanac(TSatConstellation satType,TNavigationMessage 
 
 	/* compute sat velocity */
 	ekdot = n/(1.0 - alm->eccentricity * cos(e));
-	tak = atan2( sqrt(1.0 - alm->eccentricity * alm->eccentricity) * sin(e), cos(e) - alm->eccentricity);
-	takdot = sin(e) * ekdot * (1.0 + alm->eccentricity *cos(tak)) / (sin(tak) * (1.0 - alm->eccentricity * cos(e)));
+	takdot = sqrt(1-alm->eccentricity*alm->eccentricity)*ekdot/(1-alm->eccentricity*cos(e));
 	ukdot = takdot + 2.0 *((capitalCus * cos(2.0 * u)) - (capitalCuc * sin(2.0 * u))) * takdot;
 	rkdot = ((a * alm->eccentricity * sin(e) * n) / (1.0 - alm->eccentricity * cos(e))) + (2.0 * (capitalCrs * cos(2.0 * u) - capitalCrc * sin(2.0 * u)) * takdot);
 	ikdot = iDot + ((capitalCis *	cos(2.0 * u)) - (capitalCic * sin(2.0 * u))) * 2.0 * takdot;
@@ -399,6 +398,19 @@ double Tropo(double sinel, double hsta, double p, double tkel, double hum, doubl
 	    ref     = refsea * e0sea * pow(((htop-hsta) / htop), 4);
 	}
 	return tropo;
+}
+
+double RotateSatellitePosition(const double satellite[3],const double receiver[3],double rotated[3])
+{
+    double range=hypot(hypot(satellite[0]-receiver[0],satellite[1]-receiver[1]),satellite[2]-receiver[2]);
+    int iteration;
+    for(iteration=0;iteration<2;iteration++) {
+        double angle=OMEGAE_DOT*range/SPEED_OF_LIGHT,c=cos(angle),s=sin(angle);
+        rotated[0]=c*satellite[0]+s*satellite[1];
+        rotated[1]=-s*satellite[0]+c*satellite[1];rotated[2]=satellite[2];
+        range=hypot(hypot(rotated[0]-receiver[0],rotated[1]-receiver[1]),rotated[2]-receiver[2]);
+    }
+    return range;
 }
 
 void EarthCorrection(double travelTime, double *x, double *rotX, int numOfSat, int channel)

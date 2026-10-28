@@ -12,6 +12,7 @@
 #include <time.h>
 #include "ngeneDataStructure.h"
 #include "timeConversions.h"
+#include "gnssTimeMath.h"
 #include "timeConstants.h"
 #include "spreadingCodes.h"
 #include "ngeneConstants.h"
@@ -279,9 +280,13 @@ int GetGstToGpsTimeOffset(TNGeneData *rx,int gstWn, double gstTow, double *gstTo
 		else
 		{
 			// The wn0G is truncated because represented by using 6 bits only.
-			wn0G = (gstWn & 0xffffffc0) | (galToGps->wn0G & 0x0000003f);
+			wn0G = UnrollGnssWeek(galToGps->wn0G,gstWn,64);
 		}
 		deltaWn = gstWn - wn0G;
+		if(deltaWn < -31 || deltaWn > 31) {
+			*gstToGpsTimeOffset=0;
+			return FALSE_FLAG;
+		}
 		*gstToGpsTimeOffset = galToGps->a0G + (galToGps->a1G * (gstTow-(double)galToGps->t0G + (double)(SECONDS_IN_A_WEEK*deltaWn)));
 		return TRUE_FLAG;
 	}

@@ -36,6 +36,7 @@
 #include "rinexLog.h"
 #include "nmeaLog.h"
 #include "channelManager.h"
+#include "gnssTimeMath.h"
 
 
 /**
@@ -78,6 +79,12 @@ void InitOperativeChannels(TNGeneConfiguration *cfg,TPvtData *pvtData)
 }
 
 
+static void UpdatePvtMinimumChannels(TPvtData *pvtData)
+{
+	pvtData->minNumOfChannels = pvtData->pvtAlgorithm==KALMAN_BASED_PVT ? 0 :
+		(pvtData->numOfGpsOpChannels>0 && pvtData->numOfGalileoOpChannels>0 ? LS_MULTI_SIZE : LS_SINGLE_SIZE);
+}
+
 void DeleteOperativeChannel(TPvtData *pvtData,int chIdx)
 {
 	TChannel *ch;
@@ -102,6 +109,7 @@ void DeleteOperativeChannel(TPvtData *pvtData,int chIdx)
 		pvtData->numOfGalileoOpChannels--;
 	}
 	pvtData->numOfOperativeChannels--;
+	UpdatePvtMinimumChannels(pvtData);
 }
 
 
@@ -153,9 +161,11 @@ int InitPvtData(TNGeneConfiguration *cfg,TNGeneData *rx)
 	}
 	/* Initialize PVT results */
 	pvtRes->pvtValid=FALSE_FLAG;
+	pvtRes->dopValid=FALSE_FLAG;
 	pvtRes->pvtPlotted=FALSE_FLAG;
 	pvtRes->clockBiasGpsValid=FALSE_FLAG;
-	pvtRes->clockBiasGalileo=FALSE_FLAG;
+	pvtRes->clockBiasGalileoValid=FALSE_FLAG;
+	pvtRes->clockBiasGps=pvtRes->clockBiasGalileo=pvtRes->clockDrift=0.0;
 	pvtRes->rxGpsTime.referenceValid=FALSE_FLAG;
 	pvtRes->rxGpsTime.referenceUpdated=FALSE_FLAG;
 	pvtRes->rxGalTime.referenceValid=FALSE_FLAG;
@@ -205,9 +215,11 @@ int InitPvtData(TNGeneConfiguration *cfg,TNGeneData *rx)
 	}
 	/* Initialize the structure for temporary PVT results */
 	pvtTmpRes->pvtValid=FALSE_FLAG;
+	pvtTmpRes->dopValid=FALSE_FLAG;
 	pvtTmpRes->pvtPlotted=FALSE_FLAG;
 	pvtTmpRes->clockBiasGpsValid=FALSE_FLAG;
-	pvtTmpRes->clockBiasGalileo=FALSE_FLAG;
+	pvtTmpRes->clockBiasGalileoValid=FALSE_FLAG;
+	pvtTmpRes->clockBiasGps=pvtTmpRes->clockBiasGalileo=pvtTmpRes->clockDrift=0.0;
 	pvtTmpRes->rxGpsTime.referenceValid=FALSE_FLAG;
 	pvtTmpRes->rxGalTime.referenceValid=FALSE_FLAG;
 	pvtTmpRes->utcFromGps=FALSE_FLAG;
@@ -329,13 +341,14 @@ void ResetPvt(TNGeneConfiguration *cfg,TPvtData *pvtData,TPvtResults *pvtRes, in
 
 	pvtData->lsIndex=0;
 	pvtData->pvtAlgorithm=LMS_BASED_PVT;
-	ClearCsmData(cfg,pvtData,pvtRes);
 	InitQStateNoiseCovarianceMatrices(pvtData->kfData.q,pvtData->kfData.qMulti,cfg->pvtPeriodSeconds);
+	InitKalmanFilterPostCovarianceMatrices(pvtData->kfData.pPost,pvtData->kfData.pPostMulti);
 	// end here if we are not performing a hard reset
 	if(hardReset==FALSE_FLAG)
 	{
 		return;
 	}
+	ClearCsmData(cfg,pvtData,pvtRes);
 	// other variables in pvtData
 	pvtData->lsIndex=0;
 	pvtData->pvtAlgorithm=LMS_BASED_PVT;
@@ -352,10 +365,12 @@ void ResetPvt(TNGeneConfiguration *cfg,TPvtData *pvtData,TPvtResults *pvtRes, in
 	pvtData->rxUtcTimeValid=FALSE_FLAG;
 	// other variables in pvtRes
 	pvtRes->pvtValid=FALSE_FLAG;
+	pvtRes->dopValid=FALSE_FLAG;
 	pvtRes->pvtPlotted=FALSE_FLAG;
 	pvtRes->clockBiasGpsValid=FALSE_FLAG;
-	pvtRes->clockBiasGalileo=FALSE_FLAG;
+	pvtRes->clockBiasGalileoValid=FALSE_FLAG;
 	pvtRes->clockBiasGpsCumulated=0.0;
+	pvtRes->clockBiasGps=pvtRes->clockBiasGalileo=pvtRes->clockDrift=0.0;
 	pvtRes->clockBiasGalileoCumulated=0.0;
 	for(index=0;index<GPS_NUMBER_OF_PRNS;index++)
 	{
@@ -516,23 +531,7 @@ int SelectChannelsForPvt(TNGeneConfiguration *cfg,TNGeneData *rx)
 	pvtData->numOfGpsChannelsReadyForPVT=pvtData->numOfGpsOpChannels;
 	pvtData->numOfGalileoChannelsReadyForPVT=pvtData->numOfGalileoOpChannels;
 	/**/
-	/* analyze the minimum required number of channels */
-	if(pvtData->pvtAlgorithm==KALMAN_BASED_PVT)
-	{
-		/* Kalman Filter (executed without limitations about the number of channels) */
-		pvtData->minNumOfChannels = 0;
-		return SUCCESS_RETURN;
-	}
-	if((pvtData->numOfGpsOpChannels>0) && (pvtData->numOfGalileoOpChannels>0))
-	{
-		/* Least Squares multiple constellations */
-		pvtData->minNumOfChannels = LS_MULTI_SIZE;
-	}
-	else
-	{
-		/* Least Squares single constellation (at least one of numOfGpsOpChannels and numOfGalileoOpChannels is zero) */
-		pvtData->minNumOfChannels = LS_SINGLE_SIZE;
-	}
+	UpdatePvtMinimumChannels(pvtData);
 	if(pvtData->numOfOperativeChannels>=pvtData->minNumOfChannels)
 	{
 		return SUCCESS_RETURN;
@@ -603,6 +602,7 @@ void ComputeTransmissionTime(TNGeneConfiguration *cfg,TPvtData *pvtData)
 				fprintf(pvtData->pvtLogFile,"[GAL] CHANNEL:%2d  SAT:%2d  TxTime:%18.12f\n",ch->chIndex,ch->satId,pvtCh->transmissionTime);
 			}
 		}
+		NormalizeGnssTime(&pvtCh->wn,&pvtCh->transmissionTime);
 	}
 	if(pvtData->pvtLogFile!=NULL)
 	{
@@ -613,220 +613,55 @@ void ComputeTransmissionTime(TNGeneConfiguration *cfg,TPvtData *pvtData)
 
 int VerifyTransmissionTime(TPvtData *pvtData)
 {
-	int *toBeDeleted;
-	TPvtChannel *pvtCh;
-	TChannel *ch;
-	int chIdx;
-	double tRxGpsComplete = 0;
-	double tRxGalComplete = 0;
-	double tTxComplete;
-	int chIdxMin;
-	double minTtx;
-	int chIdxMax;
-	double maxTtx;
-	int counter;
-
-	/* TODO check threshold for the first check!
-	 * 1 second is a very large threshold, but it should exclude errors coming from the parse of the navigation message */
-
-	/* first, compare with the receiver time and exclude transmission times with large errors
-	 * moreover, exclude satellites for which trx is smaller than ttx (can happen if samples are lost) */
-	toBeDeleted = (int *)malloc(pvtData->numOfOperativeChannels*sizeof(int));
-	// get receiver time
-	if(pvtData->rxGpsTimeValid==TRUE_FLAG)
-		tRxGpsComplete = (pvtData->rxGpsWn*SECONDS_IN_A_WEEK) + pvtData->rxGpsTow;
-	if(pvtData->rxGalTimeValid==TRUE_FLAG)
-		tRxGalComplete = (pvtData->rxGalWn*SECONDS_IN_A_WEEK) + pvtData->rxGalTow;
-	// check each transmission time
-	for(chIdx=0;chIdx<pvtData->numOfOperativeChannels;chIdx++)
-	{
-		pvtCh = &(pvtData->pvtChArray[chIdx]);
-		ch = pvtCh->ch;
-		//
-		toBeDeleted[chIdx] = FALSE_FLAG;
-		tTxComplete = (pvtCh->wn*SECONDS_IN_A_WEEK) + pvtCh->transmissionTime;
-		if((ch->satType==GPS_SAT) && (pvtData->rxGpsTimeValid==TRUE_FLAG))
-		{
-			if(((tRxGpsComplete-tTxComplete)>1.0) || (tRxGpsComplete<tTxComplete))
-			{
-				toBeDeleted[chIdx] = TRUE_FLAG;
-			}
-		}
-		else if((ch->satType==GALILEO_SAT) && (pvtData->rxGalTimeValid==TRUE_FLAG))
-		{
-			if(((tRxGalComplete-tTxComplete)>1.0) || (tRxGalComplete<tTxComplete))
-			{
-				toBeDeleted[chIdx] = TRUE_FLAG;
-			}
-		}
-	}
-	// delete bad channels
-	for(chIdx=pvtData->numOfOperativeChannels-1;chIdx>=0;chIdx--)
-	{
-		if(toBeDeleted[chIdx]==TRUE_FLAG)
-		{
-			DeleteOperativeChannel(pvtData,chIdx);
-		}
-	}
-	free(toBeDeleted);
-
-
-	/* second, compare transmission times amongst them and exclude incompatible ones */
-	/* GPS */
-	if(pvtData->numOfGpsOpChannels>1)
-	{
-		do
-		{
-			/* find minimum and maximum transmission time (GPS) */
-			minTtx = HUGE_VAL;
-			maxTtx = -1.0;
-			chIdxMin = 0;
-			chIdxMax = 0;
-			for(chIdx=0;chIdx<pvtData->numOfOperativeChannels;chIdx++)
-			{
-				pvtCh = &(pvtData->pvtChArray[chIdx]);
-				ch = pvtCh->ch;
-				if(ch->satType==GPS_SAT)
-				{
-					if(pvtCh->transmissionTime<minTtx)
-					{
-						minTtx = pvtCh->transmissionTime;
-						chIdxMin = chIdx;
-					}
-					if(pvtCh->transmissionTime>maxTtx)
-					{
-						maxTtx = pvtCh->transmissionTime;
-						chIdxMax = chIdx;
-					}
-				}
-			}
-			/* if the difference between minimum and maximum is over a threshold, delete one or two channels */
-			if((maxTtx-minTtx)>GPS_MAXIMUM_TTX_DIFFERENCE)
-			{
-				if(pvtData->numOfGpsOpChannels==2)
-				{
-					/* cannot find which is good, delete both minimum and maximum */
-					DeleteOperativeChannel(pvtData,chIdxMin);
-					if(chIdxMax>chIdxMin)
-						chIdxMax--;
-					DeleteOperativeChannel(pvtData,chIdxMax);
-					maxTtx = minTtx;
-				}
-				else
-				{
-					/* decide which channel will be discarded */
-					counter = 0;
-					for(chIdx=0;chIdx<pvtData->numOfOperativeChannels;chIdx++)
-					{
-						pvtCh = &(pvtData->pvtChArray[chIdx]);
-						ch = pvtCh->ch;
-						if(ch->satType==GPS_SAT)
-						{
-							if((pvtCh->transmissionTime-minTtx)>(maxTtx-pvtCh->transmissionTime))
-								counter++;
-							else
-								counter--;
-						}
-					}
-					if(counter>0)
-					{
-						DeleteOperativeChannel(pvtData,chIdxMin);
-					}
-					else
-					{
-						DeleteOperativeChannel(pvtData,chIdxMax);
-					}
-				}
-			}
-		} while((maxTtx-minTtx)>GPS_MAXIMUM_TTX_DIFFERENCE);
-	}
-
-	/* Galileo */
-	if(pvtData->numOfGalileoOpChannels>1)
-	{
-		do
-		{
-			/* find minimum and maximum transmission time (Galileo) */
-			minTtx = HUGE_VAL;
-			maxTtx = -1.0;
-			chIdxMin = 0;
-			chIdxMax = 0;
-			for(chIdx=0;chIdx<pvtData->numOfOperativeChannels;chIdx++)
-			{
-				pvtCh = &(pvtData->pvtChArray[chIdx]);
-				ch = pvtCh->ch;
-				if(ch->satType==GALILEO_SAT)
-				{
-					if(pvtCh->transmissionTime<minTtx)
-					{
-						minTtx = pvtCh->transmissionTime;
-						chIdxMin = chIdx;
-					}
-					if(pvtCh->transmissionTime>maxTtx)
-					{
-						maxTtx = pvtCh->transmissionTime;
-						chIdxMax = chIdx;
-					}
-				}
-			}
-			/* if the difference between minimum and maximum is over a threshold, delete one or two channels */
-			if((maxTtx-minTtx)>GALILEO_MAXIMUM_TTX_DIFFERENCE)
-			{
-				if(pvtData->numOfGalileoOpChannels==2)
-				{
-					/* cannot find which is good, delete both minimum and maximum */
-					DeleteOperativeChannel(pvtData,chIdxMin);
-					if(chIdxMax>chIdxMin)
-						chIdxMax--;
-					DeleteOperativeChannel(pvtData,chIdxMax);
-					maxTtx = minTtx;
-				}
-				else
-				{
-					/* decide which channel will be discarded */
-					counter = 0;
-					for(chIdx=0;chIdx<pvtData->numOfOperativeChannels;chIdx++)
-					{
-						pvtCh = &(pvtData->pvtChArray[chIdx]);
-						ch = pvtCh->ch;
-						if(ch->satType==GALILEO_SAT)
-						{
-							if((pvtCh->transmissionTime-minTtx)>(maxTtx-pvtCh->transmissionTime))
-								counter++;
-							else
-								counter--;
-						}
-					}
-					if(counter>0)
-					{
-						DeleteOperativeChannel(pvtData,chIdxMin);
-					}
-					else
-					{
-						DeleteOperativeChannel(pvtData,chIdxMax);
-					}
-				}
-			}
-		} while((maxTtx-minTtx)>GALILEO_MAXIMUM_TTX_DIFFERENCE);
-	}
-
-	/* verify if PVT is still possible */
-	if(pvtData->numOfOperativeChannels>=pvtData->minNumOfChannels)
-	{
-		return TRUE_FLAG;
-	}
-	else
-	{
-		return FALSE_FLAG;
-	}
+    const TSatConstellation types[2]={GPS_SAT,GALILEO_SAT};
+    int idx,group;
+    /* Compare normalized week/TOW pairs, never absolute timestamps in int. */
+    for(idx=pvtData->numOfOperativeChannels-1;idx>=0;--idx) {
+        TPvtChannel *ch=&pvtData->pvtChArray[idx];
+        int gps=ch->ch->satType==GPS_SAT;
+        int valid=gps?pvtData->rxGpsTimeValid:pvtData->rxGalTimeValid;
+        double delta=GnssTimeDifference(gps?pvtData->rxGpsWn:pvtData->rxGalWn,
+            gps?pvtData->rxGpsTow:pvtData->rxGalTow,ch->wn,ch->transmissionTime);
+        if(!isfinite(ch->transmissionTime) || (valid && (!isfinite(delta) || delta<0 || delta>1)))
+            DeleteOperativeChannel(pvtData,idx);
+    }
+    for(group=0;group<2;group++) for(;;) {
+        int first=-1,lo=-1,hi=-1,count=0,vote=0,week=0;
+        double minimum=HUGE_VAL,maximum=-HUGE_VAL;
+        double limit=group==0?GPS_MAXIMUM_TTX_DIFFERENCE:GALILEO_MAXIMUM_TTX_DIFFERENCE;
+        for(idx=0;idx<pvtData->numOfOperativeChannels;idx++) {
+            TPvtChannel *ch=&pvtData->pvtChArray[idx];double t;
+            if(ch->ch->satType!=types[group]) continue;
+            if(first<0) {first=idx;week=ch->wn;}
+            t=GnssTimeDifference(ch->wn,ch->transmissionTime,week,0);
+            if(t<minimum) {minimum=t;lo=idx;}
+            if(t>maximum) {maximum=t;hi=idx;}
+            count++;
+        }
+        if(count<2 || maximum-minimum<=limit) break;
+        if(count==2) {
+            DeleteOperativeChannel(pvtData,lo>hi?lo:hi);
+            DeleteOperativeChannel(pvtData,lo<hi?lo:hi);
+            break;
+        }
+        for(idx=0;idx<pvtData->numOfOperativeChannels;idx++) {
+            TPvtChannel *ch=&pvtData->pvtChArray[idx];double t;
+            if(ch->ch->satType!=types[group]) continue;
+            t=GnssTimeDifference(ch->wn,ch->transmissionTime,week,0);
+            vote+=(t-minimum>maximum-t)?1:-1;
+        }
+        DeleteOperativeChannel(pvtData,vote>0?lo:hi);
+    }
+    return pvtData->numOfOperativeChannels>=pvtData->minNumOfChannels?TRUE_FLAG:FALSE_FLAG;
 }
 
 void ComputeSatsPositions(TNGeneConfiguration *cfg,TNGeneData *rx,TPvtData *pvtData,TPvtResults *pvtRes)
 {
 	double dt, time;
 	double a, tk, n0, n, m, e, ii, eOld, dE, dtr, nu, phi, u, r, i, omega;
-	double tak, xpk, ypk, takdot, ekdot, ukdot, rkdot, ikdot, xpkdot, ypkdot, omegak, omegakdot;
+	double xpk, ypk, takdot, ekdot, ukdot, rkdot, ikdot, xpkdot, ypkdot, omegak, omegakdot;
 	double xkdot, ykdot, zkdot;
+	double mu,relativity;
 	int index;
 	TPvtChannel *pvtCh;
 	TChannel *ch;
@@ -841,6 +676,8 @@ void ComputeSatsPositions(TNGeneConfiguration *cfg,TNGeneData *rx,TPvtData *pvtD
 		pvtCh = &(pvtData->pvtChArray[index]);
 		ch = pvtCh->ch;
 		satStatus = pvtCh->satStatus;
+		mu=ch->satType==GPS_SAT?GPS_GM:GALILEO_GM;
+		relativity=ch->satType==GPS_SAT?GPS_F_CONST:GALILEO_F_CONST;
 		if(ch->satType==GPS_SAT)
 		{
 			usedEphem = &(ch->gpsParser->navMsg->eph);
@@ -867,7 +704,7 @@ void ComputeSatsPositions(TNGeneConfiguration *cfg,TNGeneData *rx,TPvtData *pvtD
 		/* compute sat position */
 		a = usedEphem->sqrtA * usedEphem->sqrtA;
 		tk = CheckT(time, usedEphem->toe);
-		n0 = sqrt(GM / (a * a * a));
+		n0 = sqrt(mu / (a * a * a));
 		n = n0 + usedEphem->deltaN;
 		m = usedEphem->meanAnomaly0 + n * tk;
 		m = fmod(m + TWICE_M_PI,TWICE_M_PI);
@@ -884,7 +721,7 @@ void ComputeSatsPositions(TNGeneConfiguration *cfg,TNGeneData *rx,TPvtData *pvtD
 			}
 		}
 		e = fmod(e + TWICE_M_PI, TWICE_M_PI);
-		dtr = F_CONST * usedEphem->eccentricity *	usedEphem->sqrtA * sin(e);
+		dtr = relativity * usedEphem->eccentricity * usedEphem->sqrtA * sin(e);
 		nu = atan2(sqrt(1 - usedEphem->eccentricity *	usedEphem->eccentricity) * sin(e), cos(e)- usedEphem->eccentricity);
 		phi = nu + usedEphem->omega;
 		phi = fmod(phi,TWICE_M_PI);
@@ -908,11 +745,12 @@ void ComputeSatsPositions(TNGeneConfiguration *cfg,TNGeneData *rx,TPvtData *pvtD
 
 		/* compute sat velocity */
 		ekdot = n/(1.0 - usedEphem->eccentricity * cos(e));
-		tak = atan2( sqrt(1.0 - usedEphem->eccentricity * usedEphem->eccentricity) * sin(e), cos(e) - usedEphem->eccentricity);
-		takdot = sin(e) * ekdot * (1.0 + usedEphem->eccentricity *cos(tak)) / (sin(tak) * (1.0 - usedEphem->eccentricity * cos(e)));
-		ukdot = takdot + 2.0 *((usedEphem->capitalCus * cos(2.0 * u)) -	(usedEphem->capitalCuc * sin(2.0 * u))) * takdot;
-		rkdot = ((a * usedEphem->eccentricity * sin(e) * n) / (1.0 - usedEphem->eccentricity * cos(e))) + (2.0 * (usedEphem->capitalCrs * cos(2.0 * u) - usedEphem->capitalCrc * sin(2.0 * u)) * takdot);
-		ikdot = usedEphem->iDot + ((usedEphem->capitalCis *	cos(2.0 * u)) - (usedEphem->capitalCic * sin(2.0 * u))) * 2.0 * takdot;
+		takdot = sqrt(1-usedEphem->eccentricity*usedEphem->eccentricity)*ekdot/(1-usedEphem->eccentricity*cos(e));
+		ukdot = takdot*(1+2*(usedEphem->capitalCus*cos(2*phi)-usedEphem->capitalCuc*sin(2*phi)));
+		rkdot = a*usedEphem->eccentricity*sin(e)*ekdot+2*(usedEphem->capitalCrs*cos(2*phi)-usedEphem->capitalCrc*sin(2*phi))*takdot;
+		ikdot = usedEphem->iDot+2*(usedEphem->capitalCis*cos(2*phi)-usedEphem->capitalCic*sin(2*phi))*takdot;
+		pvtCh->satClkDrift=usedClock->af[1]+2*usedClock->af[2]*dt+
+			relativity*usedEphem->eccentricity*usedEphem->sqrtA*cos(e)*ekdot;
 		xpk = r*cos(u);
 		ypk = r*sin(u);
 		xpkdot = rkdot * cos(u) - ypk * ukdot;
@@ -1088,7 +926,7 @@ void DeleteNotSmoothed(TNGeneConfiguration *cfg,TPvtData *pvtData)
 	int counterCsm = 0;
 
 	/* If carrier smoothing is disabled, this check is not needed */
-	if(cfg->pvtConfiguration.csmFilterLen<=1)
+	if(cfg->pvtConfiguration.csmFilterLen<=1 || pvtData->pvtAlgorithm==KALMAN_BASED_PVT)
 	{
 		return;
 	}
@@ -1157,7 +995,10 @@ void AdjustMissingRxTime(TNGeneConfiguration *cfg,TNGeneData *rx,TPvtData *pvtDa
 		pvtData->rxGalTow = pvtData->rxGpsTow;
 		pvtData->rxGalTimeValid = TRUE_FLAG;
 		/* Adjust with the GPS to GST conversion */
-		GetGstToGpsTimeOffset(rx,pvtData->rxGalWn,pvtData->rxGalTow,&gstToGpsTimeOffset);
+		if(GetGstToGpsTimeOffset(rx,pvtData->rxGalWn,pvtData->rxGalTow,&gstToGpsTimeOffset)==FALSE_FLAG) {
+            pvtData->rxGalTimeValid=FALSE_FLAG;
+            return;
+        }
 		pvtData->rxGalTow += gstToGpsTimeOffset;
 		if(pvtData->rxGalTow>=SECONDS_IN_A_WEEK)
 		{
@@ -1177,7 +1018,10 @@ void AdjustMissingRxTime(TNGeneConfiguration *cfg,TNGeneData *rx,TPvtData *pvtDa
 		pvtData->rxGpsTow = pvtData->rxGalTow;
 		pvtData->rxGpsTimeValid = TRUE_FLAG;
 		/* Adjust with the GPS to GST conversion */
-		GetGstToGpsTimeOffset(rx,pvtData->rxGalWn,pvtData->rxGalTow,&gstToGpsTimeOffset);
+		if(GetGstToGpsTimeOffset(rx,pvtData->rxGalWn,pvtData->rxGalTow,&gstToGpsTimeOffset)==FALSE_FLAG) {
+            pvtData->rxGpsTimeValid=FALSE_FLAG;
+            return;
+        }
 		pvtData->rxGpsTow -= gstToGpsTimeOffset;
 		if(pvtData->rxGpsTow>=SECONDS_IN_A_WEEK)
 		{
@@ -1192,6 +1036,15 @@ void AdjustMissingRxTime(TNGeneConfiguration *cfg,TNGeneData *rx,TPvtData *pvtDa
 	}
 }
 
+
+static void ResetPseudorangeOrigin(TNGeneConfiguration *cfg,TNGeneData *rx,TSatConstellation type,TPvtResults *res)
+{
+	int idx;
+	for(idx=0;idx<cfg->numberOfChannels;idx++)
+		if(rx->channelArray[idx].satType==type) ClearCsmDataChannel(&rx->pvtData.csmData[idx]);
+	if(type==GPS_SAT) res->clockBiasGpsCumulated=0;
+	else res->clockBiasGalileoCumulated=0;
+}
 
 void ComputePseudoranges(TNGeneConfiguration *cfg,TNGeneData *rx,TPvtData *pvtData,TPvtResults *pvtRes)
 {
@@ -1245,32 +1098,26 @@ void ComputePseudoranges(TNGeneConfiguration *cfg,TNGeneData *rx,TPvtData *pvtDa
 	{
 		if(pvtData->rxGpsTimeValid==TRUE_FLAG)
 		{
-			gpsBase = pvtData->rxGpsTow - maxGpsTow;
-			if(gpsBase<0.0)
-			{
-				gpsBase += SECONDS_IN_A_WEEK;
-			}
+			gpsBase = GnssTimeDifference(pvtData->rxGpsWn,pvtData->rxGpsTow,maxGpsWn,maxGpsTow);
 		}
 		else
 		{
 			ResetPvt(cfg,pvtData,pvtRes,FALSE_FLAG);
 			gpsBase = DEFAULT_PSEUDORANGE_GPS;
+			ResetPseudorangeOrigin(cfg,rx,GPS_SAT,pvtRes);
 		}
 	}
 	if(pvtData->numOfGalileoOpChannels>0)
 	{
 		if(pvtData->rxGalTimeValid==TRUE_FLAG)
 		{
-			galBase = pvtData->rxGalTow - maxGalTow;
-			if(galBase<0.0)
-			{
-				galBase += SECONDS_IN_A_WEEK;
-			}
+			galBase = GnssTimeDifference(pvtData->rxGalWn,pvtData->rxGalTow,maxGalWn,maxGalTow);
 		}
 		else
 		{
 			ResetPvt(cfg,pvtData,pvtRes,FALSE_FLAG);
 			galBase = DEFAULT_PSEUDORANGE_GAL;
+			ResetPseudorangeOrigin(cfg,rx,GALILEO_SAT,pvtRes);
 		}
 	}
 	if(pvtData->pvtLogFile!=NULL)
@@ -1289,16 +1136,11 @@ void ComputePseudoranges(TNGeneConfiguration *cfg,TNGeneData *rx,TPvtData *pvtDa
 		pvtCh->deltaPseudorange = (double)cfg->fePars->dopplerCorrection*ch->dopplerShift;
 		if(ch->satType==GPS_SAT)
 		{
-			pvtCh->pseudorangeRaw = (maxGpsTow - pvtCh->transmissionTime + gpsBase)*SPEED_OF_LIGHT;
+			pvtCh->pseudorangeRaw = (GnssTimeDifference(maxGpsWn,maxGpsTow,pvtCh->wn,pvtCh->transmissionTime) + gpsBase)*SPEED_OF_LIGHT;
 		}
 		else if(ch->satType==GALILEO_SAT)
 		{
-			pvtCh->pseudorangeRaw = (maxGalTow - pvtCh->transmissionTime + galBase)*SPEED_OF_LIGHT;
-		}
-		/* correct week roll-over */
-		if(pvtCh->pseudorangeRaw<0.0)
-		{
-			pvtCh->pseudorangeRaw += (SECONDS_IN_A_WEEK * SPEED_OF_LIGHT);
+			pvtCh->pseudorangeRaw = (GnssTimeDifference(maxGalWn,maxGalTow,pvtCh->wn,pvtCh->transmissionTime) + galBase)*SPEED_OF_LIGHT;
 		}
 		/* correct the satellite clock error */
 		pvtCh->pseudorange = pvtCh->pseudorangeRaw + (pvtCh->satClkCorr * SPEED_OF_LIGHT);
@@ -2134,6 +1976,7 @@ void CopyPvtResultsStructure(TPvtResults *dst,TPvtResults *src)
 	int index;
 
 	dst->pvtValid = src->pvtValid;
+	dst->dopValid = src->dopValid;
 	dst->pvtPlotted = src->pvtPlotted;
 	dst->referenceSample = src->referenceSample;
 	dst->clockBiasGpsValid = src->clockBiasGpsValid;
@@ -2201,24 +2044,19 @@ int PvtManager(TNGeneConfiguration *cfg,TNGeneData *rx)
 	DeleteOldNavMesg(cfg,rx);
 	if(SelectChannelsForPvt(cfg,rx)==FAILURE_RETURN)
 	{
-		/* Force the CSM to restart for all the channels */
-		ClearCsmData(cfg,pvtData,pvtRes);
 		/* This PVT computation is skipped */
 		SetRxTimeForNextPvt(cfg,rx);
 		ResetPvt(cfg,pvtData,pvtRes,FALSE_FLAG);
 		ResetPvtInformationForChannels(cfg,rx);
 		return FAILURE_RETURN;
 	}
-	if(pvtData->numOfOperativeChannels==0)
-	{
-		/* If the PVT is executed without measurements (it happens only with the Kalman filter)
-		 * force the CSM to restart for all the channels */
-		ClearCsmData(cfg,pvtData,pvtRes);
-		return SUCCESS_RETURN;
-	}
 	/* Copy previous PVT results into temporary variable */
 	CopyPvtResultsStructure(pvtTmpRes,pvtRes);
 	pvtTmpRes->referenceSample = rx->buf.discardedSamples;
+	if(pvtData->numOfOperativeChannels==0) {
+		if(PerformKalmanFilter(cfg,rx)!=SUCCESS_RETURN) goto invalidPvtGeometry;
+		goto finalizePvt;
+	}
 	/* Starts with PVT execution!!! */
 	PlotPvtLogFile(rx,pvtData);
 	/* Prepare observables */
@@ -2230,6 +2068,7 @@ int PvtManager(TNGeneConfiguration *cfg,TNGeneData *rx)
 		ResetPvt(cfg,pvtData,pvtRes,FALSE_FLAG);
 		ResetPvtInformationForChannels(cfg,rx);
 		ResetReferenceRxTime(rx);
+		ClearCsmData(cfg,pvtData,pvtRes);
 		return FAILURE_RETURN;
 	}
 	ComputeSatsPositions(cfg,rx,pvtData,pvtTmpRes);
@@ -2264,14 +2103,15 @@ int PvtManager(TNGeneConfiguration *cfg,TNGeneData *rx)
 	else
 	{
 		if(PerformKalmanFilter(cfg,rx)==FAILURE_RETURN)
-			return FAILURE_RETURN;
+			goto invalidPvtGeometry;
 	}
+finalizePvt:
 	/* Find remaining results of PVT computation */
 	ComputePseudorangeResiduals(pvtData,pvtTmpRes);
 	PositionVelocityConversions(pvtTmpRes);
 	pvtTmpRes->pvtValid = TRUE_FLAG;
 	pvtTmpRes->pvtPlotted = FALSE_FLAG;
-	if(DopEvaluation(rx,pvtData->pvtAlgorithm)==FALSE_FLAG)
+	if(DopEvaluation(rx,pvtData->pvtAlgorithm)==FALSE_FLAG && pvtData->pvtAlgorithm==LMS_BASED_PVT)
 		goto invalidPvtGeometry;
 	SetReferenceRxTime(rx,cfg->navMsgConfiguration.defaultLeapSeconds);
 	/* check the PVT result: if an error condition happens, the result is discarded */
@@ -2286,7 +2126,7 @@ int PvtManager(TNGeneConfiguration *cfg,TNGeneData *rx)
 		PrintPvtResults(cfg,rx,pvtData->pvtAlgorithm);
 		PerformGnssTimeAnalysis(rx);
 		ExtractPvtInformationForChannels(cfg,rx);
-		UpdateCumulatedBiases(pvtRes);
+		UpdateCumulatedBiases(pvtRes,pvtData);
 		pvtData->pvtIndex++;
 		pvtData->numOfPvtFails = 0;
 		pvtData->hardRestartMade = FALSE_FLAG;
@@ -2305,13 +2145,13 @@ int PvtManager(TNGeneConfiguration *cfg,TNGeneData *rx)
 		/* The PVT results are not good: discard! */
 		#ifdef SAVE_BAD_PVT_RESULTS
 		PrintBadPvtResults(cfg,rx,pvtData->pvtAlgorithm);
-		pvtData->pvtIndex++;
 		#endif
 		ResetPvt(cfg,pvtData,pvtRes,FALSE_FLAG);
 		ResetPvtInformationForChannels(cfg,rx);
 		if(failureFlag)
 		{
 			ResetReferenceRxTime(rx);
+			ClearCsmData(cfg,pvtData,pvtRes);
 			pvtData->numOfPvtFails++;
 			SwrxLog(NGENE_LOG_SEVERITY_ERROR,"PVT failure %d",pvtData->numOfPvtFails);
 			if(pvtData->pvtLogFile!=NULL)

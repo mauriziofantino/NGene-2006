@@ -1,5 +1,99 @@
 # Logbook NGene Classic
 
+## 28 ottobre 2026 — Correzioni PVT implementate in produzione
+
+Su richiesta esplicita dell'utente, implementati tutti i difetti confermati
+dall'audit e la regressione del controllo DOP. Matematica propria in double:
+QR esistente per LS, Cholesky/soluzioni triangolari per KF, Joseph mantenuta.
+Nessuna nuova dipendenza e nessun codice GNSS-SDR copiato.
+
+- WN/TOW normalizzati, differenze che includono la settimana, ricostruzione
+  WN0G vicina, conversione GGTO invalida non marcata come disponibile.
+- GM/F per costellazione, velocita' regolare al perigeo, clock rate satellitare
+  nei Doppler e rotazione geometrica coerente di posizione/velocita'.
+- Health GPS L1 C/A include lo stato del segnale. Corretto anche il flag
+  Galileo confuso con il valore numerico del bias durante init/hard reset;
+  bias e drift iniziali esplicitamente azzerati.
+- Minimo satelliti aggiornato dopo esclusioni; KF non cancella smoothing e
+  non elimina le nuove misure singola costellazione. Varianza transitoria
+  per canale. Reset PVT soft preserva smoothing, reset timeline/hard lo cancella.
+  Nuova origine di una costellazione invalida solo lo storico corrispondente.
+- LS controlla convergenza (1e-4 m, massimo 7 passi) e usa Hopfield con quota,
+  come la famiglia atmosferica usata dal manager/KF. Nessuna taratura su GT.
+- KF usa dt dai campioni e mantiene 9 stati se entrambi i clock sono inizializzati,
+  anche in assenza temporanea di una costellazione. Covarianze validate e
+  sigma spaziale formale limitata a 100 m. Eliminati 10 buffer inutilizzati
+  dell'inversa: 90.3 KiB e relativi azzeramenti a 17 canali.
+- DOP geometrico indisponibile distinto da errore KF. Previsione senza misure
+  schedulata correttamente e limitata dall'incertezza; NMEA qualita' zero senza
+  osservazioni, HDOP vuoto se non disponibile. Non contare previsioni come fix.
+  Bias cumulati aggiornati solo per costellazioni osservate, contatore PVT
+  non incrementato per il semplice salvataggio di una soluzione respinta.
+
+Verifica finale: 10/10 CTest, 43/43 confronti sintetici su 44 funzioni estratte.
+Include transizioni costellazioni, 3 misure, outage, matrice/rumore invalidi,
+clock rate, reset e aritmetica temporale. Profiling OFF, patch archiviata ancora
+applicabile; main/acquisizione/tracking senza differenze.
+
+Replay finali (stesso binario): LS misto 40 soluzioni; KF misto 40 con misure +
+12 previsioni (4 LS/48 KF totali); LS GPS 63; KF GPS 64 con misure + 12 previsioni
+(4 LS/72 KF). Vecchio binario configurato KF GPS produce 43 soluzioni, tutte LS:
+prima il KF non restava operativo. Confronto sulle 43 epoche GPS comuni, stesso
+numero di GPS: RMS H 4.291 -> 2.654 m, U 7.793 -> 7.460 m. E' l'effetto di tutte
+le correzioni, non un confronto isolato del filtro. SiGe: 23 soluzioni/0 perdite.
+
+Tracking RF invariato: 14 perdite sul misto, 8 GPS-only, zero hard restart e
+zero fallimenti PVT gravi. Nessuna promessa di risoluzione USB/live o di integrita'
+durante gap non quantificati. Linux/live resta da verificare; nessun pool DSP.
+
+Binario finale SHA256 6685EEED311091EE9A1EFABF34ECF6DDC3AB532B2BC4BD63BDFEBE684F9E69AB.
+Backup locale codice/binario precedente in build/pvt-before-fixes. Risultati,
+hash, epoche e riferimenti ai log in development/profiling/pvt-fixes-20261028.
+I risultati dell'audit PRIMA restano separati in pvt-audit-20261028.
+PSEUDORANGE_PVT_AUDIT.md sezione 5 e OPTIMIZATION_REPORT.md descrivono lo stato.
+Configurazioni principali invariate: PVT method 0 LS, 1 KF; runner -PvtMethod
+modifica solo la copia della prova. Non riapplicare i vecchi reset smoothing.
+
+## 28 ottobre 2026 — Audit esteso pseudorange, ICD e Kalman
+
+Richiesta: controllare messaggi, pseudorange, orbite, GPS+Galileo, LS e Kalman.
+PDF locali GPS200N/Galileo2.2 letti e confrontati. Su indicazione dell'utente,
+GNSS-SDR consultato solo per confronto, senza copiarne codice. Riferimento
+GNSS-SDR 3fcb502, blocco hybrid_observables_gs. NGene usa ricezione comune,
+allineata al ring tramite -bufferOffset/fs, non trasmissione comune; non cambiare
+metodo per imitare il concorrente. Due origini iniziali per costellazione sono
+compatibili con i due bias stimati nel modello misto.
+
+Audit al commit 4a2bf4e, nessuna modifica di produzione. 39 funzioni estratte
+esattamente in harness isolato, 34 confronti: 25 PASS / 9 discrepanze, salvate
+in development/profiling/pvt-audit-20261028. Strumenti riutilizzabili separati.
+Report dettagliato accanto al README: PSEUDORANGE_PVT_AUDIT.md.
+
+Difetti dimostrati: smoothing KF singolo azzerato ogni epoca e tutte le misure
+eliminate; minimo 5 rimasto dopo esclusione dell'ultimo Galileo con 4 GPS validi;
+rollover TOW scarta tempi validi; ricostruzione WN0G errata sul bordo di 64
+settimane; costante GM Galileo applicata anche a GPS (1.023 m nell'orbita
+sintetica a toe+3600); velocita' NaN al perigeo; rotazione terrestre KF
+dipendente dal bias della pseudorange; health GPS considera solo MSB.
+
+Regressione del controllo precedente: FALSE di DopEvaluation forza reset anche
+quando a Kalman manca soltanto il DOP geometrico con <4/5 misure. Non presentare
+questa condizione come corretta o come difetto esclusivamente storico.
+Non e' stata corretta qui: occorre distinguerla dagli errori numerici e trattare
+la covarianza KF/outage insieme alla gestione misure. Codice attuale non ancora
+validato end-to-end per Kalman nonostante i test positivi del solo QR.
+
+Test positivi: LS sintetico GPS/misto a due bias recupera posizione entro 1e-5 m;
+selezionati campi GPS/Galileo segno/scala corretti; Joseph gia' presente, zero
+innovazione e propagazione covarianza outage verificati. Non accusare il reset
+dello stato errore KF senza considerare la reiniezione nel nominale.
+
+Altri limiti: modelli tropo diversi LS/KF, LS fisso 7 passi senza criterio di
+convergenza, niente gate statistico residui, derivata clock satellite assente
+dai Doppler, inversa LDU ancora nel KF, pesi/URA/SISA e stati integrity da
+completare. Le anomalie del rollover non sono dimostrate attive nel record.
+Instabilita' RF e gap restano separati. Non dichiarare la catena risolta.
+
 ## 28 ottobre 2026 — Controllo mirato PVT / LMS
 
 Richiesta: verificare il PVT, soprattutto LMS, contenendo il round. L'utente

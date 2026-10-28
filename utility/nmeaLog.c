@@ -236,7 +236,9 @@ void NmeaSavePvt(TNGeneConfiguration *cfg,TNGeneData *rx)
 		sprintf(&(string[strlen(string)]),"%02d%05.2f,W,",-deg,min);
 	geoidalSeparation = GetWgs84Separation(pvtRes->geodPosition[1],pvtRes->geodPosition[0]);
 	// age of differential data and differential reference station ID are not available
-	sprintf(&(string[strlen(string)]),"1,%02d,%.2f,%.2f,M,%.2f,M,,*",numOpCh,pvtRes->dop[HDOP_INDEX_IN_DOP_ARRAY],pvtRes->geodPosition[2],geoidalSeparation);
+	sprintf(&(string[strlen(string)]),"%d,%02d,",numOpCh>0?1:0,numOpCh);
+	if(pvtRes->dopValid) sprintf(&(string[strlen(string)]),"%.2f",pvtRes->dop[HDOP_INDEX_IN_DOP_ARRAY]);
+	sprintf(&(string[strlen(string)]),",%.2f,M,%.2f,M,,*",pvtRes->geodPosition[2],geoidalSeparation);
 	ConcatenateChecksum(string);
 	fprintf(rx->nmeaFile,"%s\r\n",string);
 	// GSV

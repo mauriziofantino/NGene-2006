@@ -190,7 +190,8 @@ int CheckPvtResultsGoodness(TNGeneConfiguration *cfg,TPvtData *pvtData,TPvtResul
 		}
 	}
 	// DOP
-	for(idx=0;idx<5;idx++)
+	if(pvtData->pvtAlgorithm==LMS_BASED_PVT && !pvtResNew->dopValid) return FALSE_FLAG;
+	for(idx=0;pvtResNew->dopValid && idx<5;idx++)
 	{
 		if((isnan(pvtResNew->dop[idx])>0) || (isinf(pvtResNew->dop[idx])>0))
 		{
@@ -293,7 +294,9 @@ int CheckPvtResultsGoodness(TNGeneConfiguration *cfg,TPvtData *pvtData,TPvtResul
 		}
 	}
 	/* Check position jumps */
-	if((pvtResOld->pvtValid==TRUE_FLAG) && (fabs(pvtResNew->dop[0]-pvtResOld->dop[0])<MAXIMUM_GDOP_JUMP_FOR_CHECKS))
+	if((pvtResOld->pvtValid==TRUE_FLAG) &&
+	   ((!pvtResNew->dopValid || !pvtResOld->dopValid) ||
+	   fabs(pvtResNew->dop[0]-pvtResOld->dop[0])<MAXIMUM_GDOP_JUMP_FOR_CHECKS))
 	{
 		// Do not perform the check when the GDOP change is beyond a threshold
 		if(pvtCfg->staticReceiver==TRUE_FLAG)

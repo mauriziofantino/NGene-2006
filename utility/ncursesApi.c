@@ -513,7 +513,8 @@ void NcCompleteLog(TNGeneConfiguration *cfg,TNGeneData *rx)
 	/* Plot GDOP */
 	if(plotData==TRUE_FLAG)
 	{
-		sprintf(nc->tmpStr,"%.2lf",pvtRes->dop[GDOP_INDEX_IN_DOP_ARRAY]);
+		if(pvtRes->dopValid) sprintf(nc->tmpStr,"%.2lf",pvtRes->dop[GDOP_INDEX_IN_DOP_ARRAY]);
+		else strncpy(nc->tmpStr,NC_STR_UNKNOWN,nc->tmpStrLen);
 	}
 	else
 	{

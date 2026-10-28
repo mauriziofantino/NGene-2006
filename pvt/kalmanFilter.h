@@ -21,6 +21,7 @@
  * @param dt is the time interval between two consecutive PVTs
  */
 void InitQStateNoiseCovarianceMatrices(double *q,double *qMulti, double dt);
+void InitKalmanFilterPostCovarianceMatrices(double *pPost,double *pPostMulti);
 
 /**
  * @brief Initializes the variables used for the PVT computation through the Kalman Filter.

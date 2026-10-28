@@ -1,6 +1,8 @@
 #include <math.h>
 #include <stdio.h>
 #include "smallLeastSquares.h"
+#include "smallSpd.h"
+#include "gnssTimeMath.h"
 
 #define REQUIRE(x) do { if (!(x)) { fprintf(stderr,"PVT QR check failed at line %d\n",__LINE__); return 1; } } while (0)
 int main(void)
@@ -48,6 +50,21 @@ int main(void)
     REQUIRE(!SmallLeastSquares(a,b,4,4,x,q));
     a[15]=1; b[0]=INFINITY;
     REQUIRE(!SmallLeastSquares(a,b,4,4,x,q));
+    {
+        double spd[9]={4,1,2,1,5,.5,2,.5,6},lower[9],rhs[3],sol[3];
+        for(i=0;i<3;i++){rhs[i]=0;for(j=0;j<3;j++)rhs[i]+=spd[3*i+j]*truth[j];}
+        REQUIRE(SpdFactor(spd,3,lower));REQUIRE(SpdSolve(lower,3,rhs,sol));
+        for(i=0;i<3;i++)REQUIRE(fabs(sol[i]-truth[i])<1e-10);
+        spd[8]=-1;REQUIRE(!SpdFactor(spd,3,lower));
+        spd[8]=NAN;REQUIRE(!SpdFactor(spd,3,lower));
+    }
+    {
+        int week=64;double tow=604800.;
+        REQUIRE(NormalizeGnssTime(&week,&tow) && week==65 && tow==0);
+        tow=-.25;REQUIRE(NormalizeGnssTime(&week,&tow) && week==64 && tow==604799.75);
+        REQUIRE(fabs(GnssTimeDifference(65,.01,64,604799.99)-.02)<1e-10);
+        REQUIRE(UnrollGnssWeek(63,64,64)==63 && UnrollGnssWeek(0,63,64)==64);
+    }
     puts("PVT QR: single/mixed clocks, residual orthogonality, covariance, ill-conditioning and invalid inputs passed");
     return 0;
 }

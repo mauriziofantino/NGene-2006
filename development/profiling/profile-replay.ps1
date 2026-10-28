@@ -5,6 +5,7 @@ param(
     [ValidateRange(0,64)][Nullable[int]]$GpsChannels,
     [ValidateRange(0,64)][Nullable[int]]$GalileoChannels,
     [ValidateRange(0,1)][Nullable[int]]$EgnosChannels,
+    [ValidateRange(0,1)][Nullable[int]]$PvtMethod,
     [ValidateRange(1,20)][int]$Repetitions = 3,
     [ValidateRange(1,3600)][int]$TimeoutSeconds = 180
 )
@@ -43,6 +44,13 @@ for ($taskRun=1; $taskRun -le $Repetitions; $taskRun++) {
         [IO.File]::WriteAllText($taskRxConfig, $taskRxText)
     }
     # Keep all generated logs local even if the user's configuration has Dump Path.
+    if ($null -ne $PvtMethod) {
+        $taskPvtPath = Join-Path $taskDirectory 'configuration/PVT.conf'
+        $taskPvtText = [IO.File]::ReadAllText($taskPvtPath)
+        $taskPvtPattern = '(\[PVT method\][ \t]*\r?\n)[ \t]*\d+'
+        if ($taskPvtText -notmatch $taskPvtPattern) { throw 'PVT method tag missing' }
+        [IO.File]::WriteAllText($taskPvtPath,[regex]::Replace($taskPvtText,$taskPvtPattern,('${1}'+$PvtMethod)))
+    }
     $taskLogConfig = Join-Path $taskDirectory 'configuration/Logs.conf'
     $taskText = [IO.File]::ReadAllText($taskLogConfig)
     $taskText = [regex]::Replace($taskText, '(?m)^\s*\[Dump Path\]\s*\r?\n[^\r\n]*', '# Dump Path omitted for isolated replay')
@@ -68,7 +76,7 @@ for ($taskRun=1; $taskRun -le $Repetitions; $taskRun++) {
     [IO.File]::WriteAllText((Join-Path $taskDirectory 'stdout.log'), $taskOutput.Result)
     [IO.File]::WriteAllText((Join-Path $taskDirectory 'stderr.log'), $taskError.Result)
     $taskResult = [pscustomobject]@{
-        Run = $taskRun; Frontend = $Frontend; Input = $taskInput
+        Run = $taskRun; Frontend = $Frontend; Input = $taskInput; PvtMethodOverride = $PvtMethod
         InputBytes = (Get-Item -LiteralPath $taskInput).Length
         ExecutableSha256 = (Get-FileHash -LiteralPath $taskExe -Algorithm SHA256).Hash
         WallSeconds = $taskWatch.Elapsed.TotalSeconds

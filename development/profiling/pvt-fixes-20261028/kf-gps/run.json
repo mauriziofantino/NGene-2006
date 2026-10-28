@@ -1,0 +1,14 @@
+[
+    {
+        "Run":  1,
+        "Frontend":  "hackrf",
+        "Input":  "C:\\Users\\MaurizioFantino\\Downloads\\Projects\\NGene Classic\\recordings\\diagnosi\\hackrf-l1-ci8.raw",
+        "PvtMethodOverride":  1,
+        "InputBytes":  1964112000,
+        "ExecutableSha256":  "6685EEED311091EE9A1EFABF34ECF6DDC3AB532B2BC4BD63BDFEBE684F9E69AB",
+        "WallSeconds":  27.036669,
+        "CpuSeconds":  25.75,
+        "ExitCode":  0,
+        "Directory":  "C:\\Users\\MaurizioFantino\\Downloads\\Projects\\NGene Classic\\build\\profile-20261028-143515-987\\run-1"
+    }
+]

@@ -31,11 +31,11 @@ int DopEvaluation(TNGeneData *rx,int performedPvt)
 	double *satPos;
 	double pos[5];
 	int chIdx;
-	double rho2;
-	double travelTime;
 	double range, geod[3], up[3], vertical = 0, spatial;
 	int i, j;
 	(void)performedPvt;
+	pvtRes->dopValid=FALSE_FLAG;
+	for(i=0;i<5;i++) pvtRes->dop[i]=NAN;
 
 	/* prepare inputs */
 	pos[0] = pvtRes->ecefPosition[0];
@@ -79,13 +79,11 @@ int DopEvaluation(TNGeneData *rx,int performedPvt)
 			lsData->x[(0*nCh)+chIdx] = satPos[0];
 			lsData->x[(1*nCh)+chIdx] = satPos[1];
 			lsData->x[(2*nCh)+chIdx] = satPos[2];
-			rho2 = pow((lsData->x[(0*nCh)+chIdx] - pos[0]), 2.0) +
-					pow((lsData->x[(1*nCh)+chIdx] - pos[1]), 2.0) +
-					pow((lsData->x[(2*nCh)+chIdx] - pos[2]), 2.0);
-			travelTime = sqrt(rho2)/ SPEED_OF_LIGHT;
-			EarthCorrection(travelTime,lsData->x,lsData->xRotate,nCh,chIdx);
-			range = hypot(hypot(lsData->xRotate[chIdx]-pos[0],
-				lsData->xRotate[nCh+chIdx]-pos[1]),lsData->xRotate[2*nCh+chIdx]-pos[2]);
+			{
+				double rotated[3];
+				range=RotateSatellitePosition(satPos,pos,rotated);
+				for(i=0;i<3;i++) lsData->xRotate[i*nCh+chIdx]=rotated[i];
+			}
 			if(!isfinite(range) || range <= 0) return FALSE_FLAG;
 			// Build the A matrix
 			lsData->a[(chIdx*size)+0] = -(lsData->xRotate[(0*nCh)+chIdx]-pos[0])/range;
@@ -137,5 +135,6 @@ int DopEvaluation(TNGeneData *rx,int performedPvt)
 	if(!isfinite(vertical) || !isfinite(spatial)) return FALSE_FLAG;
 	pvtRes->dop[VDOP_INDEX_IN_DOP_ARRAY] = sqrt(fmax(0,vertical));
 	pvtRes->dop[HDOP_INDEX_IN_DOP_ARRAY] = sqrt(fmax(0,spatial-vertical));
+	pvtRes->dopValid=TRUE_FLAG;
 	return TRUE_FLAG;
 }

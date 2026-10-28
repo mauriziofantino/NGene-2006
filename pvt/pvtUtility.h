@@ -24,6 +24,10 @@
  */
 double CheckT(double t1,double t2);
 
+/* Broadcast ECEF at transmit time -> ECEF axes at reception. Iterated
+ * geometric flight time is independent of receiver clock bias. */
+double RotateSatellitePosition(const double satellite[3],const double receiver[3],double rotated[3]);
+
 /*
  * @brief Calculates azimuth and elevation w.r.t. the last computed receiver position
  *

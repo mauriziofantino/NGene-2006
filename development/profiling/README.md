@@ -85,3 +85,17 @@ dal blocco di posizione, non dal numero di invocazioni PVT nel profiling.
 PowerShell `-CsvFiles @('file1.csv','file2.csv') -Labels @('serie1','serie2')` e
 `-OutputDirectory build/figures`. Il live e il replay vanno etichettati come
 sessioni RF diverse.
+
+## Verifica delle correzioni PVT
+
+L'harness `run-pvt-audit.ps1 -Verify` compila funzioni estratte dal sorgente
+corrente e confronti sintetici indipendenti, fuori dalla build operativa.
+I risultati prima delle correzioni restano in `pvt-audit-20261028/`; quelli
+successivi in [pvt-fixes-20261028](pvt-fixes-20261028/README.md).
+
+`profile-replay.ps1 -PvtMethod 0` forza LS nella copia isolata; `-PvtMethod 1`
+forza Kalman. Gli override non cambiano la configurazione della radice.
+`analyze-gnss-log.ps1` distingue le statistiche MeasurementSolutions e
+PredictionOnlySolutions e salva il solver in ogni riga CSV. AllFixes conserva
+il nome storico e include entrambe le categorie: non sommare le previsioni ai
+fix basati su nuove osservazioni.

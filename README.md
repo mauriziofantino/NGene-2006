@@ -9,6 +9,11 @@ The project is being maintained to refine its coding style and to identify and r
 bugs introduced by past changes. Changes should preserve the behavior and compatibility
 of the classic receiver unless a specific correction requires otherwise.
 
+Pseudorange, satellite navigation data and LS/Kalman corrections are documented
+in [PSEUDORANGE_PVT_AUDIT.md](PSEUDORANGE_PVT_AUDIT.md), including reproducible
+tests and replay limitations. `configuration/PVT.conf` selects LS (`[PVT method] 0`)
+or Kalman (`1`). Acquisition and tracking logic are unchanged by those corrections.
+
 ## Source layout
 
 - `receiver/` contains receiver startup, configuration, and channel management.
