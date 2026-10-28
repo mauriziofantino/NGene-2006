@@ -16,6 +16,7 @@
 #include "dop.h"
 #include "matrices.h"
 #include "pvtUtility.h"
+#include "smallLeastSquares.h"
 
 int DopEvaluation(TNGeneData *rx,int performedPvt)
 {
@@ -32,6 +33,9 @@ int DopEvaluation(TNGeneData *rx,int performedPvt)
 	int chIdx;
 	double rho2;
 	double travelTime;
+	double range, geod[3], up[3], vertical = 0, spatial;
+	int i, j;
+	(void)performedPvt;
 
 	/* prepare inputs */
 	pos[0] = pvtRes->ecefPosition[0];
@@ -64,9 +68,7 @@ int DopEvaluation(TNGeneData *rx,int performedPvt)
 	{
 		return FALSE_FLAG;
 	}
-	/* If Kalman filter has been used, A matrix is initialized here,
-	 * elsewhere, A matrix used during Least Square execution is already available */
-	if(performedPvt==KALMAN_BASED_PVT)
+	/* Rebuild at the final position, also after the last LS update. */
 	{
 		for(chIdx=0;chIdx<nCh;chIdx++)
 		{
@@ -82,10 +84,13 @@ int DopEvaluation(TNGeneData *rx,int performedPvt)
 					pow((lsData->x[(2*nCh)+chIdx] - pos[2]), 2.0);
 			travelTime = sqrt(rho2)/ SPEED_OF_LIGHT;
 			EarthCorrection(travelTime,lsData->x,lsData->xRotate,nCh,chIdx);
+			range = hypot(hypot(lsData->xRotate[chIdx]-pos[0],
+				lsData->xRotate[nCh+chIdx]-pos[1]),lsData->xRotate[2*nCh+chIdx]-pos[2]);
+			if(!isfinite(range) || range <= 0) return FALSE_FLAG;
 			// Build the A matrix
-			lsData->a[(chIdx*size)+0] = -(lsData->xRotate[(0*nCh)+chIdx]-pos[0])/pvtCh->pseudorangeCsm;
-			lsData->a[(chIdx*size)+1] = -(lsData->xRotate[(1*nCh)+chIdx]-pos[1])/pvtCh->pseudorangeCsm;
-			lsData->a[(chIdx*size)+2] = -(lsData->xRotate[(2*nCh)+chIdx]-pos[2])/pvtCh->pseudorangeCsm;
+			lsData->a[(chIdx*size)+0] = -(lsData->xRotate[(0*nCh)+chIdx]-pos[0])/range;
+			lsData->a[(chIdx*size)+1] = -(lsData->xRotate[(1*nCh)+chIdx]-pos[1])/range;
+			lsData->a[(chIdx*size)+2] = -(lsData->xRotate[(2*nCh)+chIdx]-pos[2])/range;
 			if(size==LS_MULTI_SIZE)
 			{
 				if(ch->satType==GPS_SAT)
@@ -106,26 +111,31 @@ int DopEvaluation(TNGeneData *rx,int performedPvt)
 		}
 	}
 	/* Elaborate A matrix and find DOPs */
-	MatrixTrasp(lsData->a,nCh,size,lsData->at);
-	MatrixProduct(lsData->at,size,nCh,lsData->a,nCh,size,lsData->atA);
-	MatrixInv(lsData->atA,size,lsData->invAtA,lsData->matrixL,lsData->matrixD,lsData->matrixU,lsData->matrixUt,lsData->matrixIL,lsData->matrixID,lsData->matrixIU,lsData->matrixIUt,lsData->matrixIUD,lsData->matrixDet);
+	if(!SmallLeastSquares(lsData->a,NULL,nCh,size,NULL,lsData->invAtA)) return FALSE_FLAG;
 	if(size==LS_MULTI_SIZE)
 	{
 		/* double constellation */
 		pvtRes->dop[GDOP_INDEX_IN_DOP_ARRAY]  = sqrt(lsData->invAtA[0] + lsData->invAtA[6] + lsData->invAtA[12] + lsData->invAtA[18] + lsData->invAtA[24]);
 		pvtRes->dop[PDOP_INDEX_IN_DOP_ARRAY]  = sqrt(lsData->invAtA[0] + lsData->invAtA[6] + lsData->invAtA[12]);
-		pvtRes->dop[HDOP_INDEX_IN_DOP_ARRAY]  = sqrt(lsData->invAtA[0] + lsData->invAtA[6]);
-		pvtRes->dop[VDOP_INDEX_IN_DOP_ARRAY]  = sqrt(lsData->invAtA[12]);
 		pvtRes->dop[TDOP_INDEX_IN_DOP_ARRAY]  = sqrt(lsData->invAtA[18] + lsData->invAtA[24]);
 	}
 	else
 	{
-		/* double constellation */
+		/* single constellation */
 		pvtRes->dop[GDOP_INDEX_IN_DOP_ARRAY]  = sqrt(lsData->invAtA[0] + lsData->invAtA[5] + lsData->invAtA[10] + lsData->invAtA[15]);
 		pvtRes->dop[PDOP_INDEX_IN_DOP_ARRAY]  = sqrt(lsData->invAtA[0] + lsData->invAtA[5] + lsData->invAtA[10]);
-		pvtRes->dop[HDOP_INDEX_IN_DOP_ARRAY]  = sqrt(lsData->invAtA[0] + lsData->invAtA[5]);
-		pvtRes->dop[VDOP_INDEX_IN_DOP_ARRAY]  = sqrt(lsData->invAtA[10]);
 		pvtRes->dop[TDOP_INDEX_IN_DOP_ARRAY]  = sqrt(lsData->invAtA[15]);
 	}
+	/* Up is the geodetic surface normal, not the ECEF Z axis. The trace
+	 * of the spatial covariance is invariant under the ENU rotation. */
+	Ecef2Geod(pos,geod); /* longitude, latitude, height */
+	up[0] = cos(geod[1]*DEGREE_TO_RADIAN)*cos(geod[0]*DEGREE_TO_RADIAN);
+	up[1] = cos(geod[1]*DEGREE_TO_RADIAN)*sin(geod[0]*DEGREE_TO_RADIAN);
+	up[2] = sin(geod[1]*DEGREE_TO_RADIAN);
+	for(i=0;i<3;i++) for(j=0;j<3;j++) vertical += up[i]*lsData->invAtA[i*size+j]*up[j];
+	spatial = lsData->invAtA[0]+lsData->invAtA[size+1]+lsData->invAtA[2*size+2];
+	if(!isfinite(vertical) || !isfinite(spatial)) return FALSE_FLAG;
+	pvtRes->dop[VDOP_INDEX_IN_DOP_ARRAY] = sqrt(fmax(0,vertical));
+	pvtRes->dop[HDOP_INDEX_IN_DOP_ARRAY] = sqrt(fmax(0,spatial-vertical));
 	return TRUE_FLAG;
 }

@@ -2259,7 +2259,7 @@ int PvtManager(TNGeneConfiguration *cfg,TNGeneData *rx)
 	if(pvtData->pvtAlgorithm==LMS_BASED_PVT)
 	{
 		if(PerformLeastSquares(cfg,rx)==FAILURE_RETURN)
-			return FAILURE_RETURN;
+			goto invalidPvtGeometry;
 	}
 	else
 	{
@@ -2271,7 +2271,8 @@ int PvtManager(TNGeneConfiguration *cfg,TNGeneData *rx)
 	PositionVelocityConversions(pvtTmpRes);
 	pvtTmpRes->pvtValid = TRUE_FLAG;
 	pvtTmpRes->pvtPlotted = FALSE_FLAG;
-	DopEvaluation(rx,pvtData->pvtAlgorithm);
+	if(DopEvaluation(rx,pvtData->pvtAlgorithm)==FALSE_FLAG)
+		goto invalidPvtGeometry;
 	SetReferenceRxTime(rx,cfg->navMsgConfiguration.defaultLeapSeconds);
 	/* check the PVT result: if an error condition happens, the result is discarded */
 	pvtSuccess = CheckPvtResultsGoodness(cfg,pvtData,pvtTmpRes,pvtRes,&failureFlag);
@@ -2337,4 +2338,12 @@ int PvtManager(TNGeneConfiguration *cfg,TNGeneData *rx)
 	/* Prepare the next execution */
 	SetRxTimeForNextPvt(cfg,rx);
 	return SUCCESS_RETURN;
+
+invalidPvtGeometry:
+	SwrxLog(NGENE_LOG_SEVERITY_WARNING,"PVT skipped: invalid or rank-deficient geometry");
+	pvtTmpRes->pvtValid = FALSE_FLAG;
+	SetRxTimeForNextPvt(cfg,rx);
+	ResetPvt(cfg,pvtData,pvtRes,FALSE_FLAG);
+	ResetPvtInformationForChannels(cfg,rx);
+	return FAILURE_RETURN;
 }

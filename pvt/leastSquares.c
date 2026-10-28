@@ -20,6 +20,7 @@
 #include "closeManager.h"
 #include "matrices.h"
 #include "pvtUtility.h"
+#include "smallLeastSquares.h"
 
 
 int InitLeastSquaresData(TNGeneConfiguration *cfg,TNGeneData *rx)
@@ -169,6 +170,7 @@ int PerformLeastSquares(TNGeneConfiguration *cfg,TNGeneData *rx)
 		idxGpsBias = 3;
 		idxGalBias = 3;
 	}
+	if(nCh < curSize) return FAILURE_RETURN;
 	for(chIdx=0;chIdx<nCh;chIdx++)
 	{
 		satStatus = pvtData->pvtChArray[chIdx].satStatus;
@@ -214,9 +216,10 @@ int PerformLeastSquares(TNGeneConfiguration *cfg,TNGeneData *rx)
 							 (lsData->xRotate[(1*nCh)+chIdx]-lsData->pos[1]) * (lsData->xRotate[(1*nCh)+chIdx]-lsData->pos[1]) +
 							 (lsData->xRotate[(2*nCh)+chIdx]-lsData->pos[2]) * (lsData->xRotate[(2*nCh)+chIdx]-lsData->pos[2]));
 			/* Build the A matrix */
-			lsData->a[(curSize*chIdx)+0] = -(lsData->xRotate[(0*nCh)+chIdx] - lsData->pos[0] ) / pvtCh->pseudorangeCsm;
-			lsData->a[(curSize*chIdx)+1] = -(lsData->xRotate[(1*nCh)+chIdx] - lsData->pos[1] ) / pvtCh->pseudorangeCsm;
-			lsData->a[(curSize*chIdx)+2] = -(lsData->xRotate[(2*nCh)+chIdx] - lsData->pos[2] ) / pvtCh->pseudorangeCsm;
+			if(!isfinite(geomRange) || geomRange <= 0) return FAILURE_RETURN;
+			lsData->a[(curSize*chIdx)+0] = -(lsData->xRotate[(0*nCh)+chIdx] - lsData->pos[0] ) / geomRange;
+			lsData->a[(curSize*chIdx)+1] = -(lsData->xRotate[(1*nCh)+chIdx] - lsData->pos[1] ) / geomRange;
+			lsData->a[(curSize*chIdx)+2] = -(lsData->xRotate[(2*nCh)+chIdx] - lsData->pos[2] ) / geomRange;
 			lsData->a[(curSize*chIdx)+idxGpsBias]=0.0; /* TODO dovrebbe già essere zero: verificare! */
 			lsData->a[(curSize*chIdx)+idxGalBias]=0.0; /* TODO dovrebbe già essere zero: verificare! */
 			if(ch->satType==GPS_SAT)
@@ -230,13 +233,8 @@ int PerformLeastSquares(TNGeneConfiguration *cfg,TNGeneData *rx)
 				lsData->a[(curSize*chIdx)+idxGalBias]=1.0;
 			}
 		}
-		/* Calculate the solution of the AX= B system with the formula x = inv(A'A) * (A'B) */
-		MatrixTrasp(lsData->a,nCh,curSize,lsData->at);
-		MatrixProduct(lsData->at,curSize,nCh,lsData->a,nCh,curSize,lsData->atA);
-		MatrixInv(lsData->atA,curSize,lsData->invAtA,lsData->matrixL,lsData->matrixD,lsData->matrixU,
-				  lsData->matrixUt,lsData->matrixIL,lsData->matrixID,lsData->matrixIU,lsData->matrixIUt,lsData->matrixIUD,lsData->matrixDet);
-		MatrixProduct(lsData->at,curSize,nCh,lsData->b,nCh,1,lsData->atB);
-		MatrixProduct(lsData->invAtA,curSize,curSize,lsData->atB,curSize,1,lsData->sol);
+		if(!SmallLeastSquares(lsData->a,lsData->b,nCh,curSize,lsData->sol,NULL))
+			return FAILURE_RETURN;
 		MatrixSum(lsData->pos,curSize,1,lsData->sol,curSize,1,lsData->pos);
 	}
 	/* Compute the velocity and the clock drift */
@@ -259,12 +257,8 @@ int PerformLeastSquares(TNGeneConfiguration *cfg,TNGeneData *rx)
 		MatrixProduct(aCorrectRow,1,3,lsData->satVel,3,1,&prod);
 		lsData->satRadialVelAndDoppler[chIdx] = SPEED_OF_LIGHT / L1_FREQUENCY * pvtCh->deltaPseudorange + prod;
 	}
-	MatrixTrasp(lsData->ac,nCh,4,lsData->act);
-	MatrixProduct(lsData->act,4,nCh,lsData->ac,nCh,4,lsData->actAc);
-	MatrixInv(lsData->actAc,4,lsData->invActAc,lsData->matrixL,lsData->matrixD,lsData->matrixU,
-			  lsData->matrixUt,lsData->matrixIL,lsData->matrixID,lsData->matrixIU,lsData->matrixIUt,lsData->matrixIUD,lsData->matrixDet);
-	MatrixProduct(lsData->act,4,nCh,lsData->satRadialVelAndDoppler,nCh,1,lsData->actB);
-	MatrixProduct(lsData->invActAc,4,4,lsData->actB,4,1,lsData->userVel);
+	if(!SmallLeastSquares(lsData->ac,lsData->satRadialVelAndDoppler,nCh,4,lsData->userVel,NULL))
+		return FAILURE_RETURN;
 	/* Save the results */
 	pvtRes->ecefPosition[0] = lsData->pos[0];
 	pvtRes->ecefPosition[1] = lsData->pos[1];

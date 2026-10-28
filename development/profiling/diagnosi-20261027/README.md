@@ -8,6 +8,9 @@ WGS84 fornito dall'utente, con quota ellissoidica.
 - `live/`: 137 fix Linux, sessione precedente alla registrazione RF.
 - `replay/`: replay misto 8 GPS / 8 Galileo / 1 EGNOS, 40 fix e 14 perdite.
 - `gps-only/`: stesso RF, 8 GPS / 0 Galileo / 0 EGNOS, 63 fix e 8 perdite.
+- `pvt-qr-mixed/`, `pvt-qr-gps/`: ripetizione dopo le correzioni PVT/QR;
+  stessa disponibilita' fix e perdite, nessun miglioramento metrico dimostrato.
+  `run.json` conserva gli hash dei binari e i riferimenti ai log.
 - `iq-summary.json`, `iq-per-second.csv`: distribuzioni del CI8 completo.
 - CSV di fase GPS: matched filter indipendente in double, salto comune
   intorno a 77.073 s gia' nel file RF.

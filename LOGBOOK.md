@@ -1,5 +1,42 @@
 # Logbook NGene Classic
 
+## 28 ottobre 2026 — Controllo mirato PVT / LMS
+
+Richiesta: verificare il PVT, soprattutto LMS, contenendo il round. L'utente
+ribadisce che Navigation/Tracking/Acquisition continua a oscillare: non
+considerare risolto il tracking da una correzione del solver.
+
+Correzioni: Jacobiano LS normalizzato con distanza geometrica anziche'
+pseudorange; QR Givens in double per posizione/velocita' e covarianza DOP,
+senza equazioni normali, dipendenze o allocazioni aggiuntive; geometria DOP
+ricostruita alla posizione finale, HDOP/VDOP nel piano locale; rigetto esplicito
+di rango insufficiente/non finiti con avanzamento alla successiva epoca PVT.
+Corretti anche `deltaTime += fabs(deltaTime)` per Galileo, radice della variabile
+errata nel controllo dinamico e argomento mancante del relativo log.
+
+Nessun cambiamento ad acquisizione, tracking, soglie di lock o smoothing.
+Risolutore ancora LS non pesato, massimo 7 iterazioni; nessuna pretesa di aver
+verificato integralmente modelli atmosferici, osservabili e outlier.
+
+Test: nuovo contratto QR (4/5 stati, soluzioni note, residui, covarianza,
+condizionamento 1e9, rango insufficiente/non finiti), totale 10/10. Replay
+completi sulla diagnosi: misto 40 fix e 14 perdite identiche anche nelle epoche;
+GPS-only 63 fix e 8 perdite. Misto RMS H/U 7.430/18.265 m contro 7.413/18.158 m;
+GPS-only 2.778/7.346 m, praticamente invariato. Nessun miglioramento metrico
+dimostrato; nessuna risoluzione del ping pong. Nel misto zero hard restart,
+zero fallimenti PVT gravi, 24 scarti GDOP.
+
+NAVIGATION in ncurses dipende da `usedForPVT`, non e' un nuovo stato del loop:
+lo scarto del PVT puo' far apparire TRACKING senza perdita RF. TRACKING ->
+ACQUISITION passa da TRACKING_LOST o HardRestartChannels; nel replay e' il
+primo percorso. Uscire da TRACKING_LOCKED azzera lo smoothing del canale;
+anche ResetPvt soft azzera globalmente lo smoothing: possibile prolungamento
+della indisponibilita' PVT, non prova della causa delle perdite di lock.
+
+Nuovi CSV/statistiche in `development/profiling/diagnosi-20261027/pvt-qr-*`.
+Log completi: `build/profile-20261027-152510-947` (misto), `...-958` (GPS).
+Profiling OFF; strumenti di test separati dall'eseguibile operativo.
+
 ## 27 ottobre 2026 — Diagnosi RF e verifica acquisizione per satellite
 
 L'utente conferma configurazione Linux identica al repository: 8 GPS, 8 Galileo,

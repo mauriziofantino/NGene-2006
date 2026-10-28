@@ -64,7 +64,7 @@ add_library(ngene_fft STATIC asmFolder/fft.c asmFolder/fft_sse2.c)
 target_link_libraries(ngene_fft PUBLIC ngene_platform PkgConfig::USB)
 target_compile_options(ngene_fft PRIVATE ${NGENE_OPTIMIZE})
 
-# Receiver sources. Loop/search/PVT algorithms retain their existing math.
+# Receiver sources. Acquisition and tracking retain their existing logic.
 add_executable(ngene
     receiver/ngene.c
     receiver/manageConfiguration.c
@@ -193,6 +193,12 @@ if(NGENE_BUILD_PLATFORM_CHECKS)
     target_link_libraries(ngene_check_fft PRIVATE ngene_fft)
     target_compile_options(ngene_check_fft PRIVATE ${NGENE_OPTIMIZE})
     add_test(NAME fft_evo_classic_contract COMMAND ngene_check_fft)
+
+    add_executable(ngene_check_pvt_solver tools/check_pvt_solver.c)
+    if(NOT NGENE_NATIVE_WINDOWS)
+        target_link_libraries(ngene_check_pvt_solver PRIVATE m)
+    endif()
+    add_test(NAME pvt_qr_solver COMMAND ngene_check_pvt_solver)
     set_tests_properties(fft_evo_classic_contract PROPERTIES TIMEOUT 60)
     add_executable(ngene_check_wide_iq tools/check_wide_iq.c asmFolder/wideInput.c
         asmFolder/hackrfInput.c acquisition/hackrfThreshold.c utility/sampleCompression.c asmFolder/carrierTable.c)

@@ -523,3 +523,63 @@ prova RF con livelli non saturati; verifica statistica della stima soglie
 HackRF; benchmark Linux ripetuto in condizioni confrontabili; separazione dei
 dati prima di introdurre il pool multicore. Conservare nel frattempo la catena
 di acquisizione per satellite chiarita nella sezione 10.
+
+## 14. Controllo PVT / LMS, 28 ottobre 2026
+
+Il metodo chiamato LMS nel progetto e' un least squares iterativo, non un
+filtro adattativo a gradiente. Il controllo mirato ha individuato e corretto:
+
+1. **Jacobiano:** le componenti della linea di vista erano divise per la
+   pseudodistanza misurata, che contiene il bias di clock. Ora il denominatore
+   e' la distanza geometrica usata nel modello della misura.
+2. **Risoluzione numerica:** `inv(A'A) A'b` con LDU senza pivoting e nessuna
+   segnalazione di singolarita' e' sostituito da QR Givens in double per i
+   4/5 stati. Il nuovo solver non forma A'A, non alloca memoria ed espone il
+   fallimento per rango numericamente insufficiente o dati non finiti. Stesso
+   percorso per la velocita'. Armadillo non e' necessario per queste dimensioni.
+3. **DOP:** geometria ricostruita alla posizione finale anche dopo LS;
+   covarianza ricavata da R senza equazioni normali. HDOP/VDOP usano la
+   proiezione locale orizzontale/verticale, anziche' X/Y/Z ECEF.
+4. **Controlli:** lo scarto temporale Galileo usava `dt += abs(dt)`, che
+   annullava gli errori negativi; ora usa il valore assoluto come GPS. Nel
+   controllo dinamico veniva usata `sqrt(deltaPos)` invece di `sqrt(vel)` e
+   mancava l'argomento del messaggio di errore. Corretti entrambi.
+5. **Fallimento geometrico:** LS e DOP possono interrompere esplicitamente
+   un'epoca non valida; il manager invalida il risultato e prepara la successiva,
+   evitando un risultato numerico obsoleto o un tentativo continuo sulla stessa
+   epoca. Le soglie configurate non sono state allentate.
+
+Il solver usa 4 stati in singola costellazione e 5 nella soluzione GPS/Galileo,
+con bias di clock distinti; la velocita' mantiene il modello storico a 4 stati.
+Restano LS non pesato e massimo 7 iterazioni. Non sono stati introdotti pesi
+C/N0, esclusione robusta degli outlier o nuovi modelli atmosferici. Questa e'
+una verifica mirata, non una validazione completa di ogni correzione GNSS.
+
+Test del nuovo solver su geometrie singole/miste, soluzioni note, ortogonalita'
+dei residui, identita' della covarianza, condizionamento 1e9, rango insufficiente
+e valori non finiti: superato. Totale build Windows **10/10**, profiling OFF.
+Test nel target separato `ngene_check_pvt_solver`, nessun self-test nel main.
+
+| Diagnosi, stesso RF | Fix prima/dopo | RMS H prima/dopo [m] | RMS U prima/dopo [m] | Perdite tracking prima/dopo |
+| --- | --- | --- | --- | --- |
+| GPS/Galileo/EGNOS 8/8/1 | 40 / 40 | 7.413 / 7.430 | 18.158 / 18.265 | 14 / 14 |
+| GPS 8/0/0 | 63 / 63 | 2.778 / 2.778 | 7.346 / 7.346 | 8 / 8 |
+
+I 14 eventi di perdita del replay misto coincidono anche per canale, campione
+e motivo. Zero hard restart, zero fallimenti PVT gravi, 24 scarti per GDOP.
+**Nessun miglioramento di accuratezza o stabilita' RF dimostrato su questo
+record.** Le correzioni risolvono difetti del calcolo e dei controlli; non
+spiegano da sole la dispersione metrica e non risolvono l'instabilita' segnalata.
+
+La GUI mostra NAVIGATION quando `ch->pvtInfo.usedForPVT` e' vero. Il PVT resetta
+questo flag a ogni tentativo e lo ripristina soltanto per le misure del fix
+accettato. Quindi Navigation -> Tracking puo' rappresentare uno scarto PVT,
+senza perdita di lock. Tracking -> Acquisition richiede TRACKING_LOST oppure
+un hard restart dei canali: nel replay la causa riportata e' perdita PLL/CN0,
+non hard restart. Nessuno di questi comportamenti e' stato mascherato cambiando
+le etichette o le soglie. Il soft reset PVT azzera inoltre lo smoothing globale:
+puo' allungare il recupero del fix, ma non comanda direttamente il lock RF.
+
+Risultati completi in `development/profiling/diagnosi-20261027/pvt-qr-mixed/`
+e `pvt-qr-gps/`; riferimenti e hash delle esecuzioni nei rispettivi `run.json`.
+I tempi sono replay Windows concorrenti, non un benchmark di carico Linux.

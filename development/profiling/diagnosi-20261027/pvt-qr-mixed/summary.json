@@ -1,0 +1,122 @@
+{
+    "InputLog":  "C:\\Users\\MaurizioFantino\\Downloads\\Projects\\NGene Classic\\build\\profile-20261027-152510-947\\run-1\\stdout.log",
+    "Reference":  {
+                      "Latitude":  45.06538716666666,
+                      "Longitude":  7.6593234722222228,
+                      "EllipsoidalHeight":  311.9349
+                  },
+    "Method":  "WGS84 ECEF difference rotated to ENU at reference. Population SD; nearest-rank P95. Positions parsed from rounded text output.",
+    "AllFixes":  {
+                     "Count":  40,
+                     "FirstRxMs":  47000,
+                     "LastRxMs":  119216,
+                     "East":  {
+                                  "Mean":  0.088821057763528985,
+                                  "PopulationSD":  3.6148908208452735,
+                                  "RMS":  3.6159818620858206,
+                                  "P95NearestRank":  4.7672153095689138,
+                                  "Minimum":  -4.526564844538334,
+                                  "Maximum":  6.342409435354103
+                              },
+                     "North":  {
+                                   "Mean":  -1.0854363684347774,
+                                   "PopulationSD":  6.3990371107890436,
+                                   "RMS":  6.4904428242744947,
+                                   "P95NearestRank":  5.6495650118922605,
+                                   "Minimum":  -14.799858480286698,
+                                   "Maximum":  10.317399940816532
+                               },
+                     "Up":  {
+                                "Mean":  -5.6079043303962406,
+                                "PopulationSD":  17.382994279210408,
+                                "RMS":  18.265187682855565,
+                                "P95NearestRank":  26.265096821793378,
+                                "Minimum":  -40.514905491572378,
+                                "Maximum":  26.615096445365637
+                            },
+                     "HeightError":  {
+                                         "Mean":  -5.6079000000000265,
+                                         "PopulationSD":  17.382992291317397,
+                                         "RMS":  18.265184461428259,
+                                         "P95NearestRank":  26.265099999999961,
+                                         "Minimum":  -40.514900000000011,
+                                         "Maximum":  26.615099999999984
+                                     },
+                     "Horizontal":  {
+                                        "Mean":  6.9418877077184975,
+                                        "PopulationSD":  2.6478987774340519,
+                                        "RMS":  7.4297491802960556,
+                                        "P95NearestRank":  10.51064534400536,
+                                        "Minimum":  1.9181783857612071,
+                                        "Maximum":  15.455018608878536
+                                    },
+                     "Error3D":  {
+                                     "Mean":  16.981236336870328,
+                                     "PopulationSD":  10.022767404434932,
+                                     "RMS":  19.718474940320526,
+                                     "P95NearestRank":  32.420450279469271,
+                                     "Minimum":  4.9358828227313367,
+                                     "Maximum":  41.370786658147729
+                                 }
+                 },
+    "Last60Seconds":  {
+                          "Count":  27,
+                          "FirstRxMs":  59296,
+                          "LastRxMs":  119216,
+                          "East":  {
+                                       "Mean":  -1.7320125775588255,
+                                       "PopulationSD":  2.5312977340762561,
+                                       "RMS":  3.0671380450448518,
+                                       "P95NearestRank":  2.8769590168372567,
+                                       "Minimum":  -4.526564844538334,
+                                       "Maximum":  3.270762911276079
+                                   },
+                          "North":  {
+                                        "Mean":  1.9778630063571652,
+                                        "PopulationSD":  4.8858304931981351,
+                                        "RMS":  5.27098488711369,
+                                        "P95NearestRank":  5.6495650824104562,
+                                        "Minimum":  -9.9098104403883056,
+                                        "Maximum":  10.317399940816532
+                                    },
+                          "Up":  {
+                                     "Mean":  2.210652638354508,
+                                     "PopulationSD":  14.938689472194968,
+                                     "RMS":  15.101371733525815,
+                                     "P95NearestRank":  26.585096489523295,
+                                     "Minimum":  -24.854908052068414,
+                                     "Maximum":  26.615096445365637
+                                 },
+                          "HeightError":  {
+                                              "Mean":  2.2106555555555283,
+                                              "PopulationSD":  14.938689102420113,
+                                              "RMS":  15.101371794776592,
+                                              "P95NearestRank":  26.585099999999954,
+                                              "Minimum":  -24.854900000000043,
+                                              "Maximum":  26.615099999999984
+                                          },
+                          "Horizontal":  {
+                                             "Mean":  5.8071116771356923,
+                                             "PopulationSD":  1.8622758755932929,
+                                             "RMS":  6.0984110608864741,
+                                             "P95NearestRank":  10.127670924702596,
+                                             "Minimum":  1.9181783857612071,
+                                             "Maximum":  10.51064534400536
+                                         },
+                          "Error3D":  {
+                                          "Mean":  13.679918014825535,
+                                          "PopulationSD":  8.8375273017584917,
+                                          "RMS":  16.286253273901732,
+                                          "P95NearestRank":  27.453197800916588,
+                                          "Minimum":  4.9358828227313367,
+                                          "Maximum":  28.067401805546961
+                                      }
+                      },
+    "TrackingLost":  14,
+    "PllWarnings":  0,
+    "RecoveredLocks":  0,
+    "HardRestarts":  0,
+    "PvtFailures":  0,
+    "GdopRejections":  24,
+    "QueueOverflows":  0
+}
