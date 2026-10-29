@@ -7,7 +7,7 @@ These binary files contain the spreading codes for
 Each chip occupies one byte (one samples per chip).
 Each code is reported using two different modulations:
  - +1/-1   BPSK
- -  0/-1   NGene2 internal format
+ -  0/-1   NGene Classic internal format
 Galileo codes don't contain BOC.
 
 -------------------------------

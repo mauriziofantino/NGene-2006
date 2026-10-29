@@ -9,14 +9,11 @@
  *
  * @brief Functions that manage the Warm Start.
  */
-
 #ifndef WARM_START_H_INCLUDED
 #define WARM_START_H_INCLUDED
-
 #include "warmStartConfiguration.h"
 #include "ngeneConfiguration.h"
 #include "ngeneDataStructure.h"
-
 /**
  * @brief Initialization of the variables used to manage the Warm Start.
  *        It parses the almanac files.
@@ -26,15 +23,13 @@
  *
  * @return SUCCESS_RETURN when the function ends with success, FAILURE_RETURN otherwise
  */
-int InitWarmStartData(TNGeneConfiguration *cfg,TNGeneData *rx);
-
+int InitWarmStartData(TNGeneConfiguration *cfg, TNGeneData *rx);
 /**
  * @brief Deinit the variables used to manage the Warm Start.
  *
  * @param warmData points to the Warm Start data structure
  */
 void DeinitWarmStartData(TWarmStartData *warmData);
-
 /**
  * @brief Updates the visibility list.
  *
@@ -44,8 +39,7 @@ void DeinitWarmStartData(TWarmStartData *warmData);
  * @param cfg points to the receiver configuration
  * @param rx points to the receiver
  */
-void UpdateVisibilityList(TNGeneConfiguration *cfg,TNGeneData *rx);
-
+void UpdateVisibilityList(TNGeneConfiguration *cfg, TNGeneData *rx);
 /**
  * @brief Check the visibility of a satellite.
  *
@@ -56,10 +50,11 @@ void UpdateVisibilityList(TNGeneConfiguration *cfg,TNGeneData *rx);
  * @param satType current constellation
  * @satId satId current PRN
  *
- * @return TRUE_FLAG when the current PRN can be allocated by GetNextPrnForAcquisition, FALSE_FLAG if it should be discarded
+ * @return TRUE_FLAG when the current PRN can be allocated by GetNextPrnForAcquisition, FALSE_FLAG
+ * if it should be discarded
  */
-int CheckSatVisibility(TWarmStartConfiguration *warmCfg,TWarmStartData *warmData,TSatConstellation satType,int satId);
-
+int CheckSatVisibility(TWarmStartConfiguration *warmCfg, TWarmStartData *warmData,
+                       TSatConstellation satType, int satId);
 /**
  * @brief Mark the satellite as available in the visibility list.
  *
@@ -68,6 +63,6 @@ int CheckSatVisibility(TWarmStartConfiguration *warmCfg,TWarmStartData *warmData
  * @param satType current constellation
  * @satId satId current PRN
  */
-void FreeInTheVisibilityList(TWarmStartConfiguration *warmCfg,TWarmStartData *warmData,TSatConstellation satType,int satId);
-
+void FreeInTheVisibilityList(TWarmStartConfiguration *warmCfg, TWarmStartData *warmData,
+                             TSatConstellation satType, int satId);
 #endif /* WARM_START_H_INCLUDED */

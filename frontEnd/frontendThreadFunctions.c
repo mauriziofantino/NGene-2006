@@ -9,7 +9,6 @@
  *
  * @brief Function performed in a separate thread that manages USB Front End
  */
-
 #define _GNU_SOURCE
 #include <stdio.h>
 #include <pthread.h>
@@ -26,23 +25,20 @@
 #include "ioFunctions.h"
 #include "signalHandler.h"
 #include "hackrfFrontend.h"
-
-
 extern int stopFrontEndFlag;
 extern int stopReceiverFlag;
-
-
 /**
  * @def DEFAULT_INDEX_CPU
  * @brief Index of the CPU that will host the thread managing the access to the USB
  */
-#define DEFAULT_INDEX_CPU  2
-
-
+#define DEFAULT_INDEX_CPU 2
 #ifndef MONITOR_INTERMEDIATE_BUFFER
-void InitUsbFrontEndThreadFunction(TRxFe *ngeneFe, TFrontEndThreadFunctionParameters *frontEndThreadFunctionParameters)
+void InitUsbFrontEndThreadFunction(
+    TRxFe *ngeneFe, TFrontEndThreadFunctionParameters *frontEndThreadFunctionParameters)
 #else
-void InitUsbFrontEndThreadFunction(TRxFe *ngeneFe, TFrontEndThreadFunctionParameters *frontEndThreadFunctionParameters, TNGeneConfiguration *ngeneCfg)
+void InitUsbFrontEndThreadFunction(
+    TRxFe *ngeneFe, TFrontEndThreadFunctionParameters *frontEndThreadFunctionParameters,
+    TNGeneConfiguration *ngeneCfg)
 #endif
 {
     stopFrontEndFlag = FALSE_FLAG;
@@ -55,7 +51,8 @@ void InitUsbFrontEndThreadFunction(TRxFe *ngeneFe, TFrontEndThreadFunctionParame
     ngeneFe->usbFe.flagBufferFull = FALSE_FLAG;
     ngeneFe->usbFe.shutdownRequested = FALSE_FLAG;
     /* Initialize USB front-end */
-    InitializeRxFrontEnd(frontEndThreadFunctionParameters->ngeneConfiguration, frontEndThreadFunctionParameters->ngeneFrontEnd);
+    InitializeRxFrontEnd(frontEndThreadFunctionParameters->ngeneConfiguration,
+                         frontEndThreadFunctionParameters->ngeneFrontEnd);
 #ifdef MONITOR_INTERMEDIATE_BUFFER
     char filename[MAX_ROW_LENGTH];
     filename[0] = '\0';
@@ -63,17 +60,19 @@ void InitUsbFrontEndThreadFunction(TRxFe *ngeneFe, TFrontEndThreadFunctionParame
     strcat(filename, "/percentageIntermediateBufferFull.bin");
     ngeneFe->usbFe.percentageIntBufFullFile = fopen(filename, "wb");
     if (ngeneFe->usbFe.percentageIntBufFullFile == NULL) {
-	SwrxLog(NGENE_LOG_SEVERITY_NOTE, "The file percentageIntermediateBufferFullFile.bin has not been correctly created.");
-
+        SwrxLog(
+            NGENE_LOG_SEVERITY_NOTE,
+            "The file percentageIntermediateBufferFullFile.bin has not been correctly created.");
     }
 #endif
 }
-
-void DeinitUsbFrontEndThreadFunction(TRxFe *ngeneFe, TFrontEndThreadFunctionParameters *frontEndThreadFunctionParameters)
+void DeinitUsbFrontEndThreadFunction(
+    TRxFe *ngeneFe, TFrontEndThreadFunctionParameters *frontEndThreadFunctionParameters)
 {
     /* Join native vendor callbacks before destroying their synchronization. */
     StopRxFrontEnd(frontEndThreadFunctionParameters->ngeneFrontEnd);
-    DeinitializeRxFrontEnd(frontEndThreadFunctionParameters->ngeneConfiguration, frontEndThreadFunctionParameters->ngeneFrontEnd);
+    DeinitializeRxFrontEnd(frontEndThreadFunctionParameters->ngeneConfiguration,
+                           frontEndThreadFunctionParameters->ngeneFrontEnd);
     pthread_cond_destroy(&(ngeneFe->usbFe.intermediateBufferFull));
     pthread_cond_destroy(&(ngeneFe->usbFe.intermediateBufferEmpty));
     pthread_mutex_destroy(&(ngeneFe->usbFe.frontEndMutex));
@@ -84,7 +83,6 @@ void DeinitUsbFrontEndThreadFunction(TRxFe *ngeneFe, TFrontEndThreadFunctionPara
     fclose(ngeneFe->usbFe.percentageIntBufFullFile);
 #endif
 }
-
 void *UsbFrontEndThreadFunction(TFrontEndThreadFunctionParameters *frontEndThreadFunctionParameters)
 {
     TUsbFe *usbFe = &(frontEndThreadFunctionParameters->ngeneFrontEnd->usbFe);
@@ -93,25 +91,28 @@ void *UsbFrontEndThreadFunction(TFrontEndThreadFunctionParameters *frontEndThrea
     int maxPriority;
     int indexCpu;
     int numCpus = DEFAULT_INDEX_CPU + 1;
-
     /* Adjust the CPU index
        The maximum value for the CPU index is the number of available CPUs -1 */
 #ifdef NGENE_NATIVE_WINDOWS
-    { SYSTEM_INFO info; GetSystemInfo(&info); numCpus=(int)info.dwNumberOfProcessors; }
+    {
+        SYSTEM_INFO info;
+        GetSystemInfo(&info);
+        numCpus = (int)info.dwNumberOfProcessors;
+    }
 #else
     numCpus = sysconf(_SC_NPROCESSORS_ONLN);
 #endif
     if (DEFAULT_INDEX_CPU >= numCpus) {
-	indexCpu = numCpus - 1;
-	SwrxLog(NGENE_LOG_SEVERITY_WARNING, "CPU index %d not available; pthread_setaffinity_np will use CPU index %d instead", DEFAULT_INDEX_CPU, indexCpu);
+        indexCpu = numCpus - 1;
+        SwrxLog(NGENE_LOG_SEVERITY_WARNING,
+                "CPU index %d not available; pthread_setaffinity_np will use CPU index %d instead",
+                DEFAULT_INDEX_CPU, indexCpu);
     } else {
-	indexCpu = DEFAULT_INDEX_CPU;
+        indexCpu = DEFAULT_INDEX_CPU;
     }
-
     /* Act on the priority */
     maxPriority = sched_get_priority_max(SCHED_FIFO);
     SetCpuPriorityAndPolicy(indexCpu, SCHED_FIFO, maxPriority);
-
     /* Queue and start sampling only once this worker is ready to service USB.
      * Starting in the creator left a running FX2 without an event consumer
      * while pthread creation and worker scheduling were still in progress. */
@@ -133,73 +134,77 @@ void *UsbFrontEndThreadFunction(TFrontEndThreadFunctionParameters *frontEndThrea
         pthread_mutex_unlock(&usbFe->frontEndMutex);
         stopThread = TRUE_FLAG;
     }
-
     /* Thread main loop */
     while (stopThread == FALSE_FLAG && !ngeneStopRequested) {
-	if (FrontEndCheckStatus(frontEndThreadFunctionParameters->ngeneFrontEnd) == FAILURE_RETURN) {
-	    SwrxLog(NGENE_LOG_SEVERITY_INFO, "NGene2 front end thread stops due to a USB error");
-	    stopThread = TRUE_FLAG;
-	    pthread_mutex_lock(&usbFe->threadsMutexStopReceiver);
-	    stopReceiverFlag = TRUE_FLAG;
-	    pthread_mutex_unlock(&usbFe->threadsMutexStopReceiver);
-	    /* If the receiver thread is blocked on a cond_wait, we need to release it */
-	    pthread_mutex_lock(&usbFe->frontEndMutex);
-	    pthread_cond_signal(&usbFe->intermediateBufferEmpty);
-	    pthread_mutex_unlock(&usbFe->frontEndMutex);
-	} else {
-	    pthread_mutex_lock(&usbFe->threadsMutexStopFrontEnd);
-	    stopFrontEndFlagLocal = stopFrontEndFlag;
-	    pthread_mutex_unlock(&usbFe->threadsMutexStopFrontEnd);
-	    if (stopFrontEndFlagLocal == TRUE_FLAG) {
-		stopThread = TRUE_FLAG;
-		SwrxLog(NGENE_LOG_SEVERITY_INFO, "NGene2 front end thread stops due to a user command");
-	    } else {
-        if (frontEndThreadFunctionParameters->ngeneFrontEnd->hackrf)
-            ServiceHackrfFrontend(frontEndThreadFunctionParameters->ngeneFrontEnd);
-        else CopySamplesIntoUsbIntermediateBuffer(frontEndThreadFunctionParameters->ngeneFrontEnd);
-		/* libusb already waits for events; an extra sleep starves the USB queue
-		 * on Windows when the OS rounds tiny delays to its timer interval. */
-	    }
-	}
+        if (FrontEndCheckStatus(frontEndThreadFunctionParameters->ngeneFrontEnd) ==
+            FAILURE_RETURN) {
+            SwrxLog(NGENE_LOG_SEVERITY_INFO,
+                    "NGene Classic front end thread stops due to a USB error");
+            stopThread = TRUE_FLAG;
+            pthread_mutex_lock(&usbFe->threadsMutexStopReceiver);
+            stopReceiverFlag = TRUE_FLAG;
+            pthread_mutex_unlock(&usbFe->threadsMutexStopReceiver);
+            /* If the receiver thread is blocked on a cond_wait, we need to release it */
+            pthread_mutex_lock(&usbFe->frontEndMutex);
+            pthread_cond_signal(&usbFe->intermediateBufferEmpty);
+            pthread_mutex_unlock(&usbFe->frontEndMutex);
+        } else {
+            pthread_mutex_lock(&usbFe->threadsMutexStopFrontEnd);
+            stopFrontEndFlagLocal = stopFrontEndFlag;
+            pthread_mutex_unlock(&usbFe->threadsMutexStopFrontEnd);
+            if (stopFrontEndFlagLocal == TRUE_FLAG) {
+                stopThread = TRUE_FLAG;
+                SwrxLog(NGENE_LOG_SEVERITY_INFO,
+                        "NGene Classic front end thread stops due to a user command");
+            } else {
+                if (frontEndThreadFunctionParameters->ngeneFrontEnd->hackrf)
+                    ServiceHackrfFrontend(frontEndThreadFunctionParameters->ngeneFrontEnd);
+                else
+                    CopySamplesIntoUsbIntermediateBuffer(
+                        frontEndThreadFunctionParameters->ngeneFrontEnd);
+                /* libusb already waits for events; an extra sleep starves the USB queue
+                 * on Windows when the OS rounds tiny delays to its timer interval. */
+            }
+        }
     }
-
-    SwrxLog(NGENE_LOG_SEVERITY_INFO, "NGene2 front end thread exiting with stopThread=%d and stopFrontEndFlagLocal=%d", stopThread, stopFrontEndFlagLocal);
+    SwrxLog(
+        NGENE_LOG_SEVERITY_INFO,
+        "NGene Classic front end thread exiting with stopThread=%d and stopFrontEndFlagLocal=%d",
+        stopThread, stopFrontEndFlagLocal);
     return NULL;
 }
-
 void SetCpuPriorityAndPolicy(int indexCpu, int policy, int priority)
 {
 #ifdef NGENE_NATIVE_WINDOWS
     DWORD_PTR available, systemMask;
-    (void)policy; (void)priority;
-    if (indexCpu>=0 && indexCpu<(int)(sizeof(DWORD_PTR)*8) &&
-        GetProcessAffinityMask(GetCurrentProcess(),&available,&systemMask) &&
-        (available&((DWORD_PTR)1<<indexCpu))) {
-        if (!SetThreadAffinityMask(GetCurrentThread(),(DWORD_PTR)1<<indexCpu))
-            SwrxLog(NGENE_LOG_SEVERITY_INFO,"Unsuccessful in setting Windows thread affinity (%lu)",GetLastError());
+    (void)policy;
+    (void)priority;
+    if (indexCpu >= 0 && indexCpu < (int)(sizeof(DWORD_PTR) * 8) &&
+        GetProcessAffinityMask(GetCurrentProcess(), &available, &systemMask) &&
+        (available & ((DWORD_PTR)1 << indexCpu))) {
+        if (!SetThreadAffinityMask(GetCurrentThread(), (DWORD_PTR)1 << indexCpu))
+            SwrxLog(NGENE_LOG_SEVERITY_INFO,
+                    "Unsuccessful in setting Windows thread affinity (%lu)", GetLastError());
     }
-    if (!SetThreadPriority(GetCurrentThread(),THREAD_PRIORITY_ABOVE_NORMAL))
-        SwrxLog(NGENE_LOG_SEVERITY_INFO,"Unsuccessful in setting Windows thread priority (%lu)",GetLastError());
+    if (!SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_ABOVE_NORMAL))
+        SwrxLog(NGENE_LOG_SEVERITY_INFO, "Unsuccessful in setting Windows thread priority (%lu)",
+                GetLastError());
 #else
     pthread_t this_thread;
     struct sched_param params;
     cpu_set_t cpuset;
     int ret = 0;
-
     this_thread = pthread_self();
-
     CPU_ZERO(&cpuset);
     CPU_SET(indexCpu, &cpuset);
     ret = pthread_setaffinity_np(this_thread, sizeof(cpu_set_t), &cpuset);
     if (ret != 0) {
-	SwrxLog(NGENE_LOG_SEVERITY_INFO, "Unsuccessful in setting thread affinity");
+        SwrxLog(NGENE_LOG_SEVERITY_INFO, "Unsuccessful in setting thread affinity");
     }
-
     params.sched_priority = priority;
     ret = pthread_setschedparam(this_thread, policy, &params);
     if (ret != 0) {
-	SwrxLog(NGENE_LOG_SEVERITY_INFO, "Unsuccessful in setting thread priority and policy");
+        SwrxLog(NGENE_LOG_SEVERITY_INFO, "Unsuccessful in setting thread priority and policy");
     }
 #endif
-
 }

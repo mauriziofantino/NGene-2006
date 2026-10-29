@@ -9,18 +9,12 @@
  *
  * @brief Functions used to parse the EGNOS navigation message.
  */
-
 #ifndef EGNOS_MESSAGE_PARSER_H_INCLUDED
 #define EGNOS_MESSAGE_PARSER_H_INCLUDED
-
-
-int InitEgnosParser(TNGeneConfiguration *cfg,TChannel *ch);
-
+int InitEgnosParser(TNGeneConfiguration *cfg, TChannel *ch);
 void DeinitEgnosParser(TChannel *ch);
-
-void StartEgnosParser(TNGeneConfiguration *cfg,TChannel *ch);
-void CleanEgnosParserArrays(TEgnosParser *parser,int cleanInputs);
-
-void ParseEgnosMessage(TNGeneConfiguration *cfg,TNGeneData *rx,TChannel *ch,float corr,double time);
-
+void StartEgnosParser(TNGeneConfiguration *cfg, TChannel *ch);
+void CleanEgnosParserArrays(TEgnosParser *parser, int cleanInputs);
+void ParseEgnosMessage(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch, float corr,
+                       double time);
 #endif /* EGNOS_MESSAGE_PARSER_H_INCLUDED */

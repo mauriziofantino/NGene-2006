@@ -1,5 +1,5 @@
 # This file contains the list of all existing Galileo satellites and their PRN
-# One PRN per row, NGene2 reads just the first number in the row (the PRN) additional information are discarded 
+# One PRN per row, NGene Classic reads just the first number in the row (the PRN) additional information are discarded 
 11
 12
 19

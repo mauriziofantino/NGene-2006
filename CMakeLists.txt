@@ -33,7 +33,8 @@ else()
     include(platform/linux/dependencies.cmake)
 endif()
 set_source_files_properties(asmFolder/complexInput.c asmFolder/wideInput.c
-    asmFolder/hackrfInput.c asmFolder/carrierTable.c asmFolder/prnTable.c PROPERTIES COMPILE_OPTIONS "${NGENE_OPTIMIZE}")
+    asmFolder/hackrfInput.c asmFolder/carrierTable.c asmFolder/prnTable.c
+    frontEnd/hackrfGain.c PROPERTIES COMPILE_OPTIONS "${NGENE_OPTIMIZE}")
 
 include_directories(
     ${PROJECT_SOURCE_DIR}/secure
@@ -76,6 +77,7 @@ add_executable(ngene
     frontEnd/circularBuffer.c
     frontEnd/frontend.c
     frontEnd/hackrfFrontend.c
+    frontEnd/hackrfGain.c
     frontEnd/frontendThreadFunctions.c
     frontEnd/megaBuffer.c
     frontEnd/usbInterface.c
@@ -179,10 +181,10 @@ install(FILES libraries/eigen-LICENSE.txt libraries/eigen-NOTICE.txt DESTINATION
 option(NGENE_BUILD_PLATFORM_CHECKS "Build USB/platform diagnostic tools" OFF)
 if(NGENE_BUILD_PLATFORM_CHECKS)
     enable_testing()
-    add_executable(ngene_hackrf_capture tools/hackrf_capture.c frontEnd/hackrfFrontend.c)
+    add_executable(ngene_hackrf_capture tools/hackrf_capture.c frontEnd/hackrfFrontend.c frontEnd/hackrfGain.c)
     target_link_libraries(ngene_hackrf_capture PRIVATE ngene_hackrf ngene_fft)
     target_compile_options(ngene_hackrf_capture PRIVATE ${NGENE_OPTIMIZE})
-    add_executable(ngene_check_hackrf tools/check_hackrf.c frontEnd/hackrfFrontend.c)
+    add_executable(ngene_check_hackrf tools/check_hackrf.c frontEnd/hackrfFrontend.c frontEnd/hackrfGain.c)
     if(NGENE_NATIVE_WINDOWS)
         target_include_directories(ngene_check_hackrf PRIVATE "${_hackrf_generated}")
     else()
@@ -192,6 +194,13 @@ if(NGENE_BUILD_PLATFORM_CHECKS)
     target_link_libraries(ngene_check_hackrf PRIVATE ngene_platform PkgConfig::USB)
     add_test(NAME hackrf_rx_contract COMMAND ngene_check_hackrf)
     set_tests_properties(hackrf_rx_contract PROPERTIES TIMEOUT 15)
+    add_executable(ngene_check_hackrf_gain tools/check_hackrf_gain.c frontEnd/hackrfGain.c)
+    target_link_libraries(ngene_check_hackrf_gain PRIVATE ngene_platform)
+    if(NOT NGENE_NATIVE_WINDOWS)
+        target_link_libraries(ngene_check_hackrf_gain PRIVATE m)
+        target_link_libraries(ngene_check_hackrf PRIVATE m)
+    endif()
+    add_test(NAME hackrf_gain_autotune COMMAND ngene_check_hackrf_gain)
     add_executable(ngene_check_fft tools/check_fft.c)
     target_link_libraries(ngene_check_fft PRIVATE ngene_fft)
     target_compile_options(ngene_check_fft PRIVATE ${NGENE_OPTIMIZE})

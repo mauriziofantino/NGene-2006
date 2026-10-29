@@ -11,14 +11,9 @@
  *
  *          From the NeQuick model reference code with minor changes.
  */
-
 #ifndef NEQ_INTEGRATE_H_INCLUDED
 #define NEQ_INTEGRATE_H_INCLUDED
-
-
 #include "nequickDataStructures.h"
-
-
 /**
  * @brief This function performs integration to calculate the TEC along rays using
  *        the Kronrod G7-K15 adaptive quadrature method (see Knezevich and Radicella paper).
@@ -34,7 +29,7 @@
  *
  *   Interestingly, when an integration is split into two equal parts the
  *   tolerance isn't halved. So, the accuracy of the result is +- (2*dTolerance)
- *   
+ *
  *
  * @param pstIntegrateData Structure containing readonly NeQuick inputs (I)
  * @param dH1              Height of point 1 (I)
@@ -46,6 +41,6 @@
  *
  * @return Result of numerical integration
  */
-double NeqIntegrate(TIntegrateData *pstIntegrateData, double dH1,double dH2, int siCurrLevel, TSPoint *pstPactual, double *pdNmax,TLayerProperties *pstLayers);
-
+double NeqIntegrate(TIntegrateData *pstIntegrateData, double dH1, double dH2, int siCurrLevel,
+                    TSPoint *pstPactual, double *pdNmax, TLayerProperties *pstLayers);
 #endif /* NEQ_INTEGRATE_H_INCLUDED */

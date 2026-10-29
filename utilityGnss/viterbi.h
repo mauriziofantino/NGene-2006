@@ -9,15 +9,12 @@
  *
  * @brief Functions implementing the Viterbi decoder used in Galileo and EGNOS.
  */
-
 #ifndef VITERBI_H_INCLUDED
 #define VITERBI_H_INCLUDED
-
 /**
  * Init the metricTab table used during Viterbi decoding
  */
 void InitViterbi(void);
-
 /**
  * Executes Viterbi for the Galileo navigation message decoding
  *
@@ -30,10 +27,9 @@ void InitViterbi(void);
  *
  * @return FAILURE_RETURN if something went wrong, SUCCESS_RETURN elsewhere
  */
-int GalileoViterbi(long *finalPathMetric, unsigned char *decData, unsigned char *symbols, unsigned int numOutBits, unsigned int startState, unsigned int endState);
-
-
-int EgnosViterbi(long *stateMetric,unsigned char *decData,unsigned char *addData,unsigned int blocksize,unsigned char *symbols,unsigned int numSymbols,unsigned char polarityCorrection, unsigned long *paths1,unsigned long *paths2);
-
-
+int GalileoViterbi(long *finalPathMetric, unsigned char *decData, unsigned char *symbols,
+                   unsigned int numOutBits, unsigned int startState, unsigned int endState);
+int EgnosViterbi(long *stateMetric, unsigned char *decData, unsigned char *addData,
+                 unsigned int blocksize, unsigned char *symbols, unsigned int numSymbols,
+                 unsigned char polarityCorrection, unsigned long *paths1, unsigned long *paths2);
 #endif /* VITERBI_H_INCLUDED */

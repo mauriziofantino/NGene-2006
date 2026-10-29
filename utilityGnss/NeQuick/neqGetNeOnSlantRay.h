@@ -13,14 +13,9 @@
  *
  *          From the NeQuick model reference code with minor changes.
  */
-
 #ifndef NEQ_GET_NE_ON_SLANT_RAY_H_INCLUDED
 #define NEQ_GET_NE_ON_SLANT_RAY_H_INCLUDED
-
-
 #include "nequickDataStructures.h"
-
-
 /**
  * @brief This function calculates electron content at the specified distance along a
  *        slanted ray.
@@ -42,6 +37,7 @@
  *
  * @return Electron content at specified distance along the slanted ray
  */
-double NeqGetNeOnSlantRay(TNeQuickInputData *pstNeQuickInputData, TGeometryData *pstGeom, double dS, TCurrentCcir *pstCurrCCIR, TSPoint *pstPactual, double *pdNmax, TLayerProperties *pstLayers);
-
+double NeqGetNeOnSlantRay(TNeQuickInputData *pstNeQuickInputData, TGeometryData *pstGeom, double dS,
+                          TCurrentCcir *pstCurrCCIR, TSPoint *pstPactual, double *pdNmax,
+                          TLayerProperties *pstLayers);
 #endif /* NEQ_GET_NE_ON_SLANT_RAY_H_INCLUDED */

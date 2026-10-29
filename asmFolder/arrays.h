@@ -13,10 +13,8 @@
  */
 #ifndef ARRAYS_H_INCLUDED
 #define ARRAYS_H_INCLUDED
-
 #include "simd.h"
 #include "ngeneConfiguration.h"
-
 /**
    @brief ArrayXor is element-wise product of vectors of bytes using xor (8-bit)
    @details Approximates the product using XOR
@@ -34,9 +32,9 @@
  * @param n  number of elements
  */
 void ArrayXor(char *a, char *b, char *c, unsigned int n);
-
 /**
-     @brief ArrayMac (Array Multiply And Cumulate) performs dot product of vectors of byte integers  (8-bit)
+     @brief ArrayMac (Array Multiply And Cumulate) performs dot product of vectors of byte integers
+ (8-bit)
 
      @details Computes the inner product of the two integer byte sequences using bitwise xor
      and SIMD SSE2 instruction set
@@ -47,8 +45,9 @@ void ArrayXor(char *a, char *b, char *c, unsigned int n);
 
      b:  pointer to the second byte sequence. The sequence is n bytes long.
 
-         The elements of one sequence should be signed integers with values either 0 (hex 0x00) or -1 (hex 0xff);
-         The other sequence has signed integer elements 'x' with 'd' BITS OF DYNAMIC, i.e.  -2^(d-1)  <= x <= 2^(d-1)-1
+         The elements of one sequence should be signed integers with values either 0 (hex 0x00) or
+ -1 (hex 0xff); The other sequence has signed integer elements 'x' with 'd' BITS OF DYNAMIC, i.e.
+ -2^(d-1)  <= x <= 2^(d-1)-1
 
      n:  sequence length
 
@@ -77,7 +76,6 @@ void ArrayXor(char *a, char *b, char *c, unsigned int n);
  * @return   \f$ y = \sum (a[i] xor b[i]) \f$
 */
 int ArrayMac(char *a, char *b, unsigned int n);
-
 /**
  * @brief elementwise product of complex vectors
    @details Elementwise complex product of 2 vectors of length n
@@ -85,8 +83,9 @@ int ArrayMac(char *a, char *b, unsigned int n);
    C[i] = A[i]*B[i]; A[i], B[i], C[i] are complex
 
    A[i] = a[2*i]+j*a[2i+1];    (vector a contains 2*n short integers; format (Re Im), (Re Im), ....
-   B[i] = b[2*i]+j*b[2i+2];    (vector b contains 4*n short integers; format (Re -Im Im Re), (Re -Im Im Re), ....
-   C[i] = c[2*i]+j*c[2i+1];    (vector a contains 2*n short integers; format (Re Im), (Re Im), ....
+   B[i] = b[2*i]+j*b[2i+2];    (vector b contains 4*n short integers; format (Re -Im Im Re), (Re -Im
+ Im Re), .... C[i] = c[2*i]+j*c[2i+1];    (vector a contains 2*n short integers; format (Re Im), (Re
+ Im), ....
 
    Each Re or Im is a 16-bit signed integer
    a, b, c should be aligned to 16 byte boundary
@@ -96,8 +95,7 @@ int ArrayMac(char *a, char *b, unsigned int n);
  * @param c  pointer to the output     in the format [Re Im] for each of the n samples
  * @param n  number of complex elements to multiply
  */
-void ArrayProductComplex(TNGeneConfiguration *cfg,short *a,short *b,short *c,unsigned int n);
-
+void ArrayProductComplex(TNGeneConfiguration *cfg, short *a, short *b, short *c, unsigned int n);
 /**
  * @details Computes the square of the absolute value of complex numbers
  * - The input is a vector of n complex numbers in the format [Re Im], pointed by 'c'
@@ -108,13 +106,13 @@ void ArrayProductComplex(TNGeneConfiguration *cfg,short *a,short *b,short *c,uns
  *   s[i] = c[2*i]^2 + c[2*i+1]^2
  *
  * @param cfg points to the receiver configuration
- * @param c pointer to complex vector. Each complex element is in the format [Re Im], where Re and Im are short integers
+ * @param c pointer to complex vector. Each complex element is in the format [Re Im], where Re and
+ * Im are short integers
  * @param s pointer to square absolute values vector. Each element is a 32-bit unsigned integer.
  * @param n number of complex samples in the input array (should be a multiple of 4)
  * @return SUCCESS_RETURN when the function ends with success, FAILURE_RETURN otherwise
  */
 int ArrayAbs2(TNGeneConfiguration *cfg, short *c, unsigned int *s, unsigned int n);
-
 /**
  * @details Find the maximum in the vector pointed by 'v'. Vector 'v' has size n
  * The function returns the maximum and the index of the maximum
@@ -125,7 +123,6 @@ int ArrayAbs2(TNGeneConfiguration *cfg, short *c, unsigned int *s, unsigned int 
  * @param n input vector length
  */
 void ArrayMax(unsigned int *v, unsigned int *max, unsigned int *index, unsigned int n);
-
 /**
  * @brief ArrayAdd performs the sum of two arrays
  *
@@ -137,7 +134,6 @@ void ArrayMax(unsigned int *v, unsigned int *max, unsigned int *index, unsigned 
  * @param arrayLength	number of bytes to be added
  */
 void ArrayAdd(char *a, char *b, char *c, int arrayLength);
-
 /**
  * @brief ArrayAddUnsignedInt performs the sum of two arrays of unsigned integers (32 bits each)
  *
@@ -149,7 +145,6 @@ void ArrayAdd(char *a, char *b, char *c, int arrayLength);
  * @param arrayLength	number of bytes to be added
  */
 void ArrayAddUnsignedInt(unsigned int *a, unsigned int *b, unsigned int *c, int arrayLength);
-
 /**
  * @brief ArraySub performs the subtraction of two arrays
  *
@@ -161,8 +156,6 @@ void ArrayAddUnsignedInt(unsigned int *a, unsigned int *b, unsigned int *c, int 
  * @param arrayLength	number of bytes to be subtracted
  */
 void ArraySub(char *a, char *b, char *c, int arrayLength);
-
-
 /**
  * @brief ArrayClean resets all sample of the output array
  *
@@ -172,7 +165,6 @@ void ArraySub(char *a, char *b, char *c, int arrayLength);
  * @param arrayLength number of bytes to be reset
  */
 void ArrayClean(char *outputArray, int arrayLength);
-
 /**
  * @brief ArrayCopy performs a copy of an array of char (samples)
  * @details uses simd in order to initialize 16 bytes per time.
@@ -181,8 +173,7 @@ void ArrayClean(char *outputArray, int arrayLength);
  * @param outputArray pointer to the destination memory location
  * @param arrayLength number of bytes to be copied
  */
-void ArrayCopy(char *inputArray,char *outputArray,int arrayLength);
-
+void ArrayCopy(char *inputArray, char *outputArray, int arrayLength);
 /**
  * @brief Performs carrier wipe-off on input samples using cos+i*sin
  *
@@ -198,8 +189,9 @@ void ArrayCopy(char *inputArray,char *outputArray,int arrayLength);
  * @param cosDemod array containing samples demodulated using cosine
  * @param sinDemod array containing samples demodulated using sine
  */
-void CarrierComplexWipeOff(char *input1, unsigned int size1, char *input2, unsigned int size2, char *cosArray, char *sinArray, unsigned int carrierSize, char *cosDemod, char *sinDemod);
-
+void CarrierComplexWipeOff(char *input1, unsigned int size1, char *input2, unsigned int size2,
+                           char *cosArray, char *sinArray, unsigned int carrierSize, char *cosDemod,
+                           char *sinDemod);
 /* Input boundary: sizes count real samples or I/Q pairs, according to nativeIq.
  * Native mode rotates (I+jQ)*(cos+j*sin), using NGene's sign-valued oscillator.
  * Native outputs retain the XOR MAC half-LSB convention through balanced
@@ -211,14 +203,14 @@ typedef struct NativeIqScalingStruct {
 } TNativeIqScaling;
 /* Remove component DC; one shared power-of-two gain preserves IQ orientation.
  * Output components are rounded/clipped to [-7,7] for Classic's byte SIMD. */
-void AdaptIqClassic(const unsigned char *raw, char *iq, unsigned int pairs, TNativeIqScaling *scaling);
-
-void CarrierInputWipeOff(int nativeIq, char *input1, unsigned int size1,
-    char *input2, unsigned int size2, char *cosArray, char *sinArray,
-    unsigned int carrierSize, char *cosDemod, char *sinDemod);
-
+void AdaptIqClassic(const unsigned char *raw, char *iq, unsigned int pairs,
+                    TNativeIqScaling *scaling);
+void CarrierInputWipeOff(int nativeIq, char *input1, unsigned int size1, char *input2,
+                         unsigned int size2, char *cosArray, char *sinArray,
+                         unsigned int carrierSize, char *cosDemod, char *sinDemod);
 /**
- * @brief Performs carrier wipe-off on input samples using only cos (or sin). For subcarrier removal.
+ * @brief Performs carrier wipe-off on input samples using only cos (or sin). For subcarrier
+ * removal.
  *
  * @details Manages up to two bunches of input samples
  *
@@ -230,5 +222,6 @@ void CarrierInputWipeOff(int nativeIq, char *input1, unsigned int size1,
  * @param carrierSize number of samples in the carrier array (same for sine and cosine)
  * @param demod array containing samples demodulated
  */
-void CarrierRealWipeOff(char *input1, unsigned int size1, char *input2, unsigned int size2, char *carrierArray, unsigned int carrierSize, char *demod);
+void CarrierRealWipeOff(char *input1, unsigned int size1, char *input2, unsigned int size2,
+                        char *carrierArray, unsigned int carrierSize, char *demod);
 #endif /* ARRAYS_H_INCLUDED */

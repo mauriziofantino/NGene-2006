@@ -9,19 +9,14 @@
  *
  * @brief DOP computation
  */
-
-
 #ifndef DOP_H_INCLUDED
 #define DOP_H_INCLUDED
-
 #define GDOP_INDEX_IN_DOP_ARRAY 0
 #define PDOP_INDEX_IN_DOP_ARRAY 1
 #define HDOP_INDEX_IN_DOP_ARRAY 2
 #define VDOP_INDEX_IN_DOP_ARRAY 3
 #define TDOP_INDEX_IN_DOP_ARRAY 4
-
 #include "ngeneDataStructure.h"
-
 /**
  * @brief DopEvaluation evaluates the DOP related to the current position
  *        and the constellation used to evaluate the position.
@@ -35,6 +30,5 @@
  *
  * @return TRUE_FLAG if DOPs are evaluated, else FALSE_FLAG
  */
-int DopEvaluation(TNGeneData *rx,int performedPvt);
-
+int DopEvaluation(TNGeneData *rx, int performedPvt);
 #endif /* DOP_H_INCLUDED */

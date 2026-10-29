@@ -34,7 +34,6 @@ int NgSocketInit(void);
 ssize_t NgSocketRead(SOCKET socket, void *buffer, size_t size);
 ssize_t NgSocketWrite(SOCKET socket, const void *buffer, size_t size);
 ssize_t NgSocketSendfile(SOCKET socket, int input, int64_t *offset, size_t count);
-
 #define clock_gettime NgClockGettime
 #define gettimeofday NgGettimeofday
 #define posix_memalign NgPosixMemalign
@@ -60,6 +59,6 @@ ssize_t NgSocketSendfile(SOCKET socket, int input, int64_t *offset, size_t count
 #define S_ISDIR(mode) (((mode) & _S_IFMT) == _S_IFDIR)
 #define S_ISREG(mode) (((mode) & _S_IFMT) == _S_IFREG)
 #endif
-#define bzero(pointer,size) memset((pointer),0,(size))
+#define bzero(pointer, size) memset((pointer), 0, (size))
 #define SIGQUIT SIGBREAK
 #endif

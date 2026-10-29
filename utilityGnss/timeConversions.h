@@ -7,46 +7,40 @@
  */
 #ifndef TIME_CONVERSIONS_H_INCLUDED
 #define TIME_CONVERSIONS_H_INCLUDED
-
 #include "ngeneDataStructure.h"
 #include "spreadingCodes.h"
 #include "navigationMessageDataStructure.h"
-
 /**
  * @enum MonthEnum
  *
  * @brief is the type that indicates the month.
  */
-typedef enum MonthEnum
-{
-	JANUARY=1, /**< JANUARY = 1 */
-	FEBRUARY,  /**< FEBRUARY = 2 */
-	MARCH,     /**< MARCH = 3 */
-	APRIL,     /**< APRIL = 4 */
-	MAY,       /**< MAY = 5 */
-	JUNE,      /**< JUNE = 6 */
-	JULY,      /**< JULY = 7 */
-	AUGUST,    /**< AUGUST = 8 */
-	SEPTEMBER, /**< SEPTEMBER = 9 */
-	OCTOBER,   /**< OCTOBER = 10 */
-	NOVEMBER,  /**< NOVEMBER = 11 */
-	DECEMBER   /**< DECEMBER = 12 */
+typedef enum MonthEnum {
+    JANUARY = 1, /**< JANUARY = 1 */
+    FEBRUARY,    /**< FEBRUARY = 2 */
+    MARCH,       /**< MARCH = 3 */
+    APRIL,       /**< APRIL = 4 */
+    MAY,         /**< MAY = 5 */
+    JUNE,        /**< JUNE = 6 */
+    JULY,        /**< JULY = 7 */
+    AUGUST,      /**< AUGUST = 8 */
+    SEPTEMBER,   /**< SEPTEMBER = 9 */
+    OCTOBER,     /**< OCTOBER = 10 */
+    NOVEMBER,    /**< NOVEMBER = 11 */
+    DECEMBER     /**< DECEMBER = 12 */
 } TMonth;
-
 /**
  * @struct DateTimeStruct
  * @brief Represents the current date and time.
  */
-typedef struct DateTimeStruct
-{
-	int year;      /**< Current year */
-	TMonth month;  /**< Current month */
-	int day;       /**< Current day in the month (starts from 1) */
-	int hour;      /**< Current hour (starts from 0) */
-	int minute;    /**< Current minute in the hour (starts from 0) */
-	double second; /**< Current second (starts from 0) */
+typedef struct DateTimeStruct {
+    int year;      /**< Current year */
+    TMonth month;  /**< Current month */
+    int day;       /**< Current day in the month (starts from 1) */
+    int hour;      /**< Current hour (starts from 0) */
+    int minute;    /**< Current minute in the hour (starts from 0) */
+    double second; /**< Current second (starts from 0) */
 } TDateTime;
-
 /**
  * @brief FromGnssTimeToDate converts a date/time from GNSS format (week number, time of week)
  *        to a real date (dd/mm/yyyy hh:mm:ss)
@@ -57,7 +51,6 @@ typedef struct DateTimeStruct
  * @param datePtr points to the output structure
  */
 void FromGnssTimeToDate(TSatConstellation system, int wn, double tow, TDateTime *datePtr);
-
 /**
  * @brief FromDateToGnssTime converts a real date (dd/mm/yyyy hh:mm:ss)
  *        into a GNSS format (week number, time of week)
@@ -68,7 +61,6 @@ void FromGnssTimeToDate(TSatConstellation system, int wn, double tow, TDateTime 
  * @param datePtr points to the input structure
  */
 void FromDateToGnssTime(TSatConstellation system, int *wn, double *tow, TDateTime *datePtr);
-
 /**
  * @brief FromDayNumberToDate finds the date for a day whose
  *        number in the year is known. The year is known.
@@ -80,7 +72,6 @@ void FromDateToGnssTime(TSatConstellation system, int *wn, double *tow, TDateTim
  * @return 1 if the dayOfTheYear parameter is invalid, 0 else.
  */
 int FromDayNumberToDate(int dayOfTheYear, TDateTime *datePtr);
-
 /**
  * @brief FromDateToDayNumber finds the day number from the date.
  *
@@ -89,7 +80,6 @@ int FromDayNumberToDate(int dayOfTheYear, TDateTime *datePtr);
  * @return the dayOfTheYear.
  */
 int FromDateToDayNumber(TDateTime *datePtr);
-
 /**
  * @brief GetGstToGpsTimeOffset translates from Galileo System Time (GST)
  *        to GPS time.
@@ -103,8 +93,7 @@ int FromDateToDayNumber(TDateTime *datePtr);
  * @return TRUE_FLAG if the offset is valid (needed parameters not found in the
  *         Galileo navigation message), TRUE_FLAG else.
  */
-int GetGstToGpsTimeOffset(TNGeneData *rx,int gstWn, double gstTow, double *gstToGpsTimeOffset);
-
+int GetGstToGpsTimeOffset(TNGeneData *rx, int gstWn, double gstTow, double *gstToGpsTimeOffset);
 /**
  * @brief FromGnssTimeToUtcTime converts from GNSS time to UTC
  *        (week number, time of week). If parameters are not available,
@@ -119,8 +108,9 @@ int GetGstToGpsTimeOffset(TNGeneData *rx,int gstWn, double gstTow, double *gstTo
  * @param utcWn points to the output week number
  * @param utcTime points to the output time of week
  */
-void FromGnssTimeToUtcTime(TGnssToUtcTimeConversion *utcData, int utcDataValid, int defaultLeapSeconds, int gnssWn, double gnssTime, int *utcWn, double *utcTime);
-
+void FromGnssTimeToUtcTime(TGnssToUtcTimeConversion *utcData, int utcDataValid,
+                           int defaultLeapSeconds, int gnssWn, double gnssTime, int *utcWn,
+                           double *utcTime);
 /**
  * @brief TimeDifference returns the difference (in seconds) between two GNSS time.
  *
@@ -132,7 +122,6 @@ void FromGnssTimeToUtcTime(TGnssToUtcTimeConversion *utcData, int utcDataValid, 
  * @return time1-time2 in seconds
  */
 double TimeDifference(int wn1, double tow1, int wn2, double tow2);
-
 /**
  * @brief TimeIncrement returns the sums between two GNSS time.
  *
@@ -142,22 +131,22 @@ double TimeDifference(int wn1, double tow1, int wn2, double tow2);
  * @param towIncrement is the time of week of the increment (in seconds)
  */
 void TimeIncrement(int *wn, double *tow, int wnIncrement, double towIncrement);
-
 /**
  * @brief GetPcTime reads the date and the time of the PC.
  *
  * @param currTime points to the structure where the current date and time are saved
  */
 void GetPcTime(TDateTime *currTime);
-
 /**
- * @brief FromPcTimeToGalileoTime reads the current local time on the PC and uses it to emulate a receiver clock.
+ * @brief FromPcTimeToGalileoTime reads the current local time on the PC and uses it to emulate a
+ * receiver clock.
  *
  * @details The PC time is UTC (year,month,day,hour,minute,second).
  *          It takes into account both the time zone and the daylight saving time.
  *          The fractional part of the second is ignored
- *          The date and time is translated into Galileo WN/TOW by using the number of LEAP SECONDS recorded in the receiver
- *          (an error in the leap second should be negligible w.r.t. the error in the PC time).
+ *          The date and time is translated into Galileo WN/TOW by using the number of LEAP SECONDS
+ * recorded in the receiver (an error in the leap second should be negligible w.r.t. the error in
+ * the PC time).
  *
  * @param utcData points to the parameters used for conversion
  * @param utcDataValid is IS_TRUE when the parameters are valid.
@@ -165,6 +154,6 @@ void GetPcTime(TDateTime *currTime);
  * @param wn points the week number
  * @param tow points to the time of week (in seconds)
  */
-void FromPcTimeToGalileoTime(TGnssToUtcTimeConversion *utcData,int utcDataValid,int defaultLeapSeconds,int *wn, double *tow);
-
+void FromPcTimeToGalileoTime(TGnssToUtcTimeConversion *utcData, int utcDataValid,
+                             int defaultLeapSeconds, int *wn, double *tow);
 #endif /* TIME_CONVERSIONS_H_INCLUDED */

@@ -9,17 +9,15 @@
  *
  * @brief Function used to perform sample compression.
  */
-
 #ifndef SAMPLE_COMPRESSION_H_INCLUDED
 #define SAMPLE_COMPRESSION_H_INCLUDED
-
 /**
  * @brief SampleCompression reduces the size of an input array, accumulating consecutive samples
  *
- * @details The input samples are contained in two separate arrays of char (one for real part and one for imaginary part).
- *          The output samples are contained in one array of short with real and imaginary part interleaved.
- *          The length of each input array is numberOfInputs char.
- *          The length of the output array is twice numberOfOutputs short (both real and imaginary part).
+ * @details The input samples are contained in two separate arrays of char (one for real part and
+ * one for imaginary part). The output samples are contained in one array of short with real and
+ * imaginary part interleaved. The length of each input array is numberOfInputs char. The length of
+ * the output array is twice numberOfOutputs short (both real and imaginary part).
  *
  * @param initialNco is the initial value of the NCO used to perform compression
  * @param offset is a displacement w.r.t. the input pointers
@@ -31,6 +29,6 @@
  *
  * @return the final value of the NCO
  */
-unsigned int SampleCompression(unsigned int initialNco, unsigned int offset, char *real, char *imag, unsigned int numberOfInputs, short *s, unsigned int numberOfOutputs);
-
+unsigned int SampleCompression(unsigned int initialNco, unsigned int offset, char *real, char *imag,
+                               unsigned int numberOfInputs, short *s, unsigned int numberOfOutputs);
 #endif /* SAMPLE_COMPRESSION_H_INCLUDED */

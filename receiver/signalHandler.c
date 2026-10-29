@@ -12,38 +12,31 @@
  * @note This file is based on Linux standard functions (see man sigaction)
  *
  */
-
 #include <signal.h>
 #include <pthread.h>
-
 #include "ioFunctions.h"
 #include "ngeneConfiguration.h"
 #include "ngeneConstants.h"
 #include "signalHandler.h"
-
 #ifndef NGENE_NATIVE_WINDOWS
-struct sigaction action;	///< The receiver must be able to catch a signal
+struct sigaction action; ///< The receiver must be able to catch a signal
 #endif
-
 static TNGeneConfiguration *signalHandlerCfg;
 static int *signalHandlerRun;
 volatile sig_atomic_t ngeneStopRequested = 0;
-
 #ifdef NGENE_NATIVE_WINDOWS
 static BOOL WINAPI NgConsoleHandler(DWORD event)
 {
-    if (event != CTRL_C_EVENT && event != CTRL_BREAK_EVENT &&
-        event != CTRL_CLOSE_EVENT && event != CTRL_SHUTDOWN_EVENT) return FALSE;
+    if (event != CTRL_C_EVENT && event != CTRL_BREAK_EVENT && event != CTRL_CLOSE_EVENT &&
+        event != CTRL_SHUTDOWN_EVENT)
+        return FALSE;
     ngeneStopRequested = 1;
-    if (signalHandlerRun) InterlockedExchange((LONG *)signalHandlerRun, FALSE_FLAG);
-
-
+    if (signalHandlerRun)
+        InterlockedExchange((LONG *)signalHandlerRun, FALSE_FLAG);
     return TRUE;
 }
 #endif
-
-
-void StartListeningSignals(TNGeneConfiguration *cfg,int *run)
+void StartListeningSignals(TNGeneConfiguration *cfg, int *run)
 {
     ngeneStopRequested = 0;
 #ifdef NGENE_NATIVE_WINDOWS
@@ -70,48 +63,39 @@ void StartListeningSignals(TNGeneConfiguration *cfg,int *run)
     sigaction(SIGTERM, &action, NULL);
     sigaction(SIGSTOP, &action, NULL);
 #endif
-
     return;
 }
-
-
 void SignalHandler(int signol)
 {
     ngeneStopRequested = 1;
-    *signalHandlerRun = FALSE_FLAG;			///< the receiver is stopped
+    *signalHandlerRun = FALSE_FLAG; ///< the receiver is stopped
 #ifdef NGENE_NATIVE_WINDOWS
     return; /* CRT signal callbacks must not enter logging or pthread locks. */
 #else
-
-    switch (signol)
-    {
-    	case SIGINT:
-    		SwrxLog(NGENE_LOG_SEVERITY_WARNING, "Catched signal SIGINT, receiver terminated by the user");
-    		break;
-    	case SIGQUIT:
-    		SwrxLog(NGENE_LOG_SEVERITY_WARNING, "Catched signal SIGQUIT, receiver quit");
-    		break;
-    	case SIGABRT:
-    		SwrxLog(NGENE_LOG_SEVERITY_WARNING, "Catched signal SIGABRT, receiver aborted by the user");
-    		break;
-    	case SIGKILL:
-    		SwrxLog(NGENE_LOG_SEVERITY_WARNING, "Catched signal SIGKILL, receiver killed");
-    		break;
-    	case SIGTERM:
-    		SwrxLog(NGENE_LOG_SEVERITY_WARNING, "Catched signal SIGTERM, receiver terminated");
-    		break;
-    	case SIGSTOP:
-    		SwrxLog(NGENE_LOG_SEVERITY_WARNING, "Catched signal SIGSTOP, receiver stopped");
-    		break;
-    	default:
-    		SwrxLog(NGENE_LOG_SEVERITY_WARNING, "Signal catched and action executed");
-    		break;
+    switch (signol) {
+    case SIGINT:
+        SwrxLog(NGENE_LOG_SEVERITY_WARNING,
+                "Catched signal SIGINT, receiver terminated by the user");
+        break;
+    case SIGQUIT:
+        SwrxLog(NGENE_LOG_SEVERITY_WARNING, "Catched signal SIGQUIT, receiver quit");
+        break;
+    case SIGABRT:
+        SwrxLog(NGENE_LOG_SEVERITY_WARNING, "Catched signal SIGABRT, receiver aborted by the user");
+        break;
+    case SIGKILL:
+        SwrxLog(NGENE_LOG_SEVERITY_WARNING, "Catched signal SIGKILL, receiver killed");
+        break;
+    case SIGTERM:
+        SwrxLog(NGENE_LOG_SEVERITY_WARNING, "Catched signal SIGTERM, receiver terminated");
+        break;
+    case SIGSTOP:
+        SwrxLog(NGENE_LOG_SEVERITY_WARNING, "Catched signal SIGSTOP, receiver stopped");
+        break;
+    default:
+        SwrxLog(NGENE_LOG_SEVERITY_WARNING, "Signal catched and action executed");
+        break;
     }
-
-
-
     return;
 #endif
 }
-
-

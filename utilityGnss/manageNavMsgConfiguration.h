@@ -13,9 +13,7 @@
  */
 #ifndef MANAGE_NAV_MSG_CONFIGURATION_H_INCLUDED
 #define MANAGE_NAV_MSG_CONFIGURATION_H_INCLUDED
-
 #include "ngeneConfiguration.h"
-
 /**
  * @brief Read the Navigation Message parameters from the configuration file
  *
@@ -24,6 +22,4 @@
  * @return SUCCESS_RETURN when the function ends with success, FAILURE_RETURN otherwise
  */
 int ManageNavigationMessageConfiguration(TNGeneConfiguration *cfg);
-
-#endif  /* MANAGE_NAV_MSG_CONFIGURATION_H_INCLUDED */
-
+#endif /* MANAGE_NAV_MSG_CONFIGURATION_H_INCLUDED */

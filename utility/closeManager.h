@@ -9,11 +9,8 @@
  *
  * @brief Declares a function that closes the receiver.
  */
-
 #ifndef CLOSE_MANAGER_H_INCLUDED
 #define CLOSE_MANAGER_H_INCLUDED
-
-
 /**
  * @brief CloseNGene terminates the receiver. If the GUI is used,
  *        CloseNGene waits in order to let the GUI close the TCP connection.
@@ -21,7 +18,5 @@
  * @param cfg points to the receiver configuration
  * @param returnValue indicates the return value to be passed to exit function.
  */
-void CloseNGene(TNGeneConfiguration *cfg,int returnValue);
-
-
+void CloseNGene(TNGeneConfiguration *cfg, int returnValue);
 #endif /* CLOSE_MANAGER_H_INCLUDED */

@@ -9,12 +9,9 @@
  *
  * @brief Functions that manage tracking parameters.
  */
-
 #ifndef MANAGE_TRK_CONFIGURATION_H_INCLUDED
 #define MANAGE_TRK_CONFIGURATION_H_INCLUDED
-
 #include "ngeneConfiguration.h"
-
 /**
  * @brief Read the tracking parameters from the configuration file
  *
@@ -23,5 +20,4 @@
  * @return SUCCESS_RETURN when the function ends with success, FAILURE_RETURN otherwise
  */
 int ManageTrkConfiguration(TNGeneConfiguration *cfg);
-
 #endif /* MANAGE_TRK_CONFIGURATION_H_INCLUDED */

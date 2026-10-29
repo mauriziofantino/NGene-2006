@@ -12,10 +12,8 @@
  *
  * @note It is currently based on SIMD instructions
  */
-
 #ifndef SIGE_V3_H_INCLUDED
 #define SIGE_V3_H_INCLUDED
-
 /**
  * @brief Data are mapped from the SIGE notation {0,1} to the receiver one {1, -1}
  *
@@ -24,5 +22,4 @@
  * @param arrayLength is the length of both input and output array
  */
 void SigeV3SamplesElab(char *inputArray, char *outputArray, int arrayLength);
-
 #endif

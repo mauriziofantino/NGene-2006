@@ -2,82 +2,114 @@
 #include <stdio.h>
 #include "pntNumerics.h"
 #include "gnssTimeMath.h"
-
-#define REQUIRE(x) do { if (!(x)) { fprintf(stderr,"PVT QR check failed at line %d\n",__LINE__); return 1; } } while (0)
+#define REQUIRE(x)                                                                                 \
+    do {                                                                                           \
+        if (!(x)) {                                                                                \
+            fprintf(stderr, "PVT QR check failed at line %d\n", __LINE__);                         \
+            return 1;                                                                              \
+        }                                                                                          \
+    } while (0)
 int main(void)
 {
-    double a[100], b[20], x[5], q[25], truth[5]={120,-32,5,900,-400};
+    double a[100], b[20], x[5], q[25], truth[5] = {120, -32, 5, 900, -400};
     int n, m, i, j, k, l;
-    for(m=4;m<=5;m++) for(n=m;n<=20;n++) {
-        for(i=0;i<n;i++) {
-            double az=i*2.399963229728653, el=.1+.8*(i%5)/4.;
-            a[i*m]=cos(el)*cos(az); a[i*m+1]=cos(el)*sin(az); a[i*m+2]=sin(el);
-            a[i*m+3]=(m==4 || i%2==0)?1:0;
-            if(m==5) a[i*m+4]=i%2?1:0;
-            b[i]=0;
-            for(j=0;j<m;j++) b[i]+=a[i*m+j]*truth[j];
-        }
-        REQUIRE(PntLeastSquares(a,b,n,m,x,q));
-        for(j=0;j<m;j++) REQUIRE(fabs(x[j]-truth[j])<1e-8);
-        /* Independent covariance identity: (A' A) Q = I. */
-        for(j=0;j<m;j++) for(k=0;k<m;k++) {
-            double value=0;
-            for(l=0;l<m;l++) for(i=0;i<n;i++) value+=a[i*m+j]*a[i*m+l]*q[l*m+k];
-            REQUIRE(fabs(value-(j==k))<1e-8);
-        }
-        for(i=0;i<n;i++) b[i]+=.25*sin(i*1.7);
-        REQUIRE(PntLeastSquares(a,b,n,m,x,NULL));
-        for(j=0;j<m;j++) {
-            double dot=0;
-            for(i=0;i<n;i++) {
-                double residual=-b[i];
-                for(k=0;k<m;k++) residual+=a[i*m+k]*x[k];
-                dot+=a[i*m+j]*residual;
+    for (m = 4; m <= 5; m++)
+        for (n = m; n <= 20; n++) {
+            for (i = 0; i < n; i++) {
+                double az = i * 2.399963229728653, el = .1 + .8 * (i % 5) / 4.;
+                a[i * m] = cos(el) * cos(az);
+                a[i * m + 1] = cos(el) * sin(az);
+                a[i * m + 2] = sin(el);
+                a[i * m + 3] = (m == 4 || i % 2 == 0) ? 1 : 0;
+                if (m == 5)
+                    a[i * m + 4] = i % 2 ? 1 : 0;
+                b[i] = 0;
+                for (j = 0; j < m; j++)
+                    b[i] += a[i * m + j] * truth[j];
             }
-            REQUIRE(fabs(dot)<1e-8);
+            REQUIRE(PntLeastSquares(a, b, n, m, x, q));
+            for (j = 0; j < m; j++)
+                REQUIRE(fabs(x[j] - truth[j]) < 1e-8);
+            /* Independent covariance identity: (A' A) Q = I. */
+            for (j = 0; j < m; j++)
+                for (k = 0; k < m; k++) {
+                    double value = 0;
+                    for (l = 0; l < m; l++)
+                        for (i = 0; i < n; i++)
+                            value += a[i * m + j] * a[i * m + l] * q[l * m + k];
+                    REQUIRE(fabs(value - (j == k)) < 1e-8);
+                }
+            for (i = 0; i < n; i++)
+                b[i] += .25 * sin(i * 1.7);
+            REQUIRE(PntLeastSquares(a, b, n, m, x, NULL));
+            for (j = 0; j < m; j++) {
+                double dot = 0;
+                for (i = 0; i < n; i++) {
+                    double residual = -b[i];
+                    for (k = 0; k < m; k++)
+                        residual += a[i * m + k] * x[k];
+                    dot += a[i * m + j] * residual;
+                }
+                REQUIRE(fabs(dot) < 1e-8);
+            }
         }
-    }
     /* Large condition number without squaring it through normal equations. */
-    for(i=0;i<16;i++) a[i]=0;
-    for(i=0;i<4;i++) { a[4*i+i]=pow(1e-3,i); b[i]=a[4*i+i]*truth[i]; }
-    REQUIRE(PntLeastSquares(a,b,4,4,x,q));
-    for(i=0;i<4;i++) REQUIRE(fabs(x[i]-truth[i])<1e-8);
-    a[15]=0;
-    REQUIRE(!PntLeastSquares(a,b,4,4,x,q));
-    REQUIRE(!PntLeastSquares(a,b,3,4,x,q));
-    a[15]=NAN;
-    REQUIRE(!PntLeastSquares(a,b,4,4,x,q));
-    a[15]=1; b[0]=INFINITY;
-    REQUIRE(!PntLeastSquares(a,b,4,4,x,q));
+    for (i = 0; i < 16; i++)
+        a[i] = 0;
+    for (i = 0; i < 4; i++) {
+        a[4 * i + i] = pow(1e-3, i);
+        b[i] = a[4 * i + i] * truth[i];
+    }
+    REQUIRE(PntLeastSquares(a, b, 4, 4, x, q));
+    for (i = 0; i < 4; i++)
+        REQUIRE(fabs(x[i] - truth[i]) < 1e-8);
+    a[15] = 0;
+    REQUIRE(!PntLeastSquares(a, b, 4, 4, x, q));
+    REQUIRE(!PntLeastSquares(a, b, 3, 4, x, q));
+    a[15] = NAN;
+    REQUIRE(!PntLeastSquares(a, b, 4, 4, x, q));
+    a[15] = 1;
+    b[0] = INFINITY;
+    REQUIRE(!PntLeastSquares(a, b, 4, 4, x, q));
     {
-        double spd[9]={4,1,2,1,5,.5,2,.5,6},lower[9],rhs[3],sol[3];
-        for(i=0;i<3;i++){rhs[i]=0;for(j=0;j<3;j++)rhs[i]+=spd[3*i+j]*truth[j];}
-        REQUIRE(PntSpdFactor(spd,3,lower));REQUIRE(PntSpdSolve(lower,3,rhs,sol));
-        for(i=0;i<3;i++)REQUIRE(fabs(sol[i]-truth[i])<1e-10);
-        spd[8]=-1;REQUIRE(!PntSpdFactor(spd,3,lower));
-        spd[8]=NAN;REQUIRE(!PntSpdFactor(spd,3,lower));
+        double spd[9] = {4, 1, 2, 1, 5, .5, 2, .5, 6}, lower[9], rhs[3], sol[3];
+        for (i = 0; i < 3; i++) {
+            rhs[i] = 0;
+            for (j = 0; j < 3; j++)
+                rhs[i] += spd[3 * i + j] * truth[j];
+        }
+        REQUIRE(PntSpdFactor(spd, 3, lower));
+        REQUIRE(PntSpdSolve(lower, 3, rhs, sol));
+        for (i = 0; i < 3; i++)
+            REQUIRE(fabs(sol[i] - truth[i]) < 1e-10);
+        spd[8] = -1;
+        REQUIRE(!PntSpdFactor(spd, 3, lower));
+        spd[8] = NAN;
+        REQUIRE(!PntSpdFactor(spd, 3, lower));
     }
     {
         /* Analytic scalar KF, including zero PSD process noise and atomic
          * rejection: x=2 + 1/2*(6-2)=4, Joseph posterior variance=2. */
-        double f=1,process=0,h=1,r=4,z=6,state=2,p=4,predicted=-1;
-        REQUIRE(PntKalmanStep(1,1,&f,&process,&h,&r,&z,&state,&p,&predicted));
-        REQUIRE(fabs(state-4)<1e-12 && fabs(p-2)<1e-12 && predicted==2);
-        r=-1;
-        REQUIRE(!PntKalmanStep(1,1,&f,&process,&h,&r,&z,&state,&p,&predicted));
-        REQUIRE(fabs(state-4)<1e-12 && fabs(p-2)<1e-12 && predicted==2);
-        process=-.1;
-        REQUIRE(!PntKalmanStep(1,0,&f,&process,NULL,NULL,NULL,&state,&p,&predicted));
-        process=.25;
-        REQUIRE(PntKalmanStep(1,0,&f,&process,NULL,NULL,NULL,&state,&p,&predicted));
-        REQUIRE(fabs(state-4)<1e-12 && fabs(p-2.25)<1e-12);
+        double f = 1, process = 0, h = 1, r = 4, z = 6, state = 2, p = 4, predicted = -1;
+        REQUIRE(PntKalmanStep(1, 1, &f, &process, &h, &r, &z, &state, &p, &predicted));
+        REQUIRE(fabs(state - 4) < 1e-12 && fabs(p - 2) < 1e-12 && predicted == 2);
+        r = -1;
+        REQUIRE(!PntKalmanStep(1, 1, &f, &process, &h, &r, &z, &state, &p, &predicted));
+        REQUIRE(fabs(state - 4) < 1e-12 && fabs(p - 2) < 1e-12 && predicted == 2);
+        process = -.1;
+        REQUIRE(!PntKalmanStep(1, 0, &f, &process, NULL, NULL, NULL, &state, &p, &predicted));
+        process = .25;
+        REQUIRE(PntKalmanStep(1, 0, &f, &process, NULL, NULL, NULL, &state, &p, &predicted));
+        REQUIRE(fabs(state - 4) < 1e-12 && fabs(p - 2.25) < 1e-12);
     }
     {
-        int week=64;double tow=604800.;
-        REQUIRE(NormalizeGnssTime(&week,&tow) && week==65 && tow==0);
-        tow=-.25;REQUIRE(NormalizeGnssTime(&week,&tow) && week==64 && tow==604799.75);
-        REQUIRE(fabs(GnssTimeDifference(65,.01,64,604799.99)-.02)<1e-10);
-        REQUIRE(UnrollGnssWeek(63,64,64)==63 && UnrollGnssWeek(0,63,64)==64);
+        int week = 64;
+        double tow = 604800.;
+        REQUIRE(NormalizeGnssTime(&week, &tow) && week == 65 && tow == 0);
+        tow = -.25;
+        REQUIRE(NormalizeGnssTime(&week, &tow) && week == 64 && tow == 604799.75);
+        REQUIRE(fabs(GnssTimeDifference(65, .01, 64, 604799.99) - .02) < 1e-10);
+        REQUIRE(UnrollGnssWeek(63, 64, 64) == 63 && UnrollGnssWeek(0, 63, 64) == 64);
     }
     puts("PNT Eigen: QR, covariance, ill-conditioning, SPD and Joseph update/rejection passed");
     return 0;

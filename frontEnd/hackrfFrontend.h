@@ -1,7 +1,6 @@
 #ifndef NGENE_HACKRF_FRONTEND_H
 #define NGENE_HACKRF_FRONTEND_H
 #include "frontend.h"
-
 int OpenHackrfFrontend(TNGeneConfiguration *cfg, TRxFe *fe);
 int ConfigureHackrfFrontend(TNGeneConfiguration *cfg);
 int StartHackrfFrontend(TRxFe *fe);

@@ -12,22 +12,19 @@
  *
  * @note It is currently based on SIMD instructions
  */
-
 #ifndef SIGE_H_INCLUDED
 #define SIGE_H_INCLUDED
-
 /**
  * @brief Data are mapped from the SIGE notation {0,1} to the receiver one {1, -1}
  *
  * @param inputArray contains the data to convert
  * @param outputArray will contain the data after the conversion
  * @param arrayLength is the length of both input and output array
- * @param maskOffset is the number of read samples mod 4 (used as an offset in order to choose the demodulation law)
+ * @param maskOffset is the number of read samples mod 4 (used as an offset in order to choose the
+ * demodulation law)
  */
-void SigeSamplesElab(char *inputArray, char *outputArray, int arrayLength,int maskOffset);
-
+void SigeSamplesElab(char *inputArray, char *outputArray, int arrayLength, int maskOffset);
 /* Decode marker-tagged 1-bit I,Q pairs to interleaved signed bytes, with no
  * artificial IF modulation. Returns nonzero on a broken I/Q sequence. */
 int SigeDecodeNativeIq(const unsigned char *raw, char *iq, unsigned int pairs);
-
 #endif

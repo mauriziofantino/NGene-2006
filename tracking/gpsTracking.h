@@ -9,15 +9,12 @@
  *
  * @brief Functions used to perform tracking for GPS and EGNOS.
  */
-
 #ifndef GPS_TRACKING_H_INCLUDED
 #define GPS_TRACKING_H_INCLUDED
-
 #include "ngeneConfiguration.h"
 #include "ngeneDataStructure.h"
 #include "channelDataStructure.h"
 #include "trackingDataStructure.h"
-
 /**
  * @brief Performs tracking for a GPS or EGNOS PRN
  * @details Elaborates one millisecond of samples.
@@ -32,7 +29,7 @@
  *
  * @return The current state of the tracking
  */
-TTrackingStatus PerformGpsTracking(TNGeneConfiguration *cfg,TNGeneData *rx,TChannel *ch,char *firstBunch, unsigned int firstBunchSize,char *secondBunch, unsigned int secondBunchSize);
-
-
+TTrackingStatus PerformGpsTracking(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch,
+                                   char *firstBunch, unsigned int firstBunchSize, char *secondBunch,
+                                   unsigned int secondBunchSize);
 #endif /* GPS_TRACKING_H_INCLUDED */

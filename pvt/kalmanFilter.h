@@ -9,10 +9,8 @@
  *
  * @brief Kalman filter functions.
  */
-
 #ifndef KALMAN_FILTER_H_INCLUDED
 #define KALMAN_FILTER_H_INCLUDED
-
 /**
  * @brief Initializes Q matrices for Kalman filter with default values
  *
@@ -20,9 +18,8 @@
  * @param qMulti points to the Q matrix for the multiple contellations PVT
  * @param dt is the time interval between two consecutive PVTs
  */
-void InitQStateNoiseCovarianceMatrices(double *q,double *qMulti, double dt);
-void InitKalmanFilterPostCovarianceMatrices(double *pPost,double *pPostMulti);
-
+void InitQStateNoiseCovarianceMatrices(double *q, double *qMulti, double dt);
+void InitKalmanFilterPostCovarianceMatrices(double *pPost, double *pPostMulti);
 /**
  * @brief Initializes the variables used for the PVT computation through the Kalman Filter.
  *        Allocates the matrices and the array.
@@ -32,15 +29,13 @@ void InitKalmanFilterPostCovarianceMatrices(double *pPost,double *pPostMulti);
  *
  * @return SUCCESS_RETURN when the function ends with success, FAILURE_RETURN otherwise
  */
-int InitKalmanFilterData(TNGeneConfiguration *cfg,TNGeneData *rx);
-
+int InitKalmanFilterData(TNGeneConfiguration *cfg, TNGeneData *rx);
 /**
  * @brief Frees the memory allocated to matrices and the array used for the Kalman Filter.
  *
  * @param rx points to the receiver base data structure
  */
 void DeinitKalmanFilterData(TNGeneData *rx);
-
 /**
  * @brief Performs the Kalman Filter. Called by PvtManager.
  *
@@ -49,6 +44,5 @@ void DeinitKalmanFilterData(TNGeneData *rx);
  *
  * @return SUCCESS_RETURN when the function ends with success, FAILURE_RETURN otherwise
  */
-int PerformKalmanFilter(TNGeneConfiguration *cfg,TNGeneData *rx);
-
+int PerformKalmanFilter(TNGeneConfiguration *cfg, TNGeneData *rx);
 #endif /* KALMAN_FILTER_H_INCLUDED */

@@ -13,15 +13,10 @@
  *
  *          From the NeQuick model reference code with minor changes.
  */
-
 #ifndef NEQ_CALC_BOTTOMSIDE_NE_H_INCLUDED
 #define NEQ_CALC_BOTTOMSIDE_NE_H_INCLUDED
-
-
 #include <math.h>
 #include "nequickDataStructures.h"
-
-
 /**
  * This function calculates electron content at the specified height (in the
  * bottom part of the ionosphere below pdPeakHeight[LAYER_F2], the F2 electron
@@ -33,5 +28,4 @@
  * @return Electron content at specified height
  */
 double NeqCalcBottomsideNe(double dHH, TLayerProperties *pstLayers);
-
 #endif /* NEQ_CALC_BOTTOMSIDE_NE_H_INCLUDED */

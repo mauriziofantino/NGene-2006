@@ -9,15 +9,12 @@
  *
  * @brief Functions used to manage matrices.
  */
-
 #ifndef MATRICES_H_INCLUDED
 #define MATRICES_H_INCLUDED
-
 /* C storage adapters implemented by Eigen in pvt/pntNumerics.cpp. */
 #ifdef __cplusplus
 extern "C" {
 #endif
-
 /**
  * @brief Initialize the matrix to zero
  *
@@ -26,8 +23,6 @@ extern "C" {
  * @param cols id the columns number
  */
 void MatrixInit(double *m, int rows, int cols);
-
-
 /**
  * @brief Performs product (rows per columns) between two matrices
  *
@@ -39,9 +34,8 @@ void MatrixInit(double *m, int rows, int cols);
  * @param columns2 number of columns of matrix 2
  * @param output  = input1 x input2 (return value)
  */
-void MatrixProduct(double *input1,int rows1,int columns1,double *input2,int rows2,int columns2,double *output);
-
-
+void MatrixProduct(double *input1, int rows1, int columns1, double *input2, int rows2, int columns2,
+                   double *output);
 /**
  * @brief Performs the matrix transpose
  *
@@ -51,8 +45,6 @@ void MatrixProduct(double *input1,int rows1,int columns1,double *input2,int rows
  * @param output transposed matrix
  */
 void MatrixTrasp(double *input, int rows, int columns, double *output);
-
-
 /**
  * @brief Performs the sum between two matrices
  *
@@ -64,9 +56,8 @@ void MatrixTrasp(double *input, int rows, int columns, double *output);
  * @param columns2 number of columns of matrix 2
  * @param output  = input1 + input2 (return value)
  */
-void MatrixSum(double *input1, int rows1, int columns1, double *input2, int rows2, int columns2, double *output);
-
-
+void MatrixSum(double *input1, int rows1, int columns1, double *input2, int rows2, int columns2,
+               double *output);
 /**
  * @brief Performs the difference between two matrices
  *
@@ -78,9 +69,8 @@ void MatrixSum(double *input1, int rows1, int columns1, double *input2, int rows
  * @param columns2 number of columns of matrix 2
  * @param output  = input1 - input2 (return value)
  */
-void MatrixDiff(double *input1, int rows1, int columns1, double *input2, int rows2, int columns2, double *output);
-
-
+void MatrixDiff(double *input1, int rows1, int columns1, double *input2, int rows2, int columns2,
+                double *output);
 /**
  * @brief Merges vertically the matrices input1 and input2 in the output matrix output
  *
@@ -92,8 +82,8 @@ void MatrixDiff(double *input1, int rows1, int columns1, double *input2, int row
  * @param columns2 number of columns of matrix 2
  * @param output is the output matrix
  */
-void MergeMatricesVertically(double *input1, int rows1, int columns1, double *input2, int rows2, int columns2, double *output);
-
+void MergeMatricesVertically(double *input1, int rows1, int columns1, double *input2, int rows2,
+                             int columns2, double *output);
 /**
  * @brief Builds an identity matrix
  *
@@ -101,8 +91,6 @@ void MergeMatricesVertically(double *input1, int rows1, int columns1, double *in
  * @param size is the matrix dimension
  */
 void MatrixIdentity(double *output, int size);
-
-
 #ifdef __cplusplus
 }
 #endif

@@ -10,14 +10,10 @@
  * @brief Nicola Linty implementation of the C over N0 estimator
  *
  */
-
 #ifndef CNO_H_INCLUDED
 #define CNO_H_INCLUDED
-
 #include "mathFunctions.h"
 #include "ngeneConfiguration.h"
-
-
 /**
  * @def GALILEO_CN0_CORRECTION_FACTOR
  * @brief It is the correction factor [dB] to apply to the Galileo C/N0 estimation,
@@ -25,7 +21,6 @@
  * distributed accordingly
  */
 #define GALILEO_CN0_CORRECTION_FACTOR 6.5
-
 /**
  * @def GPS_CN0_CORRECTION_FACTOR
  * @brief It is the correction factor [dB] to apply to the GPS C/N0 estimation,
@@ -33,30 +28,26 @@
  * (C/A+P+NAV) and the power is distributed accordingly
  */
 #define GPS_CN0_CORRECTION_FACTOR 1.7
-
-
 /**
  * @struct Cn0TableStruct
  *
  * @brief  Data structure used to estimate the C over N0
  */
-typedef struct CnoTableStruct
-{
-	/* used to calculate equivalent bandwidth */
-	double sigmaJ2;       /**< Variance of the code discriminator output */
-	double dllBandwidth; /**<  */
-	TAverageWindow x2;   /**<  */
-	TAverageWindow muX;  /**<  */
-	unsigned int samplingFrequency;	/**< */
-	double estimatedCNo; /**< */
-	/* other variables */
-	double beq;			 /**< Correlator Noise Equivalent Bandwidth */
+typedef struct CnoTableStruct {
+    /* used to calculate equivalent bandwidth */
+    double sigmaJ2;                 /**< Variance of the code discriminator output */
+    double dllBandwidth;            /**<  */
+    TAverageWindow x2;              /**<  */
+    TAverageWindow muX;             /**<  */
+    unsigned int samplingFrequency; /**< */
+    double estimatedCNo;            /**< */
+    /* other variables */
+    double beq;          /**< Correlator Noise Equivalent Bandwidth */
     TAverageWindow cnoW; /**< moving average window for the Carrier to Noise Power Density Ratio */
-    TAverageWindow m2;	 /**< moving average window for the second order moment */
-    TAverageWindow m4;	 /**< moving average window for the fourth order moment */
-    int cnoSize;		 /**< size of the smoothing filter */
+    TAverageWindow m2;   /**< moving average window for the second order moment */
+    TAverageWindow m4;   /**< moving average window for the fourth order moment */
+    int cnoSize;         /**< size of the smoothing filter */
 } TCnoTable;
-
 /**
  * @brief Prepare the table for the CNo measure
  *
@@ -68,9 +59,8 @@ typedef struct CnoTableStruct
  *        when it is equal to zero any filter is applied on
  * @param lastCno is the last evaluated CNo value
  */
-void SetCnoMeasurement(TCnoTable *cno, double iStart, double qStart, int size, int cnoSize, double lastCno);
-
-
+void SetCnoMeasurement(TCnoTable *cno, double iStart, double qStart, int size, int cnoSize,
+                       double lastCno);
 /**
  * @brief Function to estimate the Carrier to Noise Power Spectral Density Ratio
  *
@@ -78,14 +68,16 @@ void SetCnoMeasurement(TCnoTable *cno, double iStart, double qStart, int size, i
  *          its extension to the QPSK modulation reduces to the ML algorithm. An
  *          intuitive modification has been introduced and tested here for QPSK
  *          modulations, leaving the BPSK solution unchanged:
- *          \f[ \tilde{P}_c=\left[\frac{1}{N}\displaystyle\sum_{n=1}^N\left|r_{C,Re}[n]\right|\right]^2
+ *          \f[
+ * \tilde{P}_c=\left[\frac{1}{N}\displaystyle\sum_{n=1}^N\left|r_{C,Re}[n]\right|\right]^2
  *                         +\left[\frac{1}{N}\displaystyle\sum_{n=1}^N\left|r_{C,Im}[n]\right|\right]^2\f]
  *
  *          \f[ \tilde{P}_{tot}=\frac{1}{N}\displaystyle\sum_{n=1}^N\left|r_C[n]\right|^2\f]
  *
  *          \f[ \tilde{P}_n=\tilde{P}_{tot}-\tilde{P}_s\f]
  *
- *          \f[ \tilde{SNR}_C=\frac{\tilde{P}_s}{\tilde{P}_n}=\frac{\tilde{P}_s}{\tilde{P}_{tot}-\tilde{P}_s}\f]
+ *          \f[
+ * \tilde{SNR}_C=\frac{\tilde{P}_s}{\tilde{P}_n}=\frac{\tilde{P}_s}{\tilde{P}_{tot}-\tilde{P}_s}\f]
  *
  *          The novel approach suffers for a non-negligible bias in case of complex
  *          samples, but it results more robust than ML solution in case of reduced
@@ -96,15 +88,13 @@ void SetCnoMeasurement(TCnoTable *cno, double iStart, double qStart, int size, i
  * @param qSample is the current Q prompt correlator sample
  * @param cfg points to the receiver configuration
  */
-double MeasureCno(TCnoTable *cno, double iSample, double qSample,TNGeneConfiguration *cfg);
-
+double MeasureCno(TCnoTable *cno, double iSample, double qSample, TNGeneConfiguration *cfg);
 /**
  * @brief Function to compute the variance of the code delay tracking error
  * @param cno is the pointer to the CNo structure
  * @param value is the variable for which to compute the variance
  */
 void ComputeSigmaJ(TCnoTable *cno, double value);
-
 /**
  * @brief Function to compute the equivalent noise bandwidth for the C/N0 estimation
  *
@@ -135,8 +125,8 @@ void ComputeSigmaJ(TCnoTable *cno, double value);
  * @param cno is the pointer to the CNo structure
  * @param tchip is the chip time (17codeRate)
  * @param blocksize is the number of samples in 1 ms
- * @param  rcFactor is a correction factor to be applied to ideal code autocorrelation function rc: 1 for GPS, 3 for Galileo
+ * @param  rcFactor is a correction factor to be applied to ideal code autocorrelation function rc:
+ * 1 for GPS, 3 for Galileo
  */
 double ComputeEquivalentBandwidth(TCnoTable *cno, double tchip, int blocksize, double rcFactor);
-
 #endif /* CNO_H_INCLUDED */

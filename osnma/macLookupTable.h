@@ -9,17 +9,10 @@
  *
  * @brief Functions used to manage the MAC Lookup Table
  */
-
 #ifndef MAC_LOOKUP_TABLE_H_INCLUDED
 #define MAC_LOOKUP_TABLE_H_INCLUDED
-
 #include "osnmaDataStructures.h"
-
-
 void InitMacLut(TOsnmaParameters *pars);
-
 void DeinitMacLut(TOsnmaParameters *pars);
-
 void LoadMacSequence(TOsnmaParameters *pars);
-
 #endif

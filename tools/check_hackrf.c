@@ -8,7 +8,6 @@
 #include "hackrfFrontend.h"
 #include "ioFunctions.h"
 #include "signalHandler.h"
-
 volatile sig_atomic_t ngeneStopRequested;
 static hackrf_sample_block_cb_fn callback;
 static void *callbackContext;
@@ -18,58 +17,151 @@ static uint32_t rate, divider, filterHz, lnaGain, vgaGain;
 static uint64_t frequency;
 static unsigned char ampValue;
 static int loggedOverflow, readFinished;
+static int autoFeed, autoInvalid;
+static hackrf_sample_block_cb_fn calibrationCallback;
 static unsigned char block[262144];
 static char output[262144];
-#define REQUIRE(x) do { if (!(x)) { fprintf(stderr, "HackRF check failed at line %d: %s\n", __LINE__, #x); exit(1); } } while (0)
-static int Step(void) { return ++stage == failAt ? HACKRF_ERROR_USB_API_VERSION : HACKRF_SUCCESS; }
-int ADDCALL hackrf_init(void) { return Step(); }
-int ADDCALL hackrf_exit(void) { exited++; return HACKRF_SUCCESS; }
-hackrf_device_list_t *ADDCALL hackrf_device_list(void) { return &deviceList; }
-void ADDCALL hackrf_device_list_free(hackrf_device_list_t *list) { REQUIRE(list == &deviceList); }
+#define REQUIRE(x)                                                                                 \
+    do {                                                                                           \
+        if (!(x)) {                                                                                \
+            fprintf(stderr, "HackRF check failed at line %d: %s\n", __LINE__, #x);                 \
+            exit(1);                                                                               \
+        }                                                                                          \
+    } while (0)
+static int Step(void)
+{
+    return ++stage == failAt ? HACKRF_ERROR_USB_API_VERSION : HACKRF_SUCCESS;
+}
+int ADDCALL hackrf_init(void)
+{
+    return Step();
+}
+int ADDCALL hackrf_exit(void)
+{
+    exited++;
+    return HACKRF_SUCCESS;
+}
+hackrf_device_list_t *ADDCALL hackrf_device_list(void)
+{
+    return &deviceList;
+}
+void ADDCALL hackrf_device_list_free(hackrf_device_list_t *list)
+{
+    REQUIRE(list == &deviceList);
+}
 int ADDCALL hackrf_device_list_open(hackrf_device_list_t *list, int index, hackrf_device **device)
 {
     int result = Step();
     REQUIRE(list == &deviceList && index == 0);
-    if (result == HACKRF_SUCCESS) *device = (hackrf_device *)(uintptr_t)1;
+    if (result == HACKRF_SUCCESS)
+        *device = (hackrf_device *)(uintptr_t)1;
     return result;
 }
 int ADDCALL hackrf_open_by_serial(const char *serial, hackrf_device **device)
-{ (void)serial; return hackrf_device_list_open(&deviceList, 0, device); }
+{
+    (void)serial;
+    return hackrf_device_list_open(&deviceList, 0, device);
+}
 int ADDCALL hackrf_close(hackrf_device *device)
-{ REQUIRE(device != NULL); closed++; return HACKRF_SUCCESS; }
+{
+    REQUIRE(device != NULL);
+    closed++;
+    return HACKRF_SUCCESS;
+}
 int ADDCALL hackrf_set_sample_rate_manual(hackrf_device *device, uint32_t hz, uint32_t div)
-{ (void)device; rate = hz; divider = div; return Step(); }
+{
+    (void)device;
+    rate = hz;
+    divider = div;
+    return Step();
+}
 int ADDCALL hackrf_set_baseband_filter_bandwidth(hackrf_device *device, uint32_t hz)
-{ (void)device; filterHz = hz; return Step(); }
+{
+    (void)device;
+    filterHz = hz;
+    return Step();
+}
 int ADDCALL hackrf_set_freq(hackrf_device *device, uint64_t hz)
-{ (void)device; frequency = hz; return Step(); }
+{
+    (void)device;
+    frequency = hz;
+    return Step();
+}
 int ADDCALL hackrf_set_lna_gain(hackrf_device *device, uint32_t gain)
-{ (void)device; lnaGain = gain; return Step(); }
+{
+    (void)device;
+    lnaGain = gain;
+    return Step();
+}
 int ADDCALL hackrf_set_vga_gain(hackrf_device *device, uint32_t gain)
-{ (void)device; vgaGain = gain; return Step(); }
+{
+    (void)device;
+    vgaGain = gain;
+    return Step();
+}
 int ADDCALL hackrf_set_amp_enable(hackrf_device *device, uint8_t enabled)
-{ (void)device; ampValue = enabled; return Step(); }
+{
+    (void)device;
+    ampValue = enabled;
+    return Step();
+}
 int ADDCALL hackrf_set_antenna_enable(hackrf_device *device, uint8_t enabled)
-{ (void)device; REQUIRE(enabled == 1); return Step(); }
+{
+    (void)device;
+    REQUIRE(enabled == 1);
+    return Step();
+}
 uint32_t ADDCALL hackrf_compute_baseband_filter_bw(uint32_t bandwidth)
-{ return bandwidth == 5000000 ? bandwidth : 0; }
+{
+    return bandwidth == 5000000 ? bandwidth : 0;
+}
 const char *ADDCALL hackrf_error_name(enum hackrf_error error)
-{ (void)error; return "simulated vendor error"; }
+{
+    (void)error;
+    return "simulated vendor error";
+}
 int ADDCALL hackrf_start_rx(hackrf_device *device, hackrf_sample_block_cb_fn cb, void *context)
 {
     int result = Step();
     (void)device;
-    if (result == HACKRF_SUCCESS) { callback = cb; callbackContext = context; streaming = 1; }
+    if (result == HACKRF_SUCCESS) {
+        callback = cb;
+        callbackContext = context;
+        streaming = 1;
+        if (autoFeed) {
+            int k;
+            hackrf_transfer transfer = {0};
+            if (!calibrationCallback)
+                calibrationCallback = cb;
+            if (cb == calibrationCallback) {
+                transfer.rx_ctx = context;
+                transfer.buffer = block;
+                transfer.buffer_length = sizeof(block);
+                transfer.valid_length = autoInvalid ? 1 : sizeof(block);
+                for (k = 0; k < 6; k++)
+                    cb(&transfer);
+            }
+        }
+    }
     return result;
 }
 int ADDCALL hackrf_stop_rx(hackrf_device *device)
-{ (void)device; stopped++; streaming = 0; return HACKRF_SUCCESS; }
+{
+    (void)device;
+    stopped++;
+    streaming = 0;
+    return HACKRF_SUCCESS;
+}
 int ADDCALL hackrf_is_streaming(hackrf_device *device)
-{ (void)device; return streaming ? HACKRF_TRUE : HACKRF_SUCCESS; }
+{
+    (void)device;
+    return streaming ? HACKRF_TRUE : HACKRF_SUCCESS;
+}
 int SwrxLog(int severity, const char *format, ...)
 {
     (void)severity;
-    if (strstr(format, "HackRF RX stopped")) loggedOverflow++;
+    if (strstr(format, "HackRF RX stopped"))
+        loggedOverflow++;
     return 0;
 }
 static void Initialize(TRxFe *fe, TNGeneConfiguration *cfg, TUsbFePars *pars)
@@ -80,14 +172,22 @@ static void Initialize(TRxFe *fe, TNGeneConfiguration *cfg, TUsbFePars *pars)
     pthread_mutex_init(&fe->usbFe.frontEndMutex, NULL);
     pthread_cond_init(&fe->usbFe.intermediateBufferFull, NULL);
     pthread_cond_init(&fe->usbFe.intermediateBufferEmpty, NULL);
-    cfg->fs = 8183800; cfg->fif = 38400; cfg->nativeIq = 1;
-    cfg->fePars = pars; pars->resolution = 8; pars->dopplerCorrection = -1;
+    cfg->fs = 8183800;
+    cfg->fif = 38400;
+    cfg->nativeIq = 1;
+    cfg->fePars = pars;
+    pars->resolution = 8;
+    pars->dopplerCorrection = -1;
     /* No test settings file: use production defaults independently of cwd. */
     strcpy(cfg->configurationPath, "no-such-ngene-test-folder/");
     stage = failAt = closed = exited = stopped = loggedOverflow = 0;
-    callback = NULL; callbackContext = NULL; streaming = 0;
+    callback = NULL;
+    callbackContext = NULL;
+    streaming = 0;
     deviceList.devicecount = 1;
     ngeneStopRequested = 0;
+    autoFeed = autoInvalid = 0;
+    calibrationCallback = NULL;
 }
 static void Destroy(TRxFe *fe)
 {
@@ -101,7 +201,9 @@ static int Submit(int length, int capacity, unsigned char *bytes)
 {
     hackrf_transfer transfer = {0};
     transfer.rx_ctx = callbackContext;
-    transfer.buffer = bytes; transfer.valid_length = length; transfer.buffer_length = capacity;
+    transfer.buffer = bytes;
+    transfer.valid_length = length;
+    transfer.buffer_length = capacity;
     callbackResult = callback(&transfer);
     return callbackResult;
 }
@@ -116,13 +218,19 @@ static void *BlockedReader(void *context)
 }
 static void VerifySettings(void)
 {
-    static const char *invalid[] = {
-        "[LNA gain (dB)]\n33\n", "[VGA gain (dB)]\n63\n",
-        "[RF amplifier]\n2\n", "[Antenna power]\n-1\n",
-        "[LNA gain (dB)]\n32oops\n", "[Serial number]\nnot-a-serial\n",
-        "[Center frequency (Hz)]\n0\n", "[Center frequency (Hz)]\n1575420000oops\n",
-        "[LNA gain (dB)]\n", "[RF amplifier]\n0\n[RF amplifier]\n1\n"
-    };
+    static const char *invalid[] = {"[LNA gain (dB)]\n33\n",
+                                    "[VGA gain (dB)]\n63\n",
+                                    "[RF amplifier]\n2\n",
+                                    "[Antenna power]\n-1\n",
+                                    "[LNA gain (dB)]\n32oops\n",
+                                    "[Serial number]\nnot-a-serial\n",
+                                    "[Center frequency (Hz)]\n0\n",
+                                    "[Center frequency (Hz)]\n1575420000oops\n",
+                                    "[LNA gain (dB)]\n",
+                                    "[RF amplifier]\n0\n[RF amplifier]\n1\n",
+                                    "[Auto tune gains]\n2\n",
+                                    "[Auto tune target RMS]\n7\n",
+                                    "[Auto tune target RMS]\n41\n"};
 #ifdef NGENE_NATIVE_WINDOWS
     char tempPath[MAX_PATH], folder[MAX_PATH], filename[MAX_PATH];
 #else
@@ -144,18 +252,22 @@ static void VerifySettings(void)
     for (k = 0; k < sizeof(invalid) / sizeof(invalid[0]); k++) {
         Initialize(&fe, &cfg, &pars);
         snprintf(cfg.configurationPath, sizeof(cfg.configurationPath), "%s/", folder);
-        file = fopen(filename, "w"); REQUIRE(file != NULL);
-        fputs(invalid[k], file); fclose(file);
+        file = fopen(filename, "w");
+        REQUIRE(file != NULL);
+        fputs(invalid[k], file);
+        fclose(file);
         REQUIRE(OpenHackrfFrontend(&cfg, &fe) == FAILURE_RETURN && stage == 0);
         Destroy(&fe);
     }
     Initialize(&fe, &cfg, &pars);
     snprintf(cfg.configurationPath, sizeof(cfg.configurationPath), "%s/", folder);
-    file = fopen(filename, "w"); REQUIRE(file != NULL);
+    file = fopen(filename, "w");
+    REQUIRE(file != NULL);
     fputs("# [Serial number] this comment must be ignored\n[LNA gain (dB)]\n40\n"
           "[VGA gain (dB)]\n62\n[RF amplifier]\n1\n[Antenna power]\n1\n"
           "[Center frequency (Hz)]\n1575420000\n"
-          "[Serial number]\n00000000000000000000000000000001\n", file);
+          "[Serial number]\n00000000000000000000000000000001\n",
+          file);
     fclose(file);
     REQUIRE(OpenHackrfFrontend(&cfg, &fe) == SUCCESS_RETURN);
     REQUIRE(lnaGain == 40 && vgaGain == 62 && ampValue == 1);
@@ -177,7 +289,8 @@ int main(void)
     int failure;
     pthread_t thread;
     VerifySettings();
-    for (k = 0; k < sizeof(block); k++) block[k] = (unsigned char)(k * 73 + k / 256);
+    for (k = 0; k < sizeof(block); k++)
+        block[k] = (unsigned char)(k * 73 + k / 256);
     /* Every configuration hardware call must unwind exactly what it acquired. */
     for (failure = 1; failure <= 8; failure++) {
         Initialize(&fe, &cfg, &pars);
@@ -206,7 +319,6 @@ int main(void)
     REQUIRE(stopped == 0);
     Destroy(&fe);
     REQUIRE(closed == 1 && exited == 1 && stopped == 0);
-
     Initialize(&fe, &cfg, &pars);
     REQUIRE(OpenHackrfFrontend(&cfg, &fe) == SUCCESS_RETURN);
     REQUIRE(StartHackrfFrontend(&fe) == SUCCESS_RETURN);
@@ -219,15 +331,18 @@ int main(void)
         while (remaining) {
             unsigned int request = 1 + (remaining * 17u) % 17011u;
             unsigned int actual;
-            if (request > remaining) request = remaining;
+            if (request > remaining)
+                request = remaining;
             actual = ReadHackrfFrontend(&fe, output, request);
             REQUIRE(actual == request && memcmp(output, block + position, actual) == 0);
-            position += actual; remaining -= actual;
+            position += actual;
+            remaining -= actual;
         }
     }
     REQUIRE(CheckHackrfFrontend(&fe) == SUCCESS_RETURN);
     /* Callback must return immediately on full queue, then wake a receiver. */
-    for (round = 0; round < 4; round++) REQUIRE(Submit(sizeof(block), sizeof(block), block) == 0);
+    for (round = 0; round < 4; round++)
+        REQUIRE(Submit(sizeof(block), sizeof(block), block) == 0);
     REQUIRE(Submit(2, 2, block) != 0);
     REQUIRE(CheckHackrfFrontend(&fe) == FAILURE_RETURN);
     REQUIRE(CheckHackrfFrontend(&fe) == FAILURE_RETURN && loggedOverflow == 1);
@@ -238,7 +353,9 @@ int main(void)
         Initialize(&fe, &cfg, &pars);
         REQUIRE(OpenHackrfFrontend(&cfg, &fe) == SUCCESS_RETURN);
         REQUIRE(StartHackrfFrontend(&fe) == SUCCESS_RETURN);
-        REQUIRE(Submit(failure == 0 ? -1 : failure == 1 ? 1 : 4,
+        REQUIRE(Submit(failure == 0   ? -1
+                       : failure == 1 ? 1
+                                      : 4,
                        failure == 2 ? 2 : 4, failure == 3 ? NULL : block) != 0);
         REQUIRE(CheckHackrfFrontend(&fe) == FAILURE_RETURN);
         Destroy(&fe);
@@ -250,12 +367,46 @@ int main(void)
         REQUIRE(StartHackrfFrontend(&fe) == SUCCESS_RETURN);
         readFinished = 0;
         REQUIRE(pthread_create(&thread, NULL, BlockedReader, &fe) == 0);
-        if (failure) REQUIRE(StopHackrfFrontend(&fe) == SUCCESS_RETURN);
-        else { streaming = 0; REQUIRE(CheckHackrfFrontend(&fe) == FAILURE_RETURN); }
+        if (failure)
+            REQUIRE(StopHackrfFrontend(&fe) == SUCCESS_RETURN);
+        else {
+            streaming = 0;
+            REQUIRE(CheckHackrfFrontend(&fe) == FAILURE_RETURN);
+        }
         REQUIRE(pthread_join(thread, NULL) == 0 && readFinished);
         Destroy(&fe);
         REQUIRE(stopped == 1 && closed == 1 && exited == 1);
     }
-    puts("HackRF native RX configuration, cleanup, queue order, overflow, disconnect and shutdown passed.");
+    /* Pilot samples must not leak into the first operational timeline.
+     * Reopening the same stream must not recalibrate an existing tracking arc. */
+    Initialize(&fe, &cfg, &pars);
+    REQUIRE(OpenHackrfFrontend(&cfg, &fe) == SUCCESS_RETURN);
+    cfg.hackrfConfiguration.autoTuneGains = 1;
+    autoFeed = 1;
+    {
+        static const signed char normal[] = {-56, -28, -28, 0, 0, 0, 0, 28, 28, 56};
+        unsigned k;
+        for (k = 0; k < sizeof(block); k++)
+            block[k] = (unsigned char)normal[(k / 2) % 10];
+    }
+    REQUIRE(StartHackrfFrontend(&fe) == SUCCESS_RETURN && stopped == 2);
+    block[0] = 129;
+    block[1] = 127;
+    REQUIRE(Submit(2, 2, block) == 0 && ReadHackrfFrontend(&fe, output, 2) == 2);
+    REQUIRE((unsigned char)output[0] == 129 && (unsigned char)output[1] == 127);
+    REQUIRE(StopHackrfFrontend(&fe) == SUCCESS_RETURN && stopped == 3);
+    /* In production a new operational timeline is an explicit caller action. */
+    REQUIRE(StartHackrfFrontend(&fe) == SUCCESS_RETURN && stopped == 3);
+    Destroy(&fe);
+    REQUIRE(stopped == 4 && closed == 1 && exited == 1);
+    Initialize(&fe, &cfg, &pars);
+    REQUIRE(OpenHackrfFrontend(&cfg, &fe) == SUCCESS_RETURN);
+    cfg.hackrfConfiguration.autoTuneGains = 1;
+    autoFeed = autoInvalid = 1;
+    REQUIRE(StartHackrfFrontend(&fe) == FAILURE_RETURN && stopped == 1);
+    Destroy(&fe);
+    REQUIRE(closed == 1 && exited == 1);
+    puts(
+        "HackRF native RX configuration, calibration isolation, cleanup, queue order, overflow, disconnect and shutdown passed.");
     return 0;
 }
