@@ -42,7 +42,7 @@ typedef struct ThresholdManagerStruct {
  * @struct NonCoherentSumsManagerStruct
  * @brief Contains variables used to manage the runtime change of the number of non coherent sums.
  * Initial value is 1. The maximum number depends on the maximum number of non coherent sums
- * configured by the user (through GUI or configuration file)
+ * configured by the user (through configuration files)
  */
 typedef struct NonCoherentSumsManagerStruct {
     TPrnList testedPrns; /**< List of PRN the receiver tried to acquire using the current number of

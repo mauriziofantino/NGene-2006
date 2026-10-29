@@ -148,7 +148,7 @@ int NgSocketInit(void)
 ssize_t NgSocketRead(SOCKET socket, void *buffer, size_t size)
 {
     size_t received = 0;
-    /* WinSock has no SO_RCVLOWAT. Preserve the GUI's requested minimum
+    /* WinSock has no SO_RCVLOWAT. Preserve the caller's requested minimum
      * byte count by accumulating fragments until completion, EOF or timeout. */
     while (received < size) {
         size_t amount = size - received;

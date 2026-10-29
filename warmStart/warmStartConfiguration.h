@@ -8,7 +8,7 @@
  * @version 1.0.0
  *
  * @brief This header defines the structure that stores NGene configuration for Warm start
- *        from both GUI and configuration files.
+ *        from configuration files.
  */
 #ifndef WARM_CONFIGURATION_H_INCLUDED
 #define WARM_CONFIGURATION_H_INCLUDED

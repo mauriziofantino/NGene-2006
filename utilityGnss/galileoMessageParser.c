@@ -1681,7 +1681,7 @@ void ParseGalMessage(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch, flo
                 (navMsg->ephTmp.iode3 == navMsg->ephTmp.iode4) &&
                 (parser->redCedInPvt != RED_CED_ONLY)) {
                 if (navMsg->eph.iode1 != navMsg->ephTmp.iode1) {
-                    /* a new set of data from navigation message can be sent to the GUI */
+                    /* A new validated navigation data set is available for output. */
                     ch->newNavMsgInformation = TRUE_FLAG;
                 }
                 CopyFromTmpToOperative(navMsg);

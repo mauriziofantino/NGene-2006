@@ -116,7 +116,7 @@ int HandleCmdLine(int argc, char *argv[], TNGeneConfiguration *cfg)
             break;
         case 'c':
             cfg->userInterface = RX_UI_TEXT;
-            fprintf(stdout, "\n                   GPS/Galileo NGene Software Receiver\n\n");
+            fprintf(stdout, "\n                   NGene Classic GPS/Galileo receiver\n\n");
             fprintf(
                 stdout,
                 "Copyright (c) 2007-2025 Navigation Signal Analysis and Simulation group - NavSAS\n\n");
@@ -145,7 +145,7 @@ int HandleCmdLine(int argc, char *argv[], TNGeneConfiguration *cfg)
             break;
         case 'h':
             cfg->userInterface = RX_UI_TEXT;
-            fprintf(stdout, "\n         NGene Software Receiver %s \"%s\"\n\n", NGENE_VERSION_INDEX,
+            fprintf(stdout, "\n         NGene Classic %s \"%s\"\n\n", NGENE_VERSION_INDEX,
                     NGENE_VERSION_NAME);
             fprintf(
                 stdout,

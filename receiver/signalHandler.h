@@ -15,7 +15,7 @@
 /** @brief Signal-safe stop request observed by blocking frontend waits. */
 extern volatile sig_atomic_t ngeneStopRequested;
 /**
- * @brief This function just start to listen for signal which can be sent by the OS, by the GUI
+ * @brief Register operating-system and user stop-signal handlers.
  *
  * @param cfg points to the receiver configuration
  * @param run points to a variable which is used to manage the receiver elaboration

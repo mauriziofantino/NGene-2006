@@ -815,7 +815,7 @@ void InitOsnmaData(TNGeneConfiguration *cfg, TOsnmaData *osnma)
     //	{
     //		/* cannot find public key from file, create a default one */
     //		SwrxLog(NGENE_LOG_SEVERITY_WARNING,"Cannot read the public key from the specified
-    //file (%s). A default one is loaded...",osnma->osnmaPars.publicKeyFilename);
+    // file (%s). A default one is loaded...",osnma->osnmaPars.publicKeyFilename);
     //		pubKeyCompressedSize = 29;
     //		ArrayClean((char *)pubKeyCompressed,MAX_COMPRESSED_PUBLICKEY_SIZE);
     //		osnma->function=EVP_sha224();
@@ -1385,7 +1385,7 @@ void UpdateChannelOsnmaVariables(TOsnmaData *rxOsnma, TOsnmaAuthentication *auth
             //	if(rxOsnma->rxOsnmaStatusLastPrint!=RX_OSNMA_EMERGENCY)
             //	{
             //		SwrxLog(NGENE_LOG_SEVERITY_IMPORTANT_INFO,"OSNMA Status: OAM reception is
-            //finished!\n"); 		rxOsnma->rxOsnmaStatusLastPrint = RX_OSNMA_EMERGENCY;
+            // finished!\n"); 		rxOsnma->rxOsnmaStatusLastPrint = RX_OSNMA_EMERGENCY;
             //	}
             //	rxOsnma->pkrOam = FALSE_FLAG;
             //	chOsnma->rxOsnmaStatus = RX_OSNMA_OP_NOMINAL;
@@ -2913,9 +2913,9 @@ void SaveMackInMackList(TOsnmaData *rxOsnma, TChannelOsnmaVariables *chOsnma, in
                     (towSubframeStart - pars->krootTow);
         //		keyPtr->indexKey  =
         //(deltaTime/GAL_SECONDS_PER_SUBFRAME)*pars->nmack*pars->ns; // keys in the past complete
-        //subframes 		keyPtr->indexKey += (blockIdx*pars->ns); // keys in the past MACK blocks (in the
-        //current subframe) 		keyPtr->indexKey += (pars->keyIndexTable[chOsnma->prn -1]); // key of
-        //the current PRN
+        // subframes 		keyPtr->indexKey += (blockIdx*pars->ns); // keys in the past MACK
+        // blocks (in the current subframe) 		keyPtr->indexKey +=
+        // (pars->keyIndexTable[chOsnma->prn -1]); // key of the current PRN
         indexKey = (deltaTime / GAL_SECONDS_PER_SUBFRAME) * pars->nmack *
                    pars->ns;               // keys in the past complete subframes
         indexKey += (blockIdx * pars->ns); // keys in the past MACK blocks (in the current subframe)

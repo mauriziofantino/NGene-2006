@@ -13,9 +13,7 @@
 #ifndef USB_FRONT_END_CONFIGURATION_H_INCLUDED
 #define USB_FRONT_END_CONFIGURATION_H_INCLUDED
 #include "ngeneConstants.h"
-/* Each index is used to indicate a supported front-end
- * INFO These numbers must be equal to those reported in the Front_End.conf configuration file
- * and those sent by the GUI */
+/* Supported frontend IDs must match the Front_End.conf configuration file. */
 #define NGENE_FE_SIGE 1
 #define NGENE_FE_SIGE_V3 6
 #define NGENE_FE_HACKRF 7

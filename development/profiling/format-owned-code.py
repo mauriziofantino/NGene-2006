@@ -1,7 +1,7 @@
 """Apply the repository C/C++ style and verify tokens are preserved.
 
-Vendor libraries and generated files are excluded. Branding/comment cleanup is
-performed before the token comparison, so formatting cannot hide code changes.
+Vendor libraries and generated files are excluded. Comment cleanup is performed
+before the token comparison, so formatting cannot hide code changes.
 """
 import argparse
 import difflib
@@ -32,14 +32,6 @@ def tokens(text):
 
 
 def cleanup(text, filename):
-    def replace(m):
-        part = m[0]
-        if part.startswith(('//', '/*', '"', "'")):
-            part = part.replace('NGene2Log', 'NGeneLog').replace('.ngene2', '.ngene')
-            part = part.replace('ngene2.c', 'ngene.c')
-            return part.replace('NGene2', 'NGene Classic').replace('NGENE2', 'NGENE').replace('ngene2', 'ngene')
-        return part.replace('NGene2', 'NGene').replace('NGENE2', 'NGENE').replace('ngene2', 'ngene')
-    text = token.sub(replace, text)
     # Empty block comments are old layout markers, not documentation.
     text = re.sub(r'/\*\s*\*/', '', text)
     text = re.sub(r'(?m)^(\s*\* @file\s+)[^\r\n]+', lambda m:m[1]+filename, text)
@@ -51,7 +43,8 @@ manifest = {}
 for path in files:
     text = cleanup(path.read_text(encoding='utf-8-sig'), path.name)
     before[path] = tokens(text)
-    path.write_text(text, encoding='utf-8', newline='\n')
+    if path.read_bytes() != text.encode('utf-8'):
+        path.write_text(text, encoding='utf-8', newline='\n')
 for start in range(0, len(files), 48):
     subprocess.run([a.formatter, '-i', '--style=file', *map(str, files[start:start+48])], check=True)
 for path in files:
@@ -67,12 +60,16 @@ instrumented = root/'build/style-refresh/instrumented'
 patch = []
 for name in ['receiver/ngene.c', 'utility/profilingSupport.c', 'utility/profilingSupport.h']:
     temp = instrumented/name
-    temp.write_text(cleanup(temp.read_text(encoding='utf-8-sig'), temp.name), encoding='utf-8')
-    subprocess.run([a.formatter, '-i', '--style=file:'+str(root/'.clang-format'), str(temp)], check=True)
+    source = cleanup(temp.read_text(encoding='utf-8-sig'), temp.name)
+    # stdin avoids the build/ exclusion in .clang-format-ignore.
+    formatted = subprocess.run([a.formatter, '--style=file:'+str(root/'.clang-format'),
+                                '--assume-filename='+str(root/name)], input=source,
+                               capture_output=True, encoding='utf-8', check=True).stdout
+    temp.write_text(formatted, encoding='utf-8', newline='\n')
     patch.append(f'diff --git a/{name} b/{name}\n')
     patch.extend(difflib.unified_diff((root/name).read_text().splitlines(True),
                                     temp.read_text().splitlines(True),
                                     fromfile='a/'+name, tofile='b/'+name))
-(root/'development/profiling/instrumentation.patch').write_text(''.join(patch), encoding='utf-8')
+(root/'development/profiling/instrumentation.patch').write_text(''.join(patch), encoding='utf-8', newline='\n')
 (root/'build/style-refresh/token-manifest.json').write_text(json.dumps(manifest, indent=2), encoding='utf-8')
 print(f'Formatted {len(files)} project C/C++ files; all formatting token sequences match.')

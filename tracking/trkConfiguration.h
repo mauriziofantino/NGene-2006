@@ -8,7 +8,7 @@
  * @version 1.0.0
  *
  * @brief This header defines the structure that stores NGene Classic configuration for TRK
- *        from both GUI and configuration files.
+ *        from configuration files.
  */
 #ifndef TRK_CONFIGURATION_H_INCLUDED
 #define TRK_CONFIGURATION_H_INCLUDED

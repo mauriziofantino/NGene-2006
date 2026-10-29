@@ -1155,7 +1155,7 @@ void ParseGpsMessage(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch, flo
                 (navMsg->subframe3Received == TRUE_FLAG) && (iodc == navMsg->ephTmp.iode2) &&
                 (navMsg->ephTmp.iode2 == navMsg->ephTmp.iode3)) {
                 if (navMsg->eph.iode2 != navMsg->ephTmp.iode2) {
-                    /* a new set of data from navigation message can be sent to the GUI */
+                    /* A new validated navigation data set is available for output. */
                     ch->newNavMsgInformation = TRUE_FLAG;
                 }
                 CopyFromTmpToOperative(navMsg);

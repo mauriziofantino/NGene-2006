@@ -135,7 +135,10 @@ int SwrxLog(int severity, const char *format, ...)
         if ((severity == NGENE_LOG_SEVERITY_ERROR) || (severity == NGENE_LOG_SEVERITY_WARNING) ||
             (severity == NGENE_LOG_SEVERITY_IMPORTANT_INFO)) {
             /* Errors, warnings and operational status also appear in the dashboard. */
-            NcDrawRxLog(swrxLog_ncursesData, logStringWithTime, severity);
+            NcDrawRxLog(swrxLog_ncursesData,
+                        severity == NGENE_LOG_SEVERITY_IMPORTANT_INFO ? logString
+                                                                      : logStringWithTime,
+                        severity);
         }
     }
     /* All logs performed */
@@ -410,14 +413,15 @@ int GetValXml(FILE *PKRFile, char *fieldName, void *variable, size_t *size)
                     stringPointer2 = strstr(line_buf, TAG_LENGTH);
                     /* Show the line details */
                     //				    printf("line[%06d]: chars=%06zd, buf size=%06zu,
-                    //contents: %s", line_count, 				        line_size, line_buf_size, line_buf);
+                    // contents: %s", line_count, 				        line_size,
+                    // line_buf_size, line_buf);
                     if (stringPointer2 != NULL) {
                         sscanf(stringPointer2 + strlen(TAG_LENGTH), "%d", &(lengthInBits));
                         line_size = getline(&line_buf, &line_buf_size, PKRFile);
                         /* Show the line details */
                         //					    printf("line[%06d]: chars=%06zd,
-                        //buf size=%06zu, contents: %s", line_count, 					        line_size, line_buf_size,
-                        //line_buf);
+                        // buf size=%06zu, contents: %s", line_count,
+                        // line_size, line_buf_size, line_buf);
                         stringPointer3 = strstr(line_buf, TAG_MT_ELEMENT_START);
                         stringPointer4 = strstr(line_buf, TAG_MT_ELEMENT_END);
                         if (stringPointer3 != NULL || stringPointer4 != NULL) {

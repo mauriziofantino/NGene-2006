@@ -547,8 +547,9 @@ typedef struct OsnmaDataStruct {
                                        *
                                        * With the new definition of MACK Offset (ICD 2.1)
                                        * the ...Prn19Key... variables are used to manage the key for the MACs transmitted in the
-                                       * offset MACK Sections                                   regardless of the PRN that is transmitting it                                   (i.e. depending on the NS
-                                       * parameter, the PRN transmitting the key could be different from 19) */
+                                       * offset MACK Sections                                   regardless of the PRN that is
+                                       * transmitting it                                   (i.e. depending on the NS                                   parameter, the
+                                       * PRN transmitting the key could be different from 19) */
     unsigned char *currentKey;        /*Temporary variable containing the current TESLA key */
     unsigned char *referenceKey;      /*Temporary variable containing the previous TESLA key */
     unsigned char *concatenatedInput; /*Concatenation of Key, GST_SF,alpha and P3, to be hashed */

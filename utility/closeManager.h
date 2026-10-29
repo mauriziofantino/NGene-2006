@@ -12,8 +12,7 @@
 #ifndef CLOSE_MANAGER_H_INCLUDED
 #define CLOSE_MANAGER_H_INCLUDED
 /**
- * @brief CloseNGene terminates the receiver. If the GUI is used,
- *        CloseNGene waits in order to let the GUI close the TCP connection.
+ * @brief Release receiver resources, stop the frontend and terminate the process.
  *
  * @param cfg points to the receiver configuration
  * @param returnValue indicates the return value to be passed to exit function.
