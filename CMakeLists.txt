@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(ngene VERSION 1.0 LANGUAGES C)
+project(ngene VERSION 1.0 LANGUAGES C CXX)
 
 if(WIN32 AND NOT CYGWIN AND NOT MINGW AND MSVC AND CMAKE_C_COMPILER_ID STREQUAL "Clang")
     set(NGENE_NATIVE_WINDOWS ON)
@@ -65,6 +65,7 @@ target_link_libraries(ngene_fft PUBLIC ngene_platform PkgConfig::USB)
 target_compile_options(ngene_fft PRIVATE ${NGENE_OPTIMIZE})
 
 # Receiver sources. Acquisition and tracking retain their existing logic.
+include(cmake/pnt-numerics.cmake)
 add_executable(ngene
     receiver/ngene.c
     receiver/manageConfiguration.c
@@ -102,7 +103,6 @@ add_executable(ngene
     pvt/receiverTime.c
     utility/checkFolder.c
     utility/ioFunctions.c
-    utility/matrices.c
     utility/nmeaLog.c
     utility/rinexLog.c
     utility/argvParser.c
@@ -163,6 +163,7 @@ add_subdirectory(libraries/libfec)
 target_link_libraries(ngene PRIVATE ngene_fec PkgConfig::SSL PkgConfig::USB
     PkgConfig::NCURSES Threads::Threads)
 target_link_libraries(ngene PRIVATE ngene_platform ngene_fft ngene_hackrf)
+target_link_libraries(ngene PRIVATE ngene_pnt_numerics)
 
 option(NGENE_RX_PROFILING "Measure receiver processing stages and replay throughput" OFF)
 if(NGENE_RX_PROFILING)
@@ -195,10 +196,17 @@ if(NGENE_BUILD_PLATFORM_CHECKS)
     add_test(NAME fft_evo_classic_contract COMMAND ngene_check_fft)
 
     add_executable(ngene_check_pvt_solver tools/check_pvt_solver.c)
+    target_link_libraries(ngene_check_pvt_solver PRIVATE ngene_pnt_numerics)
     if(NOT NGENE_NATIVE_WINDOWS)
         target_link_libraries(ngene_check_pvt_solver PRIVATE m)
     endif()
     add_test(NAME pvt_qr_solver COMMAND ngene_check_pvt_solver)
+    add_executable(ngene_check_pnt_observables tools/check_pnt_observables.c
+        pvt/carrierSmoothing.c utilityGnss/prnList.c)
+    target_link_libraries(ngene_check_pnt_observables PRIVATE ngene_platform PkgConfig::USB)
+    target_compile_definitions(ngene_check_pnt_observables PRIVATE
+        NGENE_TEST_DATA_DIRECTORY="${PROJECT_SOURCE_DIR}/sampleConfigurationFiles/otherData/")
+    add_test(NAME pnt_observables COMMAND ngene_check_pnt_observables)
     set_tests_properties(fft_evo_classic_contract PROPERTIES TIMEOUT 60)
     add_executable(ngene_check_wide_iq tools/check_wide_iq.c asmFolder/wideInput.c
         asmFolder/hackrfInput.c acquisition/hackrfThreshold.c utility/sampleCompression.c asmFolder/carrierTable.c)

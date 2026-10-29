@@ -21,7 +21,7 @@
 #include "closeManager.h"
 #include "matrices.h"
 #include "pvtUtility.h"
-#include "smallLeastSquares.h"
+#include "pntNumerics.h"
 
 
 int InitLeastSquaresData(TNGeneConfiguration *cfg,TNGeneData *rx)
@@ -33,14 +33,8 @@ int InitLeastSquaresData(TNGeneConfiguration *cfg,TNGeneData *rx)
 	lsData->a = (double *)malloc(n*LS_MULTI_SIZE*sizeof(double));
 	if(lsData->a==NULL)
 		errors++;
-	lsData->at = (double *)malloc(LS_MULTI_SIZE*n*sizeof(double));
-	if(lsData->at==NULL)
-		errors++;
 	lsData->ac = (double *)malloc(n*4*sizeof(double));
 	if(lsData->ac==NULL)
-		errors++;
-	lsData->act = (double *)malloc(4*n*sizeof(double));
-	if(lsData->act==NULL)
 		errors++;
 	lsData->satRadialVelAndDoppler = (double *)malloc(n*1*sizeof(double));
 	if(lsData->satRadialVelAndDoppler==NULL)
@@ -53,9 +47,6 @@ int InitLeastSquaresData(TNGeneConfiguration *cfg,TNGeneData *rx)
 		errors++;
 	lsData->b = (double *)malloc(n*1*sizeof(double));
 	if(lsData->b==NULL)
-		errors++;
-	lsData->az = (double *)malloc(1*n*sizeof(double));
-	if(lsData->az==NULL)
 		errors++;
 	lsData->el = (double *)malloc(1*n*sizeof(double));
 	if(lsData->el==NULL)
@@ -76,18 +67,10 @@ void ClearLeastSquaresData(TNGeneConfiguration *cfg,TLeastSquaresData *lsData)
 	int n = cfg->numberOfChannels;
 
 	MatrixInit(lsData->a,n,LS_MULTI_SIZE);
-	MatrixInit(lsData->at,LS_MULTI_SIZE,n);
-	MatrixInit(lsData->atA,LS_MULTI_SIZE,LS_MULTI_SIZE);
 	MatrixInit(lsData->invAtA,LS_MULTI_SIZE,LS_MULTI_SIZE);
-	MatrixInit(lsData->atB,LS_MULTI_SIZE,1);
 	MatrixInit(lsData->pos,LS_MULTI_SIZE,1);
 	MatrixInit(lsData->sol,LS_MULTI_SIZE,1);
 	MatrixInit(lsData->ac,n,4);
-	MatrixInit(lsData->act,4,n);
-	MatrixInit(lsData->actAc,4,4);
-	MatrixInit(lsData->invActAc,4,4);
-	MatrixInit(lsData->actB,4,1);
-	MatrixInit(lsData->sol2,4,1);
 	MatrixInit(lsData->userVel,4,1);
 	MatrixInit(lsData->satVel,3,1);
 	MatrixInit(lsData->distVect,1,3);
@@ -96,20 +79,7 @@ void ClearLeastSquaresData(TNGeneConfiguration *cfg,TLeastSquaresData *lsData)
 	MatrixInit(lsData->x,3,n);
 	MatrixInit(lsData->xRotate,3,n);
 	MatrixInit(lsData->b,n,1);
-	MatrixInit(lsData->az,1,n);
 	MatrixInit(lsData->el,1,n);
-	MatrixInit(lsData->matrixL,LS_MULTI_SIZE,LS_MULTI_SIZE);
-	MatrixInit(lsData->matrixD,LS_MULTI_SIZE,LS_MULTI_SIZE);
-	MatrixInit(lsData->matrixU,LS_MULTI_SIZE,LS_MULTI_SIZE);
-	MatrixInit(lsData->matrixUt,LS_MULTI_SIZE,LS_MULTI_SIZE);
-	MatrixInit(lsData->matrixIL,LS_MULTI_SIZE,LS_MULTI_SIZE);
-	MatrixInit(lsData->matrixID,LS_MULTI_SIZE,LS_MULTI_SIZE);
-	MatrixInit(lsData->matrixIU,LS_MULTI_SIZE,LS_MULTI_SIZE);
-	MatrixInit(lsData->matrixIUt,LS_MULTI_SIZE,LS_MULTI_SIZE);
-	MatrixInit(lsData->matrixIUD,LS_MULTI_SIZE,LS_MULTI_SIZE);
-	MatrixInit(lsData->matrixDet,LS_MULTI_SIZE,LS_MULTI_SIZE);
-	MatrixInit(lsData->dop,5,5);
-	MatrixInit(lsData->q,5,5);
 }
 
 
@@ -118,14 +88,11 @@ void DeinitLeastSquaresData(TNGeneData *rx)
 	TLeastSquaresData *lsData = &(rx->pvtData.lsData);
 
 	free(lsData->a);
-	free(lsData->at);
 	free(lsData->ac);
-	free(lsData->act);
 	free(lsData->satRadialVelAndDoppler);
 	free(lsData->x);
 	free(lsData->xRotate);
 	free(lsData->b);
-	free(lsData->az);
 	free(lsData->el);
 }
 
@@ -148,7 +115,7 @@ int PerformLeastSquares(TNGeneConfiguration *cfg,TNGeneData *rx)
 	double geomRange;
 	double aCorrectRow[1*3];
 	double prod;
-	double geod[3],angle,vs[3];
+	double geod[3],angle,vs[3],weight;
 	int converged=FALSE_FLAG,k;
 
 	/* Initializations */
@@ -182,6 +149,7 @@ int PerformLeastSquares(TNGeneConfiguration *cfg,TNGeneData *rx)
 	/* Iterative computation of the position and clock bias (biases, in the multiple constellation case) */
 	for(iter=0;iter<LS_ITERATIONS;iter++)
 	{
+		if(iter>0) Ecef2Geod(lsData->pos,geod);
 		for(chIdx=0;chIdx<nCh;chIdx++)
 		{
 			pvtCh = &(pvtData->pvtChArray[chIdx]);
@@ -203,7 +171,6 @@ int PerformLeastSquares(TNGeneConfiguration *cfg,TNGeneData *rx)
 				Topocent(lsData->pos,topoXRotate,lsData->el);
 				satStatus->elevation = lsData->el[0] * DEGREE_TO_RADIAN;
 				satStatus->azimuth = lsData->el[1] * DEGREE_TO_RADIAN;
-				Ecef2Geod(lsData->pos,geod);
 				pvtCh->tropoCorrection = -TropoHopfieldModel(satStatus->elevation,geod[2]);
 			}
 			/* Calculate geometric range */
@@ -228,7 +195,17 @@ int PerformLeastSquares(TNGeneConfiguration *cfg,TNGeneData *rx)
 				lsData->a[(curSize*chIdx)+idxGalBias]=1.0;
 			}
 		}
-		if(!SmallLeastSquares(lsData->a,lsData->b,nCh,curSize,lsData->sol,NULL))
+		/* Whiten each observation using the same variance/elevation model as KF.
+		 * The origin iteration has no meaningful elevation; initialize unweighted. */
+		if(cfg->pvtConfiguration.weightedLs && iter>0) for(chIdx=0;chIdx<nCh;chIdx++) {
+			pvtCh=&pvtData->pvtChArray[chIdx];
+			if(!isfinite(pvtCh->posSigma2) || pvtCh->posSigma2<=0 ||
+			   !isfinite(pvtCh->satStatus->elevation)) return FAILURE_RETURN;
+			weight=sqrt(fmax(1e-3,sin(pvtCh->satStatus->elevation))/pvtCh->posSigma2);
+			for(k=0;k<curSize;k++) lsData->a[chIdx*curSize+k]*=weight;
+			lsData->b[chIdx]*=weight;
+		}
+		if(!PntLeastSquares(lsData->a,lsData->b,nCh,curSize,lsData->sol,NULL))
 			return FAILURE_RETURN;
 		MatrixSum(lsData->pos,curSize,1,lsData->sol,curSize,1,lsData->pos);
 		if(iter>0) {
@@ -260,8 +237,15 @@ int PerformLeastSquares(TNGeneConfiguration *cfg,TNGeneData *rx)
 		lsData->satVel[2] = vs[2];
 		MatrixProduct(aCorrectRow,1,3,lsData->satVel,3,1,&prod);
 		lsData->satRadialVelAndDoppler[chIdx] = SPEED_OF_LIGHT / L1_FREQUENCY * pvtCh->deltaPseudorange + prod-SPEED_OF_LIGHT*pvtCh->satClkDrift;
+		if(cfg->pvtConfiguration.weightedLs) {
+			if(!isfinite(pvtCh->velSigma2) || pvtCh->velSigma2<=0 ||
+			   !isfinite(satStatus->elevation)) return FAILURE_RETURN;
+			weight=sqrt(fmax(1e-3,sin(satStatus->elevation))/pvtCh->velSigma2);
+			for(k=0;k<4;k++) lsData->ac[4*chIdx+k]*=weight;
+			lsData->satRadialVelAndDoppler[chIdx]*=weight;
+		}
 	}
-	if(!SmallLeastSquares(lsData->ac,lsData->satRadialVelAndDoppler,nCh,4,lsData->userVel,NULL))
+	if(!PntLeastSquares(lsData->ac,lsData->satRadialVelAndDoppler,nCh,4,lsData->userVel,NULL))
 		return FAILURE_RETURN;
 	/* Save the results */
 	pvtRes->ecefPosition[0] = lsData->pos[0];

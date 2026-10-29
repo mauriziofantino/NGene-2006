@@ -19,7 +19,7 @@ foreach($taskInclude in @('development/profiling','frontEnd','receiver','asmFold
 }
 Push-Location $taskOutput
 try {
-    & $taskCompiler @taskArgs 'ngene-audit-extracted.c' (Join-Path $taskRoot 'utility/matrices.c') '/Fe:audit-pvt.exe'
+    & $taskCompiler @taskArgs 'ngene-audit-extracted.c' (Join-Path $taskRoot 'build/windows-native/ngene_pnt_numerics.lib') '/Fe:audit-pvt.exe'
     if($LASTEXITCODE){throw 'Audit compilation failed'}
     $taskRunArgs=@();if($Verify){$taskRunArgs+='--verify'}
     & './audit-pvt.exe' @taskRunArgs | Tee-Object -FilePath 'audit-results.csv'

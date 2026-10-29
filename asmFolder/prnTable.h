@@ -36,8 +36,7 @@ typedef struct PrnTableStruct
 	unsigned int chipShortLen;	/**< Minimum number of samples in a chip for the current sampling frequency */
 	unsigned int chipLongLen;	/**< Maximum number of samples in a chip for the current sampling frequency */
 	/**/
-	unsigned char egnos136Valid;/**< If TRUE_FLAG then the PRN 136 has been read from configuration file,
-									 otherwise PRN 136 is not supported */
+
 	/**/
 	int numberOfRealGalileoSat;	/**< Number of existing Galileo satellites as reported in Galileo_real_PRNs.txt */
 	int *prnOfRealGalileoSat;	/**< Existing Galileo satellites as reported in Galileo_real_PRNs.txt */

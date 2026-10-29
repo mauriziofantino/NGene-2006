@@ -1,3 +1,4 @@
+#include "egnosPrns.h"
 /**
  * @file prnList.c
  *
@@ -45,22 +46,11 @@ int CreatePrnList(TPrnList *ptr,int gpsEnabled,int galileoEnabled,int egnosEnabl
     /* insert in the list all possible EGNOS satellites */
     if(egnosEnabled==TRUE_FLAG)
     {
-    	if(InsertElementIntoPrnList(EGNOS_SAT,EGNOS_FIRST_PRN,ptr)!=SUCCESS_RETURN)
-    	{
-    		return FAILURE_RETURN;
-    	}
-    	if(InsertElementIntoPrnList(EGNOS_SAT,EGNOS_SECOND_PRN,ptr)!=SUCCESS_RETURN)
-    	{
-    		return FAILURE_RETURN;
-    	}
-    	if(InsertElementIntoPrnList(EGNOS_SAT,EGNOS_THIRD_PRN,ptr)!=SUCCESS_RETURN)
-    	{
-    		return FAILURE_RETURN;
-    	}
-    	if(InsertElementIntoPrnList(EGNOS_SAT,EGNOS_FOURTH_PRN,ptr)!=SUCCESS_RETURN)
-    	{
-    		return FAILURE_RETURN;
-    	}
+        /* Search current operational GEOs first, then retain historical PRNs
+         * for replay and future service reassignment. No acquisition decisions change. */
+        const int order[EGNOS_NUMBER_OF_PRNS]={121,136,123,120,124,126};
+        for(index=0;index<EGNOS_NUMBER_OF_PRNS;index++)
+            if(InsertElementIntoPrnList(EGNOS_SAT,order[index],ptr)!=SUCCESS_RETURN) return FAILURE_RETURN;
     }
     /* insert in the list all possible Galileo satellites */
     if(galileoEnabled==TRUE_FLAG)

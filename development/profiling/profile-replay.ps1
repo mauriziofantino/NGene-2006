@@ -6,6 +6,7 @@ param(
     [ValidateRange(0,64)][Nullable[int]]$GalileoChannels,
     [ValidateRange(0,1)][Nullable[int]]$EgnosChannels,
     [ValidateRange(0,1)][Nullable[int]]$PvtMethod,
+    [ValidateRange(0,1)][Nullable[int]]$WeightedLs,
     [ValidateRange(1,20)][int]$Repetitions = 3,
     [ValidateRange(1,3600)][int]$TimeoutSeconds = 180
 )
@@ -44,6 +45,15 @@ for ($taskRun=1; $taskRun -le $Repetitions; $taskRun++) {
         [IO.File]::WriteAllText($taskRxConfig, $taskRxText)
     }
     # Keep all generated logs local even if the user's configuration has Dump Path.
+    if ($null -ne $WeightedLs) {
+        $taskPntPath = Join-Path $taskDirectory 'configuration/PVT.conf'
+        $taskPntText = [IO.File]::ReadAllText($taskPntPath)
+        $taskPntPattern = '(\[PNT weighted LS\][ \t]*\r?\n)[ \t]*\d+'
+        if ($taskPntText -match $taskPntPattern) {
+            $taskPntText = [regex]::Replace($taskPntText,$taskPntPattern,('${1}'+$WeightedLs))
+        } else { $taskPntText += "`r`n[PNT weighted LS]`r`n$WeightedLs`r`n" }
+        [IO.File]::WriteAllText($taskPntPath,$taskPntText)
+    }
     if ($null -ne $PvtMethod) {
         $taskPvtPath = Join-Path $taskDirectory 'configuration/PVT.conf'
         $taskPvtText = [IO.File]::ReadAllText($taskPvtPath)

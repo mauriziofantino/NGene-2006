@@ -70,15 +70,9 @@ void ComputeAzEl(double *svPos,double *solPos,double *azimuth,double *elevation)
 	e[7] = solPos[1] / r;
 	e[8] = solPos[2] / r;
 
-	int k;
-	int t;
-	for(k = 0; k < 3; k++)
-	{
-		for(t = 0; t < 3; t++)
-		{
-			d[k] = d[k] + (svPos[t] - solPos[t]) * e[t+(3*k)];
-		}
-	}
+	double delta[3];
+    MatrixDiff(svPos,3,1,solPos,3,1,delta);
+    MatrixProduct(e,3,3,delta,3,1,d);
 
 	s = d[2] / sqrt(pow(d[0], 2) + pow(d[1], 2) + pow(d[2], 2));
 

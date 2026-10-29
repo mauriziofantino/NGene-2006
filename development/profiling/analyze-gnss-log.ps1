@@ -31,12 +31,12 @@ $taskLineNumber = 0
 $taskLines = [IO.File]::ReadAllLines($taskLog)
 foreach ($taskLine in $taskLines) {
     $taskLineNumber++
-    if ($taskLine -match 'PVT COUNTER\s+(\d+)') {
+    if ($taskLine -match 'P[VN]T COUNTER\s+(\d+)') {
         $taskEpoch = [ordered]@{ Counter=[int]$Matches[1]; RxMs=$null; GpsWeek=$null; GpsTow=$null; GpsSatellites=0; GalileoSatellites=0; Gdop=$null; Host=''; Utc=''; Solver='' }
         if ($taskLine -match '^\[([^\]]+)\]') { $taskEpoch.Host = $Matches[1] }
     }
     if ($null -ne $taskEpoch) {
-        if ($taskLine -match 'PVT RESULTS \((LS|KF)\)') { $taskEpoch.Solver=$Matches[1] }
+        if ($taskLine -match 'P[VN]T RESULTS \((LS|KF)\)') { $taskEpoch.Solver=$Matches[1] }
         if ($taskLine -match '# RX\s*:\s*(\d+)') { $taskEpoch.RxMs = [long]$Matches[1] }
         if ($taskLine -match '# GPS\s+WN\s*:\s*(\d+)\s+TOW\s*:\s*([\d.]+)') { $taskEpoch.GpsWeek=[int]$Matches[1]; $taskEpoch.GpsTow=Number $Matches[2] }
         if ($taskLine -match '# UTC\s+(\d+/\d+/\d+\s+[\d:.]+)') { $taskEpoch.Utc = $Matches[1] }
@@ -61,7 +61,7 @@ foreach ($taskLine in $taskLines) {
             $taskEpoch=$null
         }
     }
-    if ($taskLine -match 'RX stopped:|stop RX:|cannot stop|tracking lost|again locked|found a problem with|Hard Receiver Restart|PVT failure') {
+    if ($taskLine -match 'RX stopped:|stop RX:|cannot stop|tracking lost|again locked|found a problem with|Hard Receiver Restart|P[VN]T failure') {
         $taskEvents.Add([pscustomobject]@{Line=$taskLineNumber;Message=$taskLine})
     }
 }
@@ -97,7 +97,7 @@ $taskSummary=[ordered]@{
     PllWarnings=([regex]::Matches($taskWholeText,'found a problem with PLL lock')).Count
     RecoveredLocks=([regex]::Matches($taskWholeText,'again locked')).Count
     HardRestarts=([regex]::Matches($taskWholeText,'Hard Receiver Restart')).Count
-    PvtFailures=([regex]::Matches($taskWholeText,'PVT failure')).Count
+    PvtFailures=([regex]::Matches($taskWholeText,'P[VN]T failure')).Count
     GdopRejections=([regex]::Matches($taskWholeText,'PVT results discarded due to a bad GDOP')).Count
     QueueOverflows=([regex]::Matches($taskWholeText,'RX stopped: receiver queue overflow')).Count
 }

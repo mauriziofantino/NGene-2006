@@ -205,7 +205,7 @@ int CheckPvtResultsGoodness(TNGeneConfiguration *cfg,TPvtData *pvtData,TPvtResul
 	if((pvtData->pvtAlgorithm==LMS_BASED_PVT) && (pvtResNew->dop[GDOP_INDEX_IN_DOP_ARRAY]>maxGdop))
 	{
 		*failure = FALSE_FLAG;
-		SwrxLog(NGENE_LOG_SEVERITY_WARNING,"PVT results discarded due to a bad GDOP");
+		SwrxLog(NGENE_LOG_SEVERITY_WARNING,"PNT results discarded due to a bad GDOP");
 		return FALSE_FLAG;
 	}
 
@@ -226,7 +226,7 @@ int CheckPvtResultsGoodness(TNGeneConfiguration *cfg,TPvtData *pvtData,TPvtResul
 		deltaTime = fabs(deltaTime);
 		if(deltaTime>PVT_MAXIMUM_TIME_ERROR)
 		{
-			SwrxLog(NGENE_LOG_SEVERITY_WARNING,"PVT results discarded due to bad receiver GPS time estimation (discrepancy with the predicted time)");
+			SwrxLog(NGENE_LOG_SEVERITY_WARNING,"PNT results discarded due to bad receiver GPS time estimation (discrepancy with the predicted time)");
 			return FALSE_FLAG;
 		}
 	}
@@ -237,7 +237,7 @@ int CheckPvtResultsGoodness(TNGeneConfiguration *cfg,TPvtData *pvtData,TPvtResul
 		deltaTime = fabs(deltaTime);
 		if(deltaTime>PVT_MAXIMUM_TIME_ERROR)
 		{
-			SwrxLog(NGENE_LOG_SEVERITY_WARNING,"PVT results discarded due to bad receiver Galileo time estimation (discrepancy with the predicted time)");
+			SwrxLog(NGENE_LOG_SEVERITY_WARNING,"PNT results discarded due to bad receiver Galileo time estimation (discrepancy with the predicted time)");
 			return FALSE_FLAG;
 		}
 	}
@@ -246,12 +246,12 @@ int CheckPvtResultsGoodness(TNGeneConfiguration *cfg,TPvtData *pvtData,TPvtResul
 	{
 		if(pvtResNew->rxGpsTime.referenceWn<pvtResOld->rxGpsTime.referenceWn)
 		{
-			SwrxLog(NGENE_LOG_SEVERITY_WARNING,"PVT results discarded due to bad receiver GPS time estimation (new time in the past)");
+			SwrxLog(NGENE_LOG_SEVERITY_WARNING,"PNT results discarded due to bad receiver GPS time estimation (new time in the past)");
 			return FALSE_FLAG;
 		}
 		if((pvtResNew->rxGpsTime.referenceWn==pvtResOld->rxGpsTime.referenceWn) && (pvtResNew->rxGpsTime.referenceTow<pvtResOld->rxGpsTime.referenceTow))
 		{
-			SwrxLog(NGENE_LOG_SEVERITY_WARNING,"PVT results discarded due to bad receiver GPS time estimation (new time in the past)");
+			SwrxLog(NGENE_LOG_SEVERITY_WARNING,"PNT results discarded due to bad receiver GPS time estimation (new time in the past)");
 			return FALSE_FLAG;
 		}
 	}
@@ -259,12 +259,12 @@ int CheckPvtResultsGoodness(TNGeneConfiguration *cfg,TPvtData *pvtData,TPvtResul
 	{
 		if(pvtResNew->rxGalTime.referenceWn<pvtResOld->rxGalTime.referenceWn)
 		{
-			SwrxLog(NGENE_LOG_SEVERITY_WARNING,"PVT results discarded due to bad receiver Galileo time estimation (new time in the past)");
+			SwrxLog(NGENE_LOG_SEVERITY_WARNING,"PNT results discarded due to bad receiver Galileo time estimation (new time in the past)");
 			return FALSE_FLAG;
 		}
 		if((pvtResNew->rxGalTime.referenceWn==pvtResOld->rxGalTime.referenceWn) && (pvtResNew->rxGalTime.referenceTow < pvtResOld->rxGalTime.referenceTow))
 		{
-			SwrxLog(NGENE_LOG_SEVERITY_WARNING,"PVT results discarded due to bad receiver Galileo time estimation (new time in the past)");
+			SwrxLog(NGENE_LOG_SEVERITY_WARNING,"PNT results discarded due to bad receiver Galileo time estimation (new time in the past)");
 			return FALSE_FLAG;
 		}
 	}
@@ -277,7 +277,7 @@ int CheckPvtResultsGoodness(TNGeneConfiguration *cfg,TPvtData *pvtData,TPvtResul
 		deltaTimeFromSamples = fabs((double)(pvtResNew->rxGpsTime.referenceSample - pvtResOld->rxGpsTime.referenceSample))/cfg->fs;
 		if(fabs(deltaTime-deltaTimeFromSamples)>PVT_MAXIMUM_TIME_ERROR)
 		{
-			SwrxLog(NGENE_LOG_SEVERITY_WARNING,"PVT results discarded due to bad receiver GPS time estimation (discrepancy with the sample count)");
+			SwrxLog(NGENE_LOG_SEVERITY_WARNING,"PNT results discarded due to bad receiver GPS time estimation (discrepancy with the sample count)");
 			return FALSE_FLAG;
 		}
 	}
@@ -289,7 +289,7 @@ int CheckPvtResultsGoodness(TNGeneConfiguration *cfg,TPvtData *pvtData,TPvtResul
 		deltaTimeFromSamples = fabs((double)(pvtResNew->rxGalTime.referenceSample - pvtResOld->rxGalTime.referenceSample))/cfg->fs;
 		if(fabs(deltaTime-deltaTimeFromSamples)>PVT_MAXIMUM_TIME_ERROR)
 		{
-			SwrxLog(NGENE_LOG_SEVERITY_WARNING,"PVT results discarded due to bad receiver Galileo time estimation (discrepancy with the sample count)");
+			SwrxLog(NGENE_LOG_SEVERITY_WARNING,"PNT results discarded due to bad receiver Galileo time estimation (discrepancy with the sample count)");
 			return FALSE_FLAG;
 		}
 	}
@@ -308,7 +308,7 @@ int CheckPvtResultsGoodness(TNGeneConfiguration *cfg,TPvtData *pvtData,TPvtResul
 			deltaPos = sqrt(deltaPos);
 			if(deltaPos>PVT_MAXIMUM_POSITION_JUMP)
 			{
-				SwrxLog(NGENE_LOG_SEVERITY_WARNING,"PVT results discarded due to bad position estimation (%f m jump w.r.t. the old position)",deltaPos);
+				SwrxLog(NGENE_LOG_SEVERITY_WARNING,"PNT results discarded due to bad position estimation (%f m jump w.r.t. the old position)",deltaPos);
 				return FALSE_FLAG;
 			}
 		}
@@ -330,7 +330,7 @@ int CheckPvtResultsGoodness(TNGeneConfiguration *cfg,TPvtData *pvtData,TPvtResul
 			deltaPos = fabs(deltaPos-deltaPosFromVel);
 			if(deltaPos>PVT_MAXIMUM_POSITION_JUMP)
 			{
-				SwrxLog(NGENE_LOG_SEVERITY_WARNING,"PVT results discarded due to bad position estimation (%f m jump w.r.t. the position predicted through velocity)",deltaPos);
+				SwrxLog(NGENE_LOG_SEVERITY_WARNING,"PNT results discarded due to bad position estimation (%f m jump w.r.t. the position predicted through velocity)",deltaPos);
 				return FALSE_FLAG;
 			}
 		}

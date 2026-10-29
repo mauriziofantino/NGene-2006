@@ -545,12 +545,12 @@ void PlotConfiguration(TNGeneConfiguration *cfg)
 	}
 
 	/* PVT */
-	SwrxLog( NGENE_LOG_SEVERITY_NOTE, "**** PVT parameters");
-	SwrxLog( NGENE_LOG_SEVERITY_NOTE, "     PVT rate %f Hz",pvtCfg->pvtRate);
+	SwrxLog( NGENE_LOG_SEVERITY_NOTE, "**** PNT parameters");
+	SwrxLog( NGENE_LOG_SEVERITY_NOTE, "     PNT rate %f Hz",pvtCfg->pvtRate);
 	if(pvtCfg->pvtMethod==KALMAN_BASED_PVT)
-		SwrxLog( NGENE_LOG_SEVERITY_NOTE, "     Kalman filter based PVT");
+		SwrxLog( NGENE_LOG_SEVERITY_NOTE, "     Kalman filter based PNT");
 	else
-		SwrxLog( NGENE_LOG_SEVERITY_NOTE, "     Least Mean Squares PVT");
+		SwrxLog( NGENE_LOG_SEVERITY_NOTE, "     Least Squares PNT");
 	if(pvtCfg->csmFilterLen>0)
 		SwrxLog( NGENE_LOG_SEVERITY_NOTE, "     Carrier smoothing (M=%d)",pvtCfg->csmFilterLen);
 	if(pvtCfg->egnosFlag==TRUE_FLAG)

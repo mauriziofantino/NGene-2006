@@ -104,7 +104,7 @@
  * @def EGNOS_NUMBER_OF_PRNS
  * @brief Total number of spreading code for EGNOS signal
  */
-#define EGNOS_NUMBER_OF_PRNS	4
+#define EGNOS_NUMBER_OF_PRNS	6
 
 /**
  * @def EGNOS_FIRST_PRN

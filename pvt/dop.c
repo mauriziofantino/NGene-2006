@@ -16,7 +16,7 @@
 #include "dop.h"
 #include "matrices.h"
 #include "pvtUtility.h"
-#include "smallLeastSquares.h"
+#include "pntNumerics.h"
 
 int DopEvaluation(TNGeneData *rx,int performedPvt)
 {
@@ -32,7 +32,7 @@ int DopEvaluation(TNGeneData *rx,int performedPvt)
 	double pos[5];
 	int chIdx;
 	double range, geod[3], up[3], vertical = 0, spatial;
-	int i, j;
+	int i;
 	(void)performedPvt;
 	pvtRes->dopValid=FALSE_FLAG;
 	for(i=0;i<5;i++) pvtRes->dop[i]=NAN;
@@ -109,7 +109,7 @@ int DopEvaluation(TNGeneData *rx,int performedPvt)
 		}
 	}
 	/* Elaborate A matrix and find DOPs */
-	if(!SmallLeastSquares(lsData->a,NULL,nCh,size,NULL,lsData->invAtA)) return FALSE_FLAG;
+	if(!PntLeastSquares(lsData->a,NULL,nCh,size,NULL,lsData->invAtA)) return FALSE_FLAG;
 	if(size==LS_MULTI_SIZE)
 	{
 		/* double constellation */
@@ -130,7 +130,7 @@ int DopEvaluation(TNGeneData *rx,int performedPvt)
 	up[0] = cos(geod[1]*DEGREE_TO_RADIAN)*cos(geod[0]*DEGREE_TO_RADIAN);
 	up[1] = cos(geod[1]*DEGREE_TO_RADIAN)*sin(geod[0]*DEGREE_TO_RADIAN);
 	up[2] = sin(geod[1]*DEGREE_TO_RADIAN);
-	for(i=0;i<3;i++) for(j=0;j<3;j++) vertical += up[i]*lsData->invAtA[i*size+j]*up[j];
+	vertical = PntSpatialProjection(lsData->invAtA,size,up);
 	spatial = lsData->invAtA[0]+lsData->invAtA[size+1]+lsData->invAtA[2*size+2];
 	if(!isfinite(vertical) || !isfinite(spatial)) return FALSE_FLAG;
 	pvtRes->dop[VDOP_INDEX_IN_DOP_ARRAY] = sqrt(fmax(0,vertical));

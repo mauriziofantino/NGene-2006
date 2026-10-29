@@ -54,6 +54,8 @@ int InitEgnosCorrections(TNGeneConfiguration *cfg,TEgnosCorrections *egnosCorr)
 	char filename[2*MAX_ROW_LENGTH];
 
 	egnosCorr->maskIodp = INVALID_VALUE;
+	egnosCorr->testModeBlocked=FALSE_FLAG;
+	egnosCorr->lastTestModeTow=0.0;
 	egnosCorr->numOfPrnsInTheMask = 0;
 	/* degradation factors */
 	degFact = &(egnosCorr->degradationFactors);

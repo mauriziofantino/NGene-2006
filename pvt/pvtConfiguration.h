@@ -59,6 +59,7 @@ typedef struct PvtConfigurationStruct
 	float pvtRate;			/**< Update rate of PVT [Hz] */
 	float maxGdop;			/**< Maximum Geometric Dilution Of Precision */
 	int pvtMethod;			/**< PVT computation method */
+	int weightedLs;            /**< PNT LS: inverse-variance weighting, 0 retains unweighted LS */
 	int csmFilterLen;		/**< Length of the carrier smoothing filter (0 = no Carrier Smoothing) */
 	int elevationMaskFlag;	/**< Flag for elevation mask use */
 	float elevationMask;	/**< If elevationMaskFlag==TRUE_FLAG, it is the elevation mask in radians */

@@ -216,6 +216,8 @@ typedef struct EgnosIonoBandDelayCorrectionsStruct
  */
 typedef struct EgnosCorrectionsStruct
 {
+	int testModeBlocked;       /**< Reject corrections following an MT0 */
+	double lastTestModeTow;    /**< GPS TOW of the most recent MT0 */
 	/* PRN mask */
 	char maskIodp;								/**< Two bits flag for the PRN mask */
 	int numOfPrnsInTheMask;						/**< Number of PRNs in the PRN mask */

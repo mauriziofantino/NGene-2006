@@ -13,6 +13,11 @@
 #ifndef MATRICES_H_INCLUDED
 #define MATRICES_H_INCLUDED
 
+/* C storage adapters implemented by Eigen in pvt/pntNumerics.cpp. */
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * @brief Initialize the matrix to zero
  *
@@ -46,27 +51,6 @@ void MatrixProduct(double *input1,int rows1,int columns1,double *input2,int rows
  * @param output transposed matrix
  */
 void MatrixTrasp(double *input, int rows, int columns, double *output);
-
-
-/**
- * @brief Performs the matrix inversion with the Doolittle method
- *
- * @param input is the pointer to matrix input
- * @param size matrix dimension
- * @param output inverse  matrix  = input^-1 (return value)
- * @param l is the pointer to matrix l
- * @param d is the pointer to matrix d
- * @param u is the pointer to matrix u
- * @param u_t is the pointer to matrix u_t
- * @param il is the pointer to matrix il
- * @param id is the pointer to matrix id
- * @param iu is the pointer to matrix iu
- * @param iu_t is the pointer to matrix iu_t
- * @param iud is the pointer to matrix iud
- * @param det is the matrix determinant
- * @return void
- */
-void MatrixInv(double *input, int size, double *output, double *l, double *d, double *u, double *u_t, double *il, double *id, double *iu, double *iu_t, double *iud, double *det);
 
 
 /**
@@ -119,4 +103,7 @@ void MergeMatricesVertically(double *input1, int rows1, int columns1, double *in
 void MatrixIdentity(double *output, int size);
 
 
+#ifdef __cplusplus
+}
+#endif
 #endif /* MATRICES_H_INCLUDED */

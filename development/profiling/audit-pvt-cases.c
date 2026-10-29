@@ -1,6 +1,7 @@
 /* Independent synthetic fixtures, not part of the production executable.
  * The generated translation unit appends exact NGene function definitions. */
 #include <math.h>
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -16,8 +17,7 @@
 #include "ioFunctions.h"
 #include "leastSquares.h"
 #include "dop.h"
-#include "smallLeastSquares.h"
-#include "smallSpd.h"
+#include "pntNumerics.h"
 #include "gnssTimeMath.h"
 #include "navigationMessageParser.h"
 #include "gpsMessageParser.h"
@@ -37,7 +37,7 @@ static void UpdatePvtMinimumChannels(TPvtData *);
 static void ResetPseudorangeOrigin(TNGeneConfiguration *,TNGeneData *,TSatConstellation,TPvtResults *);
 
 void ClearKalmanFilterData(TNGeneConfiguration *, TKalmanFilterData *);
-void KalmanFilterPrediction(int,TKalmanFilterData *,double *,double *,double *);
+int KalmanFilterPrediction(int,TKalmanFilterData *,double *,double *,double *);
 void PreparePPost(TKalmanFilterData *,TSatConstellation);
 void UpdatePPostMulti(TKalmanFilterData *,TSatConstellation);
 
@@ -136,12 +136,14 @@ static void PerfectKf(double bias)
         observations[i].posSigma2=10;observations[i].velSigma2=1;
     }
 }
-static void CheckLeastSquares(int mixed)
+static void CheckLeastSquares(int mixed,int weighted)
 {
     const double lat=45.06538716666666*DEGREE_TO_RADIAN,lon=7.659323472222223*DEGREE_TO_RADIAN;
     double radius=A_CONST/sqrt(1-E_SQUARE_CONST*sin(lat)*sin(lat)),truth[3],error=0;
     int i,j;
     Fixture(8,mixed);InitLeastSquaresData(&cfg,&rx);rx.pvtData.pvtIndex=1;
+    cfg.pvtConfiguration.weightedLs=weighted;
+    for(i=0;i<8;i++){observations[i].posSigma2=10;observations[i].velSigma2=1;}
     truth[0]=(radius+311.9349)*cos(lat)*cos(lon);truth[1]=(radius+311.9349)*cos(lat)*sin(lon);
     truth[2]=(radius*(1-E_SQUARE_CONST)+311.9349)*sin(lat);
     for(j=0;j<3;j++)rx.pvtTemporaryResults.ecefPosition[j]=truth[j]+50;
@@ -310,7 +312,7 @@ int main(int argc,char **argv)
     error=0;for(i=0;i<3;i++)error+=pow(rx.pvtTemporaryResults.ecefPosition[i]-before[i],2);
     Result("kf_clock_reference_invariance_m",sqrt(error),0,1e-6);
     DeinitKalmanFilterData(&rx);
-    CheckLeastSquares(0);CheckLeastSquares(1);
+    CheckLeastSquares(0,0);CheckLeastSquares(1,0);CheckLeastSquares(0,1);CheckLeastSquares(1,1);
     CheckNavigationFields();
     {
         TPvtChannel saved[8];int stage,failed=0;

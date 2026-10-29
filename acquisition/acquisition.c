@@ -1,3 +1,4 @@
+#include "egnosPrns.h"
 /**
  * @file spreadingCodes.c
  *
@@ -128,14 +129,12 @@ int InitLocalCodesFft(TNGeneConfiguration *cfg, TNGeneData *rx)
 	for (index = 0; index < GPS_NUMBER_OF_PRNS; index++) {
 	    fread(acqCommon->gpsCodesFft[index], sizeof(short int), codesFftLen, fftFile);
 	}
-	for (index = 0; index < EGNOS_NUMBER_OF_PRNS; index++) {
-	    /* If the FFT of PRN 136 is not available use a fake array made of 0s */
-	    if ((rx->prnTable.egnos136Valid == FALSE_FLAG) && (index == (EGNOS_NUMBER_OF_PRNS - 1))) {
-		ArrayClean((char *) acqCommon->egnosCodesFft[index], sizeof(short int) * codesFftLen);
-	    } else {
-		fread(acqCommon->egnosCodesFft[index], sizeof(short int), codesFftLen, fftFile);
-	    }
-	}
+        for(index=0;index<EGNOS_LEGACY_PRNS;index++) {
+            if(fread(acqCommon->egnosCodesFft[index],sizeof(short int),codesFftLen,fftFile)!=(size_t)codesFftLen) {
+                SwrxLog(NGENE_LOG_SEVERITY_ERROR,"Incomplete legacy SBAS FFT code table");
+                CloseNGene(cfg,EXIT_FAILURE);
+            }
+        }
     } else
 #endif
     {
@@ -166,14 +165,7 @@ int InitLocalCodesFft(TNGeneConfiguration *cfg, TNGeneData *rx)
 	/* EGNOS */
 	blocksize = (int) (EGNOS_CODE_DURATION * cfg->samplesPerMillisecond);
 	for (index = 0; index < EGNOS_NUMBER_OF_PRNS; index++) {
-	    if (index == 0)
-		prn = EGNOS_FIRST_PRN;
-	    else if (index == 1)
-		prn = EGNOS_SECOND_PRN;
-	    else if (index == 2)
-		prn = EGNOS_THIRD_PRN;
-	    else
-		prn = EGNOS_FOURTH_PRN;
+	    prn = EgnosPrnAt(index);
 	    codePhase = 0.0;
 	    codePhaseFrac = 0.0;
 	    GenerateCode(cfg, &(rx->prnTable), EGNOS_SAT, prn, (float) EGNOS_CODE_RATE, &codePhase, &codePhaseFrac, BPSK_MODULATION, blocksize, code);
@@ -191,11 +183,30 @@ int InitLocalCodesFft(TNGeneConfiguration *cfg, TNGeneData *rx)
 	    }
 #ifdef SAVE_FFT_OF_LOCAL_CODES
 	    if ((acqCfg->gpsFftSize == ACQ_DEFAULT_FFT_SIZE) && (acqCfg->galileoFftSize == ACQ_DEFAULT_FFT_SIZE)) {
-		fwrite(acqCommon->egnosCodesFft[index], sizeof(short int), codesFftLen, fftFile);
+		if(index<EGNOS_LEGACY_PRNS) fwrite(acqCommon->egnosCodesFft[index], sizeof(short int), codesFftLen, fftFile);
 	    }
 #endif
 	}
     }
+    /* Modern SBAS PRNs are not present in the unversioned legacy FFT file.
+     * Generate their FFTs at the actual sample rate, also in the cached path. */
+#ifdef FFT_OF_LOCAL_CODES_FROM_FILE
+    if ((cfg->fs > LOW_FS) && (acqCfg->gpsFftSize == ACQ_DEFAULT_FFT_SIZE)) {
+        blocksize=(int)(EGNOS_CODE_DURATION*cfg->samplesPerMillisecond);
+        for(index=EGNOS_LEGACY_PRNS;index<EGNOS_NUMBER_OF_PRNS;index++) {
+            codePhase=codePhaseFrac=0.0;
+            GenerateCode(cfg,&rx->prnTable,EGNOS_SAT,EgnosPrnAt(index),EGNOS_CODE_RATE,
+                &codePhase,&codePhaseFrac,BPSK_MODULATION,blocksize,code);
+            SampleCompression(0,0,code,zeros,blocksize,signalCompressed,acqCfg->gpsFftSize);
+            PerformFft(cfg,&rx->fftTable,signalCompressed,signalFft,acqCfg->gpsLog2FftSize,acqCfg->gpsLocalCodeFftGain);
+            ptr1=signalFft; ptr2=acqCommon->egnosCodesFft[index];
+            for(index2=0;index2<acqCfg->gpsFftSize;index2++) {
+                ptr2[0]=ptr1[0];ptr2[1]=ptr1[1];ptr2[2]=-ptr1[1];ptr2[3]=ptr1[0];
+                ptr1+=2;ptr2+=4;
+            }
+        }
+    }
+#endif
     /* Galileo */
     codesFftLen = LOCAL_CODE_FFT_SIZE_FACTOR * acqCfg->galileoFftSize;
 #ifdef FFT_OF_LOCAL_CODES_FROM_FILE

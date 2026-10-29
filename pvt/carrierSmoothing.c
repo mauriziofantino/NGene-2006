@@ -10,6 +10,7 @@
  * @brief Functions used to perform carrier smoothing.
  */
 #include <stdlib.h>
+#include <limits.h>
 #include "carrierSmoothing.h"
 #include "pvtDataStructure.h"
 #include "ngeneConfiguration.h"
@@ -25,6 +26,7 @@ void ClearCsmDataChannel(TCarrierSmoothingData *csmDataCh)
 	csmDataCh->lpcOut = 0.0;
 	csmDataCh->lpcOld = 0.0;
 	csmDataCh->pseudorangeCsmOld = 0;
+	csmDataCh->codeCorrectionOld = 0;
 	csmDataCh->csmCounter = 0;
 }
 
@@ -80,7 +82,9 @@ void UpdateCarrierSmoothingMeasure(TNGeneConfiguration *cfg,TChannel *ch,TPvtDat
 
 	/* NB the sign of the Doppler shift must be corrected in function of the used RF front-end
 	 *    but the correction of the clock drift MUST not take into account this sign!!! */
-	fd = (double)cfg->fePars->dopplerCorrection * ch->dopplerShift;
+	/* Tracking has already updated dopplerShift for the NEXT block. Integrate
+	 * the frequency actually applied to the completed samples. */
+	fd = (double)cfg->fePars->dopplerCorrection * ch->dopplerShiftOld;
 	fd = fd - (pvtRes->clockDrift / ((double)SPEED_OF_LIGHT/(double)L1_FREQUENCY));
 	csmData->csmMeasure += (TWICE_M_PI*fd*(double)ch->blocksize*cfg->ts);
 }
@@ -95,6 +99,7 @@ void PerformCarrierSmoothing(TNGeneConfiguration *cfg,TPvtData *pvtData,TPvtResu
 	double fdOld;
 	double diff;
 	double pseudoP;
+	double codeCorrection,weight;
 
 	/* if carrier smoothing is disabled, returns immediately */
 	if(cfg->pvtConfiguration.csmFilterLen<1)
@@ -127,7 +132,7 @@ void PerformCarrierSmoothing(TNGeneConfiguration *cfg,TPvtData *pvtData,TPvtResu
 		csmData = &(pvtData->csmData[ch->chIndex]);
 		/* NB the sign of the Doppler shift must be corrected in function of the used RF front-end
 		 *    but the correction of the clock drift MUST not take into account this sign!!! */
-		fdOld = (double)cfg->fePars->dopplerCorrection*ch->dopplerShift;
+		fdOld = (double)cfg->fePars->dopplerCorrection*ch->dopplerShiftOld;
 		fdOld = fdOld - (pvtRes->clockDrift / ((double)SPEED_OF_LIGHT/(double)L1_FREQUENCY));
 		/* translate from the value evaluated by the tracking to the value relative to the PVT reference time */
 		diff = TWICE_M_PI*fdOld*(double)ch->bufferOffset*cfg->ts;
@@ -163,14 +168,23 @@ void PerformCarrierSmoothing(TNGeneConfiguration *cfg,TPvtData *pvtData,TPvtResu
 		/* perform smoothing */
 		pvtCh->pseudorangeCsm = pvtCh->pseudorange;
 		pseudoP = 0.0;
-		if(csmData->csmCounter>1)
+		codeCorrection=pvtCh->satClkCorr*SPEED_OF_LIGHT+pvtCh->egnosFastCorrection;
+		if(csmData->csmCounter>0)
 		{
-			pseudoP = csmData->pseudorangeCsmOld - (csmData->lpc - csmData->lpcOld);
-			pvtCh->pseudorangeCsm = (pvtCh->pseudorange*pvtData->weightCode)+(pseudoP*pvtData->weightCarrier);
+			/* Doppler observes the uncorrected signal. Apply changes in clock/SBAS
+			 * corrections immediately, rather than low-pass filtering them. */
+			pseudoP = csmData->pseudorangeCsmOld - (csmData->lpc - csmData->lpcOld)
+			    + codeCorrection-csmData->codeCorrectionOld;
+			/* Hatch start-up: average available epochs, then use the configured
+			 * steady-state window. An early noisy code must not dominate 32 epochs. */
+			weight=1.0/(csmData->csmCounter<cfg->pvtConfiguration.csmFilterLen
+			    ? csmData->csmCounter+1 : cfg->pvtConfiguration.csmFilterLen);
+			pvtCh->pseudorangeCsm = pvtCh->pseudorange*weight+pseudoP*(1.0-weight);
 		}
 		csmData->pseudorangeCsmOld = pvtCh->pseudorangeCsm;
+		csmData->codeCorrectionOld = codeCorrection;
 		csmData->lpcOld = csmData->lpc;
-		csmData->csmCounter++;
+		if(csmData->csmCounter<INT_MAX) csmData->csmCounter++;
 		/* update the CSM  */
 		/* set the posSigma for Kalman filter */
 		if(csmData->csmCounter<CSM_TRANSIENT_LENGTH)

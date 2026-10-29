@@ -1,7 +1,6 @@
 #include <math.h>
 #include <stdio.h>
-#include "smallLeastSquares.h"
-#include "smallSpd.h"
+#include "pntNumerics.h"
 #include "gnssTimeMath.h"
 
 #define REQUIRE(x) do { if (!(x)) { fprintf(stderr,"PVT QR check failed at line %d\n",__LINE__); return 1; } } while (0)
@@ -18,7 +17,7 @@ int main(void)
             b[i]=0;
             for(j=0;j<m;j++) b[i]+=a[i*m+j]*truth[j];
         }
-        REQUIRE(SmallLeastSquares(a,b,n,m,x,q));
+        REQUIRE(PntLeastSquares(a,b,n,m,x,q));
         for(j=0;j<m;j++) REQUIRE(fabs(x[j]-truth[j])<1e-8);
         /* Independent covariance identity: (A' A) Q = I. */
         for(j=0;j<m;j++) for(k=0;k<m;k++) {
@@ -27,7 +26,7 @@ int main(void)
             REQUIRE(fabs(value-(j==k))<1e-8);
         }
         for(i=0;i<n;i++) b[i]+=.25*sin(i*1.7);
-        REQUIRE(SmallLeastSquares(a,b,n,m,x,NULL));
+        REQUIRE(PntLeastSquares(a,b,n,m,x,NULL));
         for(j=0;j<m;j++) {
             double dot=0;
             for(i=0;i<n;i++) {
@@ -41,22 +40,22 @@ int main(void)
     /* Large condition number without squaring it through normal equations. */
     for(i=0;i<16;i++) a[i]=0;
     for(i=0;i<4;i++) { a[4*i+i]=pow(1e-3,i); b[i]=a[4*i+i]*truth[i]; }
-    REQUIRE(SmallLeastSquares(a,b,4,4,x,q));
+    REQUIRE(PntLeastSquares(a,b,4,4,x,q));
     for(i=0;i<4;i++) REQUIRE(fabs(x[i]-truth[i])<1e-8);
     a[15]=0;
-    REQUIRE(!SmallLeastSquares(a,b,4,4,x,q));
-    REQUIRE(!SmallLeastSquares(a,b,3,4,x,q));
+    REQUIRE(!PntLeastSquares(a,b,4,4,x,q));
+    REQUIRE(!PntLeastSquares(a,b,3,4,x,q));
     a[15]=NAN;
-    REQUIRE(!SmallLeastSquares(a,b,4,4,x,q));
+    REQUIRE(!PntLeastSquares(a,b,4,4,x,q));
     a[15]=1; b[0]=INFINITY;
-    REQUIRE(!SmallLeastSquares(a,b,4,4,x,q));
+    REQUIRE(!PntLeastSquares(a,b,4,4,x,q));
     {
         double spd[9]={4,1,2,1,5,.5,2,.5,6},lower[9],rhs[3],sol[3];
         for(i=0;i<3;i++){rhs[i]=0;for(j=0;j<3;j++)rhs[i]+=spd[3*i+j]*truth[j];}
-        REQUIRE(SpdFactor(spd,3,lower));REQUIRE(SpdSolve(lower,3,rhs,sol));
+        REQUIRE(PntSpdFactor(spd,3,lower));REQUIRE(PntSpdSolve(lower,3,rhs,sol));
         for(i=0;i<3;i++)REQUIRE(fabs(sol[i]-truth[i])<1e-10);
-        spd[8]=-1;REQUIRE(!SpdFactor(spd,3,lower));
-        spd[8]=NAN;REQUIRE(!SpdFactor(spd,3,lower));
+        spd[8]=-1;REQUIRE(!PntSpdFactor(spd,3,lower));
+        spd[8]=NAN;REQUIRE(!PntSpdFactor(spd,3,lower));
     }
     {
         int week=64;double tow=604800.;

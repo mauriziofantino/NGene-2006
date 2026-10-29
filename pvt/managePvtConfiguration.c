@@ -52,6 +52,12 @@ int ManagePvtConfiguration(TNGeneConfiguration *cfg)
 	{
 		pvtCfg->pvtMethod=LMS_BASED_PVT;
 	}
+	strcpy(tag, "PNT weighted LS");
+	pvtCfg->weightedLs = TRUE_FLAG;
+	GetVal(cfgFilename,tag,&pvtCfg->weightedLs,F_INTEGER,1);
+	if(pvtCfg->weightedLs!=FALSE_FLAG) pvtCfg->weightedLs=TRUE_FLAG;
+	SwrxLog(NGENE_LOG_SEVERITY_INFO,"PNT: Eigen double precision; LS weighting %s",
+	    pvtCfg->weightedLs ? "enabled" : "disabled");
 	/**/
 	strcpy(tag, "CSM filter length");
 	if(GetVal(cfgFilename,tag,(void *)&(pvtCfg->csmFilterLen),F_INTEGER,1) == FAILURE_RETURN)

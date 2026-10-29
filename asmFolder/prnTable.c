@@ -1,3 +1,4 @@
+#include "egnosPrns.h"
 /**
  * @file prnTable.c
  *
@@ -25,7 +26,7 @@
 #include "arrays.h"
 
 /* Required GPS/Galileo records must be complete before they are oversampled.
- * EGNOS intentionally retains its separate missing-PRN zero-fill policy. */
+ * SBAS codes are generated from ICD delays below. */
 static int ReadRequiredCode(TNGeneConfiguration *cfg, FILE *file, char *code,
                             size_t length, const char *filename)
 {
@@ -122,52 +123,13 @@ int InitPrnTable(TNGeneConfiguration *cfg,TPrnTable *t)
 		OversampleCode(code, GPS_CODE_LEN,t->gpsChipsOversampled[index]);
 	}
 	fclose(codeFile);
-	/* EGNOS */
-	filename[0] = '\0';
-	strcat(filename, cfg->otherDataPath);
-	strcat(filename, "EGNOS_codes_v2.dat");
-	codeFile = fopen(filename,"rb");
-	if(codeFile==NULL)
-	{
-		/* if the new file containing PRN 136 is not available, read the old file */
-		SwrxLog(NGENE_LOG_SEVERITY_WARNING,"Cannot read file with EGNOS despreading codes (%s). PRN 136 not available!!!",filename);
-		filename[0] = '\0';
-		strcat(filename, cfg->otherDataPath);
-		strcat(filename, "EGNOS_codes.dat");
-		codeFile = fopen(filename,"rb");
-		if(codeFile==NULL)
-		{
-			SwrxLog(NGENE_LOG_SEVERITY_ERROR,"Cannot read file with EGNOS despreading codes (%s)",filename);
-			CloseNGene(cfg,EXIT_FAILURE);
-		}
-		t->egnos136Valid = FALSE_FLAG;
-	}
-	else
-	{
-		/* EGNOS PRN 136 is available */
-		t->egnos136Valid = TRUE_FLAG;
-	}
-	for(index=0;index<EGNOS_NUMBER_OF_PRNS;index++)
-	{
-		/* In a PRN is not present, use a fake code made of zeros */
-		if(fread(code,sizeof(char),EGNOS_CODE_LEN,codeFile)==EGNOS_CODE_LEN)
-		{
-			OversampleCode(code, EGNOS_CODE_LEN,t->egnosChipsOversampledBpsk[index]);
-		}
-		else
-		{
-			ArrayClean((char *)t->egnosChipsOversampledBpsk[index],EGNOS_CODE_LEN*sizeof(s128));
-		}
-		if(fread(code,sizeof(char),EGNOS_CODE_LEN,codeFile)==EGNOS_CODE_LEN)
-		{
-			OversampleCode(code, EGNOS_CODE_LEN,t->egnosChipsOversampled[index]);
-		}
-		else
-		{
-			ArrayClean((char *)t->egnosChipsOversampled[index],EGNOS_CODE_LEN*sizeof(s128));
-		}
-	}
-	fclose(codeFile);
+    /* Generate SBAS codes from ICD delays; no silent zero-filled PRNs. */
+    for(index=0;index<EGNOS_NUMBER_OF_PRNS;index++) {
+        char mask[EGNOS_CODE_LEN];
+        if(!GenerateEgnosCode(EgnosPrnAt(index),code,mask)) return FAILURE_RETURN;
+        OversampleCode(code,EGNOS_CODE_LEN,t->egnosChipsOversampledBpsk[index]);
+        OversampleCode(mask,EGNOS_CODE_LEN,t->egnosChipsOversampled[index]);
+    }
 	/* Galileo E1b */
 	filename[0] = '\0';
 	strcat(filename, cfg->otherDataPath);
@@ -308,32 +270,10 @@ int GenerateCode(TNGeneConfiguration *cfg,TPrnTable *t,TSatConstellation prnCons
 	}
 	else /* EGNOS_SAT */
 	{
-		if(prn==EGNOS_FIRST_PRN)
-		{
-			code = &(t->egnosChipsOversampled[0][0].b[0]);
-			if(employedModulation==BPSK_MODULATION)
-				code = &(t->egnosChipsOversampledBpsk[0][0].b[0]);
-		}
-		else if(prn==EGNOS_SECOND_PRN)
-		{
-			code = &(t->egnosChipsOversampled[1][0].b[0]);
-			if(employedModulation==BPSK_MODULATION)
-				code = &(t->egnosChipsOversampledBpsk[1][0].b[0]);
-		}
-		else if(prn==EGNOS_THIRD_PRN)
-		{
-			code = &(t->egnosChipsOversampled[2][0].b[0]);
-			if(employedModulation==BPSK_MODULATION)
-				code = &(t->egnosChipsOversampledBpsk[2][0].b[0]);
-		}
-		else if(prn==EGNOS_FOURTH_PRN)
-		{
-			code = &(t->egnosChipsOversampled[3][0].b[0]);
-			if(employedModulation==BPSK_MODULATION)
-				code = &(t->egnosChipsOversampledBpsk[3][0].b[0]);
-		}
-		else
-			return FAILURE_RETURN;
+        int slot=EgnosPrnIndex(prn);
+        if(slot<0) return FAILURE_RETURN;
+        code=&t->egnosChipsOversampled[slot][0].b[0];
+        if(employedModulation==BPSK_MODULATION) code=&t->egnosChipsOversampledBpsk[slot][0].b[0];
 	}
 	/* Without floor in the following lines,
 	 * the receiver compiled in release and in Ubuntu 64 bit does not work:

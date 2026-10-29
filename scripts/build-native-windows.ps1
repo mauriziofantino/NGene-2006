@@ -81,7 +81,7 @@ if (!(Test-Path (Join-Path $taskPrefix 'lib/libcrypto.lib')) -or
 if ($DependenciesOnly) { return }
 $taskBuild = Join-Path $taskRoot 'build/windows-native'
 $taskProfileOption = if ($Profiling) { 'ON' } else { 'OFF' }
-Invoke-NativeTool $taskCmake @('-S',$taskRoot,'-B',$taskBuild,'-G','Ninja',('-DCMAKE_MAKE_PROGRAM=' + $taskNinja),('-DCMAKE_C_COMPILER=' + $taskClang),'-DCMAKE_BUILD_TYPE=Release','-DNGENE_BUILD_PLATFORM_CHECKS=ON',('-DNGENE_RX_PROFILING=' + $taskProfileOption),('-DNGENE_NATIVE_DEPS_DIR=' + $taskPrefix),('-DNGENE_NATIVE_SOURCES_DIR=' + $taskSources))
+Invoke-NativeTool $taskCmake @('-S',$taskRoot,'-B',$taskBuild,'-G','Ninja',('-DCMAKE_MAKE_PROGRAM=' + $taskNinja),('-DCMAKE_C_COMPILER=' + $taskClang),('-DCMAKE_CXX_COMPILER=' + $taskClang),'-DCMAKE_BUILD_TYPE=Release','-DNGENE_BUILD_PLATFORM_CHECKS=ON',('-DNGENE_RX_PROFILING=' + $taskProfileOption),('-DNGENE_NATIVE_DEPS_DIR=' + $taskPrefix),('-DNGENE_NATIVE_SOURCES_DIR=' + $taskSources))
 $taskBuildArguments = @('--build',$taskBuild,'--parallel',"$Jobs")
 if ($Clean) { $taskBuildArguments += '--clean-first' }
 Invoke-NativeTool $taskCmake $taskBuildArguments

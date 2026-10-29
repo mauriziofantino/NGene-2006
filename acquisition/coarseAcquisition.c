@@ -1,3 +1,4 @@
+#include "egnosPrns.h"
 /**
  * @file coarseAcquisition.c
  *
@@ -145,14 +146,13 @@ void StartCoarseAcquisition(TNGeneConfiguration *cfg, TNGeneData *rx, TAcqCommon
 	acq->localCode = acqCommon->galileoCodesFft[ch->satId - BASE_PRN];
 	fftSize = acqCfg->galileoFftSize;
     } else {                    /* EGNOS_SAT */
-	if (ch->satId == EGNOS_FIRST_PRN)
-	    acq->localCode = acqCommon->egnosCodesFft[0];
-	else if (ch->satId == EGNOS_SECOND_PRN)
-	    acq->localCode = acqCommon->egnosCodesFft[1];
-	else if (ch->satId == EGNOS_THIRD_PRN)
-	    acq->localCode = acqCommon->egnosCodesFft[2];
-	else                    /* EGNOS_FOURTH_PRN */
-	    acq->localCode = acqCommon->egnosCodesFft[3];
+        int slot=EgnosPrnIndex(ch->satId);
+        if(slot<0) {
+            SwrxLog(NGENE_LOG_SEVERITY_ERROR,"Unsupported SBAS PRN %d",ch->satId);
+            CloseNGene(cfg,EXIT_FAILURE);
+            return;
+        }
+        acq->localCode=acqCommon->egnosCodesFft[slot];
 	fftSize = acqCfg->gpsFftSize;
     }
     PerformNonCoherentSumsManager(cfg, rx, ch->satType, ch->satId, &(acqCommon->nonCohManager));

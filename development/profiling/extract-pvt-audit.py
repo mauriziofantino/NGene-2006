@@ -59,7 +59,7 @@ for filename, names in selection.items():
                     break
         else:
             raise ValueError(f'Unbalanced function {name}')
-for header in ['pvt/smallSpd.h', 'pvt/smallLeastSquares.h', 'pvt/pvtConstants.h',
+for header in ['pvt/pntNumerics.h', 'pvt/pntNumerics.cpp', 'pvt/pvtConstants.h',
                'pvt/pvtDataStructure.h', 'utilityGnss/gnssTimeMath.h', 'utilityGnss/gpsMessageParser.h']:
     manifest[header] = {'sha256': hashlib.sha256((root / header).read_bytes()).hexdigest(), 'functions': []}
 (out / 'ngene-audit-extracted.c').write_text(''.join(chunks), encoding='utf-8')

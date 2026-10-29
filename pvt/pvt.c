@@ -822,9 +822,9 @@ int ApplyElevationMask(TNGeneConfiguration *cfg,TPvtData *pvtData)
 				if(pvtData->pvtLogFile!=NULL)
 				{
 					if(pvtCh->ch->satType==GPS_SAT)
-						fprintf(pvtData->pvtLogFile,"  Discarded GPS %d from PVT (el: %.1f)\n",pvtCh->ch->satId,satStatus->elevation*(double)RADIAN_TO_DEGREE);
+						fprintf(pvtData->pvtLogFile,"  Discarded GPS %d from PNT (el: %.1f)\n",pvtCh->ch->satId,satStatus->elevation*(double)RADIAN_TO_DEGREE);
 					else
-						fprintf(pvtData->pvtLogFile,"  Discarded Galileo %d from PVT (el: %.1f)\n",pvtCh->ch->satId,satStatus->elevation*(double)RADIAN_TO_DEGREE);
+						fprintf(pvtData->pvtLogFile,"  Discarded Galileo %d from PNT (el: %.1f)\n",pvtCh->ch->satId,satStatus->elevation*(double)RADIAN_TO_DEGREE);
 				}
 				/* Exclude the satellite from the PVT, because its elevation is under the elevation mask */
 				DeleteOperativeChannel(pvtData,chIdx);
@@ -874,12 +874,12 @@ int ApplyUrbanCanyonMask(TNGeneConfiguration *cfg,TPvtData *pvtData)
 				if(pvtData->pvtLogFile!=NULL)
 				{
 					if(pvtCh->ch->satType==GPS_SAT)
-						fprintf(pvtData->pvtLogFile,"  Discarded GPS %d from PVT (urban canyon mask)\n",pvtCh->ch->satId);
+						fprintf(pvtData->pvtLogFile,"  Discarded GPS %d from PNT (urban canyon mask)\n",pvtCh->ch->satId);
 					else
-						fprintf(pvtData->pvtLogFile,"  Discarded Galileo %d from PVT (urban canyon mask)\n",pvtCh->ch->satId);
+						fprintf(pvtData->pvtLogFile,"  Discarded Galileo %d from PNT (urban canyon mask)\n",pvtCh->ch->satId);
 				}
 				/* Exclude the satellite from the PVT, because its elevation is under the elevation mask */
-				SwrxLog(NGENE_LOG_SEVERITY_NOTE,"Satellite %s excluded from PVT",pvtCh->ch->prnName);
+				SwrxLog(NGENE_LOG_SEVERITY_NOTE,"Satellite %s excluded from PNT",pvtCh->ch->prnName);
 				DeleteOperativeChannel(pvtData,chIdx);
 				chIdx--;
 			}
@@ -891,12 +891,12 @@ int ApplyUrbanCanyonMask(TNGeneConfiguration *cfg,TPvtData *pvtData)
 					if(pvtData->pvtLogFile!=NULL)
 					{
 						if(pvtCh->ch->satType==GPS_SAT)
-							fprintf(pvtData->pvtLogFile,"  Discarded GPS %d from PVT (urban canyon mask)\n",pvtCh->ch->satId);
+							fprintf(pvtData->pvtLogFile,"  Discarded GPS %d from PNT (urban canyon mask)\n",pvtCh->ch->satId);
 						else
-							fprintf(pvtData->pvtLogFile,"  Discarded Galileo %d from PVT (urban canyon mask)\n",pvtCh->ch->satId);
+							fprintf(pvtData->pvtLogFile,"  Discarded Galileo %d from PNT (urban canyon mask)\n",pvtCh->ch->satId);
 					}
 					/* Exclude the satellite from the PVT */
-					SwrxLog(NGENE_LOG_SEVERITY_NOTE,"Satellite %s excluded from PVT since out of the Urban Canyon Mask",pvtCh->ch->prnName);
+					SwrxLog(NGENE_LOG_SEVERITY_NOTE,"Satellite %s excluded from PNT since out of the Urban Canyon Mask",pvtCh->ch->prnName);
 					DeleteOperativeChannel(pvtData,chIdx);
 					chIdx--;
 				}
@@ -962,9 +962,9 @@ void DeleteNotSmoothed(TNGeneConfiguration *cfg,TPvtData *pvtData)
 				if(pvtData->pvtLogFile!=NULL)
 				{
 					if(ch->satType==GPS_SAT)
-						fprintf(pvtData->pvtLogFile,"  Discarded GPS %d from PVT (CSM counter: %d)\n",ch->satId,csmData->csmCounter);
+						fprintf(pvtData->pvtLogFile,"  Discarded GPS %d from PNT (CSM counter: %d)\n",ch->satId,csmData->csmCounter);
 					else
-						fprintf(pvtData->pvtLogFile,"  Discarded Galileo %d from PVT (CSM counter: %d)\n",ch->satId,csmData->csmCounter);
+						fprintf(pvtData->pvtLogFile,"  Discarded Galileo %d from PNT (CSM counter: %d)\n",ch->satId,csmData->csmCounter);
 				}
 			}
 		}
@@ -1197,7 +1197,7 @@ void GetPseudorangeCorrections(TNGeneConfiguration *cfg,TNGeneData *rx,TPvtData 
 			pvtCh->ionoCorrectionFromEgnos = EgnosIonosphericCorrection(cfg,&(rx->egnosCorrections),satStatus->ippLatitude,satStatus->ippLongitude,satStatus->fpp,&(pvtCh->ionoCorrection));
 			if((cfg->pvtConfiguration.egnosFlag==TRUE_FLAG) && (pvtCh->ionoCorrectionFromEgnos==TRUE_FLAG) && (rx->egnosCorrections.ionoDebugFile!=NULL))
 			{
-				fprintf(rx->egnosCorrections.ionoDebugFile,"PVT index: %5llu -- Tx time: %10.3f -- Iono correction for %s\n\n",pvtData->pvtIndex,pvtCh->transmissionTime,ch->prnName);
+				fprintf(rx->egnosCorrections.ionoDebugFile,"PNT index: %5llu -- Tx time: %10.3f -- Iono correction for %s\n\n",pvtData->pvtIndex,pvtCh->transmissionTime,ch->prnName);
 			}
 
 			if(pvtCh->ionoCorrectionFromEgnos==FALSE_FLAG)
@@ -1424,7 +1424,7 @@ void PrintPvtResults(TNGeneConfiguration *cfg,TNGeneData *rx,int performedPvt)
 	}
 
 	/* standard log */
-	SwrxLog(NGENE_LOG_SEVERITY_INFO,"############### PVT COUNTER  %4llu ################",pvtData->pvtIndex);
+	SwrxLog(NGENE_LOG_SEVERITY_INFO,"############### PNT COUNTER  %4llu ################",pvtData->pvtIndex);
 	if(pvtRes->rxUtcTime.referenceUpdated==TRUE_FLAG)
 	{
 		if(pvtRes->utcFromGps==TRUE_FLAG)
@@ -1478,11 +1478,11 @@ void PrintPvtResults(TNGeneConfiguration *cfg,TNGeneData *rx,int performedPvt)
 	SwrxLog(NGENE_LOG_SEVERITY_INFO,"# GDOP    : %f", pvtRes->dop[GDOP_INDEX_IN_DOP_ARRAY]);
 	if(performedPvt==LMS_BASED_PVT)
 	{
-		SwrxLog(NGENE_LOG_SEVERITY_INFO,"############### PVT RESULTS (LS) #################");
+		SwrxLog(NGENE_LOG_SEVERITY_INFO,"############### PNT RESULTS (LS) #################");
 	}
 	else if(performedPvt==KALMAN_BASED_PVT)
 	{
-		SwrxLog(NGENE_LOG_SEVERITY_INFO,"############### PVT RESULTS (KF) #################");
+		SwrxLog(NGENE_LOG_SEVERITY_INFO,"############### PNT RESULTS (KF) #################");
 	}
 	SwrxLog(NGENE_LOG_SEVERITY_INFO,"# Lon: %fd   Lat: %fd   Alt: %6.2fm", pvtRes->geodPosition[0],pvtRes->geodPosition[1],pvtRes->geodPosition[2]);
 	SwrxLog(NGENE_LOG_SEVERITY_INFO,"# V : %.3f m/s (%.3f km/h)",velocity,velocity*3.6);
@@ -1543,7 +1543,7 @@ void PrintPvtResults(TNGeneConfiguration *cfg,TNGeneData *rx,int performedPvt)
 	/* optional PVT text log */
 	if(pvtData->pvtLogFile!=NULL)
 	{
-		fprintf(pvtData->pvtLogFile,"############### PVT COUNTER  %4llu ################\n",pvtData->pvtIndex);
+		fprintf(pvtData->pvtLogFile,"############### PNT COUNTER  %4llu ################\n",pvtData->pvtIndex);
 		if(pvtRes->rxUtcTime.referenceUpdated==TRUE_FLAG)
 		{
 			if(pvtRes->utcFromGps==TRUE_FLAG)
@@ -1597,11 +1597,11 @@ void PrintPvtResults(TNGeneConfiguration *cfg,TNGeneData *rx,int performedPvt)
 		fprintf(pvtData->pvtLogFile,"# GDOP    : %f\n", pvtRes->dop[GDOP_INDEX_IN_DOP_ARRAY]);
 		if(performedPvt==LMS_BASED_PVT)
 		{
-			fprintf(pvtData->pvtLogFile,"############### PVT RESULTS (LS) #################\n");
+			fprintf(pvtData->pvtLogFile,"############### PNT RESULTS (LS) #################\n");
 		}
 		else if(performedPvt==KALMAN_BASED_PVT)
 		{
-			fprintf(pvtData->pvtLogFile,"############### PVT RESULTS (KF) #################\n");
+			fprintf(pvtData->pvtLogFile,"############### PNT RESULTS (KF) #################\n");
 		}
 		fprintf(pvtData->pvtLogFile,"# Lon: %fd   Lat: %fd   Alt: %6.2fm\n", pvtRes->geodPosition[0],pvtRes->geodPosition[1],pvtRes->geodPosition[2]);
 		fprintf(pvtData->pvtLogFile,"# V : %.3f m/s (%.3f km/h)\n",velocity,velocity*3.6);
@@ -1730,7 +1730,7 @@ void PrintBadPvtResults(TNGeneConfiguration *cfg,TNGeneData *rx,int performedPvt
 	/* optional PVT text log */
 	if(pvtData->pvtLogFile!=NULL)
 	{
-		fprintf(pvtData->pvtLogFile,"############### PVT COUNTER  %4llu ################\n",pvtData->pvtIndex);
+		fprintf(pvtData->pvtLogFile,"############### PNT COUNTER  %4llu ################\n",pvtData->pvtIndex);
 		if(pvtRes->rxUtcTime.referenceUpdated==TRUE_FLAG)
 		{
 			if(pvtRes->utcFromGps==TRUE_FLAG)
@@ -1784,11 +1784,11 @@ void PrintBadPvtResults(TNGeneConfiguration *cfg,TNGeneData *rx,int performedPvt
 		fprintf(pvtData->pvtLogFile,"# GDOP    : %f\n", pvtRes->dop[GDOP_INDEX_IN_DOP_ARRAY]);
 		if(performedPvt==LMS_BASED_PVT)
 		{
-			fprintf(pvtData->pvtLogFile,"############### PVT RESULTS (LS) #################\n");
+			fprintf(pvtData->pvtLogFile,"############### PNT RESULTS (LS) #################\n");
 		}
 		else if(performedPvt==KALMAN_BASED_PVT)
 		{
-			fprintf(pvtData->pvtLogFile,"############### PVT RESULTS (KF) #################\n");
+			fprintf(pvtData->pvtLogFile,"############### PNT RESULTS (KF) #################\n");
 		}
 		fprintf(pvtData->pvtLogFile,"# Lon: %fd   Lat: %fd   Alt: %6.2fm\n", pvtRes->geodPosition[0],pvtRes->geodPosition[1],pvtRes->geodPosition[2]);
 		fprintf(pvtData->pvtLogFile,"# V : %.3f m/s (%.3f km/h)\n",velocity,velocity*3.6);
@@ -2153,10 +2153,10 @@ finalizePvt:
 			ResetReferenceRxTime(rx);
 			ClearCsmData(cfg,pvtData,pvtRes);
 			pvtData->numOfPvtFails++;
-			SwrxLog(NGENE_LOG_SEVERITY_ERROR,"PVT failure %d",pvtData->numOfPvtFails);
+			SwrxLog(NGENE_LOG_SEVERITY_ERROR,"PNT failure %d",pvtData->numOfPvtFails);
 			if(pvtData->pvtLogFile!=NULL)
 			{
-				fprintf(pvtData->pvtLogFile,"\nPVT results discarded (failure %d) after a large error\n\n",pvtData->numOfPvtFails);
+				fprintf(pvtData->pvtLogFile,"\nPNT results discarded (failure %d) after a large error\n\n",pvtData->numOfPvtFails);
 			}
 			#ifdef PVT_ENABLE_HARD_RESTART
 			/* hard restart if too many consecutive PVT computations fail */
@@ -2166,10 +2166,10 @@ finalizePvt:
 				HardRestartChannels(cfg,rx);
 				pvtData->numOfPvtFails = 0;
 				pvtData->hardRestartMade = TRUE_FLAG;
-				SwrxLog(NGENE_LOG_SEVERITY_ERROR,"Hard Receiver Restart after too many PVT failures");
+				SwrxLog(NGENE_LOG_SEVERITY_ERROR,"Hard Receiver Restart after too many PNT failures");
 				if(pvtData->pvtLogFile!=NULL)
 				{
-					fprintf(pvtData->pvtLogFile,"\nHard Receiver Restart after too many PVT failures\n\n");
+					fprintf(pvtData->pvtLogFile,"\nHard Receiver Restart after too many PNT failures\n\n");
 				}
 			}
 			#endif
@@ -2180,7 +2180,7 @@ finalizePvt:
 	return SUCCESS_RETURN;
 
 invalidPvtGeometry:
-	SwrxLog(NGENE_LOG_SEVERITY_WARNING,"PVT skipped: invalid or rank-deficient geometry");
+	SwrxLog(NGENE_LOG_SEVERITY_WARNING,"PNT skipped: invalid or rank-deficient geometry");
 	pvtTmpRes->pvtValid = FALSE_FLAG;
 	SetRxTimeForNextPvt(cfg,rx);
 	ResetPvt(cfg,pvtData,pvtRes,FALSE_FLAG);

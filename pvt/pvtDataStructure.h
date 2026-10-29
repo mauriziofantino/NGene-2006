@@ -81,18 +81,10 @@ typedef struct PvtChannelStruct
 typedef struct LeastSquaresDataStruct
 {
 	double *a; /**<  */
-	double *at; /**< a transpose */
-	double atA[LS_MULTI_SIZE*LS_MULTI_SIZE]; /**< a_Transpose_By_a */
 	double invAtA[LS_MULTI_SIZE*LS_MULTI_SIZE]; /**< inverseOf_a_Transpose_By_a */
-	double atB[LS_MULTI_SIZE*1]; /**< a_Transpose_By_b */
 	double pos[LS_MULTI_SIZE*1];
 	double sol[LS_MULTI_SIZE*1];
 	double *ac; /**< aCorrect */
-	double *act; /**< aCorrect_Transpose */
-	double actAc[4*4]; /**< aCorrect_Transpose_By_aCorrect */
-	double invActAc[4*4];  /**< inverseOf_aCorrect_Transpose_By_aCorrect */
-	double actB[4*1]; /**< aCorrect_Transpose_By_b */
-	double sol2[4*1];
 	double userVel[4*1];
 	double satVel[3*1];
 	double distVect[1*3];
@@ -101,20 +93,7 @@ typedef struct LeastSquaresDataStruct
 	double *x;
 	double *xRotate;
 	double *b;
-	double *az;
 	double *el;
-	double matrixL[LS_MULTI_SIZE*LS_MULTI_SIZE];
-	double matrixD[LS_MULTI_SIZE*LS_MULTI_SIZE];
-	double matrixU[LS_MULTI_SIZE*LS_MULTI_SIZE];
-	double matrixUt[LS_MULTI_SIZE*LS_MULTI_SIZE]; /**< matrixU_Transpose */
-	double matrixIL[LS_MULTI_SIZE*LS_MULTI_SIZE];
-	double matrixID[LS_MULTI_SIZE*LS_MULTI_SIZE];
-	double matrixIU[LS_MULTI_SIZE*LS_MULTI_SIZE];
-	double matrixIUt[LS_MULTI_SIZE*LS_MULTI_SIZE]; /**< matrixIU_Transpose */
-	double matrixIUD[LS_MULTI_SIZE*LS_MULTI_SIZE];
-	double matrixDet[LS_MULTI_SIZE*LS_MULTI_SIZE];
-	double dop[5*5];
-	double q[5*5];
 } TLeastSquaresData;
 
 
@@ -153,33 +132,9 @@ typedef struct KalmanFilterDataStruct
 	double *h; /**< hObservationMatrix; */
 	double stateAPosteriori[KF_MULTI_STATES*1];
 	/* Variables used for matrix inversion */
-	double *matrixL;
 	/* Variables used in Kalman Filter prediction and Kalman Filter routine */
 	double xPred[KF_MULTI_STATES*1]; /**< xPredictedState */
-	double pPriori[KF_MULTI_STATES*KF_MULTI_STATES];
-	double phiPap[KF_MULTI_STATES*KF_MULTI_STATES]; /**< phiPapAPostCovariance */
-	double phit[KF_MULTI_STATES*KF_MULTI_STATES]; /**< phiStateTransitMatrix_Transpose */
-	double phiPapPhit[KF_MULTI_STATES*KF_MULTI_STATES]; /**< phiStateTransitMatrix_By_PAPostCovariance_By_PHIStateTransitMatrix_Transpose */
 	/* Variables used in Kalman Filter routine */
-	double *kGain;
-	double *ht; /**< hObservationMatrix_Transpose */
-	double *pprioriHt; /**< pAPrioriCovariance_By_HObservationMatrix_Transpose */
-	double *hPpriori; /**< hObservationMatrix_By_PAPrioriCovariance */
-	double *hPprioriHt; /**< hObservationMatrix_By_PAPrioriCovariance_By_HObservationMatrix_Transpose */
-	double *hPprioriHtR; /**< hObservationMatrix_By_PAPrioriCovariance_By_HObservationMatrix_Transpose_Plus_RObservationNoiseCovariance */
-	double xCurr[KF_MULTI_STATES*1]; /**< xCurrentEstimState */
-	double *hXpred; /**< hObservationMatrix_By_XPredictedState */
-	double *zcurrHXpred; /**< zCurrentMeasurement_Minus_HObservationMatrix_By_XPredictedState */
-	double kgainZcurrHXpred[KF_MULTI_STATES*1]; /**< kGain_By_ZCurrentMeasurement_Minus_HObservationMatrix_By_XPredictedState */
-	double i[KF_MULTI_STATES*KF_MULTI_STATES]; /**< identityXPreviousEstimStateLength */
-	double kgainH[KF_MULTI_STATES*KF_MULTI_STATES]; /**< kGain_By_HObservationMatrix */
-	double iKgainH[KF_MULTI_STATES*KF_MULTI_STATES]; /**< identityXPreviousEstimStateLength_Minus_KGain_By_HObservationMatrix */
-	double iKgainHPpriori[KF_MULTI_STATES*KF_MULTI_STATES]; /**< identityXPreviousEstimStateLength_Minus_KGain_By_HObservationMatrix_By_PAPrioriCovariance */
-	double iKgainHT[KF_MULTI_STATES*KF_MULTI_STATES]; /**< identityXPreviousEstimStateLength_Minus_KGain_By_HObservationMatrix_Transpose */
-	double *kgainR; /**< kGain_By_RObservationNoiseCovariance */
-	double *kgaint; /**< kGain_Transpose */
-	double kgainRKgaint[KF_MULTI_STATES*KF_MULTI_STATES]; /**< kGain_By_RObservationNoiseCovariance_By_KGain_Transpose */
-	double aB[KF_MULTI_STATES*KF_MULTI_STATES]; /**< a_By_B */
 } TKalmanFilterData;
 
 
@@ -194,6 +149,7 @@ typedef struct CarrierSmoothingDataStruct
 	double lpcOut;		/**< Temporary variable for the output (LPC in cycles) */
 	double lpcOld;		/**< LPC at the previous PVT */
 	double pseudorangeCsmOld;   /**< Pseudorange after smoothing, from the previous PVT computation [m] */
+	double codeCorrectionOld;   /**< Satellite clock + SBAS correction already present in that range [m] */
 	int csmCounter;		/**< Counter of smoothing executions for the current channel */
 } TCarrierSmoothingData;
 

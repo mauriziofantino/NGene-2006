@@ -24,7 +24,7 @@ for task_tool in cmake ctest pkg-config; do
     fi
 done
 cmake -S "$task_root" -B "$task_build" -DCMAKE_BUILD_TYPE=Release \
-    -DNGENE_BUILD_PLATFORM_CHECKS=ON
+    -DNGENE_BUILD_PLATFORM_CHECKS=ON -DNGENE_RX_PROFILING=OFF
 cmake --build "$task_build" --parallel "${NGENE_BUILD_JOBS:-8}" ${task_clean:+"$task_clean"}
 ctest --test-dir "$task_build" --output-on-failure
 

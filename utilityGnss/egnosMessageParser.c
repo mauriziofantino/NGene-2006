@@ -1272,6 +1272,8 @@ void ParseEgnosType26(TNGeneData *rx,TEgnosParser *parser)
 
 
 
+#include "sbasValidity.h"
+
 int ParseEgnosBlock(TNGeneConfiguration *cfg,TNGeneData *rx,TEgnosParser *parser,double tow)
 {
 	unsigned char msgType;
@@ -1282,6 +1284,11 @@ int ParseEgnosBlock(TNGeneConfiguration *cfg,TNGeneData *rx,TEgnosParser *parser
 	}
 
 	msgType = parser->decodedBits[1] >> 2;
+	if(!SbasAcceptMessage(&rx->egnosCorrections,msgType,tow)) {
+		if(parser->egnosParseLogFile) fprintf(parser->egnosParseLogFile,
+		    "SBAS corrections rejected: MT0 or one-minute exclusion window\n");
+		return SUCCESS_RETURN;
+	}
 	if(msgType==0)
 	{
 		if(parser->egnosParseLogFile!=NULL)

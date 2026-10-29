@@ -20,7 +20,7 @@
 #include "closeManager.h"
 #include "matrices.h"
 #include "pvtUtility.h"
-#include "smallSpd.h"
+#include "pntNumerics.h"
 
 void InitKalmanFilterPhi(double *phi,double *phiMulti,double dt)
 {
@@ -162,39 +162,6 @@ int InitKalmanFilterData(TNGeneConfiguration *cfg,TNGeneData *rx)
 	kfData->h = (double *)malloc(nCh2*KF_MULTI_STATES*sizeof(double));
 	if(kfData->h==NULL)
 		errors++;
-	kfData->matrixL = (double *)malloc(nCh2*nCh2*sizeof(double));
-	if(kfData->matrixL==NULL)
-		errors++;
-	kfData->kGain = (double *)malloc(nCh2*KF_MULTI_STATES*sizeof(double));
-	if(kfData->kGain==NULL)
-		errors++;
-	kfData->ht = (double *)malloc(nCh2*KF_MULTI_STATES*sizeof(double));
-	if(kfData->ht==NULL)
-		errors++;
-	kfData->pprioriHt = (double *)malloc(nCh2*KF_MULTI_STATES*sizeof(double));
-	if(kfData->pprioriHt==NULL)
-		errors++;
-	kfData->hPpriori = (double *)malloc(nCh2*KF_MULTI_STATES*sizeof(double));
-	if(kfData->hPpriori==NULL)
-		errors++;
-	kfData->hPprioriHt = (double *)malloc(nCh2*nCh2*sizeof(double));
-	if(kfData->hPprioriHt==NULL)
-		errors++;
-	kfData->hPprioriHtR = (double *)malloc(nCh2*nCh2*sizeof(double));
-	if(kfData->hPprioriHtR==NULL)
-		errors++;
-	kfData->hXpred = (double *)malloc(nCh2*1*sizeof(double));
-	if(kfData->hXpred==NULL)
-		errors++;
-	kfData->zcurrHXpred = (double *)malloc(nCh2*1*sizeof(double));
-	if(kfData->zcurrHXpred==NULL)
-		errors++;
-	kfData->kgainR = (double *)malloc(KF_MULTI_STATES*nCh2*sizeof(double));
-	if(kfData->kgainR==NULL)
-		errors++;
-	kfData->kgaint = (double *)malloc(KF_MULTI_STATES*nCh2*sizeof(double));
-	if(kfData->kgaint==NULL)
-		errors++;
 
 	if(errors>0)
 	{
@@ -230,29 +197,6 @@ void ClearKalmanFilterData(TNGeneConfiguration *cfg,TKalmanFilterData *kfData)
 	MatrixInit(kfData->h,n2,KF_MULTI_STATES);
 	MatrixInit(kfData->stateAPosteriori,KF_MULTI_STATES,1);
 	MatrixInit(kfData->xPred,KF_MULTI_STATES,1);
-	MatrixInit(kfData->pPriori,KF_MULTI_STATES,KF_MULTI_STATES);
-	MatrixInit(kfData->phiPap,KF_MULTI_STATES,KF_MULTI_STATES);
-	MatrixInit(kfData->phit,KF_MULTI_STATES,KF_MULTI_STATES);
-	MatrixInit(kfData->phiPapPhit,KF_MULTI_STATES,KF_MULTI_STATES);
-	MatrixInit(kfData->kGain,n2,KF_MULTI_STATES);
-	MatrixInit(kfData->ht,n2,KF_MULTI_STATES);
-	MatrixInit(kfData->pprioriHt,n2,KF_MULTI_STATES);
-	MatrixInit(kfData->hPpriori,n2,KF_MULTI_STATES);
-	MatrixInit(kfData->hPprioriHt,n2,n2);
-	MatrixInit(kfData->hPprioriHtR,n2,n2);
-	MatrixInit(kfData->xCurr,KF_MULTI_STATES,1);
-	MatrixInit(kfData->hXpred,n2,1);
-	MatrixInit(kfData->zcurrHXpred,n2,1);
-	MatrixInit(kfData->kgainZcurrHXpred,KF_MULTI_STATES,1);
-	MatrixInit(kfData->i,KF_MULTI_STATES,KF_MULTI_STATES);
-	MatrixInit(kfData->kgainH,KF_MULTI_STATES,KF_MULTI_STATES);
-	MatrixInit(kfData->iKgainH,KF_MULTI_STATES,KF_MULTI_STATES);
-	MatrixInit(kfData->iKgainHPpriori,KF_MULTI_STATES,KF_MULTI_STATES);
-	MatrixInit(kfData->iKgainHT,KF_MULTI_STATES,KF_MULTI_STATES);
-	MatrixInit(kfData->kgainR,KF_MULTI_STATES,n2);
-	MatrixInit(kfData->kgaint,n2,KF_MULTI_STATES);
-	MatrixInit(kfData->kgainRKgaint,KF_MULTI_STATES,KF_MULTI_STATES);
-	MatrixInit(kfData->aB,KF_MULTI_STATES,KF_MULTI_STATES);
 }
 
 
@@ -274,81 +218,19 @@ void DeinitKalmanFilterData(TNGeneData *rx)
 	free(kfData->nominalMeasurement);
 	free(kfData->kfMeasurement);
 	free(kfData->h);
-	free(kfData->matrixL);
-	free(kfData->kGain);
-	free(kfData->ht);
-	free(kfData->pprioriHt);
-	free(kfData->hPpriori);
-	free(kfData->hPprioriHt);
-	free(kfData->hPprioriHtR);
-	free(kfData->hXpred);
-	free(kfData->zcurrHXpred);
-	free(kfData->kgainR);
-	free(kfData->kgaint);
 }
 
 
-void KalmanFilterPrediction(int nStates,TKalmanFilterData *kfData,double *phi,double *q,double *pap)
+int KalmanFilterPrediction(int nStates,TKalmanFilterData *kfData,double *phi,double *q,double *pap)
 {
-	/* Calculate Predicted (a priori) state estimate = State Transition Model * previous state estimate */
-	MatrixProduct(phi,nStates,nStates,kfData->stateAPosteriori,nStates,1,kfData->xPred);
-	/* Calculate Predicted (a priori) estimate covariance */
-	/* a. State Transition Model * A posteriori error Covariance */
-	MatrixProduct(phi,nStates,nStates,pap,nStates,nStates,kfData->phiPap);
-	/* b. Transpose of State Transition Model matrix */
-	MatrixTrasp(phi,nStates,nStates,kfData->phit);
-	/* 3. Product of a) * b) */
-	MatrixProduct(kfData->phiPap,nStates,nStates,kfData->phit,nStates,nStates,kfData->phiPapPhit);
-	/* c) plus Covariance of process noise */
-	MatrixSum(kfData->phiPapPhit,nStates,nStates,q,nStates,nStates,pap);
+    return PntKalmanStep(nStates,0,phi,q,NULL,NULL,NULL,
+        kfData->stateAPosteriori,pap,kfData->xPred) ? SUCCESS_RETURN : FAILURE_RETURN;
 }
 
 int KalmanFilterRoutine(int nCh,int nStates,TKalmanFilterData *kfData,double *pap,double *phi,double *q)
 {
-	int nCh2 = nCh*2;
-	int i;
-
-	/* PREDICTION STEP */
-	MatrixProduct(phi,nStates,nStates,kfData->stateAPosteriori,nStates,1,kfData->xPred);
-	MatrixProduct(phi,nStates,nStates,pap,nStates,nStates,kfData->phiPap);
-	MatrixTrasp(phi,nStates,nStates,kfData->phit);
-	MatrixProduct(kfData->phiPap,nStates,nStates,kfData->phit,nStates,nStates,kfData->phiPapPhit);
-	MatrixSum(kfData->phiPapPhit,nStates,nStates,q,nStates,nStates,kfData->pPriori);
-
-	/* UPDATE STEP */
-	/* 1. Innovation or residual covariance */
-	MatrixTrasp(kfData->h,nCh2,nStates,kfData->ht);
-	MatrixProduct(kfData->pPriori,nStates,nStates,kfData->ht,nStates,nCh2,kfData->pprioriHt);
-	MatrixProduct(kfData->h,nCh2,nStates,kfData->pPriori,nStates,nStates,kfData->hPpriori);
-	MatrixProduct(kfData->hPpriori,nCh2,nStates,kfData->ht,nStates,nCh2,kfData->hPprioriHt);
-	MatrixSum(kfData->hPprioriHt,nCh2,nCh2,kfData->r,nCh2,nCh2,kfData->hPprioriHtR);
-	/* 2. Optimal Kalman Gain */
-	if(!SpdFactor(kfData->hPprioriHtR,nCh2,kfData->matrixL)) return FAILURE_RETURN;
-	for(i=0;i<nStates;i++)
-		if(!SpdSolve(kfData->matrixL,nCh2,kfData->pprioriHt+i*nCh2,kfData->kGain+i*nCh2)) return FAILURE_RETURN;
-	/* 3. Innovation or measurement residual */
-	MatrixProduct(kfData->h,nCh2,nStates,kfData->xPred,nStates,1,kfData->hXpred);
-	MatrixDiff(kfData->kfMeasurement,nCh2,1,kfData->hXpred,nCh2,1,kfData->zcurrHXpred);
-	/* 4. Updated (a posteriori) state estimate */
-	MatrixProduct(kfData->kGain,nStates,nCh2,kfData->zcurrHXpred,nCh2,1,kfData->kgainZcurrHXpred);
-	MatrixSum(kfData->xPred,nStates,1,kfData->kgainZcurrHXpred,nStates,1,kfData->xCurr);
-	for(i=0;i<nStates;i++)
-	{
-		kfData->stateAPosteriori[i] = kfData->xCurr[i];
-	}
-	/* 5. Updated (a posteriori) estimate covariance */
-	MatrixIdentity(kfData->i,nStates);
-	MatrixProduct(kfData->kGain,nStates,nCh2,kfData->h,nCh2,nStates,kfData->kgainH);
-	MatrixDiff(kfData->i,nStates,nStates,kfData->kgainH,nStates,nStates,kfData->iKgainH);
-	MatrixProduct(kfData->iKgainH,nStates,nStates,kfData->pPriori,nStates,nStates,kfData->iKgainHPpriori);
-	/* 6. Complete the Joseph form */
-	MatrixTrasp(kfData->iKgainH,nStates,nStates,kfData->iKgainHT);
-	MatrixProduct(kfData->kGain,nStates,nCh2,kfData->r,nCh2,nCh2,kfData->kgainR);
-	MatrixTrasp(kfData->kGain,nStates,nCh2,kfData->kgaint);
-	MatrixProduct(kfData->kgainR,nStates,nCh2,kfData->kgaint,nCh2,nStates,kfData->kgainRKgaint);
-	MatrixProduct(kfData->iKgainHPpriori,nStates,nStates,kfData->iKgainHT,nStates,nStates,kfData->aB);
-	MatrixSum(kfData->aB,nStates,nStates,kfData->kgainRKgaint,nStates,nStates,pap);
-	return SUCCESS_RETURN;
+    return PntKalmanStep(nStates,2*nCh,phi,q,kfData->h,kfData->r,kfData->kfMeasurement,
+        kfData->stateAPosteriori,pap,kfData->xPred) ? SUCCESS_RETURN : FAILURE_RETURN;
 }
 
 
@@ -473,7 +355,6 @@ int PerformKalmanFilter(TNGeneConfiguration *cfg,TNGeneData *rx)
 	double *pap;
 	double dX, dY, dZ, dXv, dYv, dZv;
 	double vs[3],angle,sinEl,covFactor[KF_MULTI_STATES*KF_MULTI_STATES];
-	int row,col;
 
 	ClearKalmanFilterData(cfg,kfData);
 	if(rx->pvtResults.pvtValid && cfg->fs>0 && rx->buf.discardedSamples>rx->pvtResults.referenceSample)
@@ -520,7 +401,7 @@ int PerformKalmanFilter(TNGeneConfiguration *cfg,TNGeneData *rx)
 			q = kfData->q;
 			pap = kfData->pPost;
 		}
-		KalmanFilterPrediction(nStates,kfData,phi,q,pap);
+		if(KalmanFilterPrediction(nStates,kfData,phi,q,pap)!=SUCCESS_RETURN) return FAILURE_RETURN;
 	}
 	else
 	{
@@ -656,11 +537,7 @@ int PerformKalmanFilter(TNGeneConfiguration *cfg,TNGeneData *rx)
 	}
 	/* Joseph covariance must remain finite, symmetric and positive definite.
 	 * Limit prediction uncertainty independently of instantaneous geometry. */
-	for(row=0;row<nStates;row++) for(col=0;col<row;col++) {
-		double value=.5*(pap[row*nStates+col]+pap[col*nStates+row]);
-		pap[row*nStates+col]=pap[col*nStates+row]=value;
-	}
-	if(!SpdFactor(pap,nStates,covFactor) || pap[0]+pap[nStates+1]+pap[2*nStates+2]>
+	if(!PntSpdFactor(pap,nStates,covFactor) || pap[0]+pap[nStates+1]+pap[2*nStates+2]>
 		KF_MAX_POSITION_SIGMA*KF_MAX_POSITION_SIGMA) return FAILURE_RETURN;
 	for(idx=0;idx<KF_MULTI_STATES;idx++) if(!isfinite(positionAndVelocity[idx])) return FAILURE_RETURN;
 	/* Save the results */
