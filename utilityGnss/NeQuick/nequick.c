@@ -201,6 +201,14 @@ double GalileoIonosphericCorrection(TNeQuickData *nq,double *pdCoeffs, int siMon
 	IonoCalcModip(&(nq->stModip), pdRecvLlhRad[0], pdRecvLlhRad[1], &dModip);
 
 	dAzValue = pdCoeffs[0] + (dModip * pdCoeffs[1]) + (dModip * dModip * pdCoeffs[2]);
+	/* Galileo reference algorithm, sections 2.5.4.4 and 3.3: a zero
+	 * broadcast triplet requests the default, otherwise constrain Az. */
+	if(pdCoeffs[0]==0.0 && pdCoeffs[1]==0.0 && pdCoeffs[2]==0.0)
+		dAzValue=63.7;
+	else if(dAzValue<0.0)
+		dAzValue=0.0;
+	else if(dAzValue>400.0)
+		dAzValue=400.0;
 
 	nq->stNeQuickInputData.pdCoeff = &dAzValue;
 	nq->stNeQuickInputData.siNumCoeff = 1;

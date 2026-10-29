@@ -22,10 +22,13 @@
 #include "navigationMessageParser.h"
 #include "gpsMessageParser.h"
 #include "galileoMessageParser.h"
+#include "pvtChecks.h"
 
 int ParseGpsSubframe1(TGpsParser *);
 int ParseGalWord01(TGalParser *);
 int ParseGalWord04(TGalParser *);
+int ParseGalWord05(TNGeneData *,TGalParser *);
+int ParseGpsSubframe4(TNGeneData *,TGpsParser *);
 
 void ComputeTransmissionTime(TNGeneConfiguration *,TPvtData *);
 int VerifyTransmissionTime(TPvtData *);
@@ -213,6 +216,39 @@ static void CheckNavigationFields(void)
     Result("gps_sf1_af1_sps",nav[0].clkTmp.af[1],ldexp(-1234.,-43),1e-20);
     Result("gps_sf1_af2_sps2",nav[0].clkTmp.af[2],ldexp(-3.,-55),1e-25);
     Result("gps_all_signals_dead_health",nav[0].ephTmp.health,SIGNAL_OUT_OF_SERVICE,0);
+    memset(gal[0].bitsForParse,0,16);
+    PutBits(gal[0].bitsForParse,0,6,5);
+    PutBits(gal[0].bitsForParse,6,11,321);
+    PutBits(gal[0].bitsForParse,17,11,(uint32_t)-123);
+    PutBits(gal[0].bitsForParse,28,14,(uint32_t)-456);
+    PutBits(gal[0].bitsForParse,47,10,(uint32_t)-123);
+    PutBits(gal[0].bitsForParse,57,10,234);
+    PutBits(gal[0].bitsForParse,73,12,1400);
+    PutBits(gal[0].bitsForParse,85,20,345678);
+    ParseGalWord05(&rx,&gal[0]);
+    Result("gal_iono_ai0_sfu",nav[0].iono.alphaGal[0],321*.25,0);
+    Result("gal_iono_ai1_signed",nav[0].iono.alphaGal[1],ldexp(-123.,-8),0);
+    Result("gal_iono_ai2_signed",nav[0].iono.alphaGal[2],ldexp(-456.,-15),0);
+    Result("gal_bgd_e1e5a_signed_s",nav[0].clkTmp.bgd_E1E5a,ldexp(-123.,-32),0);
+    Result("gal_bgd_e1e5b_s",nav[0].clkTmp.bgd_E1E5b,ldexp(234.,-32),0);
+    Result("gal_word5_tow_s",nav[0].tow,345678,0);
+    memset(gps[0].subframe,0,40);
+    PutBits(gps[0].subframe,66,2,1);PutBits(gps[0].subframe,68,6,56);
+    PutBits(gps[0].subframe,74,8,(uint32_t)-3);
+    PutBits(gps[0].subframe,82,8,5);
+    PutBits(gps[0].subframe,98,8,(uint32_t)-7);
+    PutBits(gps[0].subframe,106,8,11);
+    PutBits(gps[0].subframe,114,8,67);PutBits(gps[0].subframe,130,8,(uint32_t)-13);
+    PutBits(gps[0].subframe,138,8,17);PutBits(gps[0].subframe,146,8,(uint32_t)-19);
+    ParseGpsSubframe4(&rx,&gps[0]);
+    Result("gps_iono_alpha0_signed",nav[0].iono.alphaGps[0],ldexp(-3.,-30),0);
+    Result("gps_iono_alpha1",nav[0].iono.alphaGps[1],ldexp(5.,-27),0);
+    Result("gps_iono_alpha2_signed",nav[0].iono.alphaGps[2],ldexp(-7.,-24),0);
+    Result("gps_iono_alpha3",nav[0].iono.alphaGps[3],ldexp(11.,-24),0);
+    Result("gps_iono_beta0_s",nav[0].iono.beta[0],ldexp(67.,11),0);
+    Result("gps_iono_beta1_signed",nav[0].iono.beta[1],ldexp(-13.,14),0);
+    Result("gps_iono_beta2",nav[0].iono.beta[2],ldexp(17.,16),0);
+    Result("gps_iono_beta3_signed",nav[0].iono.beta[3],ldexp(-19.,16),0);
 }
 int main(int argc,char **argv)
 {
@@ -343,9 +379,32 @@ int main(int argc,char **argv)
     ResetPvt(&cfg,&rx.pvtData,&rx.pvtTemporaryResults,FALSE_FLAG);
     Result("soft_pvt_reset_preserves_smoothing",smoothing[0].csmCounter,20,0);
     rx.pvtTemporaryResults.clockBiasGalileoValid=TRUE_FLAG;
+    channels[0].chState=TRACKING_STATE;nav[0].ephemeridesReceived=TRUE_FLAG;
     ResetPvt(&cfg,&rx.pvtData,&rx.pvtTemporaryResults,TRUE_FLAG);
     Result("hard_pvt_reset_clears_galileo_validity",rx.pvtTemporaryResults.clockBiasGalileoValid,FALSE_FLAG,0);
+    Result("pnt_reset_preserves_rf_tracking",channels[0].chState,TRACKING_STATE,0);
+    Result("pnt_reset_preserves_ephemerides",nav[0].ephemeridesReceived,TRUE_FLAG,0);
     DeinitKalmanFilterData(&rx);
+    {
+        int failure;
+        PerfectKf(0);
+        cfg.pvtConfiguration.maxGdop=100;cfg.pvtConfiguration.staticReceiver=TRUE_FLAG;
+        rx.pvtData.pvtAlgorithm=LMS_BASED_PVT;
+        rx.pvtResults=rx.pvtTemporaryResults;
+        rx.pvtResults.pvtValid=TRUE_FLAG;
+        rx.pvtTemporaryResults.dopValid=rx.pvtResults.dopValid=TRUE_FLAG;
+        for(i=0;i<5;i++) rx.pvtTemporaryResults.dop[i]=rx.pvtResults.dop[i]=1;
+        rx.pvtTemporaryResults.geodPosition[0]=7;rx.pvtTemporaryResults.geodPosition[1]=45;
+        rx.pvtTemporaryResults.geodPosition[2]=311;
+        rx.pvtTemporaryResults.ecefPosition[0]+=200;
+        Result("pnt_large_jump_rejected",CheckPvtResultsGoodness(&cfg,&rx.pvtData,&rx.pvtTemporaryResults,&rx.pvtResults,&failure),FALSE_FLAG,0);
+        Result("pnt_large_jump_is_failure",failure,TRUE_FLAG,0);
+        ResetPvt(&cfg,&rx.pvtData,&rx.pvtResults,TRUE_FLAG);
+        Result("pnt_reset_releases_bad_position_reference",CheckPvtResultsGoodness(&cfg,&rx.pvtData,&rx.pvtTemporaryResults,&rx.pvtResults,&failure),TRUE_FLAG,0);
+        rx.pvtTemporaryResults.geodPosition[2]=1e7;
+        Result("pnt_reset_does_not_bypass_sanity",CheckPvtResultsGoodness(&cfg,&rx.pvtData,&rx.pvtTemporaryResults,&rx.pvtResults,&failure),FALSE_FLAG,0);
+        DeinitKalmanFilterData(&rx);
+    }
     Fixture(8,1);rx.pvtData.numOfGalileoOpChannels=0;
     rx.pvtTemporaryResults.clockBiasGps=1;rx.pvtTemporaryResults.clockBiasGalileo=2;
     UpdateCumulatedBiases(&rx.pvtTemporaryResults,&rx.pvtData);

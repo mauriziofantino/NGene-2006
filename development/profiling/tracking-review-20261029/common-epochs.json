@@ -1,0 +1,12 @@
+{
+  "mixed": {
+    "common_epochs_same_counts": 23,
+    "max_position_delta_m": 0.0,
+    "rms_position_delta_m": 0.0
+  },
+  "gps": {
+    "common_epochs_same_counts": 40,
+    "max_position_delta_m": 0.0,
+    "rms_position_delta_m": 0.0
+  }
+}

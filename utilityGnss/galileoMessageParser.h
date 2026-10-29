@@ -713,4 +713,7 @@ void ParseGalMessage(TNGeneConfiguration *cfg,TNGeneData *rx,TChannel *ch,float 
 #define GAL_TYPE16_AF1_BITS_FIELD_DIM 			(6)
 
 
+/* Discard partial FEC words when tracking continuity is interrupted. */
+void ResetReedSolomonData(TGalParser *parser);
+
 #endif /* GALILEO_MESSAGE_PARSER_H_INCLUDED */

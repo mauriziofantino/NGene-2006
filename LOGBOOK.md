@@ -1,5 +1,45 @@
 # Logbook NGene Classic
 
+## 29 ottobre 2026 — Fast fix transizioni tracking e separazione PNT/RF
+
+Considerata l'analisi PDF fornita, verificando le affermazioni sul codice corrente.
+Su richiesta dell'utente introdotto mantenimento NCO a breve termine: traiettoria
+da fasi/epoche affidabili e frequenze gia' filtrate, rigetto degli ancoraggi nel
+rumore, rientro con evidenze ripetute di picco codice, CN0 e poi PLL. Controlli
+ogni 100 ms; cinque esiti centrali del false-lock checker evitano l'attesa di
+conferma se non c'e' stata correzione. Altrimenti conferma storica completa.
+Soglie PLL numeriche invariate; il supervisore usa esplicitamente quella bassa
+per trattenere un lock precedentemente consolidato. Primo ingresso nel PLL
+ancora subordinato alla soglia alta esistente.
+Limite unico dell'episodio, incluse ricadute/conferme: tag opzionale
+`[Tracking holdover ms]`, default 5000, 0 disabilita, massimo 10000.
+
+Nessuna misura coasting nel PNT e nessuna decodifica di bit degradati. Reset
+del solo arco smoothing e dei frammenti parser; effemeridi/WN conservati, nuovo
+TOW richiesto. Questa scelta rallenta realmente la ripartenza PNT: non nasconderlo.
+Dieci fallimenti PNT gravi reinizializzano solo lo stimatore, senza riavviare
+tracking/effemeridi e senza bypass dei controlli sul risultato successivo.
+
+Scale binarie negative dei parser ora esatte; trovati arrotondamenti soprattutto
+in 2^-14/15/16. NeQuick: default Az=63.7 per terna nulla e limiti [0,400].
+Verificati altri campi iono/BGD/TOW e interfacce/unita' dei modelli atmosferici;
+non e' una validazione integrale NeQuick/ICD. Carrier-phase PVT non aggiunta:
+rimangono necessari osservabile continua, ambiguita', slip e archi validati.
+
+Verifiche: 13/13 CTest e 74/74 confronti sintetici. Rumore artificiale 400 ms:
+5/5 episodi recuperati, zero perdite RF; 1200 ms: perdite 9 -> 2, sette recuperi.
+Il caso breve passa pero' da 13 a 1 output PNT nei 70 s della prova. Sul file
+originale con salto noto: misto 29 -> 24 fix, GPS 63 -> 57, perdite RF sempre
+13/8. KF misto finale 24 con misure + 12 previsioni. SiGe 23 fix, zero perdite.
+Coordinate stampate identiche sulle 23 epoche miste e 40 GPS comuni con uguali
+conteggi satellitari. Nessun miglioramento metrico universale dimostrato.
+
+Dettagli e regressioni: TRACKING_STATE_REVIEW.md. Hash/configurazioni/log e CSV:
+development/profiling/tracking-review-20261029. Build normale profiling OFF;
+patch di profiling ancora applicabile. Main e acquisizione senza differenze.
+Eseguibile: 3770A2BAB3FB943D179B19116573637B51B23D1BDF513C0B564E397D9C09E665.
+Linux/live, dinamica e discontinuita' esplicite frontend restano da verificare.
+
 ## 29 ottobre 2026 — PNT, Eigen, smoothing e PRN EGNOS attuali
 
 Su richiesta dell'utente e dopo confronto Armadillo/Eigen, confermato Eigen.

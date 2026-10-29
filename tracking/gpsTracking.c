@@ -116,6 +116,7 @@ void ManageUserIntegrationPeriod(TNGeneConfiguration *cfg,TNGeneData *rx,TChanne
 TTrackingStatus PerformGpsTracking(TNGeneConfiguration *cfg,TNGeneData *rx,TChannel *ch,char *firstBunch, unsigned int firstBunchSize,char *secondBunch, unsigned int secondBunchSize)
 {
 	TTracking *trk = &(ch->tracking);
+	int checkedBeforeLoops = trk->holdover.anchorValid || trk->holdover.active;
 
 	/* carrier wipe-off */
 	ch->carrierPhase = GenerateAndMixReceiverInput(cfg, rx, firstBunch, firstBunchSize, secondBunch, secondBunchSize, ch->blocksize, ch->carrierFrequency, ch->carrierPhase);
@@ -141,41 +142,46 @@ TTrackingStatus PerformGpsTracking(TNGeneConfiguration *cfg,TNGeneData *rx,TChan
 
 	/* update ms counter, evaluate loops */
 	trk->msCounter++;
+	/* Check the completed correlations before they can steer the next NCO
+	 * update or contribute bits to a navigation word. */
+	if(checkedBeforeLoops) CheckTrackingLock(cfg,rx,ch,trk);
 	if(((trk->msCounter%trk->integrationPeriod)==0) || (trk->msCounter==ch->bitDuration))
 	{
 		DumpCorrelationsToFile(cfg,rx,ch,trk);
-		if(ChooseCarrierLoop(cfg,rx,ch,trk)==CARRIER_FLL)
+		if(TrackingLoopsEnabled(trk))
 		{
-			FllDiscriminator(trk);
+			if(ChooseCarrierLoop(cfg,rx,ch,trk)==CARRIER_FLL)
+			{
+				FllDiscriminator(trk);
+			}
+			else
+			{
+				PllDiscriminator(trk);
+			}
+			CarrierLoop(cfg,ch,trk);
+			DllDiscriminator(trk);
+			CodeLoop(ch,trk);
 		}
-		else
-		{
-			PllDiscriminator(trk);
-		}
-		CarrierLoop(cfg,ch,trk);
-		DllDiscriminator(trk);
-		CodeLoop(ch,trk);
 	}
 
 	/* manage navigation message */
-	if((trk->msCounter==ch->bitDuration) && (ch->satType==GPS_SAT))
+	if(trk->msCounter==ch->bitDuration && TrackingNavigationEnabled(trk))
 	{
-		ParseGpsMessage(cfg,rx,ch,trk->pIForNav);
-	}
-	if((trk->msCounter==ch->bitDuration) && (ch->satType==EGNOS_SAT))
-	{
-		PredictRxTime(cfg,rx);
-		if(rx->pvtData.rxGpsTimeValid==TRUE_FLAG)
+		if(ch->satType==GPS_SAT)
+			ParseGpsMessage(cfg,rx,ch,trk->pIForNav);
+		else
 		{
-			ParseEgnosMessage(cfg,rx,ch,trk->pIForNav,rx->pvtData.rxGpsTow);
+			PredictRxTime(cfg,rx);
+			if(rx->pvtData.rxGpsTimeValid==TRUE_FLAG)
+			{
+				ParseEgnosMessage(cfg,rx,ch,trk->pIForNav,rx->pvtData.rxGpsTow);
+			}
 		}
 	}
 
 	/* manage the integration period chosen by the user */
-	ManageUserIntegrationPeriod(cfg,rx,ch,trk);
-
-	/* check the status */
-	CheckTrackingLock(cfg,rx,ch,trk);
+	if(TrackingLoopsEnabled(trk)) ManageUserIntegrationPeriod(cfg,rx,ch,trk);
+	if(!checkedBeforeLoops) CheckTrackingLock(cfg,rx,ch,trk);
 
 	/* reset finished correlations */
 	UpdateCorrelations(ch,trk);

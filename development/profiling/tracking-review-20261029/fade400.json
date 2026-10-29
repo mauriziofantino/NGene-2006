@@ -1,0 +1,10 @@
+{
+  "source": "C:\\Users\\MaurizioFantino\\Downloads\\Projects\\NGene Classic\\recordings\\diagnosi\\hackrf-l1-ci8.raw",
+  "output": "C:\\Users\\MaurizioFantino\\Downloads\\Projects\\NGene Classic\\build\\tracking-fade-ci8.raw",
+  "fs": 8183800,
+  "offset": 900218000,
+  "noise_bytes": 6547040,
+  "bytes": 1145732000,
+  "seed": 731,
+  "sha256": "ae1c91b6a85e5dd4ce57b7539c91035e4a63f4c168cca264f16b98d2d07cbc78"
+}

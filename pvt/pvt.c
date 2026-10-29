@@ -132,7 +132,6 @@ int InitPvtData(TNGeneConfiguration *cfg,TNGeneData *rx)
 	pvtData->pvtAlgorithm=LMS_BASED_PVT;
 	pvtData->rxTimeForNextPvtFlag=INVALID_TIME;
 	pvtData->numOfPvtFails = 0;
-	pvtData->hardRestartMade = FALSE_FLAG;
 	pvtData->numOfGpsOpChannels = 0;
 	pvtData->numOfGalileoOpChannels = 0;
 	pvtData->numOfOperativeChannels = 0;
@@ -353,7 +352,6 @@ void ResetPvt(TNGeneConfiguration *cfg,TPvtData *pvtData,TPvtResults *pvtRes, in
 	pvtData->lsIndex=0;
 	pvtData->pvtAlgorithm=LMS_BASED_PVT;
 	pvtData->numOfPvtFails = 0;
-	pvtData->hardRestartMade = FALSE_FLAG;
 	pvtData->numOfGpsOpChannels = 0;
 	pvtData->numOfGalileoOpChannels = 0;
 	pvtData->numOfOperativeChannels = 0;
@@ -2129,7 +2127,6 @@ finalizePvt:
 		UpdateCumulatedBiases(pvtRes,pvtData);
 		pvtData->pvtIndex++;
 		pvtData->numOfPvtFails = 0;
-		pvtData->hardRestartMade = FALSE_FLAG;
 		/* check the possibility to use Kalman filter */
 		if((pvtData->pvtAlgorithm==LMS_BASED_PVT) && (cfg->pvtConfiguration.pvtMethod==KALMAN_BASED_PVT) && (pvtData->lsIndex<NUMBER_OF_LS_BASED_PVTS))
 		{
@@ -2158,21 +2155,17 @@ finalizePvt:
 			{
 				fprintf(pvtData->pvtLogFile,"\nPNT results discarded (failure %d) after a large error\n\n",pvtData->numOfPvtFails);
 			}
-			#ifdef PVT_ENABLE_HARD_RESTART
-			/* hard restart if too many consecutive PVT computations fail */
-			if(pvtData->numOfPvtFails>PVT_MAXIMUM_CONSECUTIVE_FAILURES)
+			/* Release a potentially bad position reference without throwing away
+			 * independently tracked signals or validated navigation messages. */
+			if(pvtData->numOfPvtFails>=PVT_MAXIMUM_CONSECUTIVE_FAILURES)
 			{
 				ResetPvt(cfg,pvtData,pvtRes,TRUE_FLAG);
-				HardRestartChannels(cfg,rx);
-				pvtData->numOfPvtFails = 0;
-				pvtData->hardRestartMade = TRUE_FLAG;
-				SwrxLog(NGENE_LOG_SEVERITY_ERROR,"Hard Receiver Restart after too many PNT failures");
+				SwrxLog(NGENE_LOG_SEVERITY_WARNING,"PNT estimator reset after repeated failures; RF tracking retained");
 				if(pvtData->pvtLogFile!=NULL)
 				{
-					fprintf(pvtData->pvtLogFile,"\nHard Receiver Restart after too many PNT failures\n\n");
+					fprintf(pvtData->pvtLogFile,"\nPNT estimator reset; RF tracking retained\n\n");
 				}
 			}
-			#endif
 		}
 	}
 	/* Prepare the next execution */

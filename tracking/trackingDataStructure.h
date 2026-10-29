@@ -112,8 +112,34 @@ typedef enum TrackingStatusEnum
 	TRACKING_LOCKED,				/**< Tracking is locked to the input signal */
 	TRACKING_PLL_CHECK_FAILED,      /**< An error from the PLL check has been found */
 	TRACKING_CN0_CHECK_FAILED,      /**< An error from the CN0 check has been found */
-	TRACKING_LOST 					/**< Tracking is not able to lock the input signal, tracking ceases */
+	TRACKING_LOST, 				/**< Tracking is not able to lock the input signal, tracking ceases */
+	TRACKING_HOLDOVER,             /**< Propagate the last reliable NCOs without noisy loop updates */
+	TRACKING_RELOCK                /**< Closed-loop recovery, not yet usable for navigation */
 } TTrackingStatus;
+
+/* Recovery is timed in processed signal milliseconds, never host wall time. */
+#define TRACKING_RECOVERY_CHECK_MS 100
+#define TRACKING_RECOVERY_GOOD_CHECKS 3
+#define TRACKING_FALSE_LOCK_TESTS 5
+
+typedef struct TrackingHoldoverStruct
+{
+	int anchorValid;
+	int active;
+	int goodChecks;
+	int discardNavUntilBoundary;
+	unsigned long long firstFailureCounter;
+	unsigned long long lastCheckCounter;
+	unsigned long long anchorSample;
+	double carrierFrequency;
+	double codeRate;
+	double carrierPhase;
+	double codePhase;
+	double anchorPower;
+	TAverageWindow earlyPower;
+	TAverageWindow promptPower;
+	TAverageWindow latePower;
+} TTrackingHoldover;
 
 
 /**
@@ -273,6 +299,7 @@ typedef struct TrackingStruct
 	unsigned long long int lastValidDataTransition;	/**< trkCounter when the last good sign transition occurred */
 	/* check tracking status */
 	TTrackingStatusChecker trkStatusChecker;	/**< this structure stores variables used to verify the tracking lock */
+	TTrackingHoldover holdover;
 } TTracking;
 
 

@@ -7,6 +7,7 @@ param(
     [ValidateRange(0,1)][Nullable[int]]$EgnosChannels,
     [ValidateRange(0,1)][Nullable[int]]$PvtMethod,
     [ValidateRange(0,1)][Nullable[int]]$WeightedLs,
+    [switch]$TrackingLog,
     [ValidateRange(1,20)][int]$Repetitions = 3,
     [ValidateRange(1,3600)][int]$TimeoutSeconds = 180
 )
@@ -64,6 +65,9 @@ for ($taskRun=1; $taskRun -le $Repetitions; $taskRun++) {
     $taskLogConfig = Join-Path $taskDirectory 'configuration/Logs.conf'
     $taskText = [IO.File]::ReadAllText($taskLogConfig)
     $taskText = [regex]::Replace($taskText, '(?m)^\s*\[Dump Path\]\s*\r?\n[^\r\n]*', '# Dump Path omitted for isolated replay')
+    if($TrackingLog) {
+        $taskText = [regex]::Replace($taskText,'(\[Enable Tracking Log\][ \t]*\r?\n)[ \t]*\d+','${1}1')
+    }
     [IO.File]::WriteAllText($taskLogConfig, $taskText)
     $taskWatch = [Diagnostics.Stopwatch]::StartNew()
     $taskProcess = New-Object Diagnostics.Process

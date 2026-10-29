@@ -209,14 +209,6 @@ int CheckPvtResultsGoodness(TNGeneConfiguration *cfg,TPvtData *pvtData,TPvtResul
 		return FALSE_FLAG;
 	}
 
-	/* In the case of a hard restart, be lenient with checks */
-	if(pvtData->hardRestartMade==TRUE_FLAG)
-	{
-		// is good
-		*failure = FALSE_FLAG;
-		return TRUE_FLAG;
-	}
-
 	/* Complete checks follow */
 	/* Analyze the receiver time (coherence between receiver time estimated before and after PVT) */
 	if((pvtData->numOfGpsOpChannels>0) && (pvtResNew->rxGpsTime.referenceValid==TRUE_FLAG) && (pvtData->rxGpsTimeValid==TRUE_FLAG))

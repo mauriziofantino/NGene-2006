@@ -1,5 +1,12 @@
 # Revisione PNT, osservabili ed EGNOS — 29 ottobre 2026
 
+Revisione successiva della stessa giornata: il supervisore di tracking e il
+percorso di recupero PNT sono ora aggiornati come descritto in
+[TRACKING_STATE_REVIEW.md](TRACKING_STATE_REVIEW.md), incluse le regressioni di
+disponibilita', le scale binarie dei parser e la correzione del wrapper NeQuick.
+Le misure e le affermazioni di tracking invariato sottostanti riguardano lo
+stato precedente a quell'intervento.
+
 ## Risultato
 
 La navigazione viene chiamata PNT nei messaggi operativi. I percorsi `pvt/`,

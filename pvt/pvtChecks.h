@@ -27,21 +27,9 @@
  */
 #define PVT_MAXIMUM_POSITION_JUMP   100
 
-/**
- * @def PVT_ENABLE_HARD_RESTART
- * @brief If PVT_ENABLE_HARD_RESTART is defined, channels and navigation messages
- *        are reset after a sequence of PVT computation failures
- */
-#define PVT_ENABLE_HARD_RESTART
-
-#ifdef PVT_ENABLE_HARD_RESTART
-	/**
-	 * @def PVT_MAXIMUM_CONSECUTIVE_FAILURES
-	 * @brief If PVT_MAXIMUM_CONSECUTIVE_FAILURES consecutive PVT computations fail,
-	 *        then a restart of all the channels and related information is performed.
-	 */
-	#define PVT_MAXIMUM_CONSECUTIVE_FAILURES  10
-#endif
+/* Reinitialize only the PNT estimator after repeated gross failures.
+ * A rejected position is not evidence that RF tracking or ephemerides are bad. */
+#define PVT_MAXIMUM_CONSECUTIVE_FAILURES 10
 
 
 

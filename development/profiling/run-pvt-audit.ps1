@@ -22,7 +22,10 @@ try {
     & $taskCompiler @taskArgs 'ngene-audit-extracted.c' (Join-Path $taskRoot 'build/windows-native/ngene_pnt_numerics.lib') '/Fe:audit-pvt.exe'
     if($LASTEXITCODE){throw 'Audit compilation failed'}
     $taskRunArgs=@();if($Verify){$taskRunArgs+='--verify'}
-    & './audit-pvt.exe' @taskRunArgs | Tee-Object -FilePath 'audit-results.csv'
-    if($LASTEXITCODE){throw 'Audit executable failed'}
+    & './audit-pvt.exe' @taskRunArgs | Tee-Object -Variable taskAuditLines
+    $taskAuditExit=$LASTEXITCODE
+    [IO.File]::WriteAllLines((Join-Path $taskOutput 'audit-results.csv'),
+        [string[]]$taskAuditLines,[Text.UTF8Encoding]::new($false))
+    if($taskAuditExit){throw 'Audit executable failed'}
 } finally {Pop-Location}
 Write-Host 'PASS/MISMATCH refers to the independent reference, not to test harness execution.'

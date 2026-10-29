@@ -1,0 +1,213 @@
+Start testing: Oct 29 19:40 W. Europe Standard Time
+----------------------------------------------------------
+1/13 Testing: hackrf_rx_contract
+1/13 Test: hackrf_rx_contract
+Command: "C:/Users/MaurizioFantino/Downloads/Projects/NGene Classic/build/windows-native/ngene_check_hackrf.exe"
+Directory: C:/Users/MaurizioFantino/Downloads/Projects/NGene Classic/build/windows-native
+"hackrf_rx_contract" start time: Oct 29 19:40 W. Europe Standard Time
+Output:
+----------------------------------------------------------
+HackRF native RX configuration, cleanup, queue order, overflow, disconnect and shutdown passed.
+<end of output>
+Test time =   0.42 sec
+----------------------------------------------------------
+Test Passed.
+"hackrf_rx_contract" end time: Oct 29 19:40 W. Europe Standard Time
+"hackrf_rx_contract" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2/13 Testing: fft_evo_classic_contract
+2/13 Test: fft_evo_classic_contract
+Command: "C:/Users/MaurizioFantino/Downloads/Projects/NGene Classic/build/windows-native/ngene_check_fft.exe"
+Directory: C:/Users/MaurizioFantino/Downloads/Projects/NGene Classic/build/windows-native
+"fft_evo_classic_contract" start time: Oct 29 19:40 W. Europe Standard Time
+Output:
+----------------------------------------------------------
+FFT: 263056 SIMD/reference cases, all sizes/gains, guarded alignments, DFT, tone, invalid inputs and concurrent calls passed.
+<end of output>
+Test time =   0.46 sec
+----------------------------------------------------------
+Test Passed.
+"fft_evo_classic_contract" end time: Oct 29 19:40 W. Europe Standard Time
+"fft_evo_classic_contract" time elapsed: 00:00:00
+----------------------------------------------------------
+
+3/13 Testing: pvt_qr_solver
+3/13 Test: pvt_qr_solver
+Command: "C:/Users/MaurizioFantino/Downloads/Projects/NGene Classic/build/windows-native/ngene_check_pvt_solver.exe"
+Directory: C:/Users/MaurizioFantino/Downloads/Projects/NGene Classic/build/windows-native
+"pvt_qr_solver" start time: Oct 29 19:40 W. Europe Standard Time
+Output:
+----------------------------------------------------------
+PNT Eigen: QR, covariance, ill-conditioning, SPD and Joseph update/rejection passed
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"pvt_qr_solver" end time: Oct 29 19:40 W. Europe Standard Time
+"pvt_qr_solver" time elapsed: 00:00:00
+----------------------------------------------------------
+
+4/13 Testing: pnt_observables
+4/13 Test: pnt_observables
+Command: "C:/Users/MaurizioFantino/Downloads/Projects/NGene Classic/build/windows-native/ngene_check_pnt_observables.exe"
+Directory: C:/Users/MaurizioFantino/Downloads/Projects/NGene Classic/build/windows-native
+"pnt_observables" start time: Oct 29 19:40 W. Europe Standard Time
+Output:
+----------------------------------------------------------
+PNT observables: ICD SBAS codes, search list, Doppler epoch, Hatch ramp, clock/SBAS correction and rebase passed
+<end of output>
+Test time =   0.10 sec
+----------------------------------------------------------
+Test Passed.
+"pnt_observables" end time: Oct 29 19:40 W. Europe Standard Time
+"pnt_observables" time elapsed: 00:00:00
+----------------------------------------------------------
+
+5/13 Testing: tracking_holdover
+5/13 Test: tracking_holdover
+Command: "C:/Users/MaurizioFantino/Downloads/Projects/NGene Classic/build/windows-native/ngene_check_tracking.exe"
+Directory: C:/Users/MaurizioFantino/Downloads/Projects/NGene Classic/build/windows-native
+"tracking_holdover" start time: Oct 29 19:40 W. Europe Standard Time
+Output:
+----------------------------------------------------------
+Tracking holdover: recovery, deadline, signal time, erasures, startup and invalid metrics PASS
+<end of output>
+Test time =   0.10 sec
+----------------------------------------------------------
+Test Passed.
+"tracking_holdover" end time: Oct 29 19:40 W. Europe Standard Time
+"tracking_holdover" time elapsed: 00:00:00
+----------------------------------------------------------
+
+6/13 Testing: atmosphere_contract
+6/13 Test: atmosphere_contract
+Command: "C:/Users/MaurizioFantino/Downloads/Projects/NGene Classic/build/windows-native/ngene_check_atmosphere.exe"
+Directory: C:/Users/MaurizioFantino/Downloads/Projects/NGene Classic/build/windows-native
+"atmosphere_contract" start time: Oct 29 19:40 W. Europe Standard Time
+Output:
+----------------------------------------------------------
+Atmosphere: NeQuick Az/default/units, Klobuchar day rollover, tropo signs/height/elevation PASS
+<end of output>
+Test time =   0.12 sec
+----------------------------------------------------------
+Test Passed.
+"atmosphere_contract" end time: Oct 29 19:40 W. Europe Standard Time
+"atmosphere_contract" time elapsed: 00:00:00
+----------------------------------------------------------
+
+7/13 Testing: hackrf_full_precision
+7/13 Test: hackrf_full_precision
+Command: "C:/Users/MaurizioFantino/Downloads/Projects/NGene Classic/build/windows-native/ngene_check_wide_iq.exe"
+Directory: C:/Users/MaurizioFantino/Downloads/Projects/NGene Classic/build/windows-native
+"hackrf_full_precision" start time: Oct 29 19:40 W. Europe Standard Time
+Output:
+----------------------------------------------------------
+Zero/near-zero IF: sign-only NCO PLL metric 0; Q15 unit-circle metric >0.999 for all phases and Doppler signs.
+Raw CI8, Q15 unit-circle mixer, exact SIMD integer MAC, compression, FFT headroom recovery and signed zero-IF Doppler passed.
+<end of output>
+Test time =   0.55 sec
+----------------------------------------------------------
+Test Passed.
+"hackrf_full_precision" end time: Oct 29 19:40 W. Europe Standard Time
+"hackrf_full_precision" time elapsed: 00:00:00
+----------------------------------------------------------
+
+8/13 Testing: dsp_generator_preservation
+8/13 Test: dsp_generator_preservation
+Command: "C:/Users/MaurizioFantino/Downloads/Projects/NGene Classic/build/windows-native/ngene_check_dsp_generation.exe"
+Directory: C:/Users/MaurizioFantino/Downloads/Projects/NGene Classic/build/windows-native
+"dsp_generator_preservation" start time: Oct 29 19:40 W. Europe Standard Time
+Output:
+----------------------------------------------------------
+5040 generator cases: carrier 1de1df372a432ed0, code cf683d065183ee9d
+Carrier sample bytes 59d84d236984551a, max phase error 1.32e-12 rad
+<end of output>
+Test time =   0.18 sec
+----------------------------------------------------------
+Test Passed.
+"dsp_generator_preservation" end time: Oct 29 19:40 W. Europe Standard Time
+"dsp_generator_preservation" time elapsed: 00:00:00
+----------------------------------------------------------
+
+9/13 Testing: sige_sample_preservation
+9/13 Test: sige_sample_preservation
+Command: "C:/Users/MaurizioFantino/Downloads/Projects/NGene Classic/build/windows-native/ngene_check_sige.exe"
+Directory: C:/Users/MaurizioFantino/Downloads/Projects/NGene Classic/build/windows-native
+"sige_sample_preservation" start time: Oct 29 19:40 W. Europe Standard Time
+Output:
+----------------------------------------------------------
+SiGe sample mappings and buffer bounds passed.
+<end of output>
+Test time =   0.49 sec
+----------------------------------------------------------
+Test Passed.
+"sige_sample_preservation" end time: Oct 29 19:40 W. Europe Standard Time
+"sige_sample_preservation" time elapsed: 00:00:00
+----------------------------------------------------------
+
+10/13 Testing: sige_native_iq
+10/13 Test: sige_native_iq
+Command: "C:/Users/MaurizioFantino/Downloads/Projects/NGene Classic/build/windows-native/ngene_check_native_iq.exe"
+Directory: C:/Users/MaurizioFantino/Downloads/Projects/NGene Classic/build/windows-native
+"sige_native_iq" start time: Oct 29 19:40 W. Europe Standard Time
+Output:
+----------------------------------------------------------
+Native I/Q decoding, scalar/SSE2 rotation, aliases, split reads and circular wrap passed.
+<end of output>
+Test time =   0.21 sec
+----------------------------------------------------------
+Test Passed.
+"sige_native_iq" end time: Oct 29 19:40 W. Europe Standard Time
+"sige_native_iq" time elapsed: 00:00:00
+----------------------------------------------------------
+
+11/13 Testing: usb_error_paths
+11/13 Test: usb_error_paths
+Command: "C:/Users/MaurizioFantino/Downloads/Projects/NGene Classic/build/windows-native/ngene_check_usb.exe"
+Directory: C:/Users/MaurizioFantino/Downloads/Projects/NGene Classic/build/windows-native
+"usb_error_paths" start time: Oct 29 19:40 W. Europe Standard Time
+Output:
+----------------------------------------------------------
+USB statuses, short-transfer rejection and null-handle paths passed.
+<end of output>
+Test time =   0.14 sec
+----------------------------------------------------------
+Test Passed.
+"usb_error_paths" end time: Oct 29 19:40 W. Europe Standard Time
+"usb_error_paths" time elapsed: 00:00:00
+----------------------------------------------------------
+
+12/13 Testing: usb_stream_shutdown_restart
+12/13 Test: usb_stream_shutdown_restart
+Command: "C:/Users/MaurizioFantino/Downloads/Projects/NGene Classic/build/windows-native/ngene_check_usb_stream.exe"
+Directory: C:/Users/MaurizioFantino/Downloads/Projects/NGene Classic/build/windows-native
+"usb_stream_shutdown_restart" start time: Oct 29 19:40 W. Europe Standard Time
+Output:
+----------------------------------------------------------
+USB producer isolation, full-buffer shutdown, empty read and ordered timeout restart passed.
+<end of output>
+Test time =   0.12 sec
+----------------------------------------------------------
+Test Passed.
+"usb_stream_shutdown_restart" end time: Oct 29 19:40 W. Europe Standard Time
+"usb_stream_shutdown_restart" time elapsed: 00:00:00
+----------------------------------------------------------
+
+13/13 Testing: native_windows_platform
+13/13 Test: native_windows_platform
+Command: "C:/Users/MaurizioFantino/Downloads/Projects/NGene Classic/build/windows-native/ngene_check_windows.exe"
+Directory: C:/Users/MaurizioFantino/Downloads/Projects/NGene Classic/build/windows-native
+"native_windows_platform" start time: Oct 29 19:40 W. Europe Standard Time
+Output:
+----------------------------------------------------------
+Native clocks, aligned allocation, pthreads, options, getline, sockets and 64-bit file offsets passed.
+<end of output>
+Test time =   1.48 sec
+----------------------------------------------------------
+Test Passed.
+"native_windows_platform" end time: Oct 29 19:40 W. Europe Standard Time
+"native_windows_platform" time elapsed: 00:00:01
+----------------------------------------------------------
+
+End testing: Oct 29 19:40 W. Europe Standard Time

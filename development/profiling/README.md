@@ -99,3 +99,13 @@ forza Kalman. Gli override non cambiano la configurazione della radice.
 PredictionOnlySolutions e salva il solver in ogni riga CSV. AllFixes conserva
 il nome storico e include entrambe le categorie: non sommare le previsioni ai
 fix basati su nuove osservazioni.
+
+## Transizioni tracking e atmosfera, 29 ottobre
+
+Risultati del fast fix e limiti in
+[tracking-review-20261029](tracking-review-20261029/README.md). Il generatore
+`inject-ci8-outage.py` sostituisce una finestra con rumore CI8 deterministico,
+preservando numero dei campioni e byte successivi. Non simula un gap USB.
+Il runner puo' abilitare soltanto nella prova il log storico delle correlazioni
+con `-TrackingLog`. I contratti separati tracking/atmosfera portano CTest a 13
+verifiche; l'audit estratto passa a 74 casi. Nessuna strumentazione nel main.

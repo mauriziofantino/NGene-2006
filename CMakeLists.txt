@@ -64,7 +64,7 @@ add_library(ngene_fft STATIC asmFolder/fft.c asmFolder/fft_sse2.c)
 target_link_libraries(ngene_fft PUBLIC ngene_platform PkgConfig::USB)
 target_compile_options(ngene_fft PRIVATE ${NGENE_OPTIMIZE})
 
-# Receiver sources. Acquisition and tracking retain their existing logic.
+# Receiver sources. Per-satellite acquisition retains its historical decisions.
 include(cmake/pnt-numerics.cmake)
 add_executable(ngene
     receiver/ngene.c
@@ -88,6 +88,7 @@ add_executable(ngene
     acquisition/nonCoherentSumsManager.c
     acquisition/refinement.c
     tracking/tracking.c
+    tracking/trackingHoldover.c
     tracking/galileoTracking.c
     tracking/gpsTracking.c
     tracking/manageTrkConfiguration.c
@@ -208,6 +209,21 @@ if(NGENE_BUILD_PLATFORM_CHECKS)
     target_compile_definitions(ngene_check_pnt_observables PRIVATE
         NGENE_TEST_DATA_DIRECTORY="${PROJECT_SOURCE_DIR}/sampleConfigurationFiles/otherData/")
     add_test(NAME pnt_observables COMMAND ngene_check_pnt_observables)
+    add_executable(ngene_check_tracking tools/check_tracking_holdover.c
+        tracking/tracking.c tracking/trackingHoldover.c tracking/gpsTracking.c
+        tracking/galileoTracking.c tracking/trackingDiscriminatorsLoops.c utility/mathFunctions.c)
+    target_link_libraries(ngene_check_tracking PRIVATE ngene_platform PkgConfig::USB)
+    if(NOT NGENE_NATIVE_WINDOWS)
+        target_link_libraries(ngene_check_tracking PRIVATE m)
+    endif()
+    add_test(NAME tracking_holdover COMMAND ngene_check_tracking)
+    add_executable(ngene_check_atmosphere tools/check_atmosphere.c
+        pvt/pvtUtility.c utilityGnss/NeQuick/nequick.c)
+    target_link_libraries(ngene_check_atmosphere PRIVATE ngene_platform PkgConfig::USB ngene_pnt_numerics)
+    if(NOT NGENE_NATIVE_WINDOWS)
+        target_link_libraries(ngene_check_atmosphere PRIVATE m)
+    endif()
+    add_test(NAME atmosphere_contract COMMAND ngene_check_atmosphere)
     set_tests_properties(fft_evo_classic_contract PROPERTIES TIMEOUT 60)
     add_executable(ngene_check_wide_iq tools/check_wide_iq.c asmFolder/wideInput.c
         asmFolder/hackrfInput.c acquisition/hackrfThreshold.c utility/sampleCompression.c asmFolder/carrierTable.c)

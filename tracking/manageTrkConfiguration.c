@@ -28,6 +28,17 @@ int ManageTrkConfiguration(TNGeneConfiguration *cfg)
 	strcat(cfgFilename, cfg->configurationPath);
 	strcat(cfgFilename, "Tracking.conf");
 
+	/* Optional for existing configurations. An episode cannot extend itself
+	 * by alternating between a good PLL indication and a low C/N0. */
+	trkCfg->holdoverTimeoutMs = 5000;
+	strcpy(tag, "Tracking holdover ms");
+	GetVal(cfgFilename,tag,&trkCfg->holdoverTimeoutMs,F_INTEGER,1);
+	if(trkCfg->holdoverTimeoutMs<0 || trkCfg->holdoverTimeoutMs>10000)
+	{
+		SwrxLog(NGENE_LOG_SEVERITY_ERROR,"Tracking holdover ms must be between 0 and 10000");
+		CloseNGene(cfg,EXIT_FAILURE);
+	}
+
 	strcpy(tag, "CN0 cutoff");
 	if(GetVal(cfgFilename,tag,(void *)&(trkCfg->cutoffCno),F_FLOAT,1) == FAILURE_RETURN)
 	{

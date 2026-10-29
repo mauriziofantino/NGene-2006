@@ -19,6 +19,7 @@ int InitEgnosParser(TNGeneConfiguration *cfg,TChannel *ch);
 void DeinitEgnosParser(TChannel *ch);
 
 void StartEgnosParser(TNGeneConfiguration *cfg,TChannel *ch);
+void CleanEgnosParserArrays(TEgnosParser *parser,int cleanInputs);
 
 void ParseEgnosMessage(TNGeneConfiguration *cfg,TNGeneData *rx,TChannel *ch,float corr,double time);
 

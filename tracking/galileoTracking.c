@@ -23,6 +23,7 @@
 TTrackingStatus PerformGalileoTracking(TNGeneConfiguration *cfg,TNGeneData *rx,TChannel *ch,char *firstBunch, unsigned int firstBunchSize,char *secondBunch, unsigned int secondBunchSize)
 {
 	TTracking *trk = &(ch->tracking);
+	int checkedBeforeLoops = trk->holdover.anchorValid || trk->holdover.active;
 
 	/* carrier wipe-off */
 	ch->carrierPhase = GenerateAndMixReceiverInput(cfg, rx, firstBunch, firstBunchSize, secondBunch, secondBunchSize, ch->blocksize, ch->carrierFrequency, ch->carrierPhase);
@@ -61,31 +62,33 @@ TTrackingStatus PerformGalileoTracking(TNGeneConfiguration *cfg,TNGeneData *rx,T
 
 	/* update ms counter, evaluate loops */
 	trk->msCounter++;
+	if(checkedBeforeLoops) CheckTrackingLock(cfg,rx,ch,trk);
 	if(((trk->msCounter%trk->integrationPeriod)==0) || (trk->msCounter==ch->bitDuration))
 	{
 		DumpCorrelationsToFile(cfg,rx,ch,trk);
-		if(ChooseCarrierLoop(cfg,rx,ch,trk)==CARRIER_FLL)
+		if(TrackingLoopsEnabled(trk))
 		{
-			FllDiscriminator(trk);
+			if(ChooseCarrierLoop(cfg,rx,ch,trk)==CARRIER_FLL)
+			{
+				FllDiscriminator(trk);
+			}
+			else
+			{
+				PllDiscriminator(trk);
+			}
+			CarrierLoop(cfg,ch,trk);
+			DllDiscriminator(trk);
+			CodeLoop(ch,trk);
 		}
-		else
-		{
-			PllDiscriminator(trk);
-		}
-		CarrierLoop(cfg,ch,trk);
-		DllDiscriminator(trk);
-		CodeLoop(ch,trk);
 	}
 
 	/* manage navigation message */
-	if(trk->msCounter==ch->bitDuration)
+	if(trk->msCounter==ch->bitDuration && TrackingNavigationEnabled(trk))
 	{
 		ParseGalMessage(cfg,rx,ch,trk->pIForNav);
 	}
 
-	/* check the status */
-	CheckTrackingLock(cfg,rx,ch,trk);
-
+	if(!checkedBeforeLoops) CheckTrackingLock(cfg,rx,ch,trk);
 	/* reset finished correlations */
 	UpdateCorrelations(ch,trk);
 

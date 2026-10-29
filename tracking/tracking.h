@@ -132,4 +132,12 @@ void DeinitTrackingStatusChecker(TTracking *trk);
  */
 void CheckTrackingLock(TNGeneConfiguration *cfg,TNGeneData *rx,TChannel *ch,TTracking *trk);
 
+/* Bounded NCO holdover. Restore the trusted trajectory at the current sample;
+ * no held observation is eligible for PNT or navigation message decoding. */
+void RememberTrackingNco(TNGeneConfiguration *cfg,TNGeneData *rx,TChannel *ch);
+void EnterTrackingHoldover(TNGeneConfiguration *cfg,TNGeneData *rx,TChannel *ch);
+int ManageTrackingHoldover(TNGeneConfiguration *cfg,TNGeneData *rx,TChannel *ch);
+int TrackingLoopsEnabled(const TTracking *trk);
+int TrackingNavigationEnabled(TTracking *trk);
+
 #endif /* TRACKING_H_INCLUDED */

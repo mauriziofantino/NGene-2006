@@ -1,5 +1,15 @@
 # NGene Classic — ottimizzazioni, profiling e distribuzione del carico
 
+**Aggiornamento successivo del 29 ottobre:** implementato mantenimento NCO con
+criteri di recupero ripetuti e scadenza unica; separati i fallimenti PNT dal
+riavvio RF. Corrette scale binarie dei parser e condizioni Az nel wrapper
+NeQuick. **13/13 test e 74/74 confronti sintetici**. Sul calo artificiale di
+1.2 s le perdite RF passano da 9 a 2; il salto di campioni nel file originale
+resta irrecuperabile. La ri-validazione TOW/smoothing riduce la disponibilita'
+PNT in queste prove: misto 29 -> 24 fix, GPS 63 -> 57, senza miglioramento
+metrico dimostrato. Metodo, risultati e limiti sono in
+[TRACKING_STATE_REVIEW.md](TRACKING_STATE_REVIEW.md).
+
 **Aggiornamento 29 ottobre:** la navigazione e' ora denominata PNT. Eigen,
 confermato dall'utente dopo confronto con Armadillo, sostituisce la matematica
 matriciale custom; aggiunti WLS, correzioni smoothing e supporto PRN EGNOS

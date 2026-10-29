@@ -181,8 +181,6 @@ typedef struct PvtDataStruct
 	int numOfPvtFails;          /**< How many times the PVT results have been discarded
 	                                 by the PVT check due to large errors.
 	                                 It is 0 if the last PVT was valid or no PVT has been computed yet */
-	int hardRestartMade;        /**< If a maximum number of PVT failures is reached, then all the channels
-	                                 and related information are restarted */
 	/**/
 	int minNumOfChannels;       /**< Minimum number of channels required to perform next PVT */
 	int numOfGpsOpChannels;		/**< Number of GPS channels ready to be used for PVT */

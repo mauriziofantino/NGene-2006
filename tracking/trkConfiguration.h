@@ -26,6 +26,7 @@
 typedef struct TrkConfigurationStruct
 {
 	float cutoffCno;					/**< Satellites under this limit are not tracked [dBHz] */
+	int holdoverTimeoutMs;             /**< Maximum recovery episode, including confirmation; 0 disables coasting */
 	/* Specific GPS parameters */
 	int gpsIntegrationPeriod;			/**< GPS integration period chosen by the user [ms] */
 	float gpsDllBw;						/**< GPS bandwidth of the DLL [Hz] */

@@ -28,12 +28,15 @@ selection = {
                          'DeinitLeastSquaresData', 'PerformLeastSquares'],
     'pvt/dop.c': ['DopEvaluation'],
     'utilityGnss/navigationMessageParser.c': ['ExtractField', 'ExtractTwoCompField'],
-    'utilityGnss/gpsMessageParser.c': ['ParseGpsSubframe1'],
-    'utilityGnss/galileoMessageParser.c': ['ParseGalWord01', 'ParseGalWord04'],
+    'utilityGnss/gpsMessageParser.c': ['ParseGpsSubframe1', 'ParseGpsSubframe4'],
+    'utilityGnss/galileoMessageParser.c': ['ParseGalWord01', 'ParseGalWord04', 'ParseGalWord05'],
+    'pvt/pvtChecks.c': ['CheckPvtResultsGoodness'],
 }
 constant = re.search(r'^#define MINIMUM_CSM_ITERATION_BEFORE_USE[^\n]*',
                      (root / 'pvt/pvt.c').read_text(encoding='utf-8'), re.M).group()
 chunks = [constant + '\n#include "audit-pvt-cases.c"\n']
+chunks.insert(0, '\n'.join(re.findall(r'^#define MAXIMUM_[^\n]*',
+    (root / 'pvt/pvtChecks.c').read_text(encoding='utf-8'), re.M)) + '\n')
 manifest = {}
 for filename, names in selection.items():
     raw = (root / filename).read_bytes()
@@ -60,7 +63,8 @@ for filename, names in selection.items():
         else:
             raise ValueError(f'Unbalanced function {name}')
 for header in ['pvt/pntNumerics.h', 'pvt/pntNumerics.cpp', 'pvt/pvtConstants.h',
-               'pvt/pvtDataStructure.h', 'utilityGnss/gnssTimeMath.h', 'utilityGnss/gpsMessageParser.h']:
+               'pvt/pvtDataStructure.h', 'pvt/pvtChecks.h', 'utilityGnss/gnssTimeMath.h',
+               'utilityGnss/navigationMessageParser.h', 'utilityGnss/gpsMessageParser.h']:
     manifest[header] = {'sha256': hashlib.sha256((root / header).read_bytes()).hexdigest(), 'functions': []}
 (out / 'ngene-audit-extracted.c').write_text(''.join(chunks), encoding='utf-8')
 (out / 'source-manifest.json').write_text(json.dumps(manifest, indent=2), encoding='utf-8')

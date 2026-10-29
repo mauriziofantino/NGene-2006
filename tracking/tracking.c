@@ -228,6 +228,7 @@ void StartTracking(TNGeneConfiguration *cfg,TChannel *ch,TTracking *trk)
 	int index;
 
 	trk->trkStatus = TRACKING_INITIAL_TRANSIENT;
+	trk->holdover = (TTrackingHoldover){0};
 	trk->msCounter = 0;
 	trk->trkCounter = 0;
 	trk->lockCounter = INT_MAX;
@@ -431,7 +432,7 @@ void UpdateCorrelations(TChannel *ch,TTracking *trk)
  * @def PLL_FALSE_LOCK_NUM_OF_TESTS
  *  @brief Number of tests required by the M-on-N PLL False Lock Checker
  */
-#define PLL_FALSE_LOCK_NUM_OF_TESTS  5
+#define PLL_FALSE_LOCK_NUM_OF_TESTS  TRACKING_FALSE_LOCK_TESTS
 
 /**
  * @def GPS_FALSE_LOCKS_TO_BE_TESTED
@@ -704,6 +705,9 @@ void CheckTrackingLock(TNGeneConfiguration *cfg,TNGeneData *rx,TChannel *ch,TTra
 {
 	TTrackingStatusChecker *checker = &(trk->trkStatusChecker);
 	TCnoTable *cnoEstimator = &(checker->cnoEstimator);
+	double ratio;
+	double retainThreshold = trk->holdover.anchorValid ? PLL_CHECKER_LOW_THRESHOLD : PLL_CHECKER_HIGH_THRESHOLD;
+	int checkDue;
 
 	/* Updates some metrics used for tracking lock check  */
 	PerformPllChecks(cfg,ch,trk);
@@ -711,6 +715,10 @@ void CheckTrackingLock(TNGeneConfiguration *cfg,TNGeneData *rx,TChannel *ch,TTra
 	/* following tests are performed only at the end of a code period  */
 	if((trk->msCounter%ch->codeDuration)>0)
 		return;
+	if(ManageTrackingHoldover(cfg,rx,ch))
+		return;
+	ratio=checker->nbd/checker->nbp;
+	checkDue=(trk->trkCounter-checker->pllLastCheckCounter)>=PLL_CHECKER_SUMS;
 
 	/* manage the status */
 	switch(trk->trkStatus)
@@ -748,38 +756,12 @@ void CheckTrackingLock(TNGeneConfiguration *cfg,TNGeneData *rx,TChannel *ch,TTra
 			break;
 
 		case TRACKING_PLL_FALSE_LOCK_CHECK:
-			if(cnoEstimator->estimatedCNo<cfg->trkConfiguration.cutoffCno)
-			{
-				SwrxLog(NGENE_LOG_SEVERITY_NOTE,"Channel %2d %s found a problem with CNo value at sample %llu, trk counter %llu",ch->chIndex,ch->prnName,rx->buf.discardedSamples+ch->bufferOffset+ch->blocksize,trk->trkCounter);
-				checker->trkCounterForCnoError = trk->trkCounter;
-				trk->trkStatus = TRACKING_CN0_CHECK_FAILED;
-				checker->pflcLastCheckCounter = 0;
-				checker->pflcTotalTests=PLL_FALSE_LOCK_NUM_OF_TESTS;
-			}
-			else if((checker->nbd/checker->nbp)<PLL_CHECKER_HIGH_THRESHOLD)
-			{
-				SwrxLog(NGENE_LOG_SEVERITY_NOTE,"Channel %2d %s found a problem with PLL lock at sample %llu, trk counter %llu",ch->chIndex,ch->prnName,rx->buf.discardedSamples+ch->bufferOffset+ch->blocksize,trk->trkCounter);
-				checker->trkCounterForPllError = trk->trkCounter;
-				trk->trkStatus = TRACKING_PLL_CHECK_FAILED;
-				checker->pflcLastCheckCounter = 0;
-				checker->pflcTotalTests=PLL_FALSE_LOCK_NUM_OF_TESTS;
-			}
-			else if(trk->trkCounter > (checker->pflcLastCheckCounter+PLL_FALSE_LOCK_CHECK_PERIOD))
-			{
-				if(CorrectPllFalseLock(cfg,rx,ch,trk)==PFLC_FINISHED)
-				{
-					trk->trkStatus = TRACKING_PLL_FALSE_LOCK_CONFIRMATION;
-					checker->pflcLastCheckCounter = trk->trkCounter + PLL_FALSE_LOCK_CONFIRMATION_PERIOD;
-				}
-				else
-				{
-					checker->pflcLastCheckCounter = trk->trkCounter;
-				}
-			}
-			break;
-
 		case TRACKING_PLL_FALSE_LOCK_CONFIRMATION:
-			if(cnoEstimator->estimatedCNo<cfg->trkConfiguration.cutoffCno)
+			/* Use one joint, paced decision. For a previously established lock,
+			 * retain the existing low threshold throughout its verification. */
+			if(checkDue)
+				checker->pllLastCheckCounter=checker->cnoLastCheckCounter=trk->trkCounter;
+			if(checkDue && (!isfinite(cnoEstimator->estimatedCNo) || cnoEstimator->estimatedCNo<cfg->trkConfiguration.cutoffCno))
 			{
 				SwrxLog(NGENE_LOG_SEVERITY_NOTE,"Channel %2d %s found a problem with CNo value at sample %llu, trk counter %llu",ch->chIndex,ch->prnName,rx->buf.discardedSamples+ch->bufferOffset+ch->blocksize,trk->trkCounter);
 				checker->trkCounterForCnoError = trk->trkCounter;
@@ -787,7 +769,7 @@ void CheckTrackingLock(TNGeneConfiguration *cfg,TNGeneData *rx,TChannel *ch,TTra
 				checker->pflcLastCheckCounter = 0;
 				checker->pflcTotalTests=PLL_FALSE_LOCK_NUM_OF_TESTS;
 			}
-			else if((checker->nbd/checker->nbp)<PLL_CHECKER_HIGH_THRESHOLD)
+			else if(checkDue && (!isfinite(ratio) || checker->nbp<=0 || ratio<retainThreshold))
 			{
 				SwrxLog(NGENE_LOG_SEVERITY_NOTE,"Channel %2d %s found a problem with PLL lock at sample %llu, trk counter %llu",ch->chIndex,ch->prnName,rx->buf.discardedSamples+ch->bufferOffset+ch->blocksize,trk->trkCounter);
 				checker->trkCounterForPllError = trk->trkCounter;
@@ -799,8 +781,29 @@ void CheckTrackingLock(TNGeneConfiguration *cfg,TNGeneData *rx,TChannel *ch,TTra
 			{
 				if(CorrectPllFalseLock(cfg,rx,ch,trk)==PFLC_FINISHED)
 				{
-					trk->trkStatus = TRACKING_LOCKED;
-					checker->pflcLastCheckCounter = 0;
+					if(trk->trkStatus==TRACKING_PLL_FALSE_LOCK_CHECK)
+					{
+						/* An established NCO that passes every centre-bin test has
+						 * not been corrected. It needs no post-correction wait.
+						 * Cold lock and any off-centre/uncertain result retain the
+						 * full historical correction/confirmation sequence. */
+						if(trk->holdover.active &&
+						   checker->pflcTests[checker->pflcArraySize/2]==PLL_FALSE_LOCK_NUM_OF_TESTS)
+						{
+							trk->trkStatus=TRACKING_LOCKED;
+							checker->pflcLastCheckCounter=0;
+						}
+						else
+						{
+							trk->trkStatus = TRACKING_PLL_FALSE_LOCK_CONFIRMATION;
+							checker->pflcLastCheckCounter = trk->trkCounter + PLL_FALSE_LOCK_CONFIRMATION_PERIOD;
+						}
+					}
+					else
+					{
+						trk->trkStatus = TRACKING_LOCKED;
+						checker->pflcLastCheckCounter = 0;
+					}
 				}
 				else
 				{
@@ -813,7 +816,7 @@ void CheckTrackingLock(TNGeneConfiguration *cfg,TNGeneData *rx,TChannel *ch,TTra
 			if((trk->trkCounter-checker->pllLastCheckCounter)>PLL_CHECKER_SUMS)
 			{
 				checker->pllLastCheckCounter = trk->trkCounter;
-				if((checker->nbd/checker->nbp)<PLL_CHECKER_LOW_THRESHOLD)
+				if(!isfinite(ratio) || checker->nbp<=0 || ratio<PLL_CHECKER_LOW_THRESHOLD)
 				{
 					SwrxLog(NGENE_LOG_SEVERITY_NOTE,"Channel %2d %s found a problem with PLL lock at sample %llu, trk counter %llu",ch->chIndex,ch->prnName,rx->buf.discardedSamples+ch->bufferOffset+ch->blocksize,trk->trkCounter);
 					checker->trkCounterForPllError = trk->trkCounter;
@@ -823,7 +826,7 @@ void CheckTrackingLock(TNGeneConfiguration *cfg,TNGeneData *rx,TChannel *ch,TTra
 			if((trk->trkCounter-checker->cnoLastCheckCounter)>CNO_CHECK_PERIOD)
 			{
 				checker->cnoLastCheckCounter = trk->trkCounter;
-				if(cnoEstimator->estimatedCNo<cfg->trkConfiguration.cutoffCno)
+				if(!isfinite(cnoEstimator->estimatedCNo) || cnoEstimator->estimatedCNo<cfg->trkConfiguration.cutoffCno)
 				{
 					SwrxLog(NGENE_LOG_SEVERITY_NOTE,"Channel %2d %s found a problem with CNo value at sample %llu, trk counter %llu",ch->chIndex,ch->prnName,rx->buf.discardedSamples+ch->bufferOffset+ch->blocksize,trk->trkCounter);
 					checker->trkCounterForCnoError = trk->trkCounter;
@@ -833,7 +836,8 @@ void CheckTrackingLock(TNGeneConfiguration *cfg,TNGeneData *rx,TChannel *ch,TTra
 			break;
 
 		case TRACKING_PLL_CHECK_FAILED:
-			if((checker->nbd/checker->nbp)>PLL_CHECKER_HIGH_THRESHOLD)
+			if(isfinite(ratio) && ratio>PLL_CHECKER_HIGH_THRESHOLD &&
+			   isfinite(cnoEstimator->estimatedCNo) && cnoEstimator->estimatedCNo>cfg->trkConfiguration.cutoffCno+CNO_HIGH_THRESHOLD_DIFF)
 			{
 				SwrxLog(NGENE_LOG_SEVERITY_NOTE,"Channel %2d %s again locked at sample %llu, trk counter %llu, after a PLL lock problem",ch->chIndex,ch->prnName,rx->buf.discardedSamples+ch->bufferOffset+ch->blocksize,trk->trkCounter);
 				trk->trkStatus = TRACKING_PLL_FALSE_LOCK_CHECK;
@@ -846,7 +850,8 @@ void CheckTrackingLock(TNGeneConfiguration *cfg,TNGeneData *rx,TChannel *ch,TTra
 			break;
 
 		case TRACKING_CN0_CHECK_FAILED:
-			if(cnoEstimator->estimatedCNo>(float)(cfg->trkConfiguration.cutoffCno+CNO_HIGH_THRESHOLD_DIFF))
+			if(isfinite(ratio) && ratio>PLL_CHECKER_HIGH_THRESHOLD &&
+			   isfinite(cnoEstimator->estimatedCNo) && cnoEstimator->estimatedCNo>cfg->trkConfiguration.cutoffCno+CNO_HIGH_THRESHOLD_DIFF)
 			{
 				SwrxLog(NGENE_LOG_SEVERITY_NOTE,"Channel %2d %s again locked at sample %llu, trk counter %llu, after a low CNo",ch->chIndex,ch->prnName,rx->buf.discardedSamples+ch->bufferOffset+ch->blocksize,trk->trkCounter);
 				trk->trkStatus = TRACKING_PLL_FALSE_LOCK_CHECK;
@@ -860,5 +865,21 @@ void CheckTrackingLock(TNGeneConfiguration *cfg,TNGeneData *rx,TChannel *ch,TTra
 
 		default:
 			break;
+	}
+	if((trk->trkStatus==TRACKING_PLL_CHECK_FAILED || trk->trkStatus==TRACKING_CN0_CHECK_FAILED) &&
+	   trk->holdover.anchorValid && cfg->trkConfiguration.holdoverTimeoutMs>0)
+	{
+		EnterTrackingHoldover(cfg,rx,ch);
+	}
+	else if(trk->trkStatus==TRACKING_LOCKED)
+	{
+		if(trk->holdover.active)
+		{
+			SwrxLog(NGENE_LOG_SEVERITY_INFO,"Channel %2d %s tracking recovered at sample %llu, trk counter %llu (holdover %llu ms)",ch->chIndex,ch->prnName,rx->buf.discardedSamples+ch->bufferOffset+ch->blocksize,trk->trkCounter,trk->trkCounter-trk->holdover.firstFailureCounter);
+			trk->holdover.active=FALSE_FLAG;
+		}
+		if(checkDue && isfinite(ratio) && ratio>PLL_CHECKER_LOW_THRESHOLD &&
+		   isfinite(cnoEstimator->estimatedCNo) && cnoEstimator->estimatedCNo>=cfg->trkConfiguration.cutoffCno)
+			RememberTrackingNco(cfg,rx,ch);
 	}
 }
