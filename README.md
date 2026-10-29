@@ -11,8 +11,13 @@ of the classic receiver unless a specific correction requires otherwise.
 
 Pseudorange, satellite navigation data and LS/Kalman corrections are documented
 in [PSEUDORANGE_PVT_AUDIT.md](PSEUDORANGE_PVT_AUDIT.md), including reproducible
-tests and replay limitations. `configuration/PVT.conf` selects LS (`[PVT method] 0`)
-or Kalman (`1`). Acquisition and tracking logic are unchanged by those corrections.
+tests and replay limitations. Navigation is now called **PNT** in output;
+`configuration/PVT.conf` and the existing C interfaces retain their legacy names.
+`[PVT method] 0` selects LS, `1` selects Kalman. Both use Eigen in double precision,
+with pivoted QR for LS and Cholesky/Joseph for Kalman. `[PNT weighted LS] 1` (default)
+enables variance/elevation weighting; `0` retains unweighted LS for comparison.
+See [PNT_REVIEW.md](PNT_REVIEW.md) for the measurement audit, SBAS PRN 121/123
+support, reproducible results and accuracy limitations.
 
 ## Source layout
 
@@ -50,7 +55,7 @@ On Linux (Debian/Ubuntu), install the development packages once, then build:
 
 ```sh
 sudo apt update
-sudo apt install build-essential cmake pkg-config libusb-1.0-0-dev libssl-dev libncurses-dev libhackrf-dev
+sudo apt install build-essential cmake pkg-config libusb-1.0-0-dev libssl-dev libncurses-dev libhackrf-dev libeigen3-dev
 sh build.sh          # Compile, run tests and prepare configuration/data
 sh clean.sh          # Clean Linux compiled outputs without rebuilding
 sh build.sh clean    # Clean, rebuild and run tests

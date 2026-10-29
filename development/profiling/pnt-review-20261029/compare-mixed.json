@@ -1,0 +1,47 @@
+{
+  "Before": "build/pnt-analysis/mixed-ls/fixes.csv",
+  "After": "build/pnt-analysis/mixed-wls/fixes.csv",
+  "CommonEpochs": 29,
+  "SameCountsEpochs": [
+    55000,
+    55296,
+    56296,
+    57296,
+    58296,
+    59296,
+    60296,
+    61296,
+    62296,
+    63296,
+    64296,
+    65296,
+    66296,
+    67296,
+    68296,
+    69296,
+    70296,
+    71296,
+    72296,
+    73296,
+    74296,
+    75296,
+    76296,
+    77296,
+    116000,
+    116216,
+    117216,
+    118216,
+    119216
+  ],
+  "BeforeStatistics": {
+    "Count": 29,
+    "HorizontalRms": 6.13732298612233,
+    "UpRms": 13.840894877934264
+  },
+  "AfterStatistics": {
+    "Count": 29,
+    "HorizontalRms": 5.719548385628155,
+    "UpRms": 13.116695889011368
+  },
+  "Limit": "Same epoch and constellation counts; PRN identities are not encoded in this CSV."
+}

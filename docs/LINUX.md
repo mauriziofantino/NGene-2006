@@ -1,6 +1,6 @@
 # Linux x86_64
 
-Linux builds with a C11-capable GCC or Clang, CMake 3.20 or later and the distribution's
+Linux builds with C11 and C++17-capable GCC or Clang, CMake 3.20 or later and the distribution's
 development libraries. The Windows build remains native clang-cl and does not
 require Linux, WSL, Cygwin or MinGW.
 
@@ -11,7 +11,7 @@ On Debian/Ubuntu, install once:
 ```sh
 sudo apt update
 sudo apt install build-essential cmake pkg-config libusb-1.0-0-dev \
-    libssl-dev libncurses-dev libhackrf-dev
+    libssl-dev libncurses-dev libhackrf-dev libeigen3-dev
 ```
 
 From the project folder:
@@ -48,7 +48,13 @@ Linux intermediates stay in `build/linux/`; Windows uses `build/windows-native/`
 Both builds can coexist. Cleaning preserves configurations, recordings, data and
 the other platform's executable. To limit parallel compilation, use e.g.
 `NGENE_BUILD_JOBS=4 sh build.sh`. To select Clang on the first configuration,
-install `clang` and use `CC=clang sh build.sh` with a fresh build directory.
+install `clang` and use `CC=clang CXX=clang++ sh build.sh` with a fresh build directory.
+
+PNT matrix arithmetic uses Eigen >=3.4 (no BLAS/LAPACK dependency). CMake prefers
+the distribution package; if absent it downloads the pinned upstream Eigen 3.4.0
+archive with SHA256 verification. Offline builds need `libeigen3-dev`, an
+`Eigen3_DIR` installation, or the archive in `build/native-downloads/`.
+Only the numerical adapter is C++; acquisition and tracking remain C.
 
 ## CMake directly
 

@@ -1,5 +1,39 @@
 # Logbook NGene Classic
 
+## 29 ottobre 2026 — PNT, Eigen, smoothing e PRN EGNOS attuali
+
+Su richiesta dell'utente e dopo confronto Armadillo/Eigen, confermato Eigen.
+Sostituite implementazioni matriciali custom con adattatori C a Eigen double:
+QR con pivoting, Kalman Cholesky/Joseph, operazioni matriciali e DOP.
+Rimossi scratch obsoleti; conversione geodetica LS una volta per iterazione.
+WLS selezionabile con `[PNT weighted LS]` (default 1, 0 per LS non pesato).
+Messaggi operativi PNT; nomi C e PVT.conf compatibili.
+
+Smoothing: usa Doppler del blocco completato, avvio Hatch progressivo e
+variazioni clock/SBAS coerenti con il codice corretto. Non e' stata aggiunta
+una soluzione con ambiguita' di fase: il vecchio dato e' Doppler integrato,
+non una misura indipendente validata. Restano da gestire cicli/slip/ambiguita'.
+
+EGNOS: aggiunti PRN 121 e 123, generazione G1/G2 ICD verificata byte per byte
+sui quattro PRN storici, compatibilita' dei quattro slot del file FFT.
+Nel replay diagnostico EGNOS123 ora entra in tracking e aggancia FLL/PLL;
+perde lock sul gap noto e viene riacquisito. MT0 invalida la banca correzioni
+e ne inibisce l'aggiornamento per 60 secondi dall'ultimo avviso.
+Nessuna modifica a decisioni/soglie acquisizione, loop tracking o main.
+
+Verifiche: 11/11 CTest, 54/54 confronti sintetici, replay LS/WLS/KF/SiGe.
+WLS contro LS sullo stesso codice: misto RMS H/U 6.137/13.841 -> 5.720/13.117 m;
+GPS 3.395/7.068 -> 3.195/7.284 m. Nessun vantaggio universale: rispetto alla
+sessione precedente peggiora l'orizzontale GPS. Nel misto 29 fix anziche' 40,
+con differente storia satelliti/scheduling dopo l'aggancio EGNOS; non attribuire
+la differenza al solo solver. KF misto 29 con misure + 12 previsioni.
+SiGe 23 soluzioni/zero perdite. Il nuovo data record non era disponibile.
+
+Rapporto: PNT_REVIEW.md. Risultati/hash/log:
+development/profiling/pnt-review-20261029. Build finale profiling OFF;
+patch di profiling ancora applicabile. Linux/live non verificati.
+Le sezioni storiche sottostanti descrivono il codice prima di questa revisione.
+
 ## 28 ottobre 2026 — Correzioni PVT implementate in produzione
 
 Su richiesta esplicita dell'utente, implementati tutti i difetti confermati

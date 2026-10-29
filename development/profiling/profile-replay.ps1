@@ -86,7 +86,7 @@ for ($taskRun=1; $taskRun -le $Repetitions; $taskRun++) {
     [IO.File]::WriteAllText((Join-Path $taskDirectory 'stdout.log'), $taskOutput.Result)
     [IO.File]::WriteAllText((Join-Path $taskDirectory 'stderr.log'), $taskError.Result)
     $taskResult = [pscustomobject]@{
-        Run = $taskRun; Frontend = $Frontend; Input = $taskInput; PvtMethodOverride = $PvtMethod
+        Run = $taskRun; Frontend = $Frontend; Input = $taskInput; PvtMethodOverride = $PvtMethod; WeightedLsOverride = $WeightedLs
         InputBytes = (Get-Item -LiteralPath $taskInput).Length
         ExecutableSha256 = (Get-FileHash -LiteralPath $taskExe -Algorithm SHA256).Hash
         WallSeconds = $taskWatch.Elapsed.TotalSeconds

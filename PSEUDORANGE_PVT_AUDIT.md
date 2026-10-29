@@ -1,5 +1,11 @@
 # Audit pseudorange, navigazione e PVT — 28 ottobre 2026
 
+**Revisione successiva, 29 ottobre:** [PNT_REVIEW.md](PNT_REVIEW.md) descrive
+l'adozione di Eigen richiesta/confermata dall'utente, WLS, nuove correzioni
+del carrier smoothing e PRN SBAS 121/123. Le implementazioni proprie QR e
+Cholesky descritte nella sezione 5 sono state sostituite dalla libreria.
+Le prove successive non dimostrano un miglioramento metrico universale.
+
 **Stato aggiornato:** le correzioni confermate sono ora implementate. La
 [sezione 5](#5-correzioni-implementate-e-verifiche-finali) descrive il codice
 finale e le verifiche; le sezioni precedenti conservano l'audit dello stato

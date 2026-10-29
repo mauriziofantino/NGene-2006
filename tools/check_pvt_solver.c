@@ -58,12 +58,27 @@ int main(void)
         spd[8]=NAN;REQUIRE(!PntSpdFactor(spd,3,lower));
     }
     {
+        /* Analytic scalar KF, including zero PSD process noise and atomic
+         * rejection: x=2 + 1/2*(6-2)=4, Joseph posterior variance=2. */
+        double f=1,process=0,h=1,r=4,z=6,state=2,p=4,predicted=-1;
+        REQUIRE(PntKalmanStep(1,1,&f,&process,&h,&r,&z,&state,&p,&predicted));
+        REQUIRE(fabs(state-4)<1e-12 && fabs(p-2)<1e-12 && predicted==2);
+        r=-1;
+        REQUIRE(!PntKalmanStep(1,1,&f,&process,&h,&r,&z,&state,&p,&predicted));
+        REQUIRE(fabs(state-4)<1e-12 && fabs(p-2)<1e-12 && predicted==2);
+        process=-.1;
+        REQUIRE(!PntKalmanStep(1,0,&f,&process,NULL,NULL,NULL,&state,&p,&predicted));
+        process=.25;
+        REQUIRE(PntKalmanStep(1,0,&f,&process,NULL,NULL,NULL,&state,&p,&predicted));
+        REQUIRE(fabs(state-4)<1e-12 && fabs(p-2.25)<1e-12);
+    }
+    {
         int week=64;double tow=604800.;
         REQUIRE(NormalizeGnssTime(&week,&tow) && week==65 && tow==0);
         tow=-.25;REQUIRE(NormalizeGnssTime(&week,&tow) && week==64 && tow==604799.75);
         REQUIRE(fabs(GnssTimeDifference(65,.01,64,604799.99)-.02)<1e-10);
         REQUIRE(UnrollGnssWeek(63,64,64)==63 && UnrollGnssWeek(0,63,64)==64);
     }
-    puts("PVT QR: single/mixed clocks, residual orthogonality, covariance, ill-conditioning and invalid inputs passed");
+    puts("PNT Eigen: QR, covariance, ill-conditioning, SPD and Joseph update/rejection passed");
     return 0;
 }

@@ -1,5 +1,13 @@
 # NGene Classic — ottimizzazioni, profiling e distribuzione del carico
 
+**Aggiornamento 29 ottobre:** la navigazione e' ora denominata PNT. Eigen,
+confermato dall'utente dopo confronto con Armadillo, sostituisce la matematica
+matriciale custom; aggiunti WLS, correzioni smoothing e supporto PRN EGNOS
+121/123. EGNOS123 aggancia nel replay. Risultati e regressioni metriche sono
+in [PNT_REVIEW.md](PNT_REVIEW.md): 11/11 test e 54/54 confronti sintetici.
+Le considerazioni precedenti sull'assenza di dipendenze/necessita' di Eigen
+descrivono il vecchio stato, superato dalla nuova indicazione dell'utente.
+
 **Aggiornamento 28 ottobre:** implementate e verificate le correzioni dell'audit
 pseudorange/PVT, inclusa la regressione DOP e la gestione misure Kalman.
 Dettagli, limiti e risultati nella

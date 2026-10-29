@@ -24,6 +24,7 @@
 #include "viterbi.h"
 #include "egnosCorrections.h"
 #include "egnosIonoCorrections.h"
+#include "sbasValidity.h"
 
 static unsigned int egnosCrc24qTable[256] = {
 	      0x00000000, 0x00864CFB, 0x008AD50D, 0x000C99F6, 0x0093E6E1, 0x0015AA1A,
@@ -1272,8 +1273,6 @@ void ParseEgnosType26(TNGeneData *rx,TEgnosParser *parser)
 
 
 
-#include "sbasValidity.h"
-
 int ParseEgnosBlock(TNGeneConfiguration *cfg,TNGeneData *rx,TEgnosParser *parser,double tow)
 {
 	unsigned char msgType;
@@ -1289,15 +1288,7 @@ int ParseEgnosBlock(TNGeneConfiguration *cfg,TNGeneData *rx,TEgnosParser *parser
 		    "SBAS corrections rejected: MT0 or one-minute exclusion window\n");
 		return SUCCESS_RETURN;
 	}
-	if(msgType==0)
-	{
-		if(parser->egnosParseLogFile!=NULL)
-		{
-			fprintf(parser->egnosParseLogFile,"BLOCK  0: Don't use for safety applications (for SBAS testing)\n");
-			fprintf(parser->egnosParseLogFile,"\n");
-		}
-	}
-	else if(msgType==1)
+	if(msgType==1)
 	{
 		ParseEgnosType01(cfg,rx,parser);
 	}

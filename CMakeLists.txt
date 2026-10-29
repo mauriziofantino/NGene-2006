@@ -173,6 +173,7 @@ endif()
 install(TARGETS ngene RUNTIME DESTINATION .)
 install(DIRECTORY sampleConfigurationFiles/ DESTINATION .)
 install(FILES libraries/libhackrf-LICENSE.txt DESTINATION licenses)
+install(FILES libraries/eigen-LICENSE.txt libraries/eigen-NOTICE.txt DESTINATION licenses)
 
 option(NGENE_BUILD_PLATFORM_CHECKS "Build USB/platform diagnostic tools" OFF)
 if(NGENE_BUILD_PLATFORM_CHECKS)

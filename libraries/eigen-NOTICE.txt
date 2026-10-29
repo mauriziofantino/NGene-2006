@@ -1,0 +1,13 @@
+NGene PNT uses Eigen, a C++ template library for linear algebra.
+Upstream: https://gitlab.com/libeigen/eigen
+Documentation: https://libeigen.gitlab.io/eigen/docs-nightly/
+Pinned fallback source: Eigen 3.4.0
+https://gitlab.com/libeigen/eigen/-/archive/3.4.0/eigen-3.4.0.tar.gz
+SHA256: 8586084f71f9bde545ee7fa6d00288b264a2b7ac3607b974e54d13e7162c1c72
+
+Eigen headers are used unmodified, with EIGEN_MPL2_ONLY enabled.
+Copyright belongs to the Eigen authors identified in each upstream source file.
+The Mozilla Public License 2.0 is reproduced in eigen-LICENSE.txt.
+The corresponding unmodified source is available at the upstream URL above.
+Linux builds may instead use an installed Eigen >=3.4 distribution package;
+its corresponding source and copyright notices are supplied by that package.

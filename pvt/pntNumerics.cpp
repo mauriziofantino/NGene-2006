@@ -22,6 +22,15 @@ bool factor(const Mat& a, Eigen::LLT<Mat>& llt)
     return llt.info() == Eigen::Success &&
         (llt.matrixLLT().diagonal().array().square() > 64*eps*a.rows()*scale).all();
 }
+
+bool validProcessNoise(const Mat& a)
+{
+    if (!a.allFinite()) return false;
+    const double scale=a.cwiseAbs().maxCoeff();
+    if ((a-a.transpose()).cwiseAbs().maxCoeff()>128*eps*a.rows()*scale) return false;
+    Eigen::LDLT<Mat> ldlt((0.5*(a+a.transpose())).eval());
+    return ldlt.info()==Eigen::Success && ldlt.isPositive();
+}
 }
 
 extern "C" int PntLeastSquares(const double *a, const double *b, int rows, int cols,
@@ -89,7 +98,7 @@ extern "C" int PntKalmanStep(int n, int m, const double *phi, const double *q,
     try {
         Read f(phi,n,n), noise(q,n,n);
         Eigen::LLT<Mat> priorCheck;
-        if (!f.allFinite() || !noise.allFinite() ||
+        if (!f.allFinite() || !validProcessNoise(noise) ||
             !Eigen::Map<const Vec>(state,n).allFinite() ||
             !factor(Read(covariance,n,n),priorCheck)) return 0;
         Vec xp = f * Eigen::Map<const Vec>(state,n), x = xp;
