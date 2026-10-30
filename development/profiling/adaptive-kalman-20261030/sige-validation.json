@@ -1,0 +1,19 @@
+{
+    "Run":  {
+                "Run":  1,
+                "Frontend":  "sige",
+                "Input":  "C:\\Users\\MaurizioFantino\\Downloads\\Projects\\NGene Classic\\recordings\\native-ab.raw",
+                "PvtMethodOverride":  1,
+                "WeightedLsOverride":  1,
+                "InputBytes":  794615808,
+                "ExecutableSha256":  "FF1BA4214DAEFBEA2C88658759136CD2A98341DFE407A9F408D69DB666ACF9B6",
+                "WallSeconds":  30.783589499999998,
+                "CpuSeconds":  16.578125,
+                "ExitCode":  0,
+                "Directory":  "C:\\Users\\MaurizioFantino\\Downloads\\Projects\\NGene Classic\\build\\profile-20261030-141819-677\\run-1"
+            },
+    "OutputSolutions":  23,
+    "TrackingLost":  0,
+    "AccuracyEvaluated":  false,
+    "Reason":  "No SiGe reference position supplied."
+}

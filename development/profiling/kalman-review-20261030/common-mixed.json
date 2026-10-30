@@ -1,0 +1,195 @@
+{
+  "before_csv": "development\\profiling\\kalman-review-20261030\\kf-mixed\\fixes.csv",
+  "after_csv": "development\\profiling\\kalman-review-20261030\\kf-corrected-mixed\\fixes.csv",
+  "matching_rule": "RxMs, GPS count, Galileo count; measured outputs only",
+  "before_all_measured": {
+    "count": 24,
+    "horizontal_rms_m": 5.555194989558583,
+    "up_rms_m": 5.4261585112833375,
+    "east_mean_m": -0.729632367803669,
+    "north_mean_m": 2.880342762151392,
+    "up_mean_m": 4.722180912655252,
+    "centered_horizontal_rms_m": 4.6937675221928155,
+    "centered_horizontal_p95_m": 9.456397922537223,
+    "up_population_sd_m": 2.6728643096362052
+  },
+  "after_all_measured": {
+    "count": 24,
+    "horizontal_rms_m": 4.942592610769078,
+    "up_rms_m": 4.6963038839120985,
+    "east_mean_m": -0.6082089721873,
+    "north_mean_m": 2.2737108837848203,
+    "up_mean_m": 4.432598083636606,
+    "centered_horizontal_rms_m": 4.346210116772817,
+    "centered_horizontal_p95_m": 8.740853839098088,
+    "up_population_sd_m": 1.551561922383039
+  },
+  "before_common": {
+    "count": 24,
+    "horizontal_rms_m": 5.555194989558583,
+    "up_rms_m": 5.4261585112833375,
+    "east_mean_m": -0.729632367803669,
+    "north_mean_m": 2.880342762151392,
+    "up_mean_m": 4.722180912655252,
+    "centered_horizontal_rms_m": 4.6937675221928155,
+    "centered_horizontal_p95_m": 9.456397922537223,
+    "up_population_sd_m": 2.6728643096362052
+  },
+  "after_common": {
+    "count": 24,
+    "horizontal_rms_m": 4.942592610769078,
+    "up_rms_m": 4.6963038839120985,
+    "east_mean_m": -0.6082089721873,
+    "north_mean_m": 2.2737108837848203,
+    "up_mean_m": 4.432598083636606,
+    "centered_horizontal_rms_m": 4.346210116772817,
+    "centered_horizontal_p95_m": 8.740853839098088,
+    "up_population_sd_m": 1.551561922383039
+  },
+  "before_common_kf_only": {
+    "count": 22,
+    "horizontal_rms_m": 5.537582226314892,
+    "up_rms_m": 5.508451501085142,
+    "east_mean_m": -1.1863866500239812,
+    "north_mean_m": 3.467188070093876,
+    "up_mean_m": 4.773733958030544,
+    "centered_horizontal_rms_m": 4.151615410468818,
+    "centered_horizontal_p95_m": 10.196515297510585,
+    "up_population_sd_m": 2.748545440365359
+  },
+  "after_common_kf_only": {
+    "count": 22,
+    "horizontal_rms_m": 4.863045717667181,
+    "up_rms_m": 4.720538346644776,
+    "east_mean_m": -1.0539247638970333,
+    "north_mean_m": 2.8054078391485255,
+    "up_mean_m": 4.45782541728293,
+    "centered_horizontal_rms_m": 3.8299011867422474,
+    "centered_horizontal_p95_m": 9.390440322381838,
+    "up_population_sd_m": 1.5528280108144843
+  },
+  "common_epochs": [
+    [
+      55000,
+      4,
+      2
+    ],
+    [
+      55296,
+      4,
+      2
+    ],
+    [
+      56296,
+      4,
+      2
+    ],
+    [
+      57296,
+      4,
+      2
+    ],
+    [
+      58296,
+      4,
+      2
+    ],
+    [
+      59296,
+      4,
+      2
+    ],
+    [
+      60296,
+      4,
+      2
+    ],
+    [
+      61296,
+      4,
+      2
+    ],
+    [
+      62296,
+      4,
+      2
+    ],
+    [
+      63296,
+      4,
+      2
+    ],
+    [
+      64296,
+      4,
+      2
+    ],
+    [
+      65296,
+      4,
+      3
+    ],
+    [
+      66296,
+      4,
+      3
+    ],
+    [
+      67296,
+      4,
+      3
+    ],
+    [
+      68296,
+      4,
+      3
+    ],
+    [
+      69296,
+      4,
+      3
+    ],
+    [
+      70296,
+      4,
+      3
+    ],
+    [
+      71296,
+      4,
+      3
+    ],
+    [
+      72296,
+      4,
+      3
+    ],
+    [
+      73296,
+      4,
+      3
+    ],
+    [
+      74296,
+      4,
+      3
+    ],
+    [
+      75296,
+      4,
+      3
+    ],
+    [
+      76296,
+      4,
+      3
+    ],
+    [
+      77296,
+      0,
+      4
+    ]
+  ],
+  "unmatched_before": [],
+  "unmatched_after": []
+}

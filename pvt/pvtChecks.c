@@ -102,6 +102,7 @@ int ReadyForPvt(TChannel *ch)
     }
     return FALSE_FLAG;
 }
+
 /**
  * @def MAXIMUM_ANGLE_DEGREE
  * @brief PVT results where latitude or longitude is beyond 360 deg are obvious outlier
@@ -117,6 +118,7 @@ int ReadyForPvt(TChannel *ch)
  * #brief If the GDOP changes, the check on the position jumps is not meaningful: avoid it
  */
 #define MAXIMUM_GDOP_JUMP_FOR_CHECKS 5.0
+
 int CheckPvtResultsGoodness(TNGeneConfiguration *cfg, TPvtData *pvtData, TPvtResults *pvtResNew,
                             TPvtResults *pvtResOld, int *failure)
 {
@@ -274,7 +276,7 @@ int CheckPvtResultsGoodness(TNGeneConfiguration *cfg, TPvtData *pvtData, TPvtRes
         ((!pvtResNew->dopValid || !pvtResOld->dopValid) ||
          fabs(pvtResNew->dop[0] - pvtResOld->dop[0]) < MAXIMUM_GDOP_JUMP_FOR_CHECKS)) {
         // Do not perform the check when the GDOP change is beyond a threshold
-        if (pvtCfg->staticReceiver == TRUE_FLAG) {
+        if (pvtCfg->staticReceiver == TRUE_FLAG && pvtData->pvtAlgorithm != KALMAN_BASED_PVT) {
             // Check for static receiver
             deltaPos = pow(pvtResNew->ecefPosition[0] - pvtResOld->ecefPosition[0], 2.0);
             deltaPos += pow(pvtResNew->ecefPosition[1] - pvtResOld->ecefPosition[1], 2.0);
@@ -303,6 +305,16 @@ int CheckPvtResultsGoodness(TNGeneConfiguration *cfg, TPvtData *pvtData, TPvtRes
             deltaPosFromVel = vel * deltaTime;
             //
             deltaPos = fabs(deltaPos - deltaPosFromVel);
+            if (pvtData->pvtAlgorithm == KALMAN_BASED_PVT) {
+                /* Automatic motion validation must check direction as well as
+                 * distance. Equal speeds do not justify an orthogonal jump. */
+                deltaPos = 0;
+                for (idx = 0; idx < 3; idx++)
+                    deltaPos += pow(pvtResNew->ecefPosition[idx] - pvtResOld->ecefPosition[idx] -
+                                        pvtResOld->ecefVelocity[idx] * deltaTime,
+                                    2.0);
+                deltaPos = sqrt(deltaPos);
+            }
             if (deltaPos > PVT_MAXIMUM_POSITION_JUMP) {
                 SwrxLog(
                     NGENE_LOG_SEVERITY_WARNING,

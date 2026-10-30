@@ -552,7 +552,7 @@ void PlotConfiguration(TNGeneConfiguration *cfg)
     SwrxLog(NGENE_LOG_SEVERITY_NOTE, "**** PNT parameters");
     SwrxLog(NGENE_LOG_SEVERITY_NOTE, "     PNT rate %f Hz", pvtCfg->pvtRate);
     if (pvtCfg->pvtMethod == KALMAN_BASED_PVT)
-        SwrxLog(NGENE_LOG_SEVERITY_NOTE, "     Kalman filter based PNT");
+        SwrxLog(NGENE_LOG_SEVERITY_NOTE, "     Adaptive Kalman filter based PNT");
     else
         SwrxLog(NGENE_LOG_SEVERITY_NOTE, "     Least Squares PNT");
     if (pvtCfg->csmFilterLen > 0)

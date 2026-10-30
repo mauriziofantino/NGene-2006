@@ -15,6 +15,7 @@
 #include "channelDataStructure.h"
 #include "pvtConstants.h"
 #include "nequickDataStructures.h"
+
 /**
  * @struct SatStatusStruct
  * @brief This structure stores information about the position and the velocity of each satellite
@@ -34,6 +35,7 @@ typedef struct SatStatusStruct {
     double ippLongitude; /**< Ionospheric Pierce Point longitude [deg] */
     double fpp;          /**< Obliquity factor */
 } TSatStatus;
+
 /**
  * @struct PvtChannelStruct
  * @brief Stores all the PVT information related to a single channel
@@ -62,6 +64,7 @@ typedef struct PvtChannelStruct {
     double posSigma2; /**<  */
     double velSigma2; /**<  */
 } TPvtChannel;
+
 /**
  * @struct LeastSquaresDataStruc
  * @brief Variables used to perform Least Square based PVT.
@@ -87,6 +90,7 @@ typedef struct LeastSquaresDataStruct {
     double *b;
     double *el;
 } TLeastSquaresData;
+
 /**
  * @struct KalmanFilterDataStruct
  * @brief Variables used to perform Kalman filter based PVT.
@@ -96,8 +100,18 @@ typedef struct LeastSquaresDataStruct {
  *          Variable whose size changes depending on the number of channel/single or multiple
  * constellation are sized in order to take into account the worst case.
  */
+typedef struct KalmanMotionDataStruct {
+    double accelerationPsd;    /**< Estimated velocity random-walk density [m^2/s^3]. */
+    double dopplerNoiseScale;  /**< Estimated rate-noise scale relative to configured variances. */
+    double dopplerVelocity[3]; /**< Last independent Doppler velocity [m/s]. */
+    double dopplerVelocityCovariance[9]; /**< Covariance of that estimate [(m/s)^2]. */
+    unsigned long long referenceSample;
+    int referenceValid;
+} TKalmanMotionData;
+
 typedef struct KalmanFilterDataStruct {
     /* Variables to be maintained between consecutive executions */
+    TKalmanMotionData motion;
     double phi[KF_SINGLE_STATES * KF_SINGLE_STATES];    /**< Kalman state transition matrix for the
                                                            single constellation case */
     double phiMulti[KF_MULTI_STATES * KF_MULTI_STATES]; /**< Kalman state transition matrix for the
@@ -135,6 +149,7 @@ typedef struct KalmanFilterDataStruct {
     double xPred[KF_MULTI_STATES * 1]; /**< xPredictedState */
                                        /* Variables used in Kalman Filter routine */
 } TKalmanFilterData;
+
 /**
  * @struct CarrierSmoothingDataStruct
  * @brief Variables used to perform Carrier Smoothing (CSM) over measured pseudoranges.
@@ -150,6 +165,7 @@ typedef struct CarrierSmoothingDataStruct {
                                  [m] */
     int csmCounter;           /**< Counter of smoothing executions for the current channel */
 } TCarrierSmoothingData;
+
 /**
  * @enum ReceiverTimeFlagEnum
  * @brief Indicates constellation and validity for a time
@@ -160,6 +176,7 @@ typedef enum ReceiverTimeFlagEnum {
     GPS_TIME = 2,
     GALILEO_TIME = 3
 } TReceiverTimeFlag;
+
 /**
  * @struct PvtDataStruct
  * @brief Stores all the PVT information common to all the channels
@@ -217,6 +234,7 @@ typedef struct PvtDataStruct {
     FILE *gnssTimeLogFile; /**< File containing an optional text log of the estimated receiver time
                               (GNSS time) */
 } TPvtData;
+
 /**
  * @struct ReceiverTimeStruct
  * @brief Contains data used to store the time of the receiver
@@ -231,6 +249,7 @@ typedef struct ReceiverTimeStruct {
     double referenceTow; /**< time of week (receiver time) of the reference sample [s].
                It's floating point because takes into account also the fractional part */
 } TReceiverTime;
+
 /**
  * @struct PvtResultsStruct
  * @brief This structure stores PVT results: user (position, velocity, receiver time)

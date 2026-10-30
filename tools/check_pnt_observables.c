@@ -22,6 +22,7 @@ void CloseNGene(TNGeneConfiguration *cfg, int status)
     (void)status;
     abort();
 }
+
 #define CHECK(x)                                                                                   \
     do {                                                                                           \
         if (!(x)) {                                                                                \
@@ -145,6 +146,20 @@ int main(void)
     CHECK(!SbasAcceptMessage(&bank, 0, 56));
     CHECK(!SbasAcceptMessage(&bank, 2, 115.999));
     CHECK(SbasAcceptMessage(&bank, 2, 116));
+    bank.fastCorrections[0].valid = 1;
+    CHECK(!SbasAcceptMessage(&bank, 0, NAN));
+    CHECK(bank.testModeBlocked && !bank.fastCorrections[0].valid);
+    CHECK(!SbasAcceptMessage(&bank, 2, NAN));
+    CHECK(!SbasAcceptMessage(&bank, 2, 200));
+    CHECK(!SbasAcceptMessage(&bank, 2, 259.999));
+    CHECK(SbasAcceptMessage(&bank, 2, 260));
+    CHECK(!SbasAcceptMessage(&bank, 1, NAN));
+    CHECK(SbasReceptionState(0, 1000, 1000, 0, 1) == SBAS_NO_RECENT_DATA);
+    CHECK(SbasReceptionState(1, 1000, 1000, 0, 0) == SBAS_TIME_UNAVAILABLE);
+    CHECK(SbasReceptionState(1, 1000, 1000, 1, 0) == SBAS_TEST_SERVICE);
+    CHECK(SbasReceptionState(1, 1000, 1000, 0, 1) == SBAS_DATA_DECODED);
+    CHECK(SbasReceptionState(1, 1000, 4001, 0, 1) == SBAS_NO_RECENT_DATA);
+    CHECK(SbasReceptionState(1, 1000, 999, 0, 1) == SBAS_NO_RECENT_DATA);
     CHECK(CheckSbasCodes() == 0);
     CHECK(CheckSmoothing() == 0);
     puts(

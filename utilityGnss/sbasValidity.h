@@ -2,6 +2,7 @@
 #define NGENE_SBAS_VALIDITY_H
 #include <math.h>
 #include "egnosCorrectionsDataStructure.h"
+
 /* MT0 advertises test/unusable service. Retain RF tracking, but discard the
  * shared correction bank and reject data for a minute after the last MT0.
  * NGene currently supports one SBAS channel. This is not an integrity system. */
@@ -10,8 +11,6 @@ static inline int SbasAcceptMessage(TEgnosCorrections *bank, int type, double to
 {
     int i, j;
     double dt;
-    if (!isfinite(tow))
-        return 0;
     if (type == 0) {
         bank->testModeBlocked = 1;
         bank->lastTestModeTow = tow;
@@ -39,7 +38,15 @@ static inline int SbasAcceptMessage(TEgnosCorrections *bank, int type, double to
         }
         return 0;
     }
+    if (!isfinite(tow))
+        return 0;
     if (bank->testModeBlocked) {
+        /* An MT0 decoded before GPS time was known must not be forgotten.
+         * Anchor a conservative full exclusion minute when time becomes known. */
+        if (!isfinite(bank->lastTestModeTow)) {
+            bank->lastTestModeTow = tow;
+            return 0;
+        }
         dt = tow - bank->lastTestModeTow;
         if (dt < -302400)
             dt += 604800;
@@ -50,5 +57,24 @@ static inline int SbasAcceptMessage(TEgnosCorrections *bank, int type, double to
         bank->testModeBlocked = 0;
     }
     return 1;
+}
+
+typedef enum SbasReceptionStateEnum {
+    SBAS_NO_RECENT_DATA,
+    SBAS_TEST_SERVICE,
+    SBAS_TIME_UNAVAILABLE,
+    SBAS_DATA_DECODED
+} TSbasReceptionState;
+
+static inline TSbasReceptionState SbasReceptionState(int messageValid,
+                                                     unsigned long long lastMessageMs,
+                                                     unsigned long long currentMs,
+                                                     int testModeBlocked, int gpsTimeValid)
+{
+    if (!messageValid || currentMs < lastMessageMs || currentMs - lastMessageMs > 3000)
+        return SBAS_NO_RECENT_DATA;
+    if (testModeBlocked)
+        return SBAS_TEST_SERVICE;
+    return gpsTimeValid ? SBAS_DATA_DECODED : SBAS_TIME_UNAVAILABLE;
 }
 #endif

@@ -1,0 +1,8 @@
+{
+    "MeasurementSolutions":  23,
+    "PredictionOnlySolutions":  0,
+    "TrackingLost":  0,
+    "PvtFailures":  0,
+    "AccuracyEvaluated":  false,
+    "Reason":  "SiGe reference position is not the HackRF antenna position."
+}

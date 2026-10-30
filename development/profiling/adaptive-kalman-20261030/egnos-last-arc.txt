@@ -1,0 +1,69 @@
+TOW     : 206265.000000
+MESSAGE TYPE: 4
+SBAS corrections withheld: MT0 or one-minute exclusion window
+TOW     : 206267.000000
+MESSAGE TYPE: 3
+SBAS corrections withheld: MT0 or one-minute exclusion window
+TOW     : 206268.000000
+MESSAGE TYPE: 0
+SBAS corrections withheld: MT0 or one-minute exclusion window
+TOW     : 206269.000000
+MESSAGE TYPE: 4
+SBAS corrections withheld: MT0 or one-minute exclusion window
+TOW     : 206270.000000
+MESSAGE TYPE: 1
+SBAS corrections withheld: MT0 or one-minute exclusion window
+TOW     : 206271.000000
+MESSAGE TYPE: 3
+SBAS corrections withheld: MT0 or one-minute exclusion window
+TOW     : nan
+MESSAGE TYPE: 0
+SBAS corrections withheld: GPS time unavailable
+TOW     : nan
+MESSAGE TYPE: 4
+SBAS corrections withheld: GPS time unavailable
+TOW     : nan
+MESSAGE TYPE: 18
+SBAS corrections withheld: GPS time unavailable
+TOW     : nan
+MESSAGE TYPE: 3
+SBAS corrections withheld: GPS time unavailable
+TOW     : nan
+MESSAGE TYPE: 0
+SBAS corrections withheld: GPS time unavailable
+TOW     : nan
+MESSAGE TYPE: 4
+SBAS corrections withheld: GPS time unavailable
+TOW     : nan
+MESSAGE TYPE: 17
+SBAS corrections withheld: GPS time unavailable
+TOW     : nan
+MESSAGE TYPE: 3
+SBAS corrections withheld: GPS time unavailable
+TOW     : nan
+MESSAGE TYPE: 0
+SBAS corrections withheld: GPS time unavailable
+TOW     : nan
+MESSAGE TYPE: 4
+SBAS corrections withheld: GPS time unavailable
+TOW     : nan
+MESSAGE TYPE: 10
+SBAS corrections withheld: GPS time unavailable
+TOW     : nan
+MESSAGE TYPE: 3
+SBAS corrections withheld: GPS time unavailable
+TOW     : nan
+MESSAGE TYPE: 0
+SBAS corrections withheld: GPS time unavailable
+TOW     : nan
+MESSAGE TYPE: 4
+SBAS corrections withheld: GPS time unavailable
+TOW     : nan
+MESSAGE TYPE: 12
+SBAS corrections withheld: GPS time unavailable
+TOW     : nan
+MESSAGE TYPE: 3
+SBAS corrections withheld: GPS time unavailable
+TOW     : nan
+MESSAGE TYPE: 0
+SBAS corrections withheld: GPS time unavailable

@@ -18,6 +18,8 @@ static uint64_t frequency;
 static unsigned char ampValue;
 static int loggedOverflow, readFinished;
 static int autoFeed, autoInvalid;
+static int autoLateAcceptAt, calibrationWindows, loggedSettled, loggedBounded,
+    importantAutotuneLogs;
 static hackrf_sample_block_cb_fn calibrationCallback;
 static unsigned char block[262144];
 static char output[262144];
@@ -152,6 +154,14 @@ int ADDCALL hackrf_start_rx(hackrf_device *device, hackrf_sample_block_cb_fn cb,
             if (!calibrationCallback)
                 calibrationCallback = cb;
             if (cb == calibrationCallback) {
+                calibrationWindows++;
+                if (autoLateAcceptAt) {
+                    int amplitude = calibrationWindows >= autoLateAcceptAt
+                                        ? 28
+                                        : (calibrationWindows & 1 ? 40 : 20);
+                    for (k = 0; k < (int)sizeof(block); k++)
+                        block[k] = (unsigned char)((k / 2) & 1 ? amplitude : -amplitude);
+                }
                 transfer.rx_ctx = context;
                 transfer.buffer = block;
                 transfer.buffer_length = sizeof(block);
@@ -180,7 +190,17 @@ int ADDCALL hackrf_is_streaming(hackrf_device *device)
 
 int SwrxLog(int severity, const char *format, ...)
 {
-    (void)severity;
+    if (strstr(format, "HackRF autotune") && severity == NGENE_LOG_SEVERITY_IMPORTANT_INFO)
+        importantAutotuneLogs++;
+    if (strstr(format, "HackRF autotune %s:")) {
+        va_list arguments;
+        const char *status;
+        va_start(arguments, format);
+        status = va_arg(arguments, const char *);
+        loggedSettled += strcmp(status, "settled") == 0;
+        loggedBounded += strstr(status, "bounded") != NULL;
+        va_end(arguments);
+    }
     if (strstr(format, "HackRF RX stopped"))
         loggedOverflow++;
     return 0;
@@ -209,6 +229,8 @@ static void Initialize(TRxFe *fe, TNGeneConfiguration *cfg, TUsbFePars *pars)
     deviceList.devicecount = 1;
     ngeneStopRequested = 0;
     autoFeed = autoInvalid = 0;
+    autoLateAcceptAt = calibrationWindows = loggedSettled = loggedBounded = importantAutotuneLogs =
+        0;
     calibrationCallback = NULL;
 }
 
@@ -240,6 +262,15 @@ static void *BlockedReader(void *context)
     readFinished = 1;
     pthread_mutex_unlock(&fe->usbFe.frontEndMutex);
     return NULL;
+}
+
+/* Transport error/queue tests explicitly opt out of gain calibration. */
+static int OpenTransportFixture(TNGeneConfiguration *cfg, TRxFe *fe)
+{
+    int result = OpenHackrfFrontend(cfg, fe);
+    if (result == SUCCESS_RETURN)
+        cfg->hackrfConfiguration.autoTuneGains = 0;
+    return result;
 }
 
 static void VerifySettings(void)
@@ -282,7 +313,7 @@ static void VerifySettings(void)
         REQUIRE(file != NULL);
         fputs(invalid[k], file);
         fclose(file);
-        REQUIRE(OpenHackrfFrontend(&cfg, &fe) == FAILURE_RETURN && stage == 0);
+        REQUIRE(OpenTransportFixture(&cfg, &fe) == FAILURE_RETURN && stage == 0);
         Destroy(&fe);
     }
     Initialize(&fe, &cfg, &pars);
@@ -292,10 +323,13 @@ static void VerifySettings(void)
     fputs("# [Serial number] this comment must be ignored\n[LNA gain (dB)]\n40\n"
           "[VGA gain (dB)]\n62\n[RF amplifier]\n1\n[Antenna power]\n1\n"
           "[Center frequency (Hz)]\n1575420000\n"
+          "[Auto tune gains]\n0\n"
           "[Serial number]\n00000000000000000000000000000001\n",
           file);
     fclose(file);
-    REQUIRE(OpenHackrfFrontend(&cfg, &fe) == SUCCESS_RETURN);
+    REQUIRE(ConfigureHackrfFrontend(&cfg) == SUCCESS_RETURN);
+    REQUIRE(cfg.hackrfConfiguration.autoTuneGains == 0);
+    REQUIRE(OpenTransportFixture(&cfg, &fe) == SUCCESS_RETURN);
     REQUIRE(lnaGain == 40 && vgaGain == 62 && ampValue == 1);
     REQUIRE(cfg.fif == 0 && frequency == UINT64_C(1575420000));
     REQUIRE(StartHackrfFrontend(&fe) == SUCCESS_RETURN);
@@ -316,29 +350,33 @@ int main(void)
     int failure;
     pthread_t thread;
     VerifySettings();
+    Initialize(&fe, &cfg, &pars);
+    REQUIRE(ConfigureHackrfFrontend(&cfg) == SUCCESS_RETURN);
+    REQUIRE(cfg.hackrfConfiguration.autoTuneGains == 1);
+    Destroy(&fe);
     for (k = 0; k < sizeof(block); k++)
         block[k] = (unsigned char)(k * 73 + k / 256);
     /* Every configuration hardware call must unwind exactly what it acquired. */
     for (failure = 1; failure <= 8; failure++) {
         Initialize(&fe, &cfg, &pars);
         failAt = failure;
-        REQUIRE(OpenHackrfFrontend(&cfg, &fe) == FAILURE_RETURN && fe.hackrf == NULL);
+        REQUIRE(OpenTransportFixture(&cfg, &fe) == FAILURE_RETURN && fe.hackrf == NULL);
         REQUIRE(exited == (failure > 1) && closed == (failure > 2));
         Destroy(&fe);
     }
     Initialize(&fe, &cfg, &pars);
     cfg.fs = 16367600;
-    REQUIRE(OpenHackrfFrontend(&cfg, &fe) == FAILURE_RETURN && stage == 0);
+    REQUIRE(OpenTransportFixture(&cfg, &fe) == FAILURE_RETURN && stage == 0);
     Destroy(&fe);
     for (failure = 0; failure <= 2; failure += 2) {
         Initialize(&fe, &cfg, &pars);
         deviceList.devicecount = failure;
-        REQUIRE(OpenHackrfFrontend(&cfg, &fe) == FAILURE_RETURN);
+        REQUIRE(OpenTransportFixture(&cfg, &fe) == FAILURE_RETURN);
         REQUIRE(closed == 0 && exited == 1);
         Destroy(&fe);
     }
     Initialize(&fe, &cfg, &pars);
-    REQUIRE(OpenHackrfFrontend(&cfg, &fe) == SUCCESS_RETURN);
+    REQUIRE(OpenTransportFixture(&cfg, &fe) == SUCCESS_RETURN);
     REQUIRE(rate == 8183800 && divider == 1 && filterHz == 5000000);
     REQUIRE(frequency == UINT64_C(1575458400) && lnaGain == 32 && vgaGain == 32 && ampValue == 0);
     failAt = stage + 1;
@@ -347,7 +385,7 @@ int main(void)
     Destroy(&fe);
     REQUIRE(closed == 1 && exited == 1 && stopped == 0);
     Initialize(&fe, &cfg, &pars);
-    REQUIRE(OpenHackrfFrontend(&cfg, &fe) == SUCCESS_RETURN);
+    REQUIRE(OpenTransportFixture(&cfg, &fe) == SUCCESS_RETURN);
     REQUIRE(StartHackrfFrontend(&fe) == SUCCESS_RETURN);
     REQUIRE(Submit(0, 0, NULL) == 0);
     /* Thousands of odd/even reads and queue wraparounds preserve all CI8 bits. */
@@ -378,7 +416,7 @@ int main(void)
     REQUIRE(stopped == 1 && closed == 1 && exited == 1);
     for (failure = 0; failure < 4; failure++) {
         Initialize(&fe, &cfg, &pars);
-        REQUIRE(OpenHackrfFrontend(&cfg, &fe) == SUCCESS_RETURN);
+        REQUIRE(OpenTransportFixture(&cfg, &fe) == SUCCESS_RETURN);
         REQUIRE(StartHackrfFrontend(&fe) == SUCCESS_RETURN);
         REQUIRE(Submit(failure == 0   ? -1
                        : failure == 1 ? 1
@@ -390,7 +428,7 @@ int main(void)
     /* A disconnected stream and an explicit stop release an empty-queue wait. */
     for (failure = 0; failure < 2; failure++) {
         Initialize(&fe, &cfg, &pars);
-        REQUIRE(OpenHackrfFrontend(&cfg, &fe) == SUCCESS_RETURN);
+        REQUIRE(OpenTransportFixture(&cfg, &fe) == SUCCESS_RETURN);
         REQUIRE(StartHackrfFrontend(&fe) == SUCCESS_RETURN);
         readFinished = 0;
         REQUIRE(pthread_create(&thread, NULL, BlockedReader, &fe) == 0);
@@ -407,7 +445,7 @@ int main(void)
     /* Pilot samples must not leak into the first operational timeline.
      * Reopening the same stream must not recalibrate an existing tracking arc. */
     Initialize(&fe, &cfg, &pars);
-    REQUIRE(OpenHackrfFrontend(&cfg, &fe) == SUCCESS_RETURN);
+    REQUIRE(OpenTransportFixture(&cfg, &fe) == SUCCESS_RETURN);
     cfg.hackrfConfiguration.autoTuneGains = 1;
     autoFeed = 1;
     {
@@ -417,6 +455,7 @@ int main(void)
             block[k] = (unsigned char)normal[(k / 2) % 10];
     }
     REQUIRE(StartHackrfFrontend(&fe) == SUCCESS_RETURN && stopped == 2);
+    REQUIRE(loggedSettled == 1 && loggedBounded == 0 && importantAutotuneLogs >= 4);
     block[0] = 129;
     block[1] = 127;
     REQUIRE(Submit(2, 2, block) == 0 && ReadHackrfFrontend(&fe, output, 2) == 2);
@@ -427,12 +466,23 @@ int main(void)
     Destroy(&fe);
     REQUIRE(stopped == 4 && closed == 1 && exited == 1);
     Initialize(&fe, &cfg, &pars);
-    REQUIRE(OpenHackrfFrontend(&cfg, &fe) == SUCCESS_RETURN);
+    REQUIRE(OpenTransportFixture(&cfg, &fe) == SUCCESS_RETURN);
     cfg.hackrfConfiguration.autoTuneGains = 1;
     autoFeed = autoInvalid = 1;
     REQUIRE(StartHackrfFrontend(&fe) == FAILURE_RETURN && stopped == 1);
     Destroy(&fe);
     REQUIRE(closed == 1 && exited == 1);
+    /* An accepted final window alone is not two-window convergence. */
+    for (failure = 11; failure <= 12; failure++) {
+        Initialize(&fe, &cfg, &pars);
+        REQUIRE(OpenTransportFixture(&cfg, &fe) == SUCCESS_RETURN);
+        cfg.hackrfConfiguration.autoTuneGains = 1;
+        autoFeed = 1;
+        autoLateAcceptAt = failure;
+        REQUIRE(StartHackrfFrontend(&fe) == SUCCESS_RETURN && calibrationWindows == 12);
+        REQUIRE(loggedSettled == (failure == 11) && loggedBounded == (failure == 12));
+        Destroy(&fe);
+    }
     puts(
         "HackRF native RX configuration, calibration isolation, cleanup, queue order, overflow, disconnect and shutdown passed.");
     return 0;

@@ -72,6 +72,8 @@ int InitEgnosParser(TNGeneConfiguration *cfg, TChannel *ch)
     // ch->egnosParser->navMsg=NULL;
     ch->egnosParser->egnosParseLogFile = NULL;
     ch->egnosParser->egnosBitsLogFile = NULL;
+    ch->egnosParser->messageValid = FALSE_FLAG;
+    ch->egnosParser->lastMessageRxMs = 0;
     return SUCCESS_RETURN;
 }
 
@@ -92,6 +94,8 @@ void DeinitEgnosParser(TChannel *ch)
 void CleanEgnosParserArrays(TEgnosParser *parser, int cleanInputs)
 {
     if (cleanInputs == TRUE_FLAG) {
+        parser->messageValid = FALSE_FLAG;
+        parser->lastMessageRxMs = 0;
         ArrayClean((char *)(parser->symbols),
                    EGNOS_ENCODED_BLOCK_LENGTH_SYMBOLS + EGNOS_ADDITIONAL_BLOCK_LENGTH_SYMBOLS + 1);
     }
@@ -119,6 +123,8 @@ void StartEgnosParser(TNGeneConfiguration *cfg, TChannel *ch)
     parser->polarityCorrection = 0x00;
     parser->status = SEARCH_SYNCHRONIZATION;
     parser->expectedPreamble = EGNOS_PREAMBLE_INVALID_INDEX;
+    parser->messageValid = FALSE_FLAG;
+    parser->lastMessageRxMs = 0;
     if (cfg->logConfiguration.enableNavMesgLog == TRUE_FLAG) {
         if (parser->egnosParseLogFile != NULL) {
             fclose(parser->egnosParseLogFile);
@@ -132,6 +138,7 @@ void StartEgnosParser(TNGeneConfiguration *cfg, TChannel *ch)
         parser->egnosBitsLogFile = fopen(filename, "a");
     }
 }
+
 TEgnosPreambleIndex ResearchEgnosPreamble(unsigned char *bits, unsigned int blocksize,
                                           unsigned int *startOfPreamble,
                                           unsigned char *polarityCorrection)
@@ -183,6 +190,7 @@ TEgnosPreambleIndex ResearchEgnosPreamble(unsigned char *bits, unsigned int bloc
     *startOfPreamble = idx - 7;
     return preambleIndex;
 }
+
 TEgnosPreambleIndex CheckAndUpdateEgnosPreamble(unsigned char *bits,
                                                 TEgnosPreambleIndex preambleIndex)
 {
@@ -645,6 +653,7 @@ void ParseEgnosType18(TNGeneData *rx, TEgnosParser *parser)
         fprintf(parser->egnosParseLogFile, "\n");
     }
 }
+
 /* TODO Va debuggata trovando un dataset che contenga il messaggio di tipo 24!!! */
 
 void ParseEgnosType24(TNGeneData *rx, TEgnosParser *parser, double tow)
@@ -1147,10 +1156,14 @@ int ParseEgnosBlock(TNGeneConfiguration *cfg, TNGeneData *rx, TEgnosParser *pars
         fprintf(parser->egnosParseLogFile, "TOW     : %f\n", tow);
     }
     msgType = parser->decodedBits[1] >> 2;
+    if (msgType == 0 && !rx->egnosCorrections.testModeBlocked)
+        SwrxLog(NGENE_LOG_SEVERITY_WARNING, "SBAS MT0 test service received; corrections disabled");
+    if (parser->egnosParseLogFile)
+        fprintf(parser->egnosParseLogFile, "MESSAGE TYPE: %u\n", msgType);
     if (!SbasAcceptMessage(&rx->egnosCorrections, msgType, tow)) {
         if (parser->egnosParseLogFile)
-            fprintf(parser->egnosParseLogFile,
-                    "SBAS corrections rejected: MT0 or one-minute exclusion window\n");
+            fprintf(parser->egnosParseLogFile, "SBAS corrections withheld: %s\n",
+                    !isfinite(tow) ? "GPS time unavailable" : "MT0 or one-minute exclusion window");
         return SUCCESS_RETURN;
     }
     if (msgType == 1) {
@@ -1196,6 +1209,7 @@ int ParseEgnosBlock(TNGeneConfiguration *cfg, TNGeneData *rx, TEgnosParser *pars
     }
     return SUCCESS_RETURN;
 }
+
 void ParseEgnosMessage(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch, float corr,
                        double tow)
 {
@@ -1293,6 +1307,7 @@ void ParseEgnosMessage(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch, f
         crcResult = EgnosCrc24qVerified(parser->decodedBits, EGNOS_ARRAY_FOR_PARSE_LENGTH_BYTES);
         if ((parser->expectedPreamble == EGNOS_PREAMBLE_INVALID_INDEX) ||
             (crcResult == FAILURE_RETURN)) {
+            parser->messageValid = FALSE_FLAG;
             if (parser->symbolIndex == blocksizeTot) {
                 /* It came from the first decoding */
                 ArrayCopy((char *)&(parser->symbols[1]), (char *)&(parser->symbols[0]),
@@ -1301,6 +1316,12 @@ void ParseEgnosMessage(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch, f
             }
             parser->status = SEARCH_SYNCHRONIZATION;
         } else {
+            if (!parser->messageValid)
+                SwrxLog(NGENE_LOG_SEVERITY_INFO,
+                        "Channel %2d EGNOS%d SBAS decoding synchronized (CRC valid)", ch->chIndex,
+                        ch->satId);
+            parser->messageValid = TRUE_FLAG;
+            parser->lastMessageRxMs = rx->rxCounter;
             parser->symbolIndex = 0;
             tow = floor(tow) -
                   2.0; /* The time is referred to the first bit of the message block:

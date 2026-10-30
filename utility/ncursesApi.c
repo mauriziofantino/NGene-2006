@@ -21,6 +21,8 @@
 #include "dop.h"
 #include "timeConversions.h"
 #include "timeConstants.h"
+#include "sbasValidity.h"
+#include "frontendStatus.h"
 /* This global variable is used to print the name of folder containing the input files
  * when the receiver is executed in the NavMesg mode */
 #if defined(FAKE_OSNMA_RECEIVER) && !defined(FAKE_CHIMERA_RECEIVER)
@@ -45,7 +47,7 @@ void NcPrintString(TNCursesData *nc, int row, int col, const char *str)
         nc->tmpStr[COLS - col - 1] = '\0';
     }
     /* print! */
-    mvwprintw(nc->uiWin, row, col, nc->tmpStr);
+    mvwprintw(nc->uiWin, row, col, "%s", nc->tmpStr);
 }
 
 void NcCleanRow(TNCursesData *nc, int row)
@@ -71,6 +73,20 @@ void NcUnsetColorScheme(TNCursesData *nc, int scheme)
     refresh();
 }
 
+static void NcDrawFrontendStatus(TNCursesData *nc)
+{
+    NcCleanRow(nc, NC_ROW_FRONTEND_STATUS);
+    if (nc->frontendStatus[0]) {
+        int color = nc->frontendStatusSeverity == NGENE_LOG_SEVERITY_ERROR ? NC_COLOR_SCHEME_ERROR
+                    : nc->frontendStatusSeverity == NGENE_LOG_SEVERITY_WARNING
+                        ? NC_COLOR_SCHEME_WARNING
+                        : NC_COLOR_SCHEME_INFO;
+        NcSetColorScheme(nc, color);
+        NcPrintString(nc, NC_ROW_FRONTEND_STATUS, 0, nc->frontendStatus);
+        NcUnsetColorScheme(nc, color);
+    }
+}
+
 int InitNCurses(TNGeneConfiguration *cfg, TNGeneData *rx, int firstExecution)
 {
     TNCursesData *nc = &(rx->ncursesData);
@@ -83,6 +99,18 @@ int InitNCurses(TNGeneConfiguration *cfg, TNGeneData *rx, int firstExecution)
     nodelay(nc->uiWin, TRUE);
     /* after initscr(), COLS and LINES stores the current number of columns and rows */
     if (firstExecution == TRUE_FLAG) {
+        nc->frontendStatus[0] = '\0';
+        nc->frontendStatusSeverity = NGENE_LOG_SEVERITY_INFO;
+        if (cfg->usedFrontEnd == NGENE_FE_HACKRF) {
+            if (cfg->inputMethod != USB_FRONTEND)
+                snprintf(nc->frontendStatus, sizeof(nc->frontendStatus),
+                         "HackRF replay: autotune is not applied to recorded samples");
+            else
+                snprintf(nc->frontendStatus, sizeof(nc->frontendStatus),
+                         "HackRF autotune %s; LNA %d VGA %d",
+                         cfg->hackrfConfiguration.autoTuneGains ? "pending" : "disabled",
+                         cfg->hackrfConfiguration.lnaGain, cfg->hackrfConfiguration.vgaGain);
+        }
         if (COLS > MAX_ROW_LENGTH) {
             nc->tmpStr = (char *)malloc((COLS + 1) * sizeof(char));
             nc->tmpStrLen = COLS;
@@ -192,6 +220,7 @@ int InitNCurses(TNGeneConfiguration *cfg, TNGeneData *rx, int firstExecution)
 #endif
     }
     NcPrintString(nc, nc->rowSettings, 0, nc->tmpStr);
+    NcDrawFrontendStatus(nc);
     refresh();
     cfg->ncursesData = nc;
     return SUCCESS_RETURN;
@@ -207,6 +236,10 @@ int NcDrawRxLog(TNCursesData *nc, char *logString, int severity)
 {
     if (nc == NULL) {
         return FAILURE_RETURN;
+    }
+    if (FrontendStatusUpdate(nc->frontendStatus, sizeof(nc->frontendStatus), logString)) {
+        nc->frontendStatusSeverity = severity;
+        NcDrawFrontendStatus(nc);
     }
     NcCleanRow(nc, nc->rowMessages);
     switch (severity) {
@@ -541,7 +574,26 @@ void NcCompleteLog(TNGeneConfiguration *cfg, TNGeneData *rx)
                     }
                 }
                 if (ch->satType == EGNOS_SAT) {
-                    strncpy(nc->tmpStr, NC_STR_CH_TRACKING_STATE, nc->tmpStrLen);
+                    TSbasReceptionState state = SBAS_NO_RECENT_DATA;
+                    if (ch->egnosParser && ch->tracking.trkStatus == TRACKING_LOCKED)
+                        state = SbasReceptionState(ch->egnosParser->messageValid,
+                                                   ch->egnosParser->lastMessageRxMs, rx->rxCounter,
+                                                   rx->egnosCorrections.testModeBlocked,
+                                                   rx->pvtData.rxGpsTimeValid);
+                    const char *label = NC_STR_CH_TRACKING_STATE;
+                    if (state == SBAS_DATA_DECODED)
+                        label = NC_STR_CH_SBAS_DATA_STATE;
+                    else if (state == SBAS_TEST_SERVICE)
+                        label = NC_STR_CH_SBAS_TEST_STATE;
+                    else if (state == SBAS_TIME_UNAVAILABLE)
+                        label = NC_STR_CH_SBAS_TIME_STATE;
+                    if (state != SBAS_NO_RECENT_DATA) {
+                        NcUnsetColorScheme(nc, NC_COLOR_SCHEME_TRK);
+                        curColorScheme = state == SBAS_DATA_DECODED ? NC_COLOR_SCHEME_DATAOK
+                                                                    : NC_COLOR_SCHEME_WARNING;
+                        NcSetColorScheme(nc, curColorScheme);
+                    }
+                    strncpy(nc->tmpStr, label, nc->tmpStrLen);
                     NcPrintString(nc, chRow, NC_COL_TABLE_STATE, nc->tmpStr);
                 }
             }
@@ -623,7 +675,14 @@ void NcCompleteLog(TNGeneConfiguration *cfg, TNGeneData *rx)
             NcPrintString(nc, chRow, NC_COL_TABLE_KEY, NC_STR_UNKNOWN);
         }
         /* Navigation message */
-        if (ch->msgStatus == VALIDATED) {
+        if (ch->satType == EGNOS_SAT) {
+            int recent =
+                ch->chState == TRACKING_STATE && ch->egnosParser &&
+                ch->tracking.trkStatus == TRACKING_LOCKED &&
+                SbasReceptionState(ch->egnosParser->messageValid, ch->egnosParser->lastMessageRxMs,
+                                   rx->rxCounter, 0, 1) != SBAS_NO_RECENT_DATA;
+            NcPrintString(nc, chRow, NC_COL_TABLE_NAVMSG, recent ? "CRC OK" : NC_STR_UNKNOWN);
+        } else if (ch->msgStatus == VALIDATED) {
             NcSetColorScheme(nc, NC_COLOR_SCHEME_DATAOK);
             NcPrintString(nc, chRow, NC_COL_TABLE_NAVMSG, "Validated");
             NcUnsetColorScheme(nc, NC_COLOR_SCHEME_DATAOK);

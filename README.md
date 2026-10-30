@@ -13,9 +13,12 @@ Pseudorange, satellite navigation data and LS/Kalman corrections are documented
 in [PSEUDORANGE_PVT_AUDIT.md](PSEUDORANGE_PVT_AUDIT.md), including reproducible
 tests and replay limitations. Navigation is now called **PNT** in output;
 `configuration/PVT.conf` and the existing C interfaces retain their legacy names.
-`[PVT method] 0` selects LS, `1` selects Kalman. Both use Eigen in double precision,
+`[PVT method] 0` selects LS, `1` selects adaptive Kalman. Both use Eigen in double precision,
 with pivoted QR for LS and Cholesky/Joseph for Kalman. `[PNT weighted LS] 1` (default)
 enables variance/elevation weighting; `0` retains unweighted LS for comparison.
+Kalman adapts motion and Doppler noise without a static/dynamic selector; the
+legacy `[Static Receiver]` flag affects LS jump checks. See
+[ADAPTIVE_KALMAN_REVIEW.md](ADAPTIVE_KALMAN_REVIEW.md) for tests and remaining regressions.
 See [PNT_REVIEW.md](PNT_REVIEW.md) for the measurement audit, SBAS PRN 121/123
 support, reproducible results and accuracy limitations.
 
@@ -84,6 +87,9 @@ The separate HackRF SIMD path subtracts component DC and rotates with Q15 sine
 and cosine coefficients. Products retain Q6 fractions in int16 intermediates;
 correlations accumulate in int32 and acquisition powers in uint64.
 Tuning, gains and antenna power are in `configuration/HackRF.conf`.
+`[Auto tune gains] 1` calibrates LNA/VGA once before acquisition; `0` uses fixed
+gains. `[Auto tune target RMS]` defaults to 28 ADC counts. Ncurses retains the
+calibration progress/result on its frontend status row.
 Live/replay findings and Doppler conventions are in [HACKRF.md](docs/HACKRF.md).
 
 To process the existing workspace recording without changing USB settings:

@@ -1,8 +1,10 @@
-param([string]$PythonExe=(Join-Path $env:LOCALAPPDATA 'vcpkg/downloads/tools/python/python-3.14.2-x64-1/python.exe'),[switch]$Verify)
+param([string]$PythonExe=(Join-Path $env:LOCALAPPDATA 'vcpkg/downloads/tools/python/python-3.14.2-x64-1/python.exe'),[switch]$Verify,[string]$KalmanSource,[switch]$MotionSeries,[uint32]$MotionSeed=194527)
 $ErrorActionPreference='Stop'
 $taskRoot=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../..'))
 $taskOutput=Join-Path $taskRoot 'build/icd-audit'
-& $PythonExe (Join-Path $PSScriptRoot 'extract-pvt-audit.py')
+$taskExtractArgs=@((Join-Path $PSScriptRoot 'extract-pvt-audit.py'))
+if($KalmanSource){$taskExtractArgs+=@('--kalman-source',(Resolve-Path -LiteralPath $KalmanSource).Path)}
+& $PythonExe @taskExtractArgs
 if($LASTEXITCODE){throw 'Source extraction failed'}
 $taskVsWhere=Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio/Installer/vswhere.exe'
 $taskVsRoot=& $taskVsWhere -latest -products '*' -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
@@ -21,10 +23,13 @@ Push-Location $taskOutput
 try {
     & $taskCompiler @taskArgs 'ngene-audit-extracted.c' (Join-Path $taskRoot 'build/windows-native/ngene_pnt_numerics.lib') '/Fe:audit-pvt.exe'
     if($LASTEXITCODE){throw 'Audit compilation failed'}
+    if($Verify -and $MotionSeries){throw 'Choose contract verification or motion-series output'}
     $taskRunArgs=@();if($Verify){$taskRunArgs+='--verify'}
+    if($MotionSeries){$taskRunArgs+=@('--motion-series',"$MotionSeed")}
     & './audit-pvt.exe' @taskRunArgs | Tee-Object -Variable taskAuditLines
     $taskAuditExit=$LASTEXITCODE
-    [IO.File]::WriteAllLines((Join-Path $taskOutput 'audit-results.csv'),
+    $taskCsvName=if($MotionSeries){'motion-series.csv'}else{'audit-results.csv'}
+    [IO.File]::WriteAllLines((Join-Path $taskOutput $taskCsvName),
         [string[]]$taskAuditLines,[Text.UTF8Encoding]::new($false))
     if($taskAuditExit){throw 'Audit executable failed'}
 } finally {Pop-Location}

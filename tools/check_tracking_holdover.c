@@ -28,6 +28,7 @@ static TEgnosParser sbas;
 static TNavigationMessage nav;
 static double testCno, testI, testQ;
 static int decodedBits;
+static double lastEgnosTime;
 static short wide;
 
 int SwrxLog(int severity, const char *format, ...)
@@ -63,6 +64,7 @@ float CorrelateWide(const short *s, const char *code, unsigned n)
 {
     return 0;
 }
+
 void CorrelateWideEpl(const short *i, const short *q, const char *e, const char *p, const char *l,
                       unsigned n, float out[6])
 {
@@ -71,26 +73,31 @@ void CorrelateWideEpl(const short *i, const short *q, const char *e, const char 
     out[2] = (float)testI;
     out[3] = (float)testQ;
 }
+
 double GenerateCarrier(TNGeneConfiguration *c, TSinCosTable *t, double f, double phase, unsigned n,
                        char *s, char *co)
 {
     return fmod(phase + TWICE_M_PI * f * n / c->fs, TWICE_M_PI);
 }
+
 double GenerateSine(TNGeneConfiguration *c, TSinCosTable *t, double f, double phase, unsigned n,
                     char *s)
 {
     return phase;
 }
+
 void CarrierInputWipeOff(int native, char *a, unsigned na, char *b, unsigned nb, char *co, char *si,
                          unsigned n, char *oi, char *oq)
 {
 }
+
 double MixHackrfInput(const THackrfMixer *m, const THackrfIq8 *a, unsigned na, const THackrfIq8 *b,
                       unsigned nb, unsigned n, double f, double phase, double fs, short *i,
                       short *q)
 {
     return fmod(phase + TWICE_M_PI * f * n / fs, TWICE_M_PI);
 }
+
 int GenerateCode(TNGeneConfiguration *c, TPrnTable *t, TSatConstellation type, int id, double rate,
                  double *phase, double *frac, TEmployedModulation mod, int n, char *out)
 {
@@ -136,10 +143,12 @@ void ParseGalMessage(TNGeneConfiguration *c, TNGeneData *r, TChannel *channel, f
 {
     decodedBits++;
 }
+
 void ParseEgnosMessage(TNGeneConfiguration *c, TNGeneData *r, TChannel *channel, float v,
                        double time)
 {
     decodedBits++;
+    lastEgnosTime = time;
 }
 
 void PredictRxTime(TNGeneConfiguration *c, TNGeneData *r)
@@ -412,11 +421,28 @@ static int CheckStartupAndInvalidMetrics(void)
     return 0;
 }
 
+static int CheckSbasDecodingWithoutGpsTime(void)
+{
+    Setup(EGNOS_SAT);
+    rx.pvtData.rxGpsTimeValid = FALSE_FLAG;
+    ch.tracking.msCounter = ch.bitDuration - 1;
+    PerformGpsTracking(&cfg, &rx, &ch, NULL, 1, NULL, 0);
+    CHECK(decodedBits == 1 && isnan(lastEgnosTime));
+    rx.pvtData.rxGpsTimeValid = TRUE_FLAG;
+    rx.pvtData.rxGpsTow = 12345;
+    ch.tracking.msCounter = ch.bitDuration - 1;
+    PerformGpsTracking(&cfg, &rx, &ch, NULL, 1, NULL, 0);
+    CHECK(decodedBits == 2 && lastEgnosTime == 12345);
+    Finish();
+    return 0;
+}
+
 int main(void)
 {
     if (CheckRecovery() || CheckDeadline() || CheckUnalignedCarrier() || CheckPredictedPhase() ||
         CheckCorrectedCarrier() || CheckSignalTime(GPS_SAT) || CheckSignalTime(GALILEO_SAT) ||
-        CheckSignalTime(EGNOS_SAT) || CheckStartupAndInvalidMetrics())
+        CheckSignalTime(EGNOS_SAT) || CheckStartupAndInvalidMetrics() ||
+        CheckSbasDecodingWithoutGpsTime())
         return 1;
     puts(
         "Tracking holdover: recovery, deadline, signal time, erasures, startup and invalid metrics PASS");

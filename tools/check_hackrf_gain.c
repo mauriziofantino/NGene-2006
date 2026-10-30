@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "hackrfGain.h"
+#include "frontendStatus.h"
 #define CHECK(x)                                                                                   \
     do {                                                                                           \
         if (!(x)) {                                                                                \
@@ -33,9 +34,20 @@ static void Gaussian(THackrfAdcHistogram *h, double muI, double muQ, double sigm
 
 int main(void)
 {
+    char status[160] = "";
     THackrfAdcHistogram h;
     THackrfAdcStats s;
     int lna, vga, i, decision;
+    CHECK(FrontendStatusUpdate(status, sizeof(status), "HackRF autotune 1/12: LNA 32 VGA 40"));
+    CHECK(FrontendStatusUpdate(status, sizeof(status), "HackRF autotune settled: LNA 32 VGA 56"));
+    CHECK(!FrontendStatusUpdate(status, sizeof(status), "Receiver initialized"));
+    CHECK(strcmp(status, "HackRF autotune settled: LNA 32 VGA 56") == 0);
+    CHECK(FrontendStatusUpdate(
+        status, sizeof(status),
+        "[time] WARNING: HackRF autotune bounded without confirmed target: LNA 0 VGA 0"));
+    CHECK(strncmp(status, "HackRF autotune bounded", 22) == 0);
+    CHECK(FrontendStatusUpdate(status, sizeof(status), "HackRF autotune failed: ADC 50%"));
+    CHECK(strstr(status, "50%") != NULL);
     unsigned char bytes[] = {128, 127, 0, 0, 1, 255, 127, 128};
     memset(&h, 0, sizeof(h));
     HackrfAdcAccumulate(&h, bytes, sizeof(bytes));

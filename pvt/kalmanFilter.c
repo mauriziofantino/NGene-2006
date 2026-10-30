@@ -21,6 +21,125 @@
 #include "pvtUtility.h"
 #include "pntNumerics.h"
 
+/* These are estimator limits, not static/dynamic receiver modes. The lower
+ * density retains manoeuvre observability; loss of Doppler geometry restores
+ * the original conservative process density. No ground truth enters them. */
+#define KF_MOTION_MIN_PSD 1e-4
+#define KF_MOTION_MAX_PSD 1e3
+#define KF_MOTION_MEMORY_SECONDS 5.0
+#define KF_MOTION_NIS_LIMIT 16.26623619623813 /* chi-square(3), 99.9% */
+
+void ResetKalmanMotionData(TKalmanMotionData *motion)
+{
+    int i;
+    motion->accelerationPsd = 1e2 * KF_SP;
+    motion->dopplerNoiseScale = 1;
+    motion->referenceSample = 0;
+    motion->referenceValid = FALSE_FLAG;
+    for (i = 0; i < 3; i++)
+        motion->dopplerVelocity[i] = 0;
+    for (i = 0; i < 9; i++)
+        motion->dopplerVelocityCovariance[i] = 0;
+}
+
+static void ApplyKalmanMotionNoise(TKalmanFilterData *kfData, double accelerationPsd)
+{
+    double ratio = accelerationPsd / (1e2 * KF_SP);
+    int mode, n, axis;
+    for (mode = 0; mode < 2; mode++) {
+        double *q = mode ? kfData->qMulti : kfData->q;
+        n = mode ? KF_MULTI_STATES : KF_SINGLE_STATES;
+        for (axis = 0; axis < 3; axis++) {
+            q[axis * n + axis] *= ratio;
+            q[(axis + 3) * n + axis + 3] *= ratio;
+            q[axis * n + axis + 3] *= ratio;
+            q[(axis + 3) * n + axis] *= ratio;
+        }
+    }
+}
+
+static void AdaptKalmanMotion(TKalmanFilterData *kfData, TKalmanMotionData *motion, int nCh,
+                              int nStates, const double *pap, const double *nominalVelocity,
+                              double dt, unsigned long long sample, double fs)
+{
+    double correction[3], covariance[9], scatter, velocity[3];
+    double innovationCovariance[9], lower[9], normalized[3];
+    double power = 0, noise = 0, interval, raw, alpha, estimate, nis = 0, rateScale;
+    int i, j, nMeasures = 2 * nCh;
+    if (!isfinite(motion->accelerationPsd) || motion->accelerationPsd < KF_MOTION_MIN_PSD ||
+        motion->accelerationPsd > KF_MOTION_MAX_PSD || !isfinite(motion->dopplerNoiseScale) ||
+        motion->dopplerNoiseScale < .01)
+        ResetKalmanMotionData(motion);
+    if (nCh < 6 || !(fs > 0) ||
+        !PntDopplerFit(nCh, nStates, kfData->h + nCh * nStates, kfData->r + nCh * (nMeasures + 1),
+                       nMeasures, kfData->kfMeasurement + nCh, correction, covariance, &scatter)) {
+        motion->accelerationPsd = fmax(motion->accelerationPsd, 1e2 * KF_SP);
+        motion->dopplerNoiseScale = fmax(motion->dopplerNoiseScale, 1.0);
+        motion->referenceValid = FALSE_FLAG;
+        return;
+    }
+    /* The redundant fit removes velocity and common drift before estimating
+     * noise. Learn its sustained level, but inflate immediately on an unusually
+     * noisy epoch. A grossly inconsistent epoch cannot train either estimator. */
+    if (scatter <= 25.0) {
+        alpha = -expm1(-dt / KF_MOTION_MEMORY_SECONDS);
+        motion->dopplerNoiseScale =
+            fmax(.01, motion->dopplerNoiseScale + alpha * (scatter - motion->dopplerNoiseScale));
+    }
+    rateScale = fmin(1e6, fmax(motion->dopplerNoiseScale, scatter));
+    for (i = 0; i < nCh; i++)
+        kfData->r[(nCh + i) * (nMeasures + 1)] *= rateScale;
+    for (i = 0; i < 9; i++)
+        covariance[i] *= rateScale / fmax(.01, scatter);
+    if (scatter > 25.0) {
+        motion->referenceValid = FALSE_FLAG;
+        return;
+    }
+    for (i = 0; i < 3; i++) {
+        velocity[i] = nominalVelocity[i] + correction[i];
+        for (j = 0; j < 3; j++)
+            innovationCovariance[i * 3 + j] =
+                pap[(i + 3) * nStates + j + 3] + covariance[i * 3 + j];
+    }
+    estimate = motion->accelerationPsd;
+    if (motion->referenceValid && sample > motion->referenceSample) {
+        interval = (double)(sample - motion->referenceSample) / fs;
+        if (interval <= 1.5 * dt) {
+            for (i = 0; i < 3; i++) {
+                power += (velocity[i] - motion->dopplerVelocity[i]) *
+                         (velocity[i] - motion->dopplerVelocity[i]);
+                noise += covariance[i * 3 + i] + motion->dopplerVelocityCovariance[i * 3 + i];
+            }
+            /* Covariance matching uses signed excess power. Clipping each
+             * individual squared difference first would bias stationary Q up. */
+            raw = (power - noise) / (3.0 * interval);
+            alpha = -expm1(-interval / KF_MOTION_MEMORY_SECONDS);
+            estimate += alpha * (raw - estimate);
+        }
+    }
+    /* A statistically significant, geometrically coherent velocity innovation
+     * opens Q before this epoch's update, so a quiet history cannot lock out
+     * the start of motion. The common Doppler clock term was fitted separately. */
+    if (PntSpdFactor(innovationCovariance, 3, lower) &&
+        PntSpdSolve(lower, 3, correction, normalized)) {
+        power = noise = 0;
+        for (i = 0; i < 3; i++) {
+            nis += correction[i] * normalized[i];
+            power += correction[i] * correction[i];
+            noise += innovationCovariance[i * 3 + i];
+        }
+        if (nis > KF_MOTION_NIS_LIMIT)
+            estimate = fmax(estimate, (power - noise) / (3.0 * dt));
+    }
+    motion->accelerationPsd = fmax(KF_MOTION_MIN_PSD, fmin(KF_MOTION_MAX_PSD, estimate));
+    motion->referenceSample = sample;
+    motion->referenceValid = TRUE_FLAG;
+    for (i = 0; i < 3; i++)
+        motion->dopplerVelocity[i] = velocity[i];
+    for (i = 0; i < 9; i++)
+        motion->dopplerVelocityCovariance[i] = covariance[i];
+}
+
 void InitKalmanFilterPhi(double *phi, double *phiMulti, double dt)
 {
     int idx;
@@ -76,32 +195,35 @@ void InitKalmanFilterPostCovarianceMatrices(double *pPost, double *pPostMulti)
 
 void InitQStateNoiseCovarianceMatrices(double *q, double *qMulti, double dt)
 {
-    /* Initialize Q noise covariance matrices for Kalman filter */
+    /* Continuous white acceleration and oscillator noise. Keep the effective
+     * velocity/drift spectral densities of the previous one-second model;
+     * integrate every covariance term using the same density. */
+    const double acceleration = 1e2 * KF_SP;
+    const double phase = 1e2 * KF_SF;
+    const double frequency = 1e2 * KF_SG;
+    const double dt2 = dt * dt, dt3 = dt2 * dt;
+    double *noise;
+    int mode, n, axis;
     MatrixInit(q, KF_SINGLE_STATES, KF_SINGLE_STATES);
-    q[0] = 1e3 * (KF_SP / 3) * pow(dt, 3.0);
-    q[9] = 1e3 * (KF_SP / 3) * pow(dt, 3.0);
-    q[18] = 1e3 * (KF_SP / 3) * pow(dt, 3.0);
-    q[27] = 1e2 * KF_SP * dt;
-    q[36] = 1e2 * KF_SP * dt;
-    q[45] = 1e2 * KF_SP * dt;
-    q[54] = 1e2 * ((KF_SF * dt) + ((KF_SG / 2) * pow(dt, 3.0)));
-    q[63] = 1e2 * (KF_SG)*dt;
-    q[3] = q[12] = q[21] = q[24] = q[33] = q[42] = (KF_SP / 2) * pow(dt, 2.0);
-    q[55] = q[62] = (KF_SG / 2) * pow(dt, 2.0);
     MatrixInit(qMulti, KF_MULTI_STATES, KF_MULTI_STATES);
-    qMulti[0] = 1e3 * (KF_SP / 3) * pow(dt, 3.0);
-    qMulti[10] = 1e3 * (KF_SP / 3) * pow(dt, 3.0);
-    qMulti[20] = 1e3 * (KF_SP / 3) * pow(dt, 3.0);
-    qMulti[30] = 1e2 * KF_SP * dt;
-    qMulti[40] = 1e2 * KF_SP * dt;
-    qMulti[50] = 1e2 * KF_SP * dt;
-    qMulti[60] = 1e2 * ((KF_SF * dt) + ((KF_SG / 2) * pow(dt, 3.0)));
-    qMulti[70] = 1e2 * (KF_SG)*dt;
-    qMulti[80] = 1e2 * ((KF_SF * dt) + ((KF_SG / 2) * pow(dt, 3.0)));
-    qMulti[3] = qMulti[13] = qMulti[23] = qMulti[27] = qMulti[37] = qMulti[47] =
-        (KF_SP / 2) * pow(dt, 2.0);
-    qMulti[69] = qMulti[71] = (KF_SG / 2) * pow(dt, 2.0);
-    qMulti[61] = qMulti[79] = (KF_SG / 2) * pow(dt, 2.0);
+    for (mode = 0; mode < 2; mode++) {
+        n = mode ? KF_MULTI_STATES : KF_SINGLE_STATES;
+        noise = mode ? qMulti : q;
+        for (axis = 0; axis < 3; axis++) {
+            noise[axis * n + axis] = acceleration * dt3 / 3.0;
+            noise[(axis + 3) * n + axis + 3] = acceleration * dt;
+            noise[axis * n + axis + 3] = noise[(axis + 3) * n + axis] = acceleration * dt2 / 2.0;
+        }
+        noise[6 * n + 6] = phase * dt + frequency * dt3 / 3.0;
+        noise[7 * n + 7] = frequency * dt;
+        noise[6 * n + 7] = noise[7 * n + 6] = frequency * dt2 / 2.0;
+        if (mode) {
+            noise[8 * n + 8] = noise[6 * n + 6];
+            noise[8 * n + 7] = noise[7 * n + 8] = frequency * dt2 / 2.0;
+            /* Both constellation biases integrate the same oscillator drift. */
+            noise[6 * n + 8] = noise[8 * n + 6] = frequency * dt3 / 3.0;
+        }
+    }
 }
 
 int InitKalmanFilterData(TNGeneConfiguration *cfg, TNGeneData *rx)
@@ -110,6 +232,7 @@ int InitKalmanFilterData(TNGeneConfiguration *cfg, TNGeneData *rx)
     int nCh2 = 2 * nCh;
     TKalmanFilterData *kfData = &(rx->pvtData.kfData);
     int errors = 0;
+    ResetKalmanMotionData(&kfData->motion);
     kfData->aaa = (double *)malloc(1 * nCh * sizeof(double));
     if (kfData->aaa == NULL)
         errors++;
@@ -202,6 +325,7 @@ void DeinitKalmanFilterData(TNGeneData *rx)
     free(kfData->kfMeasurement);
     free(kfData->h);
 }
+
 int KalmanFilterPrediction(int nStates, TKalmanFilterData *kfData, double *phi, double *q,
                            double *pap)
 {
@@ -210,6 +334,7 @@ int KalmanFilterPrediction(int nStates, TKalmanFilterData *kfData, double *phi, 
                ? SUCCESS_RETURN
                : FAILURE_RETURN;
 }
+
 int KalmanFilterRoutine(int nCh, int nStates, TKalmanFilterData *kfData, double *pap, double *phi,
                         double *q)
 {
@@ -261,6 +386,7 @@ void PreparePPost(TKalmanFilterData *kfData, TSatConstellation satType)
         kfData->pPost[(6 * KF_SINGLE_STATES) + 7] = kfData->pPostMulti[(7 * KF_MULTI_STATES) + 8];
     }
 }
+
 /**
  * @brief After a Single constellation PVT has been performed, the pPost matrix is updated.
  * This function updates the pPostMulti matrix accordingly
@@ -315,6 +441,7 @@ int PerformKalmanFilter(TNGeneConfiguration *cfg, TNGeneData *rx)
 {
     TPvtData *pvtData = &(rx->pvtData);
     TKalmanFilterData *kfData = &(pvtData->kfData);
+    TKalmanMotionData motion = kfData->motion;
     int nCh = pvtData->numOfOperativeChannels;
     int nCh2 = nCh * 2;
     TPvtChannel *pvtCh;
@@ -351,6 +478,18 @@ int PerformKalmanFilter(TNGeneConfiguration *cfg, TNGeneData *rx)
     positionAndVelocity[6] = pvtRes->clockBiasGps;
     positionAndVelocity[7] = pvtRes->clockDrift;
     positionAndVelocity[8] = pvtRes->clockBiasGalileo;
+    /* SetReferenceRxTime has already subtracted the last observed bias from
+     * the time used to form this epoch's pseudoranges. Its nominal is now zero;
+     * the posterior uncertainty remains in P. Unobserved clocks retain their
+     * estimate until their own reference is refreshed. */
+    if (rx->pvtResults.pvtValid) {
+        if (pvtRes->rxGpsTime.referenceValid &&
+            pvtRes->rxGpsTime.referenceSample == rx->pvtResults.referenceSample)
+            positionAndVelocity[6] = 0;
+        if (pvtRes->rxGalTime.referenceValid &&
+            pvtRes->rxGalTime.referenceSample == rx->pvtResults.referenceSample)
+            positionAndVelocity[8] = 0;
+    }
     if (nCh == 0) {
         /* No measures are available, prediction is performed */
         if ((pvtRes->clockBiasGpsValid == TRUE_FLAG) &&
@@ -373,6 +512,9 @@ int PerformKalmanFilter(TNGeneConfiguration *cfg, TNGeneData *rx)
             q = kfData->q;
             pap = kfData->pPost;
         }
+        AdaptKalmanMotion(kfData, &motion, 0, nStates, pap, positionAndVelocity + 3, dt,
+                          rx->buf.discardedSamples, cfg->fs);
+        ApplyKalmanMotionNoise(kfData, motion.accelerationPsd);
         if (KalmanFilterPrediction(nStates, kfData, phi, q, pap) != SUCCESS_RETURN)
             return FAILURE_RETURN;
     } else {
@@ -447,10 +589,10 @@ int PerformKalmanFilter(TNGeneConfiguration *cfg, TNGeneData *rx)
             }
             kfData->pr[idx] = pvtCh->pseudorangeCsm;
             if (pvtCh->ch->satType == GPS_SAT) {
-                kfData->prCorr[idx] = kfData->pr[idx] - pvtRes->clockBiasGps;
+                kfData->prCorr[idx] = kfData->pr[idx] - positionAndVelocity[6];
             } else /* if(pvtCh->ch->satType == GALILEO_SAT) */
             {
-                kfData->prCorr[idx] = kfData->pr[idx] - pvtRes->clockBiasGalileo;
+                kfData->prCorr[idx] = kfData->pr[idx] - positionAndVelocity[8];
             }
             kfData->deltaPrCorr[idx] = (-(pvtCh->deltaPseudorange) * LAMBDA) + pvtRes->clockDrift +
                                        SPEED_OF_LIGHT * pvtCh->satClkDrift;
@@ -470,6 +612,9 @@ int PerformKalmanFilter(TNGeneConfiguration *cfg, TNGeneData *rx)
                                 kfData->nominalMeasurement);
         MatrixDiff(kfData->zCurr, nCh2, 1, kfData->nominalMeasurement, nCh2, 1,
                    kfData->kfMeasurement);
+        AdaptKalmanMotion(kfData, &motion, nCh, nStates, pap, positionAndVelocity + 3, dt,
+                          rx->buf.discardedSamples, cfg->fs);
+        ApplyKalmanMotionNoise(kfData, motion.accelerationPsd);
         if (KalmanFilterRoutine(nCh, nStates, kfData, pap, phi, q) != SUCCESS_RETURN)
             return FAILURE_RETURN;
         /* Correct PVT solution */
@@ -488,6 +633,20 @@ int PerformKalmanFilter(TNGeneConfiguration *cfg, TNGeneData *rx)
         } else if (pvtData->numOfGalileoOpChannels > 0) {
             positionAndVelocity[8] = positionAndVelocity[8] + kfData->stateAPosteriori[6];
         }
+        /* PredictRxTime applies the newly estimated drift over the full age
+         * of an unrefreshed clock reference. Express its nominal bias in that
+         * updated time origin too. Observed clocks are refreshed by the manager
+         * using the current pseudoranges and must retain their current bias. */
+        if (pvtData->numOfGpsOpChannels == 0 && pvtRes->rxGpsTime.referenceValid &&
+            rx->buf.discardedSamples >= pvtRes->rxGpsTime.referenceSample)
+            positionAndVelocity[6] -=
+                kfData->stateAPosteriori[7] *
+                (double)(rx->buf.discardedSamples - pvtRes->rxGpsTime.referenceSample) / cfg->fs;
+        if (pvtData->numOfGalileoOpChannels == 0 && pvtRes->rxGalTime.referenceValid &&
+            rx->buf.discardedSamples >= pvtRes->rxGalTime.referenceSample)
+            positionAndVelocity[8] -=
+                kfData->stateAPosteriori[7] *
+                (double)(rx->buf.discardedSamples - pvtRes->rxGalTime.referenceSample) / cfg->fs;
     }
     /* Update PPostMulti when single constellation PVT is performed,
      * or just one bias is predicted (outage) */
@@ -516,5 +675,6 @@ int PerformKalmanFilter(TNGeneConfiguration *cfg, TNGeneData *rx)
     if (pvtRes->clockBiasGalileoValid == TRUE_FLAG) {
         pvtRes->clockBiasGalileo = positionAndVelocity[8];
     }
+    kfData->motion = motion;
     return SUCCESS_RETURN;
 }

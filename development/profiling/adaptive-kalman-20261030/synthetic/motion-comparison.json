@@ -1,0 +1,323 @@
+{
+  "seeds": [
+    194527,
+    202446,
+    210365,
+    218284,
+    226203,
+    234122,
+    242041,
+    249960,
+    257879,
+    265798,
+    273717,
+    281636,
+    289555,
+    297474,
+    305393,
+    313312,
+    321231,
+    329150,
+    337069,
+    344988
+  ],
+  "method": "Paired data; quiet epochs 20..59; no-measurement epochs excluded; per-trial centering.",
+  "fixed_sha256": "a390b46bdef369a784719f855572c9dd630cc5fcec3ad49f11c7e677c39a7001",
+  "adaptive_sha256": "efdd768b992c9138b14b7b2b119e05cd64766388efb8d0dcb76fc55538bb102d",
+  "phases": {
+    "quiet": {
+      "position_mse": {
+        "WLS_rms_or_sd": 20.925901181326033,
+        "fixed_rms_or_sd": 15.986589971580104,
+        "adaptive_rms_or_sd": 11.512616377889895,
+        "paired_mean_difference_squared_units": -123.03072305496687,
+        "paired_normal_95_interval_squared_units": [
+          -192.28425475668658,
+          -53.77719135324716
+        ]
+      },
+      "horizontal_centered_variance": {
+        "WLS_rms_or_sd": 3.131867390365701,
+        "fixed_rms_or_sd": 2.499708273280483,
+        "adaptive_rms_or_sd": 1.4430338185977447,
+        "paired_mean_difference_squared_units": -4.166194849890106,
+        "paired_normal_95_interval_squared_units": [
+          -5.039211241136885,
+          -3.293178458643327
+        ]
+      },
+      "up_centered_variance": {
+        "WLS_rms_or_sd": 15.844551847787406,
+        "fixed_rms_or_sd": 10.149640773863084,
+        "adaptive_rms_or_sd": 5.8348586215169504,
+        "paired_mean_difference_squared_units": -68.96963270537334,
+        "paired_normal_95_interval_squared_units": [
+          -96.6248379156074,
+          -41.314427495139284
+        ]
+      },
+      "velocity_mse": {
+        "WLS_rms_or_sd": 0.7194029063552231,
+        "fixed_rms_or_sd": 0.5907447102522052,
+        "adaptive_rms_or_sd": 0.33942581544457195,
+        "paired_mean_difference_squared_units": -0.23376942850074925,
+        "paired_normal_95_interval_squared_units": [
+          -0.3010032747237238,
+          -0.16653558227777474
+        ]
+      }
+    },
+    "accelerating": {
+      "position_mse": {
+        "WLS_rms_or_sd": 17.041845480489695,
+        "fixed_rms_or_sd": 12.243229538656298,
+        "adaptive_rms_or_sd": 10.822730629489573,
+        "paired_mean_difference_squared_units": -32.76517125773432,
+        "paired_normal_95_interval_squared_units": [
+          -78.1454797808845,
+          12.61513726541586
+        ]
+      },
+      "horizontal_centered_variance": {
+        "WLS_rms_or_sd": 1.8068827954042677,
+        "fixed_rms_or_sd": 0.9768954108888521,
+        "adaptive_rms_or_sd": 0.5482869665978652,
+        "paired_mean_difference_squared_units": -0.6537060460746108,
+        "paired_normal_95_interval_squared_units": [
+          -0.8708646671070713,
+          -0.43654742504215027
+        ]
+      },
+      "up_centered_variance": {
+        "WLS_rms_or_sd": 9.266939035199444,
+        "fixed_rms_or_sd": 3.684158646280028,
+        "adaptive_rms_or_sd": 1.0549610640191118,
+        "paired_mean_difference_squared_units": -12.46008208436355,
+        "paired_normal_95_interval_squared_units": [
+          -17.254847657281182,
+          -7.665316511445919
+        ]
+      },
+      "velocity_mse": {
+        "WLS_rms_or_sd": 0.6460849132368363,
+        "fixed_rms_or_sd": 0.6644128244895412,
+        "adaptive_rms_or_sd": 0.5247821442987081,
+        "paired_mean_difference_squared_units": -0.16604810237141984,
+        "paired_normal_95_interval_squared_units": [
+          -0.313805770528777,
+          -0.01829043421406265
+        ]
+      }
+    },
+    "cruise_east": {
+      "position_mse": {
+        "WLS_rms_or_sd": 20.614329386960872,
+        "fixed_rms_or_sd": 14.148077470334558,
+        "adaptive_rms_or_sd": 9.443426828161577,
+        "paired_mean_difference_squared_units": -110.98978584774649,
+        "paired_normal_95_interval_squared_units": [
+          -176.23992081950306,
+          -45.73965087598992
+        ]
+      },
+      "horizontal_centered_variance": {
+        "WLS_rms_or_sd": 2.7699940898048485,
+        "fixed_rms_or_sd": 2.078785096129229,
+        "adaptive_rms_or_sd": 1.1283509102877896,
+        "paired_mean_difference_squared_units": -3.0481716991417236,
+        "paired_normal_95_interval_squared_units": [
+          -4.084401329777603,
+          -2.011942068505844
+        ]
+      },
+      "up_centered_variance": {
+        "WLS_rms_or_sd": 16.69201139491722,
+        "fixed_rms_or_sd": 8.700060814885791,
+        "adaptive_rms_or_sd": 3.4334910675337764,
+        "paired_mean_difference_squared_units": -63.90219727187699,
+        "paired_normal_95_interval_squared_units": [
+          -90.12966282398077,
+          -37.67473171977322
+        ]
+      },
+      "velocity_mse": {
+        "WLS_rms_or_sd": 0.6999864540817029,
+        "fixed_rms_or_sd": 0.5865319489061377,
+        "adaptive_rms_or_sd": 0.42115744749290485,
+        "paired_mean_difference_squared_units": -0.16664613150889326,
+        "paired_normal_95_interval_squared_units": [
+          -0.23776595689821756,
+          -0.09552630611956898
+        ]
+      }
+    },
+    "turning": {
+      "position_mse": {
+        "WLS_rms_or_sd": 18.404041198676225,
+        "fixed_rms_or_sd": 14.111537154706143,
+        "adaptive_rms_or_sd": 7.600812068416308,
+        "paired_mean_difference_squared_units": -141.363136769269,
+        "paired_normal_95_interval_squared_units": [
+          -268.8083070380149,
+          -13.917966500523107
+        ]
+      },
+      "horizontal_centered_variance": {
+        "WLS_rms_or_sd": 1.7451435424764383,
+        "fixed_rms_or_sd": 0.9577093712084253,
+        "adaptive_rms_or_sd": 0.5451445864604795,
+        "paired_mean_difference_squared_units": -0.6200246195532702,
+        "paired_normal_95_interval_squared_units": [
+          -0.9332289133798581,
+          -0.3068203257266821
+        ]
+      },
+      "up_centered_variance": {
+        "WLS_rms_or_sd": 8.328518494885758,
+        "fixed_rms_or_sd": 2.9130183820091946,
+        "adaptive_rms_or_sd": 1.158897467126721,
+        "paired_mean_difference_squared_units": -7.142632754610737,
+        "paired_normal_95_interval_squared_units": [
+          -11.952561134073225,
+          -2.33270437514825
+        ]
+      },
+      "velocity_mse": {
+        "WLS_rms_or_sd": 0.6765679012546273,
+        "fixed_rms_or_sd": 0.6629496142594685,
+        "adaptive_rms_or_sd": 0.5769285120707275,
+        "paired_mean_difference_squared_units": -0.10665568300663447,
+        "paired_normal_95_interval_squared_units": [
+          -0.2217554290353141,
+          0.008444063022045145
+        ]
+      }
+    },
+    "cruise_north": {
+      "position_mse": {
+        "WLS_rms_or_sd": 22.82700488205736,
+        "fixed_rms_or_sd": 15.724552760589045,
+        "adaptive_rms_or_sd": 11.233938089193952,
+        "paired_mean_difference_squared_units": -121.06019452870589,
+        "paired_normal_95_interval_squared_units": [
+          -177.05235932185283,
+          -65.06802973555895
+        ]
+      },
+      "horizontal_centered_variance": {
+        "WLS_rms_or_sd": 3.1013170911126653,
+        "fixed_rms_or_sd": 2.168023000549747,
+        "adaptive_rms_or_sd": 1.8459672983380153,
+        "paired_mean_difference_squared_units": -1.2927284643793773,
+        "paired_normal_95_interval_squared_units": [
+          -1.7809337802800598,
+          -0.8045231484786948
+        ]
+      },
+      "up_centered_variance": {
+        "WLS_rms_or_sd": 18.72950434525448,
+        "fixed_rms_or_sd": 9.57277070658552,
+        "adaptive_rms_or_sd": 6.035097322929035,
+        "paired_mean_difference_squared_units": -55.21553930363663,
+        "paired_normal_95_interval_squared_units": [
+          -88.04412987440247,
+          -22.3869487328708
+        ]
+      },
+      "velocity_mse": {
+        "WLS_rms_or_sd": 1.0403357163617863,
+        "fixed_rms_or_sd": 0.7543111524871575,
+        "adaptive_rms_or_sd": 0.5914633202591179,
+        "paired_mean_difference_squared_units": -0.21915645555456395,
+        "paired_normal_95_interval_squared_units": [
+          -0.35525189425886694,
+          -0.08306101685026096
+        ]
+      }
+    },
+    "braking": {
+      "position_mse": {
+        "WLS_rms_or_sd": 18.355546051879795,
+        "fixed_rms_or_sd": 13.407243113779613,
+        "adaptive_rms_or_sd": 11.744305688931101,
+        "paired_mean_difference_squared_units": -41.82545179693141,
+        "paired_normal_95_interval_squared_units": [
+          -94.17262283641762,
+          10.521719242554802
+        ]
+      },
+      "horizontal_centered_variance": {
+        "WLS_rms_or_sd": 1.5580231741241488,
+        "fixed_rms_or_sd": 0.9796613999022503,
+        "adaptive_rms_or_sd": 0.5961509461761104,
+        "paired_mean_difference_squared_units": -0.6043405078317652,
+        "paired_normal_95_interval_squared_units": [
+          -0.9064538658698406,
+          -0.3022271497936898
+        ]
+      },
+      "up_centered_variance": {
+        "WLS_rms_or_sd": 7.734393393106054,
+        "fixed_rms_or_sd": 3.5568259764503956,
+        "adaptive_rms_or_sd": 1.8377892244111853,
+        "paired_mean_difference_squared_units": -9.273541793390443,
+        "paired_normal_95_interval_squared_units": [
+          -13.643589873467462,
+          -4.903493713313424
+        ]
+      },
+      "velocity_mse": {
+        "WLS_rms_or_sd": 0.6637302120896432,
+        "fixed_rms_or_sd": 0.6628244615220779,
+        "adaptive_rms_or_sd": 0.5206134196071737,
+        "paired_mean_difference_squared_units": -0.16829793411695748,
+        "paired_normal_95_interval_squared_units": [
+          -0.3089105122633539,
+          -0.027685355970561043
+        ]
+      }
+    },
+    "quiet_after": {
+      "position_mse": {
+        "WLS_rms_or_sd": 17.478061065642468,
+        "fixed_rms_or_sd": 12.59589886437955,
+        "adaptive_rms_or_sd": 9.782391312070645,
+        "paired_mean_difference_squared_units": -62.96148841920276,
+        "paired_normal_95_interval_squared_units": [
+          -84.41282385442932,
+          -41.5101529839762
+        ]
+      },
+      "horizontal_centered_variance": {
+        "WLS_rms_or_sd": 3.2564351220983885,
+        "fixed_rms_or_sd": 2.6955263779962655,
+        "adaptive_rms_or_sd": 2.063650323047498,
+        "paired_mean_difference_squared_units": -3.0072097986596225,
+        "paired_normal_95_interval_squared_units": [
+          -4.067072986636642,
+          -1.9473466106826025
+        ]
+      },
+      "up_centered_variance": {
+        "WLS_rms_or_sd": 16.09971070054261,
+        "fixed_rms_or_sd": 10.967172949596213,
+        "adaptive_rms_or_sd": 8.144552885701062,
+        "paired_mean_difference_squared_units": -53.94514079837341,
+        "paired_normal_95_interval_squared_units": [
+          -72.08649006081303,
+          -35.80379153593378
+        ]
+      },
+      "velocity_mse": {
+        "WLS_rms_or_sd": 0.6518832849216059,
+        "fixed_rms_or_sd": 0.5627177128643868,
+        "adaptive_rms_or_sd": 0.3901803031439343,
+        "paired_mean_difference_squared_units": -0.16441055540983396,
+        "paired_normal_95_interval_squared_units": [
+          -0.19876108037088147,
+          -0.13006003044878645
+        ]
+      }
+    }
+  }
+}

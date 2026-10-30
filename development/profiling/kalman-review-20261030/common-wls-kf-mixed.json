@@ -1,0 +1,231 @@
+{
+  "before_csv": "development\\profiling\\kalman-review-20261030\\wls-mixed\\fixes.csv",
+  "after_csv": "development\\profiling\\kalman-review-20261030\\kf-corrected-mixed\\fixes.csv",
+  "matching_rule": "RxMs, GPS count, Galileo count; measured outputs only",
+  "before_all_measured": {
+    "count": 24,
+    "horizontal_rms_m": 7.1751824036361755,
+    "up_rms_m": 7.968127577873243,
+    "east_mean_m": -1.3498766199565635,
+    "north_mean_m": 2.769201739841611,
+    "up_mean_m": 6.679679293554926,
+    "centered_horizontal_rms_m": 6.480169547195736,
+    "centered_horizontal_p95_m": 9.57627790795986,
+    "up_population_sd_m": 4.344299901309494
+  },
+  "after_all_measured": {
+    "count": 24,
+    "horizontal_rms_m": 4.942592610769078,
+    "up_rms_m": 4.6963038839120985,
+    "east_mean_m": -0.6082089721873,
+    "north_mean_m": 2.2737108837848203,
+    "up_mean_m": 4.432598083636606,
+    "centered_horizontal_rms_m": 4.346210116772817,
+    "centered_horizontal_p95_m": 8.740853839098088,
+    "up_population_sd_m": 1.551561922383039
+  },
+  "before_common": {
+    "count": 14,
+    "horizontal_rms_m": 7.373016367899916,
+    "up_rms_m": 9.327144349815251,
+    "east_mean_m": -0.7629212030250331,
+    "north_mean_m": 0.18787412140626142,
+    "up_mean_m": 7.586524306125889,
+    "centered_horizontal_rms_m": 7.331031640485574,
+    "centered_horizontal_p95_m": 20.972661880397787,
+    "up_population_sd_m": 5.425888929461389
+  },
+  "after_common": {
+    "count": 14,
+    "horizontal_rms_m": 4.480732934632517,
+    "up_rms_m": 4.503778762501606,
+    "east_mean_m": 0.6041476150429025,
+    "north_mean_m": 0.39427827700948287,
+    "up_mean_m": 4.192241282692064,
+    "centered_horizontal_rms_m": 4.422275198471584,
+    "centered_horizontal_p95_m": 6.552227341467697,
+    "up_population_sd_m": 1.6459453724996154
+  },
+  "before_common_kf_only": {
+    "count": 0
+  },
+  "after_common_kf_only": {
+    "count": 0
+  },
+  "common_epochs": [
+    [
+      55000,
+      4,
+      2
+    ],
+    [
+      55296,
+      4,
+      2
+    ],
+    [
+      56296,
+      4,
+      2
+    ],
+    [
+      57296,
+      4,
+      2
+    ],
+    [
+      58296,
+      4,
+      2
+    ],
+    [
+      59296,
+      4,
+      2
+    ],
+    [
+      60296,
+      4,
+      2
+    ],
+    [
+      61296,
+      4,
+      2
+    ],
+    [
+      62296,
+      4,
+      2
+    ],
+    [
+      63296,
+      4,
+      2
+    ],
+    [
+      64296,
+      4,
+      2
+    ],
+    [
+      75296,
+      4,
+      3
+    ],
+    [
+      76296,
+      4,
+      3
+    ],
+    [
+      77296,
+      0,
+      4
+    ]
+  ],
+  "unmatched_before": [
+    [
+      65296,
+      4,
+      2
+    ],
+    [
+      66296,
+      4,
+      2
+    ],
+    [
+      67296,
+      4,
+      2
+    ],
+    [
+      68296,
+      4,
+      2
+    ],
+    [
+      69296,
+      4,
+      2
+    ],
+    [
+      70296,
+      4,
+      2
+    ],
+    [
+      71296,
+      4,
+      2
+    ],
+    [
+      72296,
+      4,
+      2
+    ],
+    [
+      73296,
+      4,
+      2
+    ],
+    [
+      74296,
+      4,
+      2
+    ]
+  ],
+  "unmatched_after": [
+    [
+      65296,
+      4,
+      3
+    ],
+    [
+      66296,
+      4,
+      3
+    ],
+    [
+      67296,
+      4,
+      3
+    ],
+    [
+      68296,
+      4,
+      3
+    ],
+    [
+      69296,
+      4,
+      3
+    ],
+    [
+      70296,
+      4,
+      3
+    ],
+    [
+      71296,
+      4,
+      3
+    ],
+    [
+      72296,
+      4,
+      3
+    ],
+    [
+      73296,
+      4,
+      3
+    ],
+    [
+      74296,
+      4,
+      3
+    ]
+  ]
+}

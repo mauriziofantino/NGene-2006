@@ -16,6 +16,7 @@
 #define LMS_BASED_PVT 0
 #define KALMAN_BASED_PVT 1
 #define MINIMUM_CSM_RESTART_PERIOD 3
+
 /**
  * @enum PvtAuthSelEnum
  *
@@ -28,6 +29,7 @@ typedef enum PvtAuthSelEnum {
         1,                 /**< Discard only satellites with failed authentications */
     PVT_DO_NOT_DISCARD = 2 /**< Do not use authentication to select satellites */
 } TPvtAuthSel;
+
 /**
  * @enum RedCedInPvtEnum
  *
@@ -38,6 +40,7 @@ typedef enum RedCedInPvtEnum {
     RED_CED_ENABLED = 1,  /**< In PVT, use RedCED when CED are not available (default) */
     RED_CED_ONLY = 2      /**< In PVT, use only RedCED */
 } TRedCedInPvt;
+
 /**
  * @struct PvtConfigurationStruct
  *
@@ -54,9 +57,10 @@ typedef struct PvtConfigurationStruct {
         elevationMask; /**< If elevationMaskFlag==TRUE_FLAG, it is the elevation mask in radians */
     int urbanCanyonMaskFlag; /**< Flag for Urban Canyon mask use */
     int egnosFlag;           /**< EGNOS is used for PVT computation */
-    int staticReceiver;      /**< TRUE_FLAG if the receiver is static, FALSE_FLAG otherwise */
-    TPvtAuthSel pvtAuthSel;  /**< Which strategy is used to select satellites for PVT in function of
-                                authentication */
+    int staticReceiver; /**< Legacy LS jump checks; KF validates its automatically estimated motion.
+                         */
+    TPvtAuthSel pvtAuthSel; /**< Which strategy is used to select satellites for PVT in function of
+                               authentication */
     TRedCedInPvt redCedInPvt; /**< Enable/disable use of RedCED in PVT */
     /* default Iono models */
     int ionoDefaultValid;  /**< Validity flag for ionoDefault  */

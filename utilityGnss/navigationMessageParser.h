@@ -15,6 +15,7 @@
 #include "navigationMessageDataStructure.h"
 #include "osnmaDataStructures.h"
 #include "pvtConfiguration.h"
+
 /**
  * @enum NavigationMessageParseStatusEnum
  *
@@ -30,6 +31,7 @@ typedef enum NavigationMessageParseStatusEnum {
     PREAMBLE_2,               /**< Must receive the preamble of the odd page part (Galileo only) */
     DECODING_2                /**< The odd page part is under decoding (Galileo only) */
 } TNavigationMessageParseStatus;
+
 /**
  * @enum ParseResultEnum
  *
@@ -47,6 +49,7 @@ typedef enum ParseResultEnum {
     DECODING_1_SUCCESSFUL, /**< The subframe/even page part has been decoded successfully */
     DECODING_2_SUCCESSFUL  /**< The odd page part has been decoded successfully */
 } TParseResult;
+
 /* GPS */
 /**
  * @def GPS_PREAMBLE_BITS
@@ -104,6 +107,7 @@ typedef enum ParseResultEnum {
  * @bried Duration of a GPS frame [s]
  */
 #define GPS_FRAME_DURATION (GPS_SUBFRAMES_PER_FRAME * GPS_SUBFRAME_DURATION)
+
 /**
  * @struct GpsParserStruct
  *
@@ -131,6 +135,7 @@ typedef struct GpsParserStruct {
     FILE *gpsParseLogFile; /**< The content of the parse navigation message is saved in a text file
                               for debug */
 } TGpsParser;
+
 /* GALILEO */
 /**
  * @def GALILEO_PAGE_PART_EVEN
@@ -279,6 +284,7 @@ typedef struct GpsParserStruct {
  *        and 4 words for the parity vector.
  */
 #define GAL_RS_NUM_OF_USED_WORDS 4
+
 /**
  * @struct GalParserStruct
  *
@@ -344,6 +350,7 @@ typedef struct GalParserStruct {
     FILE *galParseLogFile; /**< The content of the parse navigation message is saved in a text file
                               for debug */
 } TGalParser;
+
 /* F/NAV */
 /**
  * @def FNAV_PREAMBLE_BITS
@@ -422,6 +429,7 @@ typedef struct GalParserStruct {
  * @brief Duration of an F/NAV subframe [s].
  */
 #define FNAV_SUBFRAME_DURATION (FNAV_PAGES_PER_SUBFRAME * FNAV_PAGE_DURATION)
+
 /**
  * @struct FNavParserStruct
  *
@@ -456,6 +464,7 @@ typedef struct FNavParserStruct {
     FILE *fnavParseLogFile; /**< The content of the parse navigation message is saved in a text file
                                for debug */
 } TFNavParser;
+
 /* EGNOS */
 #define EGNOS_ENCODED_BLOCK_LENGTH_SYMBOLS 500
 #define EGNOS_DECODED_BLOCK_LENGTH_BITS 250
@@ -468,6 +477,7 @@ typedef struct FNavParserStruct {
 #define EGNOS_PREAMBLE_INV_2 (0x65)
 #define EGNOS_PREAMBLE_3 (0xC6)
 #define EGNOS_PREAMBLE_INV_3 (0x39)
+
 /**
  * @enum EgnosPreambleIndexEnum
  * @brief EGNOS message has three preamble alternated in the navigation message blocks.
@@ -478,12 +488,16 @@ typedef enum EgnosPreambleIndexEnum {
     EGNOS_PREAMBLE_2_INDEX = 1,        /**< Index for the EGNOS_PREAMBLE_2 */
     EGNOS_PREAMBLE_3_INDEX = 2         /**< Index for the EGNOS_PREAMBLE_3 */
 } TEgnosPreambleIndex;
+
 /**
  * @struct EgnosParserStruct
  *
  * @brief This structure contains variables used to parse EGNOS navigation message.
  */
 typedef struct EgnosParserStruct {
+    int messageValid; /**< Most recently decoded frame passed preamble and CRC checks. */
+    unsigned long long
+        lastMessageRxMs; /**< Receiver timeline of that frame, independent of GPS time. */
     unsigned char symbols[EGNOS_ENCODED_BLOCK_LENGTH_SYMBOLS +
                           EGNOS_ADDITIONAL_BLOCK_LENGTH_SYMBOLS + 1]; /**< */
     unsigned int symbolIndex;
@@ -501,6 +515,7 @@ typedef struct EgnosParserStruct {
     FILE *egnosBitsLogFile; /**< The output of the Viterbi, after the synchronization, is saved in a
                                text file for debug */
 } TEgnosParser;
+
 /*
  * Hereafter the functions used to parse each field in the navigation message
  * are reported. This comment explains the meaning of the inputs: for each input

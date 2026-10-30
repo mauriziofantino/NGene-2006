@@ -23,6 +23,8 @@ void InitQStateNoiseCovarianceMatrices(double *q, double *qMulti, double dt);
 
 void InitKalmanFilterPostCovarianceMatrices(double *pPost, double *pPostMulti);
 
+void ResetKalmanMotionData(TKalmanMotionData *motion);
+
 /**
  * @brief Initializes the variables used for the PVT computation through the Kalman Filter.
  *        Allocates the matrices and the array.

@@ -9,6 +9,7 @@
  *
  * @brief Functions used to perform tracking for GPS and EGNOS.
  */
+#include <math.h>
 #include "ngeneConfiguration.h"
 #include "ngeneDataStructure.h"
 #include "channelDataStructure.h"
@@ -83,6 +84,7 @@ void CheckBitSynchronization(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel 
         }
     }
 }
+
 void ManageUserIntegrationPeriod(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch,
                                  TTracking *trk)
 {
@@ -102,6 +104,7 @@ void ManageUserIntegrationPeriod(TNGeneConfiguration *cfg, TNGeneData *rx, TChan
             ch->prnName, trk->integrationPeriod,
             rx->buf.discardedSamples + ch->bufferOffset + ch->blocksize);
 }
+
 TTrackingStatus PerformGpsTracking(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch,
                                    char *firstBunch, unsigned int firstBunchSize, char *secondBunch,
                                    unsigned int secondBunchSize)
@@ -158,9 +161,10 @@ TTrackingStatus PerformGpsTracking(TNGeneConfiguration *cfg, TNGeneData *rx, TCh
             ParseGpsMessage(cfg, rx, ch, trk->pIForNav);
         else {
             PredictRxTime(cfg, rx);
-            if (rx->pvtData.rxGpsTimeValid == TRUE_FLAG) {
-                ParseEgnosMessage(cfg, rx, ch, trk->pIForNav, rx->pvtData.rxGpsTow);
-            }
+            /* Symbol synchronization and CRC do not require a GPS time fix.
+             * Corrections are withheld by the parser until they can be timed. */
+            ParseEgnosMessage(cfg, rx, ch, trk->pIForNav,
+                              rx->pvtData.rxGpsTimeValid ? rx->pvtData.rxGpsTow : NAN);
         }
     }
     /* manage the integration period chosen by the user */

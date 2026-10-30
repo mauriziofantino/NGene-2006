@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
+
 namespace {
 using Mat = Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
 using Vec = Eigen::VectorXd;
@@ -34,6 +35,7 @@ bool validProcessNoise(const Mat &a)
     return ldlt.info() == Eigen::Success && ldlt.isPositive();
 }
 }
+
 extern "C" int PntLeastSquares(const double *a, const double *b, int rows, int cols,
                                double *solution, double *covariance)
 {
@@ -76,6 +78,7 @@ extern "C" int PntLeastSquares(const double *a, const double *b, int rows, int c
         return 0;
     }
 }
+
 extern "C" int PntSpdFactor(const double *a, int n, double *lower)
 {
     if (!a || !lower || n < 1)
@@ -90,6 +93,7 @@ extern "C" int PntSpdFactor(const double *a, int n, double *lower)
         return 0;
     }
 }
+
 extern "C" int PntSpdSolve(const double *lower, int n, const double *b, double *x)
 {
     if (!lower || !b || !x || n < 1)
@@ -109,6 +113,57 @@ extern "C" int PntSpdSolve(const double *lower, int n, const double *b, double *
         return 0;
     }
 }
+
+extern "C" int PntDopplerFit(int rows, int stateCols, const double *h, const double *r, int rStride,
+                             const double *z, double *velocityCorrection, double *covariance,
+                             double *scatter)
+{
+    if (rows < 6 || (stateCols != 8 && stateCols != 9) || rStride < rows || !h || !r || !z ||
+        !velocityCorrection || !covariance || !scatter)
+        return 0;
+    try {
+        Read observation(h, rows, stateCols);
+        Eigen::Map<const Vec> measurement(z, rows);
+        if (!observation.allFinite() || !measurement.allFinite())
+            return 0;
+        Mat design(rows, 4);
+        design.leftCols(3) = observation.middleCols(3, 3);
+        design.col(3) = observation.col(7);
+        Vec whitened = measurement;
+        for (int i = 0; i < rows; ++i) {
+            const double variance = r[i * (rStride + 1)];
+            if (!std::isfinite(variance) || !(variance > 0))
+                return 0;
+            const double weight = 1 / std::sqrt(variance);
+            design.row(i) *= weight;
+            whitened[i] *= weight;
+        }
+        Eigen::ColPivHouseholderQR<Mat> qr(design);
+        qr.setThreshold(64 * eps * rows);
+        if (qr.rank() != 4)
+            return 0;
+        Vec correction = qr.solve(whitened);
+        const double residualScale = (whitened - design * correction).squaredNorm() / (rows - 4);
+        Mat inverseR = qr.matrixR().topLeftCorner(4, 4).triangularView<Eigen::Upper>().solve(
+            Mat::Identity(4, 4));
+        Mat geometry = qr.colsPermutation() * (inverseR * inverseR.transpose()) *
+                       qr.colsPermutation().transpose();
+        // A residual floor avoids interpreting a short, fortuitously exact fit
+        // as a perfectly known velocity. The C caller stabilizes it over time.
+        Mat velocityCovariance = std::max(0.01, residualScale) * geometry.topLeftCorner(3, 3);
+        Eigen::LLT<Mat> check;
+        if (!correction.allFinite() || !std::isfinite(residualScale) ||
+            !factor(velocityCovariance, check))
+            return 0;
+        Eigen::Map<Vec>(velocityCorrection, 3) = correction.head(3);
+        View(covariance, 3, 3) = velocityCovariance;
+        *scatter = residualScale;
+        return 1;
+    } catch (...) {
+        return 0;
+    }
+}
+
 extern "C" int PntKalmanStep(int n, int m, const double *phi, const double *q, const double *h,
                              const double *r, const double *z, double *state, double *covariance,
                              double *predicted)
@@ -156,35 +211,42 @@ extern "C" int PntKalmanStep(int n, int m, const double *phi, const double *q, c
         return 0;
     }
 }
+
 extern "C" double PntSpatialProjection(const double *cov, int stride, const double *direction)
 {
     const Eigen::Map<const Eigen::Vector3d> up(direction);
     return up.dot(Read(cov, stride, stride).topLeftCorner<3, 3>() * up);
 }
+
 // Legacy C names are storage adapters only; no local matrix algorithms.
 extern "C" void MatrixInit(double *m, int rows, int cols)
 {
     View(m, rows, cols).setZero();
 }
+
 extern "C" void MatrixProduct(double *a, int ar, int ac, double *b, int br, int bc, double *out)
 {
     if (ac == br)
         View(out, ar, bc) = (Read(a, ar, ac) * Read(b, br, bc)).eval();
 }
+
 extern "C" void MatrixTrasp(double *a, int rows, int cols, double *out)
 {
     View(out, cols, rows) = Read(a, rows, cols).transpose().eval();
 }
+
 extern "C" void MatrixSum(double *a, int ar, int ac, double *b, int br, int bc, double *out)
 {
     if (ar == br && ac == bc)
         View(out, ar, ac) = Read(a, ar, ac) + Read(b, br, bc);
 }
+
 extern "C" void MatrixDiff(double *a, int ar, int ac, double *b, int br, int bc, double *out)
 {
     if (ar == br && ac == bc)
         View(out, ar, ac) = Read(a, ar, ac) - Read(b, br, bc);
 }
+
 extern "C" void MergeMatricesVertically(double *a, int ar, int ac, double *b, int br, int bc,
                                         double *out)
 {
@@ -193,6 +255,7 @@ extern "C" void MergeMatricesVertically(double *a, int ar, int ac, double *b, in
         View(out, ar + br, ac).bottomRows(br) = Read(b, br, bc);
     }
 }
+
 extern "C" void MatrixIdentity(double *out, int n)
 {
     View(out, n, n).setIdentity();

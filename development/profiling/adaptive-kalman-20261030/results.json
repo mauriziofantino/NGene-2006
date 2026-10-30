@@ -1,0 +1,278 @@
+{
+    "Date":  "2026-10-30",
+    "BaseCommit":  "06696aec6eeb7a43d79c6e10eb287422bbc54eed",
+    "Runs":  [
+                 {
+                     "Label":  "adaptive-q-only-mixed",
+                     "Run":  {
+                                 "Run":  1,
+                                 "Frontend":  "hackrf",
+                                 "Input":  "C:\\Users\\MaurizioFantino\\Downloads\\Projects\\NGene Classic\\recordings\\diagnosi\\hackrf-l1-ci8.raw",
+                                 "PvtMethodOverride":  1,
+                                 "WeightedLsOverride":  1,
+                                 "InputBytes":  1964112000,
+                                 "ExecutableSha256":  "A9E88C0756C065608F0594DBD3937710BDF21B98803D113698DA71955482A589",
+                                 "WallSeconds":  152.3189863,
+                                 "CpuSeconds":  141.25,
+                                 "ExitCode":  0,
+                                 "Directory":  "C:\\Users\\MaurizioFantino\\Downloads\\Projects\\NGene Classic\\build\\profile-20261030-121939-418\\run-1"
+                             },
+                     "ConfigurationSha256":  {
+                                                 "Tracking.conf":  "E7A16731B08DF645AE3F1CAB5AD693FE8B5AAF8C9FC93ACF16DEE0ACFDFAC8C8",
+                                                 "Front_End.conf":  "0FFB4E1031AC8E18BCD9B46B5A122DFB10B0FA87EB482AA48383EE8BA6182625",
+                                                 "Warm.conf":  "9DA5672D2702C81EE679512FD67304B1E30CDB01F546A726A133D21BBCE432FE",
+                                                 "PRN_List.conf":  "650724BC415D11EDFBD52FFA8A6759EA73730BE3E61610853F7D7DEC312303BF",
+                                                 "NavigationMessages.conf":  "74F79F46B0B6618CA035441B070CB5BD0E72C89F603338FC4B9F77EDF459D070",
+                                                 "HackRF.conf":  "F49B23D2A7D291F17BE131E43BF0FA34955356B1D004EB47EBC1EE5A677A4A89",
+                                                 "Acquisition.conf":  "D3E75A05F044EB84DDF65AA67BBA5F0B309A39981735212E7DF777CB211C3BC3",
+                                                 "GNSS_RX.conf":  "54B258B46BE617B7AA03246ED34089A1C1D89679E5DA2495E05A8ACCB2E44BFD",
+                                                 "PVT.conf":  "27A4C94628B084A1B592168570D968330309B63357C753B31097AFD2E31A0B0B",
+                                                 "OSNMA_parameters.txt":  "61A68CECB5C0CF7B6B5A79C3E1A51101051C6E0E8BB186E7454F43453E0E7BA0",
+                                                 "Logs.conf":  "B8C8B5C16A1BD882C8F0111032E208BEFA2D89C4D73AFEBE3460ADB677CCE822"
+                                             }
+                 },
+                 {
+                     "Label":  "adaptive-q-only-gps",
+                     "Run":  {
+                                 "Run":  1,
+                                 "Frontend":  "hackrf",
+                                 "Input":  "C:\\Users\\MaurizioFantino\\Downloads\\Projects\\NGene Classic\\recordings\\diagnosi\\hackrf-l1-ci8.raw",
+                                 "PvtMethodOverride":  1,
+                                 "WeightedLsOverride":  1,
+                                 "InputBytes":  1964112000,
+                                 "ExecutableSha256":  "A9E88C0756C065608F0594DBD3937710BDF21B98803D113698DA71955482A589",
+                                 "WallSeconds":  47.787337,
+                                 "CpuSeconds":  43.9375,
+                                 "ExitCode":  0,
+                                 "Directory":  "C:\\Users\\MaurizioFantino\\Downloads\\Projects\\NGene Classic\\build\\profile-20261030-121950-696\\run-1"
+                             },
+                     "ConfigurationSha256":  {
+                                                 "Tracking.conf":  "E7A16731B08DF645AE3F1CAB5AD693FE8B5AAF8C9FC93ACF16DEE0ACFDFAC8C8",
+                                                 "Front_End.conf":  "0FFB4E1031AC8E18BCD9B46B5A122DFB10B0FA87EB482AA48383EE8BA6182625",
+                                                 "Warm.conf":  "9DA5672D2702C81EE679512FD67304B1E30CDB01F546A726A133D21BBCE432FE",
+                                                 "PRN_List.conf":  "650724BC415D11EDFBD52FFA8A6759EA73730BE3E61610853F7D7DEC312303BF",
+                                                 "NavigationMessages.conf":  "74F79F46B0B6618CA035441B070CB5BD0E72C89F603338FC4B9F77EDF459D070",
+                                                 "HackRF.conf":  "F49B23D2A7D291F17BE131E43BF0FA34955356B1D004EB47EBC1EE5A677A4A89",
+                                                 "Acquisition.conf":  "D3E75A05F044EB84DDF65AA67BBA5F0B309A39981735212E7DF777CB211C3BC3",
+                                                 "GNSS_RX.conf":  "79E59CF5830EB8794B3CF26CF41E8DC1F34BFAEFB0A288FAB8E6B7B5C08831B6",
+                                                 "PVT.conf":  "27A4C94628B084A1B592168570D968330309B63357C753B31097AFD2E31A0B0B",
+                                                 "OSNMA_parameters.txt":  "61A68CECB5C0CF7B6B5A79C3E1A51101051C6E0E8BB186E7454F43453E0E7BA0",
+                                                 "Logs.conf":  "B8C8B5C16A1BD882C8F0111032E208BEFA2D89C4D73AFEBE3460ADB677CCE822"
+                                             }
+                 },
+                 {
+                     "Label":  "adaptive-q-only-sige",
+                     "Run":  {
+                                 "Run":  1,
+                                 "Frontend":  "sige",
+                                 "Input":  "C:\\Users\\MaurizioFantino\\Downloads\\Projects\\NGene Classic\\recordings\\native-ab.raw",
+                                 "PvtMethodOverride":  1,
+                                 "WeightedLsOverride":  1,
+                                 "InputBytes":  794615808,
+                                 "ExecutableSha256":  "A9E88C0756C065608F0594DBD3937710BDF21B98803D113698DA71955482A589",
+                                 "WallSeconds":  29.0445618,
+                                 "CpuSeconds":  26.3125,
+                                 "ExitCode":  0,
+                                 "Directory":  "C:\\Users\\MaurizioFantino\\Downloads\\Projects\\NGene Classic\\build\\profile-20261030-122002-524\\run-1"
+                             },
+                     "ConfigurationSha256":  {
+                                                 "Tracking.conf":  "E7A16731B08DF645AE3F1CAB5AD693FE8B5AAF8C9FC93ACF16DEE0ACFDFAC8C8",
+                                                 "Front_End.conf":  "0FFB4E1031AC8E18BCD9B46B5A122DFB10B0FA87EB482AA48383EE8BA6182625",
+                                                 "Warm.conf":  "9DA5672D2702C81EE679512FD67304B1E30CDB01F546A726A133D21BBCE432FE",
+                                                 "PRN_List.conf":  "650724BC415D11EDFBD52FFA8A6759EA73730BE3E61610853F7D7DEC312303BF",
+                                                 "NavigationMessages.conf":  "74F79F46B0B6618CA035441B070CB5BD0E72C89F603338FC4B9F77EDF459D070",
+                                                 "HackRF.conf":  "F49B23D2A7D291F17BE131E43BF0FA34955356B1D004EB47EBC1EE5A677A4A89",
+                                                 "Acquisition.conf":  "D3E75A05F044EB84DDF65AA67BBA5F0B309A39981735212E7DF777CB211C3BC3",
+                                                 "GNSS_RX.conf":  "54B258B46BE617B7AA03246ED34089A1C1D89679E5DA2495E05A8ACCB2E44BFD",
+                                                 "PVT.conf":  "27A4C94628B084A1B592168570D968330309B63357C753B31097AFD2E31A0B0B",
+                                                 "OSNMA_parameters.txt":  "61A68CECB5C0CF7B6B5A79C3E1A51101051C6E0E8BB186E7454F43453E0E7BA0",
+                                                 "Logs.conf":  "B8C8B5C16A1BD882C8F0111032E208BEFA2D89C4D73AFEBE3460ADB677CCE822"
+                                             }
+                 },
+                 {
+                     "Label":  "adaptive-qr-mixed",
+                     "Run":  {
+                                 "Run":  1,
+                                 "Frontend":  "hackrf",
+                                 "Input":  "C:\\Users\\MaurizioFantino\\Downloads\\Projects\\NGene Classic\\recordings\\diagnosi\\hackrf-l1-ci8.raw",
+                                 "PvtMethodOverride":  1,
+                                 "WeightedLsOverride":  1,
+                                 "InputBytes":  1964112000,
+                                 "ExecutableSha256":  "49ACD6A11D91E825C3A930D876859427D12CC8C3687BC7D2C158F3F9AF793073",
+                                 "WallSeconds":  106.9052492,
+                                 "CpuSeconds":  102.515625,
+                                 "ExitCode":  0,
+                                 "Directory":  "C:\\Users\\MaurizioFantino\\Downloads\\Projects\\NGene Classic\\build\\profile-20261030-122425-578\\run-1"
+                             },
+                     "ConfigurationSha256":  {
+                                                 "Tracking.conf":  "E7A16731B08DF645AE3F1CAB5AD693FE8B5AAF8C9FC93ACF16DEE0ACFDFAC8C8",
+                                                 "Front_End.conf":  "0FFB4E1031AC8E18BCD9B46B5A122DFB10B0FA87EB482AA48383EE8BA6182625",
+                                                 "Warm.conf":  "9DA5672D2702C81EE679512FD67304B1E30CDB01F546A726A133D21BBCE432FE",
+                                                 "PRN_List.conf":  "650724BC415D11EDFBD52FFA8A6759EA73730BE3E61610853F7D7DEC312303BF",
+                                                 "NavigationMessages.conf":  "74F79F46B0B6618CA035441B070CB5BD0E72C89F603338FC4B9F77EDF459D070",
+                                                 "HackRF.conf":  "F49B23D2A7D291F17BE131E43BF0FA34955356B1D004EB47EBC1EE5A677A4A89",
+                                                 "Acquisition.conf":  "D3E75A05F044EB84DDF65AA67BBA5F0B309A39981735212E7DF777CB211C3BC3",
+                                                 "GNSS_RX.conf":  "54B258B46BE617B7AA03246ED34089A1C1D89679E5DA2495E05A8ACCB2E44BFD",
+                                                 "PVT.conf":  "27A4C94628B084A1B592168570D968330309B63357C753B31097AFD2E31A0B0B",
+                                                 "OSNMA_parameters.txt":  "61A68CECB5C0CF7B6B5A79C3E1A51101051C6E0E8BB186E7454F43453E0E7BA0",
+                                                 "Logs.conf":  "B8C8B5C16A1BD882C8F0111032E208BEFA2D89C4D73AFEBE3460ADB677CCE822"
+                                             }
+                 },
+                 {
+                     "Label":  "adaptive-qr-gps",
+                     "Run":  {
+                                 "Run":  1,
+                                 "Frontend":  "hackrf",
+                                 "Input":  "C:\\Users\\MaurizioFantino\\Downloads\\Projects\\NGene Classic\\recordings\\diagnosi\\hackrf-l1-ci8.raw",
+                                 "PvtMethodOverride":  1,
+                                 "WeightedLsOverride":  1,
+                                 "InputBytes":  1964112000,
+                                 "ExecutableSha256":  "49ACD6A11D91E825C3A930D876859427D12CC8C3687BC7D2C158F3F9AF793073",
+                                 "WallSeconds":  29.2195,
+                                 "CpuSeconds":  27.796875,
+                                 "ExitCode":  0,
+                                 "Directory":  "C:\\Users\\MaurizioFantino\\Downloads\\Projects\\NGene Classic\\build\\profile-20261030-122436-544\\run-1"
+                             },
+                     "ConfigurationSha256":  {
+                                                 "Tracking.conf":  "E7A16731B08DF645AE3F1CAB5AD693FE8B5AAF8C9FC93ACF16DEE0ACFDFAC8C8",
+                                                 "Front_End.conf":  "0FFB4E1031AC8E18BCD9B46B5A122DFB10B0FA87EB482AA48383EE8BA6182625",
+                                                 "Warm.conf":  "9DA5672D2702C81EE679512FD67304B1E30CDB01F546A726A133D21BBCE432FE",
+                                                 "PRN_List.conf":  "650724BC415D11EDFBD52FFA8A6759EA73730BE3E61610853F7D7DEC312303BF",
+                                                 "NavigationMessages.conf":  "74F79F46B0B6618CA035441B070CB5BD0E72C89F603338FC4B9F77EDF459D070",
+                                                 "HackRF.conf":  "F49B23D2A7D291F17BE131E43BF0FA34955356B1D004EB47EBC1EE5A677A4A89",
+                                                 "Acquisition.conf":  "D3E75A05F044EB84DDF65AA67BBA5F0B309A39981735212E7DF777CB211C3BC3",
+                                                 "GNSS_RX.conf":  "79E59CF5830EB8794B3CF26CF41E8DC1F34BFAEFB0A288FAB8E6B7B5C08831B6",
+                                                 "PVT.conf":  "27A4C94628B084A1B592168570D968330309B63357C753B31097AFD2E31A0B0B",
+                                                 "OSNMA_parameters.txt":  "61A68CECB5C0CF7B6B5A79C3E1A51101051C6E0E8BB186E7454F43453E0E7BA0",
+                                                 "Logs.conf":  "B8C8B5C16A1BD882C8F0111032E208BEFA2D89C4D73AFEBE3460ADB677CCE822"
+                                             }
+                 },
+                 {
+                     "Label":  "adaptive-qr-sige",
+                     "Run":  {
+                                 "Run":  1,
+                                 "Frontend":  "sige",
+                                 "Input":  "C:\\Users\\MaurizioFantino\\Downloads\\Projects\\NGene Classic\\recordings\\native-ab.raw",
+                                 "PvtMethodOverride":  1,
+                                 "WeightedLsOverride":  1,
+                                 "InputBytes":  794615808,
+                                 "ExecutableSha256":  "49ACD6A11D91E825C3A930D876859427D12CC8C3687BC7D2C158F3F9AF793073",
+                                 "WallSeconds":  30.406592999999997,
+                                 "CpuSeconds":  17.109375,
+                                 "ExitCode":  0,
+                                 "Directory":  "C:\\Users\\MaurizioFantino\\Downloads\\Projects\\NGene Classic\\build\\profile-20261030-135525-917\\run-1"
+                             },
+                     "ConfigurationSha256":  {
+                                                 "Tracking.conf":  "E7A16731B08DF645AE3F1CAB5AD693FE8B5AAF8C9FC93ACF16DEE0ACFDFAC8C8",
+                                                 "Front_End.conf":  "0FFB4E1031AC8E18BCD9B46B5A122DFB10B0FA87EB482AA48383EE8BA6182625",
+                                                 "Warm.conf":  "9DA5672D2702C81EE679512FD67304B1E30CDB01F546A726A133D21BBCE432FE",
+                                                 "PRN_List.conf":  "650724BC415D11EDFBD52FFA8A6759EA73730BE3E61610853F7D7DEC312303BF",
+                                                 "NavigationMessages.conf":  "74F79F46B0B6618CA035441B070CB5BD0E72C89F603338FC4B9F77EDF459D070",
+                                                 "HackRF.conf":  "F49B23D2A7D291F17BE131E43BF0FA34955356B1D004EB47EBC1EE5A677A4A89",
+                                                 "Acquisition.conf":  "D3E75A05F044EB84DDF65AA67BBA5F0B309A39981735212E7DF777CB211C3BC3",
+                                                 "GNSS_RX.conf":  "54B258B46BE617B7AA03246ED34089A1C1D89679E5DA2495E05A8ACCB2E44BFD",
+                                                 "PVT.conf":  "27A4C94628B084A1B592168570D968330309B63357C753B31097AFD2E31A0B0B",
+                                                 "OSNMA_parameters.txt":  "61A68CECB5C0CF7B6B5A79C3E1A51101051C6E0E8BB186E7454F43453E0E7BA0",
+                                                 "Logs.conf":  "B8C8B5C16A1BD882C8F0111032E208BEFA2D89C4D73AFEBE3460ADB677CCE822"
+                                             }
+                 },
+                 {
+                     "Label":  "combined-final-mixed",
+                     "Run":  {
+                                 "Run":  1,
+                                 "Frontend":  "hackrf",
+                                 "Input":  "C:\\Users\\MaurizioFantino\\Downloads\\Projects\\NGene Classic\\recordings\\diagnosi\\hackrf-l1-ci8.raw",
+                                 "PvtMethodOverride":  1,
+                                 "WeightedLsOverride":  1,
+                                 "InputBytes":  1964112000,
+                                 "ExecutableSha256":  "5CDBC536D2624795FE7BC7B2F1A1A602A6B4A2CC9F8F7FA20F3EE04B55271240",
+                                 "WallSeconds":  128.4871034,
+                                 "CpuSeconds":  79.8125,
+                                 "ExitCode":  0,
+                                 "Directory":  "C:\\Users\\MaurizioFantino\\Downloads\\Projects\\NGene Classic\\build\\profile-20261030-141052-376\\run-1"
+                             },
+                     "ConfigurationSha256":  {
+                                                 "Tracking.conf":  "E7A16731B08DF645AE3F1CAB5AD693FE8B5AAF8C9FC93ACF16DEE0ACFDFAC8C8",
+                                                 "Front_End.conf":  "0FFB4E1031AC8E18BCD9B46B5A122DFB10B0FA87EB482AA48383EE8BA6182625",
+                                                 "Warm.conf":  "9DA5672D2702C81EE679512FD67304B1E30CDB01F546A726A133D21BBCE432FE",
+                                                 "PRN_List.conf":  "650724BC415D11EDFBD52FFA8A6759EA73730BE3E61610853F7D7DEC312303BF",
+                                                 "NavigationMessages.conf":  "74F79F46B0B6618CA035441B070CB5BD0E72C89F603338FC4B9F77EDF459D070",
+                                                 "HackRF.conf":  "D1566364C4D4AD35639B619FEC0FA320C1440A581264835A933784FFD7A75E35",
+                                                 "Acquisition.conf":  "D3E75A05F044EB84DDF65AA67BBA5F0B309A39981735212E7DF777CB211C3BC3",
+                                                 "GNSS_RX.conf":  "54B258B46BE617B7AA03246ED34089A1C1D89679E5DA2495E05A8ACCB2E44BFD",
+                                                 "PVT.conf":  "0E2BFB29BA2FE4B385E90B18C5A84C5F4D181A58C1841B760AA54985B70A6B3F",
+                                                 "OSNMA_parameters.txt":  "61A68CECB5C0CF7B6B5A79C3E1A51101051C6E0E8BB186E7454F43453E0E7BA0",
+                                                 "Logs.conf":  "CB29E2BEB1E0A56459384D5F6D68D2A19F29049158894B30505A9E8F64B68A78"
+                                             }
+                 },
+                 {
+                     "Label":  "combined-final-sige",
+                     "Run":  {
+                                 "Run":  1,
+                                 "Frontend":  "sige",
+                                 "Input":  "C:\\Users\\MaurizioFantino\\Downloads\\Projects\\NGene Classic\\recordings\\native-ab.raw",
+                                 "PvtMethodOverride":  1,
+                                 "WeightedLsOverride":  1,
+                                 "InputBytes":  794615808,
+                                 "ExecutableSha256":  "FF1BA4214DAEFBEA2C88658759136CD2A98341DFE407A9F408D69DB666ACF9B6",
+                                 "WallSeconds":  30.783589499999998,
+                                 "CpuSeconds":  16.578125,
+                                 "ExitCode":  0,
+                                 "Directory":  "C:\\Users\\MaurizioFantino\\Downloads\\Projects\\NGene Classic\\build\\profile-20261030-141819-677\\run-1"
+                             },
+                     "ConfigurationSha256":  {
+                                                 "Tracking.conf":  "E7A16731B08DF645AE3F1CAB5AD693FE8B5AAF8C9FC93ACF16DEE0ACFDFAC8C8",
+                                                 "Front_End.conf":  "0FFB4E1031AC8E18BCD9B46B5A122DFB10B0FA87EB482AA48383EE8BA6182625",
+                                                 "Warm.conf":  "9DA5672D2702C81EE679512FD67304B1E30CDB01F546A726A133D21BBCE432FE",
+                                                 "PRN_List.conf":  "650724BC415D11EDFBD52FFA8A6759EA73730BE3E61610853F7D7DEC312303BF",
+                                                 "NavigationMessages.conf":  "74F79F46B0B6618CA035441B070CB5BD0E72C89F603338FC4B9F77EDF459D070",
+                                                 "HackRF.conf":  "D1566364C4D4AD35639B619FEC0FA320C1440A581264835A933784FFD7A75E35",
+                                                 "Acquisition.conf":  "D3E75A05F044EB84DDF65AA67BBA5F0B309A39981735212E7DF777CB211C3BC3",
+                                                 "GNSS_RX.conf":  "54B258B46BE617B7AA03246ED34089A1C1D89679E5DA2495E05A8ACCB2E44BFD",
+                                                 "PVT.conf":  "0E2BFB29BA2FE4B385E90B18C5A84C5F4D181A58C1841B760AA54985B70A6B3F",
+                                                 "OSNMA_parameters.txt":  "61A68CECB5C0CF7B6B5A79C3E1A51101051C6E0E8BB186E7454F43453E0E7BA0",
+                                                 "Logs.conf":  "B8C8B5C16A1BD882C8F0111032E208BEFA2D89C4D73AFEBE3460ADB677CCE822"
+                                             }
+                 }
+             ],
+    "HackrfInputSha256":  "90C65DD542DE8EEE1B411FE60DF6CE24E12374B6C82261FF5FEEF213491168B1",
+    "SigeInputSha256":  "FA0BDD1330E0F22D8B83F12ED288E7C5D167F700150A4A9511E69ECD306365B8",
+    "FinalExecutableSha256":  "FF1BA4214DAEFBEA2C88658759136CD2A98341DFE407A9F408D69DB666ACF9B6",
+    "SourcesSha256":  {
+                          "development/profiling/compare-motion-models.py":  "AA1D75915F5DF9150A8D5370A55E53E44323D90F1F9C4682452BE6FBEE454503",
+                          "development/profiling/compare-pvt-epochs.py":  "F525E01325C3F38D4373678AC7314615C8A4286BC63BBE421AD3FCD9F1BEF56A",
+                          "utility/frontendStatus.h":  "49A0914FE7F37D326A183C384695ABC63D58ADAF6895FF5CC5EE186D3D2868D4",
+                          "LOGBOOK.md":  "052DE845ACE7B693DC6C72EBF8CF1023411251611A830E4E1F46CB4DB12A30C7",
+                          "OPTIMIZATION_REPORT.md":  "934CF63AF4D33D2561E74246C99AB9E6D77F9ED4637BC81856EA3B4E50C64889",
+                          "README.md":  "3CEA07390C97A1BF215E61A52B7DD2169A7F60F789D0E1F790420A7AD2F8171C",
+                          "development/profiling/audit-pvt-cases.c":  "CC6E873B3D45C4B619ABF524F81E9ACF3528023ADC176D2AE54A6E0B3BF915B2",
+                          "development/profiling/extract-pvt-audit.py":  "41E80F0965B7901190FBC8485F59D8281A3CE8AAB68010A377496F056B357064",
+                          "development/profiling/profile-replay.ps1":  "1A70536A40B09DCB05F4AB1FCC5D036F431A2536D0D900D910B882140579C43E",
+                          "development/profiling/run-pvt-audit.ps1":  "8D8A18E4A6BF602AC925CB93F80A2B701DD78957A3CC0863FCD3D47A8D7E742B",
+                          "docs/LINUX.md":  "F5073769A331F2BDF2D41F92A0725CC8BF9A8D2A6E34CA1D8339D94E18BE82B4",
+                          "frontEnd/hackrfFrontend.c":  "1C67652CF1EFA1C33589D6C061FA84B62A217DE3DD3376EB7A346EFF8898E124",
+                          "pvt/kalmanFilter.c":  "55B67002462D79A28DAF9B8FC0565302D79FF5BEB3880E962A6A0021FB998F8B",
+                          "pvt/kalmanFilter.h":  "60E057BA87CE53402867454A81A096C3A687AEA57FB27472CE5DB2079AF23361",
+                          "pvt/pntNumerics.cpp":  "3CC088D3505C0D6668AB087AE613BD5E0A5C747E847193A3FC9B835DD968F013",
+                          "pvt/pntNumerics.h":  "1E617C79C0C611F5BE8D0B8DFF7EA00CEAF0A0D95A94599F4639F56A25BDCE63",
+                          "pvt/pvt.c":  "B11618ED9B4851E546029D294346901FE80A6927D5E1DB7FB8D71C8CBEAFF88B",
+                          "pvt/pvtChecks.c":  "7170A76F07B859D52FDDCABA161CB03100337A5ACEF4EEE3BB3DF3AB552CA4F7",
+                          "pvt/pvtConfiguration.h":  "8E66E58223E8101E29F1926474E7B078ACAA03578D0E98F2D2158688CC13EE2B",
+                          "pvt/pvtDataStructure.h":  "D7285A8547466F20D87F14288723D2AF5C752B6EA30D26C30AA252A2C862A0AC",
+                          "receiver/manageConfiguration.c":  "DA291060904A5B3AA132A82C240A729E2E68E0A3041F866ABB6A1501623E3D67",
+                          "sampleConfigurationFiles/configuration/OSNMA_parameters.txt":  "61A68CECB5C0CF7B6B5A79C3E1A51101051C6E0E8BB186E7454F43453E0E7BA0",
+                          "sampleConfigurationFiles/configuration/PVT.conf":  "57CC0F8428BCA8724EAAD77F0C557267C7CB24E0DCBF7D0647EF2500E6133716",
+                          "tools/check_hackrf.c":  "B0CB5D5B160DC66DE4572B9935FDB70AD3B95DBD0CB7E8145FD9B875F39C41B8",
+                          "tools/check_hackrf_gain.c":  "0E6A4435906575AEED457CF45DF316BC8E0913CBDF243A21F373A690EB3B118E",
+                          "tools/check_pnt_observables.c":  "FD51ABCF9073DB5C9E22B7038390279C817138C2ADA732D95F47657F9BED53AB",
+                          "tools/check_tracking_holdover.c":  "04E79BDBA37B85BCD50EEED8B12058BC10DD647012CD8D48C1EE3645C5BC54F7",
+                          "tracking/gpsTracking.c":  "D841782A2434FB3CD57A984A74E9DD4922F2E341D225C982E09F72FAD1DBED73",
+                          "utility/ncursesApi.c":  "B5F671BA403499F45452DC953F0AEAB4F1D0FF341DECADF3C15AFE82D1AE825D",
+                          "utility/ncursesDataStructure.h":  "9195E5E2EFECF23866B5A64272094473CADF33E9B04EF54D7144EA7BC8C178D6",
+                          "utilityGnss/egnosMessageParser.c":  "6016E4B04A6175D4A49967913D990D16CDCCDDAA4152A634502277EE4E4543EA",
+                          "utilityGnss/navigationMessageParser.h":  "3F228339392978D04E80351E2204B915D259F8E728CC383005694AE67064B60A",
+                          "utilityGnss/sbasValidity.h":  "C242937D49298653AA1AA6B0E1D47ED01430BBD9EAD21312F2ADBAF5AEFA2C16"
+                      },
+    "Profiling":  false,
+    "LinuxLiveValidated":  false
+}

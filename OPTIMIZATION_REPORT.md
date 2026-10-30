@@ -1,5 +1,29 @@
 # NGene Classic — ottimizzazioni, profiling e distribuzione del carico
 
+**Aggiornamento successivo 30 ottobre:** Kalman ora adattativo Q/R, senza
+scelta statico/dinamico. 110/110 contratti, venti traiettorie accoppiate e
+14/14 CTest. Dispersione H del replay misto 4.346 -> 3.981 m; GPS
+2.054 -> 1.729 m, con regressioni residue nelle altre metriche riportate in
+[ADAPTIVE_KALMAN_REVIEW.md](ADAPTIVE_KALMAN_REVIEW.md). Decoder EGNOS svincolato
+dalla disponibilita' del tempo GPS, stati SBAS espliciti in ncurses e blocco
+MT0 conservativo. Autotune HackRF configurabile e abilitato per default anche
+nei vecchi file privi del tag, risultato persistente nella dashboard, due
+finestre richieste per dichiarare convergenza. Dettagli e limiti in
+[EGNOS_AUTOTUNE_REVIEW.md](EGNOS_AUTOTUNE_REVIEW.md). Nessuna nuova modifica alle
+decisioni/soglie acquisizione o al main; profiling OFF. Linux/live non validati.
+
+**Aggiornamento 30 ottobre:** corretti il riutilizzo del bias di clock gia'
+rimosso dal riferimento temporale e Q incoerente fra passi temporali diversi;
+allineato anche il nominale dei clock assenti dopo una correzione del drift.
+Stesso harness prima/dopo: 7 discrepanze -> 91/91 PASS. Build Windows 14/14,
+profiling OFF. Nel replay corrente 8/4/1, CSM=8, KF misto RMS H/U
+5.555/5.426 -> 4.943/4.696 m, stessi 24 fix con misure e 12 previsioni.
+Solo GPS peggiora lievemente: 3.547/4.896 -> 3.611/4.906 m; non attribuire
+un miglioramento universale al filtro. SiGe mantiene 23 soluzioni e zero
+perdite. Nessuna nuova modifica ad acquisizione, tracking o main. Restano
+modello R, correlazioni delle misure e gate statistici da completare;
+Linux/live non verificati qui. Dettagli in [KALMAN_REVIEW.md](KALMAN_REVIEW.md).
+
 **Aggiornamento successivo del 29 ottobre:** implementato mantenimento NCO con
 criteri di recupero ripetuti e scadenza unica; separati i fallimenti PNT dal
 riavvio RF. Corrette scale binarie dei parser e condizioni Az nel wrapper

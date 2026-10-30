@@ -37,6 +37,21 @@ Recordings are local artifacts, not included in a fresh checkout. Select the
 frontend matching the recording. HackRF recordings also need the original RF
 centre/rate settings in `configuration/HackRF.conf` and `Front_End.conf`.
 
+Live HackRF gain calibration is controlled by `configuration/HackRF.conf`:
+
+```ini
+[Auto tune gains]
+1
+
+[Auto tune target RMS]
+28
+```
+
+Use `0` for fixed LNA/VGA gains. A missing tag defaults to enabled; an explicit
+`0` is respected. Calibration runs before acquisition and freezes the gains
+for tracking. Ncurses keeps its progress/result on a separate row; replay does
+not calibrate hardware. See [EGNOS/autotune review](../EGNOS_AUTOTUNE_REVIEW.md).
+
 ## Clean and rebuild
 
 ```sh

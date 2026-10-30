@@ -1,5 +1,92 @@
 # Logbook NGene Classic
 
+## 30 ottobre 2026 - Kalman adattativo, EGNOS e autotune visibile
+
+L'utente richiede un unico modello adattativo, senza opzioni statico/dinamico.
+Implementata stima di Q da variazioni della velocita' Doppler al netto della
+sua incertezza, piu' stima temporale di R dal residuo del fit ridondante.
+Il clock comune e' separato dalla velocita'. Innovazione coerente forte riapre
+Q nell'epoca corrente; outage/geometria debole ripristinano incertezza prudente.
+Nessuna velocita' forzata a zero. Static Receiver riguarda i controlli LS;
+KF usa sempre un controllo cinematico vettoriale, senza allargare la soglia.
+
+Scartata variante Q-only che peggiorava alcune fasi simulate. Versione Q/R:
+110/110 contratti, 14/14 CTest; venti semi accoppiati con fermo/accelerazione/
+curva/frenata/outage. Da fermo dispersione H/U aggregata 2.500/10.150 ->
+1.443/5.835 m, miglioramento medio delle metriche anche nelle fasi dinamiche.
+Non tutte le realizzazioni individuali migliorano. WLS identico fra i due
+binari del confronto sintetico. Nessuna taratura sulla GT.
+
+Replay misto 24 misurati + 12 previsioni, RMS H/U 4.943/4.696 -> 4.350/4.518 m,
+dispersione centrata 4.346/1.552 -> 3.981/1.252 m. GPS 58 + 11: RMS
+3.611/4.906 -> 3.723/4.619 m, dispersione 2.054/2.069 -> 1.729/2.227 m:
+regressioni orizzontale assoluta e verticale centrata conservate nel rapporto.
+R codice e correlazioni dello smoothing restano incompleti; Linux/live non
+validati con questi replay. ADAPTIVE_KALMAN_REVIEW.md contiene i limiti.
+
+Su segnalazione EGNOS: decoder ora alimentato anche senza tempo GPS, con
+correzioni non temporizzabili escluse. MT0 senza tempo invalida la banca e
+mantiene una finestra prudente quando il tempo torna noto. Ncurses distingue
+TRACKING / SBAS NO TIME / SBAS DATA / SBAS TEST, senza fingere ranging GEO.
+Replay: CRC validi gia' fra 8 e 9 s, prima del primo PVT a 55 s; PRN 123
+trasmette MT0. Stato ufficiale consultato: 121/136 operativi, 123 in test.
+La scarsa disponibilita' RF live non e' dichiarata risolta. Soglie e logica
+di acquisizione invariate.
+
+Autotune HackRF: mancava il tag nel file locale e il default del parser era
+0, diverso dal template a 1. Ora default coerente, voci esplicite locali,
+0 esplicito rispettato; riga ncurses persistente con avanzamento/risultato,
+guadagni e modalita' replay. Corretto falso settled con una sola finestra
+accettata al dodicesimo tentativo. Test del ciclo completo con ABI hardware
+simulata, isolamento campioni e restart senza ritaratura. Nessuna nuova prova
+hardware/Linux della dashboard; esiste il log hardware storico del 29 ottobre.
+
+Dettagli EGNOS/autotune in EGNOS_AUTOTUNE_REVIEW.md; CSV, hash, log e sorgente
+baseline in development/profiling/adaptive-kalman-20261030. Main senza nuova
+strumentazione, build normale profiling OFF, algebra double Eigen/Joseph.
+
+## 30 ottobre 2026 - Kalman: origine dei clock e covarianza temporale
+
+Chiarimento successivo dell'utente: il problema e' dispersione KF maggiore
+del LMS nel live Linux. Aggiunte metriche centrate sulla media, distinte
+dall'RMS verso GT: nel replay KF H misto 4.694 -> 4.346 m, GPS 2.163 -> 2.054 m.
+Il replay non riproduce quella regressione live rispetto al WLS. Il filtro
+resta dinamico a velocita' costante; Static Receiver controlla soltanto i
+salti, non seleziona un modello statico. Questo limite resta da affrontare
+esplicitamente, senza presentare le correzioni sotto come validazione live.
+
+Ripresa dell'analisi PVT su richiesta dell'utente. Confermati due difetti che
+i vecchi casi a innovazione nulla non esercitavano: il bias gia' rimosso da
+SetReferenceRxTime veniva riutilizzato nel nominale KF; Q non rispettava la
+composizione dei passi temporali. Corretto anche il nominale del clock assente
+quando PredictRxTime applica la nuova deriva all'intera eta' del riferimento.
+
+Nominale azzerato solo per il clock appena ribasato; incertezza mantenuta in P.
+Q integrata con densita' coerenti, conservando i valori effettivi gia' usati
+per velocita' e deriva, inclusa la correlazione dei due bias col drift comune.
+Nessuna taratura sulla ground truth, nessuna modifica a main, tracking o
+decisioni/soglie di acquisizione. Precisione double e Joseph/Eigen conservate.
+
+Stesso harness finale: sorgente precedente 84 PASS / 7 MISMATCH, corretto
+91/91. Ribasamento sintetico di 100 m: spostamento spurio 47.833 m -> 2.64e-9 m.
+Ciclo reale tempo/pseudorange/KF con transizioni/outage: 96.007 -> 0.002823 m.
+Build operativa normale Windows 14/14 CTest, profiling OFF.
+
+Replay RF diagnostico, configurazione corrente 8 GPS / 4 Galileo / 1 EGNOS,
+CSM=8: KF misto 24 misurati + 12 previsioni in entrambi i casi; RMS H/U
+5.555/5.426 -> 4.943/4.696 m. GPS 58 misurati + 11 previsioni: lieve
+peggioramento 3.547/4.896 -> 3.611/4.906 m. Epoche e conteggi comuni verificati;
+coordinate testuali arrotondate, non prova di osservabili identiche.
+SiGe KF 23 soluzioni, zero perdite prima/dopo; GT HackRF non applicata a SiGe.
+
+Restano R empirica, correlazioni smoothing/Doppler non modellate, assenza
+di gate statistico delle innovazioni, dinamica statica non distinta e P
+iniziale indipendente dalla geometria WLS. Linux/live non verificati qui.
+Dettagli: KALMAN_REVIEW.md; hash, log, CSV e sorgente baseline in
+development/profiling/kalman-review-20261030. Il controllo dell'archivio
+instrumentation.patch fallisce su profilingSupport.c gia' non modificato da
+questo intervento; nessuna applicazione di quella patch nelle misure.
+
 ## 29 ottobre 2026 — Fast fix transizioni tracking e separazione PNT/RF
 
 Considerata l'analisi PDF fornita, verificando le affermazioni sul codice corrente.

@@ -14,6 +14,7 @@
 /* Four upstream 262144-byte transfers, about 64 ms at 8.1838 M complex/s.
  * Stop on overflow, never block USB behind processing or silently drop data. */
 #define HACKRF_QUEUE_BYTES (4u * 262144u)
+
 struct HackrfFrontend {
     hackrf_device *device;
     unsigned char *queue;
@@ -81,6 +82,7 @@ static int VendorResult(int code, const char *operation)
             hackrf_error_name((enum hackrf_error)code), code);
     return FAILURE_RETURN;
 }
+
 /* Local bounded parser: optional settings, exact tags, no commented tag matches
  * and no silently accepted malformed values. Existing receiver parsers stay put. */
 
@@ -152,6 +154,7 @@ invalid:
     fclose(file);
     return FAILURE_RETURN;
 }
+
 #define CONFIGURE(call)                                                                            \
     do {                                                                                           \
         if (VendorResult((call), #call) != SUCCESS_RETURN)                                         \
@@ -161,7 +164,7 @@ invalid:
 int ConfigureHackrfFrontend(TNGeneConfiguration *cfg)
 {
     THackrfConfiguration *settings = &cfg->hackrfConfiguration;
-    int values[8] = {32, 32, 0, 0, 5000000, 1575458400, 0, 28};
+    int values[8] = {32, 32, 0, 0, 5000000, 1575458400, 1, 28};
     int lna, vga, amp, antenna, bandwidth;
     char filename[MAX_ROW_LENGTH], serial[MAX_ROW_LENGTH] = "";
     settings->loaded = 0;
@@ -267,6 +270,7 @@ failed:
     CloseHackrfFrontend(fe);
     return FAILURE_RETURN;
 }
+
 /* Separate pre-stream callback: calibration bytes never enter the DSP ring.
  * The operational callback remains a copy-only callback after calibration. */
 #define CALIBRATION_PAIRS 524288u
@@ -343,13 +347,16 @@ static int AutoTuneGains(TRxFe *fe)
     struct HackrfFrontend *h = fe->hackrf;
     THackrfConfiguration *s = h->settings;
     THackrfAdcStats stats;
-    int trial, stable = 0, decision = 2;
+    int trial, stable = 0, decision = 2, settled;
     SwrxLog(NGENE_LOG_SEVERITY_IMPORTANT_INFO,
             "HackRF autotune: calibrating analog LNA/VGA before acquisition");
     for (trial = 0; trial < 12; trial++) {
         int lna = s->lnaGain, vga = s->vgaGain;
-        if (MeasureCalibrationWindow(fe, &stats) != SUCCESS_RETURN)
+        if (MeasureCalibrationWindow(fe, &stats) != SUCCESS_RETURN) {
+            SwrxLog(NGENE_LOG_SEVERITY_ERROR,
+                    "HackRF autotune failed: ADC calibration unavailable");
             return FAILURE_RETURN;
+        }
         SwrxLog(NGENE_LOG_SEVERITY_IMPORTANT_INFO,
                 "HackRF autotune %d/12: LNA %d VGA %d; sigma I/Q %.2f/%.2f", trial + 1, lna, vga,
                 stats.sigma[0], stats.sigma[1]);
@@ -366,14 +373,17 @@ static int AutoTuneGains(TRxFe *fe)
         if (decision == 2 || trial == 11)
             break;
         if (VendorResult(hackrf_set_lna_gain(h->device, lna), "autotune LNA") != SUCCESS_RETURN ||
-            VendorResult(hackrf_set_vga_gain(h->device, vga), "autotune VGA") != SUCCESS_RETURN)
+            VendorResult(hackrf_set_vga_gain(h->device, vga), "autotune VGA") != SUCCESS_RETURN) {
+            SwrxLog(NGENE_LOG_SEVERITY_ERROR, "HackRF autotune failed: gain update rejected");
             return FAILURE_RETURN;
+        }
         s->lnaGain = lna;
         s->vgaGain = vga;
     }
-    SwrxLog(decision == 0 ? NGENE_LOG_SEVERITY_IMPORTANT_INFO : NGENE_LOG_SEVERITY_WARNING,
+    settled = decision == 0 && stable >= 2;
+    SwrxLog(settled ? NGENE_LOG_SEVERITY_IMPORTANT_INFO : NGENE_LOG_SEVERITY_WARNING,
             "HackRF autotune %s: LNA %d VGA %d; gains frozen for tracking",
-            decision == 0 ? "settled" : "bounded without target", s->lnaGain, s->vgaGain);
+            settled ? "settled" : "bounded without confirmed target", s->lnaGain, s->vgaGain);
     SwrxLog(
         NGENE_LOG_SEVERITY_INFO,
         "HackRF ADC: target sigma %d; centred skew %.3f/%.3f, kurtosis %.3f/%.3f (Gaussian 0/3)",
@@ -392,6 +402,11 @@ int StartHackrfFrontend(TRxFe *fe)
     if (h->settings->autoTuneGains && !h->gainsTuned) {
         if (AutoTuneGains(fe) != SUCCESS_RETURN)
             return FAILURE_RETURN;
+        h->gainsTuned = 1;
+    } else if (!h->settings->autoTuneGains && !h->gainsTuned) {
+        SwrxLog(NGENE_LOG_SEVERITY_IMPORTANT_INFO,
+                "HackRF autotune disabled: LNA %d VGA %d; fixed gains", h->settings->lnaGain,
+                h->settings->vgaGain);
         h->gainsTuned = 1;
     }
     /* Firmware turns antenna power off in idle mode. Set only when enabled. */

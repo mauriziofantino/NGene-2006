@@ -32,7 +32,7 @@
 
 # OSNMA data folder
 # indicates the folder where the OSMA related files are stored
-# Comment out the tag and the string with # if the files must be read from the ~/.ngene/otherData folder
+# Comment out the tag and the string with # to read files from otherData beside the executable
 # Do not terminate with /
 #[OSNMA data folder]
 # /complete/path/folder

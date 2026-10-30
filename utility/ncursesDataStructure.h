@@ -23,6 +23,7 @@
 #define NC_ROW_TITLE 0
 #define NC_ROW_DIAMONDS 1
 #define NC_ROW_TIME 2
+#define NC_ROW_FRONTEND_STATUS 3
 #define NC_ROW_POSITION_TITLE 4
 #define NC_ROW_PRN_TABLE_TITLE 7
 #define NC_NEXT_ROW 1
@@ -74,6 +75,9 @@
 #define NC_STR_CH_ACQUISITION_STATE "ACQUISITION     "
 #define NC_STR_CH_TRACKING_STATE "TRACKING        "
 #define NC_STR_CH_NAVIGATION_STATE "NAVIGATION      "
+#define NC_STR_CH_SBAS_DATA_STATE "SBAS DATA       "
+#define NC_STR_CH_SBAS_TEST_STATE "SBAS TEST       "
+#define NC_STR_CH_SBAS_TIME_STATE "SBAS NO TIME    "
 #define NC_STR_CH_UNUSED_STATE "IDLE            "
 #define NC_STR_CH_UNHEALTHY_STATE "UNHEALTHY       "
 #define NC_STR_CH_NAVMSG_INVALID_STATE "INVALID NAV MSG "
@@ -98,11 +102,14 @@
 #define NC_COLOR_SCHEME_OSNMA_TEST 12
 #define NC_COLOR_SCHEME_OSNMA_OP 13
 #define NC_COLOR_SCHEME_OSNMA_BAD 14
+
 /**
  * @struct NCursesDataStruct
  * @brief Contains some variables used to manage NCurses interface
  */
 typedef struct NCursesDataStruct {
+    char frontendStatus[160]; /**< Retained calibration state, separate from transient logs. */
+    int frontendStatusSeverity;
     WINDOW *uiWin;     /**< Main User Interface window */
     int colorsEnabled; /**< Flag indicating whenever the current window supports colors */
     int colsOld;       /**< Number of columns (old value) */

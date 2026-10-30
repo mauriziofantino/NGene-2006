@@ -305,6 +305,7 @@ void ResetPvt(TNGeneConfiguration *cfg, TPvtData *pvtData, TPvtResults *pvtRes, 
     InitQStateNoiseCovarianceMatrices(pvtData->kfData.q, pvtData->kfData.qMulti,
                                       cfg->pvtPeriodSeconds);
     InitKalmanFilterPostCovarianceMatrices(pvtData->kfData.pPost, pvtData->kfData.pPostMulti);
+    ResetKalmanMotionData(&pvtData->kfData.motion);
     // end here if we are not performing a hard reset
     if (hardReset == FALSE_FLAG) {
         return;

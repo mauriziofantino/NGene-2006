@@ -1,0 +1,18 @@
+[Fri Oct 30 14:10:54 2026] INFO   : Channel 12 EGNOS123 tracking starts at samples 24706671 with Doppler -847.000000 Hz
+[Fri Oct 30 14:10:55 2026] INFO   : Channel 12 EGNOS123 tracking FLL locked at sample 37800744, trk counter 1599, with Doppler -876.346484 Hz!
+[Fri Oct 30 14:10:55 2026] INFO   : Channel 12 EGNOS123 tracking PLL locked at sample 39903979, trk counter 1856,  with Doppler -887.988038 Hz!
+[Fri Oct 30 14:10:59 2026] INFO   : RX Counter 8010
+[Fri Oct 30 14:11:00 2026] INFO   : Channel 12 EGNOS123 SBAS decoding synchronized (CRC valid)
+[Fri Oct 30 14:11:00 2026] INFO   : RX Counter 9010
+[Fri Oct 30 14:11:00 2026] INFO   : Channel 12 EGNOS123 SBAS decoding synchronized (CRC valid)
+[Fri Oct 30 14:11:00 2026] INFO   : RX Counter 11010
+[Fri Oct 30 14:11:01 2026] WARNING: SBAS MT0 test service received; corrections disabled
+[Fri Oct 30 14:11:01 2026] INFO   : RX Counter 12010
+[Fri Oct 30 14:11:21 2026] INFO   : ############### PNT COUNTER     0 ################
+[Fri Oct 30 14:11:36 2026] INFO   : Channel 12 EGNOS123 tracking holdover at sample 632394394, trk counter 74254 (limit 5000 ms)
+[Fri Oct 30 14:11:47 2026] INFO   : Channel 12 EGNOS123 tracking lost at sample 673313362, trk counter 79254 (holdover timeout)
+[Fri Oct 30 14:11:48 2026] INFO   : Channel 12 EGNOS123 tracking starts at samples 686742627 with Doppler -1017.000000 Hz
+[Fri Oct 30 14:11:53 2026] INFO   : Channel 12 EGNOS123 tracking FLL locked at sample 708020495, trk counter 2599, with Doppler -938.773525 Hz!
+[Fri Oct 30 14:11:54 2026] INFO   : Channel 12 EGNOS123 tracking PLL locked at sample 710205568, trk counter 2866,  with Doppler -926.531839 Hz!
+[Fri Oct 30 14:12:12 2026] INFO   : Channel 12 EGNOS123 SBAS decoding synchronized (CRC valid)
+[Fri Oct 30 14:12:17 2026] INFO   : Channel 12 EGNOS123 SBAS decoding synchronized (CRC valid)
