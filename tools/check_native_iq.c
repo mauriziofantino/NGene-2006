@@ -10,18 +10,21 @@
 char *ngeneXmmsBackup;
 static unsigned char wire[81];
 static unsigned int wireIndex, readCalls;
+
 int SwrxLog(int severity, const char *format, ...)
 {
     (void)severity;
     (void)format;
     return 0;
 }
+
 void CloseNGene(TNGeneConfiguration *cfg, int result)
 {
     (void)cfg;
     (void)result;
     abort();
 }
+
 unsigned int ReadRxFrontEnd(TRxFe *frontend, char *out, int capacity)
 {
     static const unsigned int fragments[] = {1, 1, 3, 7, 2, 13, 1, 19};
@@ -42,6 +45,7 @@ unsigned int ReadRxFrontEnd(TRxFe *frontend, char *out, int capacity)
             return 1;                                                                              \
         }                                                                                          \
     } while (0)
+
 static int VerifyHackrfDoppler(void)
 {
     const unsigned int length = 8184;
@@ -113,6 +117,7 @@ static int VerifyHackrfDoppler(void)
     free(code);
     return 0;
 }
+
 static int VerifyInputAdapter(void)
 {
     unsigned char source[320], original[320];
@@ -175,6 +180,7 @@ static int VerifyInputAdapter(void)
                 }
     return 0;
 }
+
 int main(void)
 {
     unsigned char raw[320];

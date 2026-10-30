@@ -25,6 +25,7 @@
 #define ENTRIES_PER_FRONTEND 8
 /* Global variable */
 int USB_BLOCKSIZE; /**< Each data transfer from USB will read USB_BLOCKSIZE bytes */
+
 int ManageUsbFeConfiguration(TNGeneConfiguration *cfg)
 {
     TUsbFeConfiguration *feCfg;
@@ -162,6 +163,7 @@ int ManageUsbFeConfiguration(TNGeneConfiguration *cfg)
     }
     return SUCCESS_RETURN;
 }
+
 void DeleteUsbFeConfiguration(TNGeneConfiguration *cfg)
 {
     free(cfg->usbFeParameters.feList);

@@ -12,6 +12,7 @@
 #ifndef MANAGE_PVT_CONFIGURATION_H_INCLUDED
 #define MANAGE_PVT_CONFIGURATION_H_INCLUDED
 #include "ngeneConfiguration.h"
+
 /**
  * @brief Read the PVT parameters from the configuration file
  *

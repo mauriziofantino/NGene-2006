@@ -28,27 +28,33 @@ static char output[262144];
             exit(1);                                                                               \
         }                                                                                          \
     } while (0)
+
 static int Step(void)
 {
     return ++stage == failAt ? HACKRF_ERROR_USB_API_VERSION : HACKRF_SUCCESS;
 }
+
 int ADDCALL hackrf_init(void)
 {
     return Step();
 }
+
 int ADDCALL hackrf_exit(void)
 {
     exited++;
     return HACKRF_SUCCESS;
 }
+
 hackrf_device_list_t *ADDCALL hackrf_device_list(void)
 {
     return &deviceList;
 }
+
 void ADDCALL hackrf_device_list_free(hackrf_device_list_t *list)
 {
     REQUIRE(list == &deviceList);
 }
+
 int ADDCALL hackrf_device_list_open(hackrf_device_list_t *list, int index, hackrf_device **device)
 {
     int result = Step();
@@ -57,17 +63,20 @@ int ADDCALL hackrf_device_list_open(hackrf_device_list_t *list, int index, hackr
         *device = (hackrf_device *)(uintptr_t)1;
     return result;
 }
+
 int ADDCALL hackrf_open_by_serial(const char *serial, hackrf_device **device)
 {
     (void)serial;
     return hackrf_device_list_open(&deviceList, 0, device);
 }
+
 int ADDCALL hackrf_close(hackrf_device *device)
 {
     REQUIRE(device != NULL);
     closed++;
     return HACKRF_SUCCESS;
 }
+
 int ADDCALL hackrf_set_sample_rate_manual(hackrf_device *device, uint32_t hz, uint32_t div)
 {
     (void)device;
@@ -75,51 +84,60 @@ int ADDCALL hackrf_set_sample_rate_manual(hackrf_device *device, uint32_t hz, ui
     divider = div;
     return Step();
 }
+
 int ADDCALL hackrf_set_baseband_filter_bandwidth(hackrf_device *device, uint32_t hz)
 {
     (void)device;
     filterHz = hz;
     return Step();
 }
+
 int ADDCALL hackrf_set_freq(hackrf_device *device, uint64_t hz)
 {
     (void)device;
     frequency = hz;
     return Step();
 }
+
 int ADDCALL hackrf_set_lna_gain(hackrf_device *device, uint32_t gain)
 {
     (void)device;
     lnaGain = gain;
     return Step();
 }
+
 int ADDCALL hackrf_set_vga_gain(hackrf_device *device, uint32_t gain)
 {
     (void)device;
     vgaGain = gain;
     return Step();
 }
+
 int ADDCALL hackrf_set_amp_enable(hackrf_device *device, uint8_t enabled)
 {
     (void)device;
     ampValue = enabled;
     return Step();
 }
+
 int ADDCALL hackrf_set_antenna_enable(hackrf_device *device, uint8_t enabled)
 {
     (void)device;
     REQUIRE(enabled == 1);
     return Step();
 }
+
 uint32_t ADDCALL hackrf_compute_baseband_filter_bw(uint32_t bandwidth)
 {
     return bandwidth == 5000000 ? bandwidth : 0;
 }
+
 const char *ADDCALL hackrf_error_name(enum hackrf_error error)
 {
     (void)error;
     return "simulated vendor error";
 }
+
 int ADDCALL hackrf_start_rx(hackrf_device *device, hackrf_sample_block_cb_fn cb, void *context)
 {
     int result = Step();
@@ -145,6 +163,7 @@ int ADDCALL hackrf_start_rx(hackrf_device *device, hackrf_sample_block_cb_fn cb,
     }
     return result;
 }
+
 int ADDCALL hackrf_stop_rx(hackrf_device *device)
 {
     (void)device;
@@ -152,11 +171,13 @@ int ADDCALL hackrf_stop_rx(hackrf_device *device)
     streaming = 0;
     return HACKRF_SUCCESS;
 }
+
 int ADDCALL hackrf_is_streaming(hackrf_device *device)
 {
     (void)device;
     return streaming ? HACKRF_TRUE : HACKRF_SUCCESS;
 }
+
 int SwrxLog(int severity, const char *format, ...)
 {
     (void)severity;
@@ -164,6 +185,7 @@ int SwrxLog(int severity, const char *format, ...)
         loggedOverflow++;
     return 0;
 }
+
 static void Initialize(TRxFe *fe, TNGeneConfiguration *cfg, TUsbFePars *pars)
 {
     memset(fe, 0, sizeof(*fe));
@@ -189,6 +211,7 @@ static void Initialize(TRxFe *fe, TNGeneConfiguration *cfg, TUsbFePars *pars)
     autoFeed = autoInvalid = 0;
     calibrationCallback = NULL;
 }
+
 static void Destroy(TRxFe *fe)
 {
     CloseHackrfFrontend(fe);
@@ -197,6 +220,7 @@ static void Destroy(TRxFe *fe)
     pthread_cond_destroy(&fe->usbFe.intermediateBufferFull);
     pthread_cond_destroy(&fe->usbFe.intermediateBufferEmpty);
 }
+
 static int Submit(int length, int capacity, unsigned char *bytes)
 {
     hackrf_transfer transfer = {0};
@@ -207,6 +231,7 @@ static int Submit(int length, int capacity, unsigned char *bytes)
     callbackResult = callback(&transfer);
     return callbackResult;
 }
+
 static void *BlockedReader(void *context)
 {
     TRxFe *fe = context;
@@ -216,6 +241,7 @@ static void *BlockedReader(void *context)
     pthread_mutex_unlock(&fe->usbFe.frontEndMutex);
     return NULL;
 }
+
 static void VerifySettings(void)
 {
     static const char *invalid[] = {"[LNA gain (dB)]\n33\n",
@@ -280,6 +306,7 @@ static void VerifySettings(void)
     REQUIRE(unlink(filename) == 0 && rmdir(folder) == 0);
 #endif
 }
+
 int main(void)
 {
     TRxFe fe;

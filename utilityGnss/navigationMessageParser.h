@@ -575,6 +575,7 @@ typedef struct EgnosParserStruct {
  *
  * These values are compatible with the implemented parser function.
  */
+
 /**
  * @brief ExtractTwoCompField parses an array of bits and extracts a signed integer.
  * @details The detailed explanation of the indexes is shown up here.
@@ -590,6 +591,7 @@ typedef struct EgnosParserStruct {
  */
 double ExtractTwoCompField(unsigned char dataBytes[], int startByte, int endByte,
                            int bitsOfFirstByte, int bitsOfLastByte, int numBits);
+
 /**
  * @brief ExtractField parses an array of bits and extracts an unsigned integer.
  * @details The detailed explanation of the indexes is shown up here.
@@ -604,6 +606,7 @@ double ExtractTwoCompField(unsigned char dataBytes[], int startByte, int endByte
  */
 double ExtractField(unsigned char dataBytes[], int startByte, int endByte, int bitsOfFirstByte,
                     int bitsOfLastByte);
+
 /**
  * @brief ExtractBits extracts specified bits from an array of bytes.
  * @details The first bit is saved in the MS bit of the first output byte (index 0).
@@ -620,6 +623,7 @@ double ExtractField(unsigned char dataBytes[], int startByte, int endByte, int b
  */
 void ExtractBits(int startByte, int endByte, int bitsOfFirstByte, int bitsOfLastByte,
                  unsigned char inputBytes[], unsigned char outputBytes[]);
+
 /**
  * @brief CopyBitsUnaligned copies specified bits from an array of bytes.
  *        Output indexes (both byte and bit) are updated: at the end of

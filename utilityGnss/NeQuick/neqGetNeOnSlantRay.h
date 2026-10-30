@@ -16,6 +16,7 @@
 #ifndef NEQ_GET_NE_ON_SLANT_RAY_H_INCLUDED
 #define NEQ_GET_NE_ON_SLANT_RAY_H_INCLUDED
 #include "nequickDataStructures.h"
+
 /**
  * @brief This function calculates electron content at the specified distance along a
  *        slanted ray.

@@ -2,15 +2,18 @@
 #include <math.h>
 #include <stdint.h>
 #include "wideInput.h"
+
 static __m128i SignedProduct(__m128i v, __m128i mask)
 {
     return _mm_sub_epi16(_mm_xor_si128(v, mask), mask);
 }
+
 static __m128i Masks(const char *p)
 {
     __m128i m = _mm_loadl_epi64((const __m128i *)p);
     return _mm_unpacklo_epi8(m, _mm_cmpgt_epi8(_mm_setzero_si128(), m));
 }
+
 int32_t CorrelateWideInteger(const short *signal, const char *code, unsigned n)
 {
     unsigned k;
@@ -26,6 +29,7 @@ int32_t CorrelateWideInteger(const short *signal, const char *code, unsigned n)
         total += code[k] ? -signal[k] : signal[k];
     return total;
 }
+
 float CorrelateWide(const short *signal, const char *code, unsigned n)
 {
     return CorrelateWideInteger(signal, code, n) / (float)HACKRF_MIXER_SCALE;

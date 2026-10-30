@@ -31,6 +31,7 @@
  * @param c  pointer to the output vector
  * @param n  number of elements
  */
+
 void ArrayXor(char *a, char *b, char *c, unsigned int n);
 /**
      @brief ArrayMac (Array Multiply And Cumulate) performs dot product of vectors of byte integers
@@ -75,6 +76,7 @@ void ArrayXor(char *a, char *b, char *c, unsigned int n);
  * @param n  number of elements
  * @return   \f$ y = \sum (a[i] xor b[i]) \f$
 */
+
 int ArrayMac(char *a, char *b, unsigned int n);
 /**
  * @brief elementwise product of complex vectors
@@ -95,7 +97,9 @@ int ArrayMac(char *a, char *b, unsigned int n);
  * @param c  pointer to the output     in the format [Re Im] for each of the n samples
  * @param n  number of complex elements to multiply
  */
+
 void ArrayProductComplex(TNGeneConfiguration *cfg, short *a, short *b, short *c, unsigned int n);
+
 /**
  * @details Computes the square of the absolute value of complex numbers
  * - The input is a vector of n complex numbers in the format [Re Im], pointed by 'c'
@@ -113,6 +117,7 @@ void ArrayProductComplex(TNGeneConfiguration *cfg, short *a, short *b, short *c,
  * @return SUCCESS_RETURN when the function ends with success, FAILURE_RETURN otherwise
  */
 int ArrayAbs2(TNGeneConfiguration *cfg, short *c, unsigned int *s, unsigned int n);
+
 /**
  * @details Find the maximum in the vector pointed by 'v'. Vector 'v' has size n
  * The function returns the maximum and the index of the maximum
@@ -123,6 +128,7 @@ int ArrayAbs2(TNGeneConfiguration *cfg, short *c, unsigned int *s, unsigned int 
  * @param n input vector length
  */
 void ArrayMax(unsigned int *v, unsigned int *max, unsigned int *index, unsigned int n);
+
 /**
  * @brief ArrayAdd performs the sum of two arrays
  *
@@ -134,6 +140,7 @@ void ArrayMax(unsigned int *v, unsigned int *max, unsigned int *index, unsigned 
  * @param arrayLength	number of bytes to be added
  */
 void ArrayAdd(char *a, char *b, char *c, int arrayLength);
+
 /**
  * @brief ArrayAddUnsignedInt performs the sum of two arrays of unsigned integers (32 bits each)
  *
@@ -145,6 +152,7 @@ void ArrayAdd(char *a, char *b, char *c, int arrayLength);
  * @param arrayLength	number of bytes to be added
  */
 void ArrayAddUnsignedInt(unsigned int *a, unsigned int *b, unsigned int *c, int arrayLength);
+
 /**
  * @brief ArraySub performs the subtraction of two arrays
  *
@@ -156,6 +164,7 @@ void ArrayAddUnsignedInt(unsigned int *a, unsigned int *b, unsigned int *c, int 
  * @param arrayLength	number of bytes to be subtracted
  */
 void ArraySub(char *a, char *b, char *c, int arrayLength);
+
 /**
  * @brief ArrayClean resets all sample of the output array
  *
@@ -165,6 +174,7 @@ void ArraySub(char *a, char *b, char *c, int arrayLength);
  * @param arrayLength number of bytes to be reset
  */
 void ArrayClean(char *outputArray, int arrayLength);
+
 /**
  * @brief ArrayCopy performs a copy of an array of char (samples)
  * @details uses simd in order to initialize 16 bytes per time.
@@ -174,6 +184,7 @@ void ArrayClean(char *outputArray, int arrayLength);
  * @param arrayLength number of bytes to be copied
  */
 void ArrayCopy(char *inputArray, char *outputArray, int arrayLength);
+
 /**
  * @brief Performs carrier wipe-off on input samples using cos+i*sin
  *
@@ -203,11 +214,14 @@ typedef struct NativeIqScalingStruct {
 } TNativeIqScaling;
 /* Remove component DC; one shared power-of-two gain preserves IQ orientation.
  * Output components are rounded/clipped to [-7,7] for Classic's byte SIMD. */
+
 void AdaptIqClassic(const unsigned char *raw, char *iq, unsigned int pairs,
                     TNativeIqScaling *scaling);
+
 void CarrierInputWipeOff(int nativeIq, char *input1, unsigned int size1, char *input2,
                          unsigned int size2, char *cosArray, char *sinArray,
                          unsigned int carrierSize, char *cosDemod, char *sinDemod);
+
 /**
  * @brief Performs carrier wipe-off on input samples using only cos (or sin). For subcarrier
  * removal.

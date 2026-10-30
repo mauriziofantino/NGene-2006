@@ -18,6 +18,7 @@
 #include "arrays.h"
 #include "egnosIonoCorrections.h"
 static const int egnosIonoMaskBandsTable[2192][4] = EGNOS_IONO_MASK_BAND_VALUES;
+
 void GetIgpLatLon(int band, int idx, int *lat, int *lon)
 {
     int tabIndex;
@@ -44,6 +45,7 @@ void GetIgpLatLon(int band, int idx, int *lat, int *lon)
         }
     }
 }
+
 int CorrectLon(int lon)
 {
     if (lon < -180) {
@@ -92,6 +94,7 @@ void GetIonosphericPiercePoint(double *userPos, double az, double el, double *ip
     *fpp = 1.0 / sqrt(1.0 - pow((re / (re + hi)) * cos(el), 2.0));
 }
 /* Functions used to get ionospheric corrections in function of the pierce point */
+
 int GetMaskIndex(TEgnosCorrections *egnosCorr, int lat, int lon, int bandNumber)
 {
     TEgnosIonoMask *ionoMask;
@@ -158,6 +161,7 @@ void GetIgpInformation(TEgnosCorrections *egnosCorr, int lat, int lon, int *band
     }
     /* not found in the mask! */
 }
+
 void ResetIgpInfo(TIgpInfo *ptr)
 {
     ArrayClean((char *)ptr->lat, 4 * sizeof(int));
@@ -171,6 +175,7 @@ void ResetIgpInfo(TIgpInfo *ptr)
     ArrayClean((char *)ptr->verticalDelay, 4 * sizeof(double));
     ptr->validElements = 0;
 }
+
 void CopyIgpInfo(TIgpInfo *src, TIgpInfo *dest)
 {
     ArrayCopy((char *)src->lat, (char *)dest->lat, 4 * sizeof(int));
@@ -197,6 +202,7 @@ void CopyIgpInfo(TIgpInfo *src, TIgpInfo *dest)
  *
  * Nella struttura TIgpInfo in ingresso i vertici sono ordinati come da standard (page A-38)
  **/
+
 void SortIgpsTriangle(TIgpInfo *igps, TIgpInfo *sortedIgps)
 {
     int igpIdx;
@@ -257,6 +263,7 @@ void SortIgpsTriangle(TIgpInfo *igps, TIgpInfo *sortedIgps)
  * Verifica se il pierce point è dentro il triangolo descritto dalla struttura TIgpInfo.
  * I vertici del triangolo nella struttura TIgpInfo vanno prima ordinati con SortIgpsTriangle.
  **/
+
 int CheckTriangle(TIgpInfo *igps, double ippLat, double ippLon)
 {
     double m = (double)(igps->lat[2] - igps->lat[0]) / (double)(igps->lon[2] - igps->lon[0]);
@@ -391,6 +398,7 @@ int VerticalDelayInterpolation(double ippLat, double ippLon, double fpp, TIgpInf
     }
     return FALSE_FLAG;
 }
+
 void SelectIgpsCaseCNorth(TEgnosCorrections *egnosCorr, TIgpInfo *refIgps, double ippLon)
 {
     int idx;
@@ -479,6 +487,7 @@ void SelectIgpsCaseCNorth(TEgnosCorrections *egnosCorr, TIgpInfo *refIgps, doubl
         return;
     }
 }
+
 void SelectIgpsCaseCSouth(TEgnosCorrections *egnosCorr, TIgpInfo *refIgps, double ippLon)
 {
     int idx;
@@ -567,6 +576,7 @@ void SelectIgpsCaseCSouth(TEgnosCorrections *egnosCorr, TIgpInfo *refIgps, doubl
         return;
     }
 }
+
 void SelectIgpsCaseD(TEgnosCorrections *egnosCorr, TIgpInfo *refIgps, double ippLon)
 {
     const int bandNumber = 9;
@@ -625,6 +635,7 @@ int VerticalDelayInterpolationCaseDCaseE(double ippLat, double ippLon, double fp
     }
     return FALSE_FLAG;
 }
+
 void SelectIgpsCaseE(TEgnosCorrections *egnosCorr, TIgpInfo *refIgps, double ippLon)
 {
     const int bandNumber = 10;

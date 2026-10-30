@@ -11,6 +11,7 @@
  */
 #ifndef COARSE_ACQUISITION_H_INCLUDED
 #define COARSE_ACQUISITION_H_INCLUDED
+
 /**
  * @brief Initializes the Coarse acquisition data structure in the channel when the receiver starts
  * elaboration
@@ -20,11 +21,13 @@
  * @param ch points to the current channel
  */
 void InitCoarseAcquisition(TNGeneConfiguration *cfg, TAcqCommon *acqCommon, TChannel *ch);
+
 /**
  * @brief De-initializes the Coarse acquisition data structure in the channel
  * @param acq is the structure storing the coarse acquisition variables
  */
 void DeinitCoarseAcquisition(TCoarseAcquisition *acq);
+
 /**
  * @brief Initializes the Coarse acquisition data structure in the channel when the coarse
  * acquisition for a new PRN is started
@@ -36,6 +39,7 @@ void DeinitCoarseAcquisition(TCoarseAcquisition *acq);
  */
 void StartCoarseAcquisition(TNGeneConfiguration *cfg, TNGeneData *rx, TAcqCommon *acqCommon,
                             TChannel *ch);
+
 /**
  * @brief Performs Coarse acquisition
  * @details Elaborates one millisecond of samples. Tests one combination of code offset and Doppler

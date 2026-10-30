@@ -3,10 +3,12 @@
 #include <math.h>
 #include <limits.h>
 /* Keep sub-second precision by subtracting TOW before combining weeks. */
+
 static inline double GnssTimeDifference(int w1, double t1, int w0, double t0)
 {
     return ((double)w1 - (double)w0) * 604800.0 + (t1 - t0);
 }
+
 static inline int NormalizeGnssTime(int *week, double *tow)
 {
     double carry;
@@ -19,6 +21,7 @@ static inline int NormalizeGnssTime(int *week, double *tow)
     *tow -= carry * 604800.0;
     return 1;
 }
+
 static inline int UnrollGnssWeek(int truncated, int reference, int modulus)
 {
     int delta = (truncated % modulus - reference % modulus + modulus) % modulus;

@@ -35,6 +35,7 @@ static TTeslaKeyVerificationThreadFunctionParametersStruct
 static pthread_t threadTESLAKeyVerification; /**< Thread handling the accomplishment of the TESLA
                                                 key verification */
 extern int threadTESLAKeyVerificationStopIsRunning;
+
 void InitOsnmaParameters(TNGeneConfiguration *cfg, TOsnmaParameters *osnma)
 {
     char cfgFilename[MAX_ROW_LENGTH];
@@ -299,11 +300,13 @@ void InitOsnmaParameters(TNGeneConfiguration *cfg, TOsnmaParameters *osnma)
         }
     }
 }
+
 void DeinitOsnmaParameters(TOsnmaParameters *osnma)
 {
     free(osnma->keyIndexTable);
     DeinitMacLut(osnma);
 }
+
 void GetOsnmaParameters(TOsnmaParameters *osnma, unsigned char *chDsm, int overwrite, FILE *filePtr)
 {
     int dsmid;
@@ -423,6 +426,7 @@ void GetOsnmaParameters(TOsnmaParameters *osnma, unsigned char *chDsm, int overw
     osnma->LBits = (104 * osnma->dsmKrootNb) - osnma->M_DSSizeBits;
     osnma->LBytes = ceil((double)osnma->LBits / 8);
 }
+
 void CopyOsnmaParameters(TOsnmaParameters *src, TOsnmaParameters *dst, int overwriteKRootTime)
 {
     dst->parametersValid = TRUE_FLAG;
@@ -461,6 +465,7 @@ void CopyOsnmaParameters(TOsnmaParameters *src, TOsnmaParameters *dst, int overw
     dst->LBits = src->LBits;
     dst->LBytes = src->LBytes;
 }
+
 void InitOsnmaData(TNGeneConfiguration *cfg, TOsnmaData *osnma)
 {
     FILE *PKRFile;
@@ -959,6 +964,7 @@ void InitOsnmaData(TNGeneConfiguration *cfg, TOsnmaData *osnma)
     pthread_mutex_init(&osnma->TESLAKeyVerificationMutex, NULL);
     //**************************
 }
+
 void RestartTeslaKeyVericationVariables(TOsnmaData *osnma)
 {
     int index;
@@ -986,6 +992,7 @@ void RestartTeslaKeyVericationVariables(TOsnmaData *osnma)
         osnma->towLastPrn19KeyThread[index] = -1;
     }
 }
+
 void DeinitOsnmaData(TOsnmaData *osnma)
 {
     int index, indexRow, indexColumn;
@@ -1128,6 +1135,7 @@ void DeinitOsnmaData(TOsnmaData *osnma)
     free(osnma->lastPrn19KeyThreadTmp);
     pthread_mutex_destroy(&osnma->TESLAKeyVerificationMutex);
 }
+
 void InitChannelOsnmaVariables(TChannel *ch, TChannelOsnmaVariables *osnma)
 {
     osnma->satType = ch->satType;
@@ -2552,6 +2560,7 @@ void UpdateChannelOsnmaVariables(TOsnmaData *rxOsnma, TOsnmaAuthentication *auth
         chOsnma->chOsnmaStatusLogColor = NC_COLOR_SCHEME_OSNMA_OP;
     }
 }
+
 void RestartChannelOsnmaVariables(TOsnmaData *rxOsnma, TChannelOsnmaVariables *chOsnma)
 {
     if (chOsnma->chOsnmaStatus == CH_OSNMA_IDLE) {
@@ -2614,6 +2623,7 @@ static void UpdateByteIndexBitIndex(int *startByte, int *endByte, int *bitsOfFir
     *bitsOfFirstByte = 8 - bitIdx1;
     *bitsOfLastByte = bitIdx2 + 1;
 }
+
 int CheckTeslaValidationThread(TOsnmaData *rxOsnma)
 {
     TOsnmaParameters *pars = &(rxOsnma->osnmaPars);
@@ -2687,6 +2697,7 @@ int CheckTeslaValidationThread(TOsnmaData *rxOsnma)
     }
     return FAILURE_RETURN;
 }
+
 void SaveMackInMackList(TOsnmaData *rxOsnma, TChannelOsnmaVariables *chOsnma, int wn, int tow)
 {
     TOsnmaParameters *pars = &(rxOsnma->osnmaPars);
@@ -3077,6 +3088,7 @@ void SaveMackInMackList(TOsnmaData *rxOsnma, TChannelOsnmaVariables *chOsnma, in
     free(mackPtrForDbg);
     free(macPtrForDbg);
 }
+
 void SaveNavdataInMackList(TOsnmaData *rxOsnma, TChannelOsnmaVariables *chOsnma, int wn, int tow)
 {
     TMackList *mackPtr;
@@ -3889,6 +3901,7 @@ int ExtractNavDataBits(TSatConstellation satType, TAdkd adkd, unsigned char *nav
     }
     return SUCCESS_RETURN;
 }
+
 void SaveDsmBlock(TOsnmaData *rxOsnma, TChannelOsnmaVariables *chOsnma, int wn, int tow)
 {
     TOsnmaParameters *pars = &(rxOsnma->osnmaPars);
@@ -3981,6 +3994,7 @@ void SaveDsmBlock(TOsnmaData *rxOsnma, TChannelOsnmaVariables *chOsnma, int wn, 
     memcpy(&(dsmElement->dsmBlocks[dsmDestIdx]), &chOsnma->chDsm[2], DSM_BLOCK_SIZE);
     dsmElement->validity[bid] = TRUE_FLAG;
 }
+
 void DeleteChannelFromOsnmaData(TOsnmaData *rxOsnma, int chId)
 {
     /* MACK */

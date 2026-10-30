@@ -38,6 +38,7 @@ static int ReadRequiredCode(TNGeneConfiguration *cfg, FILE *file, char *code, si
     CloseNGene(cfg, EXIT_FAILURE);
     return FAILURE_RETURN;
 }
+
 void OversampleCode(char *code, int codeLen, s128 *oversampled)
 {
     int i;
@@ -48,6 +49,7 @@ void OversampleCode(char *code, int codeLen, s128 *oversampled)
     }
     _mm_store_si128((__m128i *)(oversampled + 2 * codeLen), _mm_set1_epi8(code[0]));
 }
+
 int InitPrnTable(TNGeneConfiguration *cfg, TPrnTable *t)
 {
     int errorsFound = 0;
@@ -196,6 +198,7 @@ int InitPrnTable(TNGeneConfiguration *cfg, TPrnTable *t)
     t->chipLongLen = t->chipShortLen + 1;
     return SUCCESS_RETURN;
 }
+
 void DeinitPrnTable(TPrnTable *t)
 {
     int index;

@@ -15,6 +15,7 @@
 #ifndef NEQ_CALC_EPST_PARAMS_H_INCLUDED
 #define NEQ_CALC_EPST_PARAMS_H_INCLUDED
 #include "nequickDataStructures.h"
+
 /**
  * @brief This function calculates the values of ionospheric properties for the
  *        current latitude, longitude, time, etc.

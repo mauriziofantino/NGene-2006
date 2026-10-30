@@ -15,6 +15,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
 /**
  * @brief Initialize the matrix to zero
  *
@@ -23,6 +24,7 @@ extern "C" {
  * @param cols id the columns number
  */
 void MatrixInit(double *m, int rows, int cols);
+
 /**
  * @brief Performs product (rows per columns) between two matrices
  *
@@ -36,6 +38,7 @@ void MatrixInit(double *m, int rows, int cols);
  */
 void MatrixProduct(double *input1, int rows1, int columns1, double *input2, int rows2, int columns2,
                    double *output);
+
 /**
  * @brief Performs the matrix transpose
  *
@@ -45,6 +48,7 @@ void MatrixProduct(double *input1, int rows1, int columns1, double *input2, int 
  * @param output transposed matrix
  */
 void MatrixTrasp(double *input, int rows, int columns, double *output);
+
 /**
  * @brief Performs the sum between two matrices
  *
@@ -58,6 +62,7 @@ void MatrixTrasp(double *input, int rows, int columns, double *output);
  */
 void MatrixSum(double *input1, int rows1, int columns1, double *input2, int rows2, int columns2,
                double *output);
+
 /**
  * @brief Performs the difference between two matrices
  *
@@ -71,6 +76,7 @@ void MatrixSum(double *input1, int rows1, int columns1, double *input2, int rows
  */
 void MatrixDiff(double *input1, int rows1, int columns1, double *input2, int rows2, int columns2,
                 double *output);
+
 /**
  * @brief Merges vertically the matrices input1 and input2 in the output matrix output
  *
@@ -84,6 +90,7 @@ void MatrixDiff(double *input1, int rows1, int columns1, double *input2, int row
  */
 void MergeMatricesVertically(double *input1, int rows1, int columns1, double *input2, int rows2,
                              int columns2, double *output);
+
 /**
  * @brief Builds an identity matrix
  *

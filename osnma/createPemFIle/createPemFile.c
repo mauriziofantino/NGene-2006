@@ -13,6 +13,7 @@
 #include "base64.h"
 // #define DEBUG
 #define FILENAME_LEN 1024
+
 int main(int argc, char *argv[])
 {
     char filenameIn[FILENAME_LEN];

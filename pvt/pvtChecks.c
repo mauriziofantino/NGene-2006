@@ -19,6 +19,7 @@
 #include "ioFunctions.h"
 #include "timeConstants.h"
 #include "pvtChecks.h"
+
 int CheckTow(TChannel *ch)
 {
     /* Preliminary check */
@@ -47,6 +48,7 @@ int CheckTow(TChannel *ch)
     }
     return FALSE_FLAG;
 }
+
 int CheckEphemerides(TChannel *ch)
 {
     TNavigationMessage *navMsg;
@@ -88,6 +90,7 @@ int CheckEphemerides(TChannel *ch)
     }
     return TRUE_FLAG;
 }
+
 int ReadyForPvt(TChannel *ch)
 {
     if (ch->satType == EGNOS_SAT) {

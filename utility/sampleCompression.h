@@ -11,6 +11,7 @@
  */
 #ifndef SAMPLE_COMPRESSION_H_INCLUDED
 #define SAMPLE_COMPRESSION_H_INCLUDED
+
 /**
  * @brief SampleCompression reduces the size of an input array, accumulating consecutive samples
  *

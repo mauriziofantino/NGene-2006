@@ -25,6 +25,7 @@
 /* Reinitialize only the PNT estimator after repeated gross failures.
  * A rejected position is not evidence that RF tracking or ephemerides are bad. */
 #define PVT_MAXIMUM_CONSECUTIVE_FAILURES 10
+
 /**
  * Checks if the Time Of Week from the satellite on the channel ch has been received
  *
@@ -33,6 +34,7 @@
  * @return TRUE_FLAG if currently TOW and bit counter are valid, FALSE_FLAG otherwise
  */
 int CheckTow(TChannel *ch);
+
 /**
  * Checks if all the ephemerides data from the satellite on the channel ch have been received
  *
@@ -41,6 +43,7 @@ int CheckTow(TChannel *ch);
  * @return TRUE_FLAG if ephemerides have been received, FALSE_FLAG, otherwise
  */
 int CheckEphemerides(TChannel *ch);
+
 /**
  * Checks if a channel can be used for PVT computation
  *
@@ -49,6 +52,7 @@ int CheckEphemerides(TChannel *ch);
  * @return TRUE_FLAG if the channel can be used, FALSE_FLAG otherwise
  */
 int ReadyForPvt(TChannel *ch);
+
 /**
  * Checks the goodness of the obtained PVT results
  *

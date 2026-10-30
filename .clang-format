@@ -21,8 +21,8 @@ AllowShortBlocksOnASingleLine: Never
 IndentCaseLabels: false
 IndentPPDirectives: None
 SpaceBeforeParens: ControlStatements
-MaxEmptyLinesToKeep: 0
-SeparateDefinitionBlocks: Never
+MaxEmptyLinesToKeep: 1
+SeparateDefinitionBlocks: Always
 SortIncludes: Never
 SortUsingDeclarations: Never
 BreakStringLiterals: false

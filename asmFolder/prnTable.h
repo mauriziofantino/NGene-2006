@@ -55,6 +55,7 @@ typedef enum EmployedModulationEnum {
     BPSK_MODULATION, /**< When chips are represented as +1/-1 */
     NGENE_MODULATION /**< When chips are represented as  0/-1 */
 } TEmployedModulation;
+
 /**
  * @brief InitPrnTable initializes the table used to generate despreading sequences
  * @details Allocates memory to store codes, and read them from files
@@ -65,6 +66,7 @@ typedef enum EmployedModulationEnum {
  * @return SUCCESS_RETURN when the function ends with success, FAILURE_RETURN otherwise
  */
 int InitPrnTable(TNGeneConfiguration *cfg, TPrnTable *t);
+
 /**
  * @brief Frees the memory allocated for the PRN table
  *
@@ -73,6 +75,7 @@ int InitPrnTable(TNGeneConfiguration *cfg, TPrnTable *t);
  * @return SUCCESS_RETURN when the function ends with success, FAILURE_RETURN otherwise
  */
 void DeinitPrnTable(TPrnTable *t);
+
 /**
  * @brief Generate a sequence of samples at fs of the desired despreading code
  * @param Updates code phase
@@ -97,6 +100,7 @@ void DeinitPrnTable(TPrnTable *t);
 int GenerateCode(TNGeneConfiguration *cfg, TPrnTable *t, TSatConstellation prnConstellation,
                  int prn, double codeRate, double *codePhase, double *codePhaseFrac,
                  TEmployedModulation employedModulation, int n, char *codeOut);
+
 /**
  * @brief Updates the code phase variable (after nSamples have been generated)
  *
@@ -109,6 +113,7 @@ int GenerateCode(TNGeneConfiguration *cfg, TPrnTable *t, TSatConstellation prnCo
  */
 void UpdateCodePhase(TNGeneConfiguration *cfg, TSatConstellation satType, double *codePhase,
                      double *codePhaseFrac, unsigned int nSamples, double codeRate);
+
 /**
  * @brief Add two code phases
  *

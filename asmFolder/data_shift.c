@@ -81,6 +81,7 @@ void RightShiftU2sByte(char *inputArray, char *outputArray, int arrayLength, int
     movdqa_m2r(ngeneXmmsBackup[XMM_REGISTER_SIZE * 7], xmm7);
 }
 /* Function which shifts the data to reduce their dynamic */
+
 void RightShiftByte(char *inputArray, char *outputArray, int arrayLength, int shiftedBits)
 {
     unsigned int offsetIn, offsetOut;
@@ -130,6 +131,7 @@ void RightShiftByte(char *inputArray, char *outputArray, int arrayLength, int sh
     movdqa_m2r(ngeneXmmsBackup[XMM_REGISTER_SIZE * 4], xmm4);
     movdqa_m2r(ngeneXmmsBackup[XMM_REGISTER_SIZE * 5], xmm5);
 }
+
 void LeftShiftWord(short int *inputArray, short int *outputArray, int arrayLength, int shiftedBits)
 {
     int index = arrayLength >> 3;

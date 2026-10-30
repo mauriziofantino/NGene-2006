@@ -17,6 +17,7 @@
 #define NEQ_CALC_BOTTOMSIDE_NE_H_INCLUDED
 #include <math.h>
 #include "nequickDataStructures.h"
+
 /**
  * This function calculates electron content at the specified height (in the
  * bottom part of the ionosphere below pdPeakHeight[LAYER_F2], the F2 electron

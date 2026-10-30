@@ -16,6 +16,7 @@
 #include "matrices.h"
 #include "pvtUtility.h"
 #include "pntNumerics.h"
+
 int DopEvaluation(TNGeneData *rx, int performedPvt)
 {
     TPvtData *pvtData = &(rx->pvtData);

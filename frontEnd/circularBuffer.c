@@ -25,6 +25,7 @@
 #include "closeManager.h"
 #include "arrays.h"
 /* Perform the Circular buffer initialization */
+
 int InitCircularBuffer(TNGeneConfiguration *cfg, TCircularBuffer *buf)
 {
     int index;
@@ -73,6 +74,7 @@ int InitCircularBuffer(TNGeneConfiguration *cfg, TCircularBuffer *buf)
     return SUCCESS_RETURN;
 }
 /* It is the opposite of the Initialize function. It destroy and clean everything */
+
 void DeinitCircularBuffer(TCircularBuffer *buf)
 {
     free(buf->sigeIqRaw);
@@ -90,6 +92,7 @@ void DeinitCircularBuffer(TCircularBuffer *buf)
     buf->free2 = 0;
     buf->discardedSamples = 0;
 }
+
 int InsertIntoCircularBuffer(TCircularBuffer *buf, unsigned int displacement)
 {
     /* No new samples */
@@ -122,6 +125,7 @@ int InsertIntoCircularBuffer(TCircularBuffer *buf, unsigned int displacement)
     return SUCCESS_RETURN;
 }
 /* This function is used to update the pointer for the buffer data handling */
+
 unsigned int DeleteFromCircularBuffer(TCircularBuffer *buf, unsigned int displacement)
 {
     /* if no samples have to be discarded, then returns immediately */
@@ -152,6 +156,7 @@ unsigned int DeleteFromCircularBuffer(TCircularBuffer *buf, unsigned int displac
     buf->discardedSamples += displacement;
     return displacement;
 }
+
 void ConvertSamplesIntoNGeneFormat(TNGeneConfiguration *cfg, TCircularBuffer *buf, char *ptr, int n)
 {
     if (n <= 0)
@@ -175,6 +180,7 @@ void ConvertSamplesIntoNGeneFormat(TNGeneConfiguration *cfg, TCircularBuffer *bu
         break;
     }
 }
+
 int FillInputBuffer(TNGeneConfiguration *cfg, TCircularBuffer *buf, TRxFe *rxFe)
 {
     unsigned int read1 = 0;
@@ -287,6 +293,7 @@ int FillInputBuffer(TNGeneConfiguration *cfg, TCircularBuffer *buf, TRxFe *rxFe)
     else
         return SUCCESS_RETURN;
 }
+
 int CopyABunchOfContiguousSamples(TCircularBuffer *buf, int neededSamples, char *outputArray)
 {
     /* check if the input buffer is large enough */

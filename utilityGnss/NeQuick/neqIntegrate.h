@@ -14,6 +14,7 @@
 #ifndef NEQ_INTEGRATE_H_INCLUDED
 #define NEQ_INTEGRATE_H_INCLUDED
 #include "nequickDataStructures.h"
+
 /**
  * @brief This function performs integration to calculate the TEC along rays using
  *        the Kronrod G7-K15 adaptive quadrature method (see Knezevich and Radicella paper).

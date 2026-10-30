@@ -9,6 +9,7 @@
 #include "hackrfInput.h"
 #include "wideInput.h"
 #include "ngeneConstants.h"
+
 int SwrxLog(int level, const char *format, ...)
 {
     (void)level;
@@ -17,6 +18,7 @@ int SwrxLog(int level, const char *format, ...)
 }
 typedef int (*Transform)(TNGeneConfiguration *, TFftTable *, short *, short *, unsigned, int,
                          unsigned *);
+
 static double Now(void)
 {
     struct timespec t;
@@ -37,6 +39,7 @@ static int Evaluate(TFftTable *table, const int32_t *compressed, short *input, s
             return requested;
     }
 }
+
 int main(int argc, char **argv)
 {
     THackrfIq8 raw[8184];

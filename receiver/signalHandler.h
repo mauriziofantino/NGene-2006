@@ -14,6 +14,7 @@
 #include <signal.h>
 /** @brief Signal-safe stop request observed by blocking frontend waits. */
 extern volatile sig_atomic_t ngeneStopRequested;
+
 /**
  * @brief Register operating-system and user stop-signal handlers.
  *
@@ -21,6 +22,7 @@ extern volatile sig_atomic_t ngeneStopRequested;
  * @param run points to a variable which is used to manage the receiver elaboration
  */
 void StartListeningSignals(TNGeneConfiguration *cfg, int *run);
+
 /**
  * @brief This function performs the corresponding actions when the signal is caught
  *

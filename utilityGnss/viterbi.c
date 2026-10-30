@@ -60,6 +60,7 @@ static int metricTab[2][256]; /**< Used to quickly evaluate the branch metric */
             dec |= 1 << ((2 * inputStateIndex + 1) & 31);                                          \
         }                                                                                          \
     }
+
 void InitViterbi(void)
 {
     int i;

@@ -13,6 +13,7 @@
 #endif
 /* Optional per-call accounting; no shared state. Count narrowing operations
  * with actual out-of-range lanes, rather than guessing from output rails. */
+
 INLINE __m128i Pack(__m128i a, __m128i b, unsigned *clipped)
 {
     if (clipped) {
@@ -24,19 +25,23 @@ INLINE __m128i Pack(__m128i a, __m128i b, unsigned *clipped)
     }
     return _mm_packs_epi32(a, b);
 }
+
 INLINE __m128i Average(__m128i a, __m128i b)
 {
     return _mm_add_epi16(_mm_and_si128(a, b), _mm_srai_epi16(_mm_xor_si128(a, b), 1));
 }
+
 INLINE __m128i ExtendLow(__m128i value)
 {
     return _mm_unpacklo_epi16(value, _mm_srai_epi16(value, 15));
 }
+
 INLINE __m128i ExtendHigh(__m128i value)
 {
     return _mm_unpackhi_epi16(value, _mm_srai_epi16(value, 15));
 }
 /** Preserve EVO's exact first two scaled stages when Q14 headroom holds. */
+
 INLINE __m128i FirstTwoBounded(__m128i value, __m128i rotateMask)
 {
     __m128i upper = _mm_shuffle_epi32(value, 0x88);
@@ -77,6 +82,7 @@ INLINE void WideFour(__m128i upper, __m128i productLow, __m128i productHigh, __m
     *sum = Pack(sumLow, sumHigh, clipped);
     *difference = Pack(diffLow, diffHigh, clipped);
 }
+
 int FftInputInRangeSse2(const short *input, size_t size)
 {
     const __m128i minimum = _mm_set1_epi16(-16384), maximum = _mm_set1_epi16(16384);

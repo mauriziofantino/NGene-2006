@@ -10,6 +10,7 @@ using Vec = Eigen::VectorXd;
 using View = Eigen::Map<Mat>;
 using Read = Eigen::Map<const Mat>;
 constexpr double eps = std::numeric_limits<double>::epsilon();
+
 bool factor(const Mat &a, Eigen::LLT<Mat> &llt)
 {
     if (!a.allFinite() || a.rows() < 1 || a.rows() != a.cols())
@@ -21,6 +22,7 @@ bool factor(const Mat &a, Eigen::LLT<Mat> &llt)
     return llt.info() == Eigen::Success &&
            (llt.matrixLLT().diagonal().array().square() > 64 * eps * a.rows() * scale).all();
 }
+
 bool validProcessNoise(const Mat &a)
 {
     if (!a.allFinite())

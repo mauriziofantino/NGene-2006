@@ -58,6 +58,7 @@ TBoolean NeqGetRayProperties(TSPoint *pstP1, TSPoint *pstP2, TSPoint *pstRay, do
  * @param ptRay  Ray perigee (dLat/dLng(deg) and dR(km) only) (O)
  * @param pdZeta Ray zenith angle (deg) (O)
  */
+
 static void NeqCalcRayProperties1(TSPoint *pstP1, TSPoint *pstP2, TSPoint *pstRay, double *pdZeta)
 {
     double dCosDl12; /* cos zenith angle */

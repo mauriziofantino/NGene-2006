@@ -46,6 +46,7 @@
 #include "checkFolder.h"
 #include "osnmaValidations.h"
 #include "manageLogs.h"
+
 void PreparePaths(TNGeneConfiguration *cfg, TNGeneData *rx)
 {
     const char *homeFolder = GetExecutableDirectory();
@@ -129,6 +130,7 @@ void PreparePaths(TNGeneConfiguration *cfg, TNGeneData *rx)
     }
     // The completion of the GoogleEarth filename is managed in InitPvtData
 }
+
 int PreliminaryInitialization(TNGeneConfiguration *cfg, TNGeneData *rx)
 {
     /* NCurses must be initialized after the number of channels is known!!! */
@@ -136,6 +138,7 @@ int PreliminaryInitialization(TNGeneConfiguration *cfg, TNGeneData *rx)
     InitSwrxLog(cfg, rx);
     return SUCCESS_RETURN;
 }
+
 int InitReceiver(TNGeneConfiguration *cfg, TNGeneData *rx)
 {
     int errorsFound = 0;
@@ -322,6 +325,7 @@ int InitReceiver(TNGeneConfiguration *cfg, TNGeneData *rx)
     SwrxLog(NGENE_LOG_SEVERITY_NOTE, "Receiver initialized!");
     return SUCCESS_RETURN;
 }
+
 void DeinitReceiver(TNGeneConfiguration *cfg, TNGeneData *rx)
 {
     int index;

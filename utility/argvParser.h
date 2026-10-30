@@ -12,6 +12,7 @@
 #ifndef ARGV_PARSER_H_INCLUDED
 #define ARGV_PARSER_H_INCLUDED
 #include "ngeneConfiguration.h"
+
 /**
  * @brief GetMainName parses command line arguments to extract program name.
  *        It excludes the path.
@@ -20,6 +21,7 @@
  * @param cfg points to the receiver configuration
  */
 void GetMainName(char *argv[], TNGeneConfiguration *cfg);
+
 /**
  * @brief HandleCmdLine parses command line arguments to extract program options.
  *

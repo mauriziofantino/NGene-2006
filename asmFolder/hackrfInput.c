@@ -4,6 +4,7 @@
 #include "hackrfInput.h"
 #define TWO_PI 6.283185307179586476925286766559
 #define TABLE_SIZE 65536u
+
 int InitHackrfMixer(THackrfMixer *mixer)
 {
     unsigned k;
@@ -17,11 +18,13 @@ int InitHackrfMixer(THackrfMixer *mixer)
     }
     return 1;
 }
+
 void DeinitHackrfMixer(THackrfMixer *mixer)
 {
     free(mixer->coefficients);
     mixer->coefficients = NULL;
 }
+
 static void SumSamples(const THackrfIq8 *input, unsigned n, int64_t *si, int64_t *sq)
 {
     unsigned k = 0, j;
@@ -46,6 +49,7 @@ static void SumSamples(const THackrfIq8 *input, unsigned n, int64_t *si, int64_t
         *sq += input[k].q;
     }
 }
+
 static __m128i RoundQ6(__m128i v)
 {
     /* Q15 -> Q6, ties away from zero. The shift changes representation;
@@ -53,6 +57,7 @@ static __m128i RoundQ6(__m128i v)
     return _mm_srai_epi32(
         _mm_add_epi32(v, _mm_add_epi32(_mm_set1_epi32(256), _mm_srai_epi32(v, 31))), 9);
 }
+
 static __m128i Gather(const uint32_t *table, uint32_t *phase, uint32_t step)
 {
     uint32_t a = table[(*phase + 32768u) >> 16];

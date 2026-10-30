@@ -19,7 +19,10 @@ typedef enum RsCheckResultEnum {
     RS_FAILED_RESTORE,
     RS_ERASURE_RESTORED
 } TRsCheckResult;
+
 void InitReedSolomon();
+
 void DeinitReedSolomon();
+
 TRsCheckResult CheckReedSolomon(TGalParser *parser, int *numCorrections);
 #endif /* REEDSOLOMON_H_INCLUDED */

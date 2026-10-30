@@ -11,6 +11,7 @@
  */
 #include <stdio.h>
 #include "profilingSupport.h"
+
 void InitProfilingSupport(TProfilingSupport *prof, char *targetName)
 {
     sprintf(prof->targetName, "%s", targetName);
@@ -21,6 +22,7 @@ void InitProfilingSupport(TProfilingSupport *prof, char *targetName)
     prof->endTimeS = INVALID_PROFILING_TIME;
     // prof->tv overwritten at each execution
 }
+
 void StartProfilingUpdate(TProfilingSupport *prof)
 {
 #ifdef ENABLE_NANOSECOND_PRECISION
@@ -31,6 +33,7 @@ void StartProfilingUpdate(TProfilingSupport *prof)
     prof->startTimeS = prof->tv.tv_sec + (prof->tv.tv_usec * FROM_MICROSECONDS_TO_SECONDS);
 #endif
 }
+
 void StopProfilingUpdate(TProfilingSupport *prof, unsigned int numberOfExecutions)
 {
     if (prof->startTimeS == INVALID_PROFILING_TIME) {
@@ -54,6 +57,7 @@ void StopProfilingUpdate(TProfilingSupport *prof, unsigned int numberOfExecution
     prof->startTimeS = INVALID_PROFILING_TIME;
     prof->endTimeS = INVALID_PROFILING_TIME;
 }
+
 void ReportProfilingData(TProfilingSupport *prof)
 {
     FILE *profFile;
@@ -73,6 +77,7 @@ void ReportProfilingData(TProfilingSupport *prof)
             timeUs);
     fclose(profFile);
 }
+
 void TotalTimeProfilingUpdate(TProfilingSupport *prof)
 {
     if (prof->startTimeS == INVALID_PROFILING_TIME) {

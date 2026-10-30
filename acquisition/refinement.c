@@ -20,6 +20,7 @@
 #include "arrays.h"
 #include "inputProcessing.h"
 #include "spreadingCodes.h"
+
 void InitRefinement(TNGeneConfiguration *cfg, TRefinement *ref, TChannel *ch)
 {
     ref->indexBin = 0;
@@ -53,6 +54,7 @@ void InitRefinement(TNGeneConfiguration *cfg, TRefinement *ref, TChannel *ch)
         }
     }
 }
+
 void StartDopplerRefinement(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch)
 {
     TAcqCommon *acqCommon = &(rx->acqCommon);
@@ -167,6 +169,7 @@ TAcquisitionStatus PerformDopplerRefinement(TNGeneConfiguration *cfg, TNGeneData
     }
     return ACQUISITION_IN_EXECUTION;
 }
+
 void StartCodeRefinement(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch)
 {
     TAcqCommon *acqCommon = &(rx->acqCommon);

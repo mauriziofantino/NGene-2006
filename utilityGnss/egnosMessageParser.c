@@ -57,6 +57,7 @@ static unsigned int egnosCrc24qTable[256] = {
     0x0087B4A6, 0x0001F85D, 0x000D61AB, 0x008B2D50, 0x00145247, 0x00921EBC, 0x009E874A, 0x0018CBB1,
     0x00E37B16, 0x006537ED, 0x0069AE1B, 0x00EFE2E0, 0x00709DF7, 0x00F6D10C, 0x00FA48FA, 0x007C0401,
     0x0042FA2F, 0x00C4B6D4, 0x00C82F22, 0x004E63D9, 0x00D11CCE, 0x00575035, 0x005BC9C3, 0x00DD8538};
+
 int InitEgnosParser(TNGeneConfiguration *cfg, TChannel *ch)
 {
     if (ch->satType != EGNOS_SAT) {
@@ -73,6 +74,7 @@ int InitEgnosParser(TNGeneConfiguration *cfg, TChannel *ch)
     ch->egnosParser->egnosBitsLogFile = NULL;
     return SUCCESS_RETURN;
 }
+
 void DeinitEgnosParser(TChannel *ch)
 {
     if (ch->egnosParser != NULL) {
@@ -86,6 +88,7 @@ void DeinitEgnosParser(TChannel *ch)
         ch->egnosParser = NULL;
     }
 }
+
 void CleanEgnosParserArrays(TEgnosParser *parser, int cleanInputs)
 {
     if (cleanInputs == TRUE_FLAG) {
@@ -102,6 +105,7 @@ void CleanEgnosParserArrays(TEgnosParser *parser, int cleanInputs)
     ArrayClean((char *)(parser->additionalBits),
                EGNOS_ARRAY_FOR_PARSE_LENGTH_BYTES * sizeof(unsigned char));
 }
+
 void StartEgnosParser(TNGeneConfiguration *cfg, TChannel *ch)
 {
     TEgnosParser *parser = ch->egnosParser;
@@ -190,6 +194,7 @@ TEgnosPreambleIndex CheckAndUpdateEgnosPreamble(unsigned char *bits,
         return EGNOS_PREAMBLE_1_INDEX;
     return EGNOS_PREAMBLE_INVALID_INDEX;
 }
+
 int EgnosCrc24qVerified(unsigned char *vec, int vecLen)
 {
     unsigned int r;
@@ -207,6 +212,7 @@ int EgnosCrc24qVerified(unsigned char *vec, int vecLen)
     }
     return FAILURE_RETURN;
 }
+
 static void PlotEgnosBits(TEgnosParser *parser)
 {
     int idx;
@@ -218,6 +224,7 @@ static void PlotEgnosBits(TEgnosParser *parser)
     fprintf(parser->egnosBitsLogFile, "\n");
     fflush(parser->egnosBitsLogFile);
 }
+
 static void PrintPrnFromTheMask(FILE *f, int numOfPrnsInTheMask, TEgnosMaskElement *prn)
 {
     if (numOfPrnsInTheMask > 0) {
@@ -232,6 +239,7 @@ static void PrintPrnFromTheMask(FILE *f, int numOfPrnsInTheMask, TEgnosMaskEleme
         fprintf(f, "             NA");
     }
 }
+
 void ParseEgnosType01(TNGeneConfiguration *cfg, TNGeneData *rx, TEgnosParser *parser)
 {
     char oldMaskIodp;
@@ -311,6 +319,7 @@ void ParseEgnosType01(TNGeneConfiguration *cfg, TNGeneData *rx, TEgnosParser *pa
         fprintf(parser->egnosParseLogFile, "\n");
     }
 }
+
 void ParseEgnosType0205(TNGeneData *rx, TEgnosParser *parser, double tow)
 {
     TEgnosCorrections *egnosCorr = &(rx->egnosCorrections);
@@ -420,6 +429,7 @@ void ParseEgnosType0205(TNGeneData *rx, TEgnosParser *parser, double tow)
         fprintf(parser->egnosParseLogFile, "\n");
     }
 }
+
 void ParseEgnosType06(TNGeneData *rx, TEgnosParser *parser)
 {
     TEgnosCorrections *egnosCorr = &(rx->egnosCorrections);
@@ -466,6 +476,7 @@ void ParseEgnosType06(TNGeneData *rx, TEgnosParser *parser)
         fprintf(parser->egnosParseLogFile, "\n");
     }
 }
+
 void ParseEgnosType07(TNGeneData *rx, TEgnosParser *parser)
 {
     TEgnosCorrections *egnosCorr = &(rx->egnosCorrections);
@@ -510,6 +521,7 @@ void ParseEgnosType07(TNGeneData *rx, TEgnosParser *parser)
         fprintf(parser->egnosParseLogFile, "\n");
     }
 }
+
 void ParseEgnosType10(TNGeneData *rx, TEgnosParser *parser)
 {
     TEgnosCorrections *egnosCorr = &(rx->egnosCorrections);
@@ -552,6 +564,7 @@ void ParseEgnosType10(TNGeneData *rx, TEgnosParser *parser)
         fprintf(parser->egnosParseLogFile, "\n");
     }
 }
+
 void ParseEgnosType18(TNGeneData *rx, TEgnosParser *parser)
 {
     char oldMaskIodi;
@@ -633,6 +646,7 @@ void ParseEgnosType18(TNGeneData *rx, TEgnosParser *parser)
     }
 }
 /* TODO Va debuggata trovando un dataset che contenga il messaggio di tipo 24!!! */
+
 void ParseEgnosType24(TNGeneData *rx, TEgnosParser *parser, double tow)
 {
     TEgnosCorrections *egnosCorr = &(rx->egnosCorrections);
@@ -837,6 +851,7 @@ void ParseEgnosType24(TNGeneData *rx, TEgnosParser *parser, double tow)
         fprintf(parser->egnosParseLogFile, "\n");
     }
 }
+
 void ParseEgnosType25(TNGeneData *rx, TEgnosParser *parser)
 {
     TEgnosCorrections *egnosCorr = &(rx->egnosCorrections);
@@ -1009,6 +1024,7 @@ void ParseEgnosType25(TNGeneData *rx, TEgnosParser *parser)
         fprintf(parser->egnosParseLogFile, "\n");
     }
 }
+
 void ParseEgnosType26(TNGeneData *rx, TEgnosParser *parser)
 {
     TEgnosCorrections *egnosCorr = &(rx->egnosCorrections);
@@ -1123,6 +1139,7 @@ void ParseEgnosType26(TNGeneData *rx, TEgnosParser *parser)
         fprintf(parser->egnosParseLogFile, "\n");
     }
 }
+
 int ParseEgnosBlock(TNGeneConfiguration *cfg, TNGeneData *rx, TEgnosParser *parser, double tow)
 {
     unsigned char msgType;

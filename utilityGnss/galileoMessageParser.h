@@ -44,6 +44,7 @@
  * @brief This is the nominal value for i0 [rad], i.e. 56 degree
  */
 #define GAL_NOMINAL_I0 0.977384381116825
+
 /**
  * @brief Initialize the data structure used for parse the Galileo navigation message
  *
@@ -53,12 +54,14 @@
  * @return SUCCESS_RETURN when the function ends with success, FAILURE_RETURN otherwise
  */
 int InitGalParser(TNGeneConfiguration *cfg, TChannel *ch);
+
 /**
  * @brief Deinit the data structure used for parse the Galileo navigation message
  *
  * @param ch points to the current channel
  */
 void DeinitGalParser(TChannel *ch);
+
 /**
  * @brief Called at the start of the tracking, it prepares the parse of the navigation message
  *
@@ -67,6 +70,7 @@ void DeinitGalParser(TChannel *ch);
  * @param ch points to the current channel
  */
 void StartGalParser(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch);
+
 /**
  * @brief Used to verify the CRC in the Galileo I/NAV and F/NAV navigation messages
  *
@@ -76,6 +80,7 @@ void StartGalParser(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch);
  * return SUCCESS_RETURN if the CRC is correct, FAILURE_RETURN otherwise
  */
 int GalCrc24qVerified(unsigned char *vec, int vecLen);
+
 /**
  * @brief Manages the parse of the Galileo navigation message.
  *
@@ -587,5 +592,6 @@ void ParseGalMessage(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch, flo
 #define GAL_TYPE16_AF1_BITS_OF_LAST_BYTE (6)
 #define GAL_TYPE16_AF1_BITS_FIELD_DIM (6)
 /* Discard partial FEC words when tracking continuity is interrupted. */
+
 void ResetReedSolomonData(TGalParser *parser);
 #endif /* GALILEO_MESSAGE_PARSER_H_INCLUDED */

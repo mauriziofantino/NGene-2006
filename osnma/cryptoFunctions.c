@@ -19,6 +19,7 @@
 extern int threadTESLAKeyVerificationStopIsRunning;
 #define handleErrors abort
 /*If you have all of your data at once, use this:*/
+
 int SHA256Native(unsigned char *ibuf, size_t ibufSize, unsigned char *obuf)
 {
     SHA256(ibuf, ibufSize, obuf);
@@ -34,6 +35,7 @@ int SHA256Native(unsigned char *ibuf, size_t ibufSize, unsigned char *obuf)
 /*If, on the other hand, you only get your data one piece at a time and you want to
  * compute the hash as you receive that data, then use this:
  */
+
 int SHA256InitUpdateFinalPattern(unsigned char *ibuf, size_t ibufSize, unsigned char *obuf)
 {
     // Object to hold the current state of the hash
@@ -55,6 +57,7 @@ int SHA256InitUpdateFinalPattern(unsigned char *ibuf, size_t ibufSize, unsigned 
 ///*If, on the other hand, you only get your data one piece at a time and you want to
 // * compute the hash as you receive that data, then use this:
 // */
+
 int EVP_HASH(unsigned char *ibuf, size_t ibufSize, unsigned char *obuf, const EVP_MD *function)
 {
     unsigned int obuf_len;
@@ -154,6 +157,7 @@ int CMAC_AES_function(unsigned char *ibuf, size_t ibufSize, unsigned char *obuf,
     return 0;
 }
 //****************************************************
+
 int ECDSA(int nid, int generateKeyFLag, unsigned char *digest, int digestLenght)
 {
     EC_KEY *eckey;
@@ -717,6 +721,7 @@ int DSM_KROOT_SignatureVerification_fromPEM(unsigned char *M, size_t MSize, int 
     fclose(PEMFile);
     return 0;
 }
+
 EVP_PKEY *PublicKey_PEMToEVPKEY(FILE *PEMFile)
 {
     EVP_PKEY *evp_key;
@@ -726,6 +731,7 @@ EVP_PKEY *PublicKey_PEMToEVPKEY(FILE *PEMFile)
     d2i_PUBKEY_fp(PEMFile, &(evp_key));
     return evp_key;
 }
+
 int PublicKey_BNToEVPKEY(int nid, unsigned char *pubKey, size_t pubKeySize, EVP_PKEY *evp_key)
 {
     EC_KEY *eckey = NULL; /* EC key pair */
@@ -956,6 +962,7 @@ int DSM_KROOT_P1Verification(unsigned char *dsmBlocks, TOsnmaData *rxOsnma,
         return SUCCESS_RETURN;
     }
 }
+
 size_t br_ecdsa_asn1_to_raw(void *sig, size_t sig_len)
 {
     /* Note: this code is a bit lenient in that it accepts a few
@@ -1053,6 +1060,7 @@ size_t br_ecdsa_asn1_to_raw(void *sig, size_t sig_len)
     memcpy(sig, tmp, sig_len);
     return sig_len;
 }
+
 size_t br_ecdsa_raw_to_asn1(void *sig, size_t sig_len)
 {
     /*
@@ -1120,6 +1128,7 @@ size_t br_ecdsa_raw_to_asn1(void *sig, size_t sig_len)
     memcpy(sig, tmp, off);
     return off;
 }
+
 size_t _opt_libs_BearSSL_src_ec_ecdsa_rta_c_asn1_int_length(const unsigned char *x, size_t xlen)
 {
     while (xlen > 0 && *x == 0) {
@@ -2107,6 +2116,7 @@ unsigned char *FindKeyForMacVerification(TOsnmaParameters *pars, TOsnmaData *rxO
     }
     return NULL;
 }
+
 int MACVerificationAll(TNGeneConfiguration *ngeneCfg, TNGeneData *ngene)
 {
     TMackList *mackPtr = NULL; //, *mackPtrToFree=NULL;
@@ -2859,6 +2869,7 @@ int MerkleTreePublicKeyVerification(TOsnmaData *rxOsnma, TOsnmaParameters *osnma
     }
     return 0;
 }
+
 int DSM_PKR_P2Verification(TOsnmaData *rxOsnma, TOsnmaParameters *osnmaPars)
 {
     if (rxOsnma->pkrP2Len == 0) {

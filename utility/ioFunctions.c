@@ -21,6 +21,7 @@
 #include "ncursesApi.h"
 #include <stdlib.h>
 // Function to parse the input path
+
 int ParsePath(char *line, int *vid, int *pid, char *filename, int workFromFile)
 {
     int pointer; // used to parse the string
@@ -54,6 +55,7 @@ static pthread_mutex_t *swrxLog_stdLogMutexPtr;
 static TUserInterface swrxLog_userInterface;
 static TNCursesData *swrxLog_ncursesData;
 static int swrxLog_ncursesDataInitialized;
+
 void InitSwrxLog(TNGeneConfiguration *cfg, TNGeneData *rx)
 {
     swrxLog_verbose = cfg->verbose;
@@ -63,10 +65,12 @@ void InitSwrxLog(TNGeneConfiguration *cfg, TNGeneData *rx)
     swrxLog_ncursesData = &(rx->ncursesData);
     swrxLog_ncursesDataInitialized = cfg->ncursesDataInitialized;
 }
+
 void RestartSwrxLog(TNGeneConfiguration *cfg)
 {
     swrxLog_stdlog = cfg->stdlog;
 }
+
 int SwrxLog(int severity, const char *format, ...)
 {
     FILE *f;
@@ -145,6 +149,7 @@ int SwrxLog(int severity, const char *format, ...)
     pthread_mutex_unlock(swrxLog_stdLogMutexPtr);
     return SUCCESS_RETURN;
 }
+
 int GetVal(char *fileName, char *fieldName, void *variable, TFieldType fieldType, int fieldLen)
 {
     FILE *fin;
@@ -294,6 +299,7 @@ int GetVal(char *fileName, char *fieldName, void *variable, TFieldType fieldType
     fclose(fin);
     return FAILURE_RETURN;
 }
+
 int GetLineCountXml(FILE *PKRFile)
 {
     char *line_buf = NULL;
@@ -310,6 +316,7 @@ int GetLineCountXml(FILE *PKRFile)
     free(line_buf);
     return line_count;
 }
+
 int GetValXml(FILE *PKRFile, char *fieldName, void *variable, size_t *size)
 {
     char *line_buf = NULL;
@@ -481,6 +488,7 @@ int GetValXml(FILE *PKRFile, char *fieldName, void *variable, size_t *size)
     free(line_buf);
     return FAILURE_RETURN;
 }
+
 int ReadAnInt(void **ptr)
 {
     int tmp;
@@ -488,6 +496,7 @@ int ReadAnInt(void **ptr)
     *ptr = (void *)(((int *)*ptr) + 1);
     return tmp;
 }
+
 float ReadAFloat(void **ptr)
 {
     float tmp;
@@ -495,6 +504,7 @@ float ReadAFloat(void **ptr)
     *ptr = (void *)(((float *)*ptr) + 1);
     return tmp;
 }
+
 double ReadADouble(void **ptr)
 {
     double tmp;
@@ -502,56 +512,67 @@ double ReadADouble(void **ptr)
     *ptr = (void *)(((double *)*ptr) + 1);
     return tmp;
 }
+
 void WriteAShort(void **ptr, short int value)
 {
     *((short int *)(*ptr)) = value;
     *ptr = (void *)(((short int *)*ptr) + 1);
 }
+
 void WriteAnInt(void **ptr, int value)
 {
     *((int *)(*ptr)) = value;
     *ptr = (void *)(((int *)*ptr) + 1);
 }
+
 void WriteAChar(void **ptr, char value)
 {
     *((char *)(*ptr)) = value;
     *ptr = (void *)(((char *)*ptr) + 1);
 }
+
 void WriteAnUnsignedChar(void **ptr, unsigned char value)
 {
     *((unsigned char *)(*ptr)) = value;
     *ptr = (void *)(((unsigned char *)*ptr) + 1);
 }
+
 void WriteAnUnsignedInt(void **ptr, unsigned int value)
 {
     *((unsigned int *)(*ptr)) = value;
     *ptr = (void *)(((unsigned int *)*ptr) + 1);
 }
+
 void WriteAnUnsignedLongLongInt(void **ptr, unsigned long long int value)
 {
     *((unsigned long long int *)(*ptr)) = value;
     *ptr = (void *)(((unsigned long long int *)*ptr) + 1);
 }
+
 void WriteAFloat(void **ptr, float value)
 {
     *((float *)(*ptr)) = value;
     *ptr = (void *)(((float *)*ptr) + 1);
 }
+
 void WriteADouble(void **ptr, double value)
 {
     *((double *)(*ptr)) = value;
     *ptr = (void *)(((double *)*ptr) + 1);
 }
+
 void WriteALongLongInt(void **ptr, long long int value)
 {
     *((long long int *)(*ptr)) = value;
     *ptr = (void *)(((long long int *)*ptr) + 1);
 }
+
 void WriteAString(void **ptr, char *array, int arrayLength)
 {
     strncpy((char *)(*ptr), array, arrayLength);
     *ptr = (void *)(((char *)*ptr) + arrayLength);
 }
+
 void PrintABitString(FILE *outFile, unsigned char *array, int numBits)
 {
     unsigned char mask = 0x80;
@@ -573,6 +594,7 @@ void PrintABitString(FILE *outFile, unsigned char *array, int numBits)
         }
     }
 }
+
 int CheckFileExistence(char *filename)
 {
     FILE *tmp = fopen(filename, "r");

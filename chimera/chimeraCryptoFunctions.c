@@ -19,6 +19,7 @@
 #include "mackList.h"
 #include "checkFolder.h"
 //***********************************************CHIMERA**************************
+
 void ReadHexBytes(char *hexArray, unsigned char *byteArray, int num)
 {
     int rdIdx = 0;
@@ -26,6 +27,7 @@ void ReadHexBytes(char *hexArray, unsigned char *byteArray, int num)
         sscanf(&(hexArray[2 * rdIdx]), "%2hhX", &(byteArray[rdIdx]));
     }
 }
+
 int InitChimeraParameters(TChimeraParameters *chimeraPars, char *directory)
 {
     char stringPk[] = "ChimeraPublicKey.pem";
@@ -58,6 +60,7 @@ int InitChimeraParameters(TChimeraParameters *chimeraPars, char *directory)
     }
     return SUCCESS_RETURN;
 }
+
 int InitChimeraData(TChimeraData *chimera)
 {
     int prn;
@@ -152,6 +155,7 @@ int InitChimeraData(TChimeraData *chimera)
 #endif
     return SUCCESS_RETURN;
 }
+
 void DeinitChimeraData(TChimeraData *chimera)
 {
     int prn;
@@ -198,6 +202,7 @@ void DeinitChimeraData(TChimeraData *chimera)
     ReportProfilingData(&(chimera->markerValueGenerationPerPilotProfiling));
 #endif
 }
+
 int Digital_SignatureVerification_fromEVPKEY(unsigned char *epoch, TChimeraData *chimera, int *toi)
 {
     unsigned char pageNumber = {0x00};
@@ -408,6 +413,7 @@ int Digital_SignatureVerification_fromEVPKEY(unsigned char *epoch, TChimeraData 
     }
     return SUCCESS_RETURN;
 }
+
 void SlowChannelMarkerKeyGeneration(unsigned char *digitalSignature, TChimeraData *chimera, int prn)
 {
     int byteIdxOut = 0;
@@ -734,6 +740,7 @@ void MarkersGeneration(TChimeraData *chimera, TChimeraChannelEnum channel, int p
 #endif
     }
 }
+
 int LoadSectorPatternTable(TChimeraData *chimera)
 {
     int pattern, segment;
@@ -763,6 +770,7 @@ int LoadSectorPatternTable(TChimeraData *chimera)
     fclose(sectorPatternFile);
     return SUCCESS_RETURN;
 }
+
 void GeneratePatternList(TChimeraData *chimera)
 {
     int segment, rowSectorPattern, indexSlowPatterList, indexFastPatterList;
@@ -985,6 +993,7 @@ void ValuesListGeneration(TChimeraData *chimera, int ciphertextBytesForValue,
     //}
     // #endif
 }
+
 int LoadFastMarkerKey(TChimeraData *chimera)
 {
     /*Read a new fast marker key*/

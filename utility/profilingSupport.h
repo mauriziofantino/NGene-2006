@@ -57,9 +57,14 @@ typedef struct ProfilingSupportStruct {
 //	long tv_nsec; /* nanoseconds */
 // };
 /* supporting functions */
+
 void InitProfilingSupport(TProfilingSupport *prof, char *targetName);
+
 void StartProfilingUpdate(TProfilingSupport *prof);
+
 void StopProfilingUpdate(TProfilingSupport *prof, unsigned int numberOfExecutions);
+
 void ReportProfilingData(TProfilingSupport *prof);
+
 void TotalTimeProfilingUpdate(TProfilingSupport *prof);
 #endif /* PROFILING_SUPPORT_H_INCLUDED */

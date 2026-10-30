@@ -37,6 +37,7 @@ typedef struct SinCosTablStruct {
     unsigned int samplesPerRow;     /**< samples per row */
     s128 *table;                    /**< needs to be aligned to 16 bytes boundary */
 } TSinCosTable;
+
 /**
  * @brief Initializes the table used to generate the carrier
  *
@@ -47,12 +48,14 @@ typedef struct SinCosTablStruct {
  * @return SUCCESS_RETURN when the function ends with success, FAILURE_RETURN otherwise
  */
 int InitCarrierTable(TNGeneConfiguration *cfg, TSinCosTable *t, double f);
+
 /**
  * @brief Frees memory allocated for the carrier table
  *
  * @param t points to the carrier table
  */
 void DeinitCarrierTable(TSinCosTable *t);
+
 /**
  * @brief Generate samples of a carrier (both sine and cosine)
  *
@@ -70,6 +73,7 @@ void DeinitCarrierTable(TSinCosTable *t);
  */
 double GenerateCarrier(TNGeneConfiguration *cfg, TSinCosTable *t, double f, double phaseIn,
                        unsigned int samples, char *sinOut, char *cosOut);
+
 /**
  * @brief Generate samples of a sine
  *

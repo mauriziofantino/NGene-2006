@@ -30,6 +30,7 @@
 #define GPS_MAXIMUM_ECCENTRICITY 0.03
 /* IS-GPS-200N table 20-VIII. Health of other bands does not by itself
  * invalidate L1 C/A; reject bad LNAV, dead/unmodulated L1, or unknown mixtures. */
+
 static inline int GpsL1CaHealthy(unsigned health)
 {
     unsigned signal = health & 31;
@@ -497,6 +498,7 @@ static inline int GpsL1CaHealthy(unsigned health)
 #define GPS_SUBF5_HEALTH24_LAST_BYTE_IDX (35)
 #define GPS_SUBF5_HEALTH24_BITS_OF_FIRST_BYTE (4)
 #define GPS_SUBF5_HEALTH24_BITS_OF_LAST_BYTE (2)
+
 /**
  * @brief Initialize the data structure used for parse the GPS navigation message
  *
@@ -506,12 +508,14 @@ static inline int GpsL1CaHealthy(unsigned health)
  * @return SUCCESS_RETURN when the function ends with success, FAILURE_RETURN otherwise
  */
 int InitGpsParser(TNGeneConfiguration *cfg, TChannel *ch);
+
 /**
  * @brief Deinit the data structure used for parse the GPS navigation message
  *
  * @param ch points to the current channel
  */
 void DeinitGpsParser(TChannel *ch);
+
 /**
  * @brief Called at the start of the tracking, it prepares the parse of the navigation message
  *
@@ -520,6 +524,7 @@ void DeinitGpsParser(TChannel *ch);
  * @param ch points to the current channel
  */
 void StartGpsParser(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch);
+
 /**
  * @brief Manages the parse of the GPS navigation message.
  *

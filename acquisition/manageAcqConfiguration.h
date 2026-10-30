@@ -12,12 +12,14 @@
 #ifndef MANAGE_ACQ_CONFIGURATION_H_INCLUDED
 #define MANAGE_ACQ_CONFIGURATION_H_INCLUDED
 #include "ngeneConfiguration.h"
+
 /**
  * @brief Read the acquisition parameters from the configuration file
  * @param cfg points to the receiver configuration
  * @return SUCCESS_RETURN when the function ends with success, FAILURE_RETURN otherwise
  */
 int ManageAcqConfiguration(TNGeneConfiguration *cfg);
+
 /**
  * @brief Complete initializing the missing acquisition parameters in function of the selected FE
  * and fs

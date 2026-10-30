@@ -9,8 +9,11 @@ typedef struct HackrfAdcStats {
     double mean[2], sigma[2], railFraction[2], skew[2], kurtosis[2];
 } THackrfAdcStats;
 /* Calibration only. ADC bytes are inspected, never modified. */
+
 void HackrfAdcAccumulate(THackrfAdcHistogram *h, const unsigned char *iq, unsigned bytes);
+
 int HackrfAdcMeasure(const THackrfAdcHistogram *h, THackrfAdcStats *s);
 /* 0: accepted; 1: another setting; 2: hardware limit. */
+
 int HackrfGainNext(const THackrfAdcStats *s, double target, int *lna, int *vga);
 #endif

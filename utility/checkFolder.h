@@ -13,7 +13,9 @@
 #define UTILITY_CHECKFOLDER_H_INCLUDED
 /** @brief Folder containing the running executable, or NULL on lookup failure.
  * The returned storage is owned by the platform and must not be freed. */
+
 const char *GetExecutableDirectory(void);
+
 /**
  * @brief Check if the specified folder exists.
  *
@@ -22,6 +24,7 @@ const char *GetExecutableDirectory(void);
  * @return TRUE_FLAG when the folder exists, FALSE_FLAG elsewhere
  */
 int IsFolderExistent(char *folder);
+
 /**
  * @brief Get the file name associated to a file pointer.
  *        Works on Linux only.

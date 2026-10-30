@@ -41,6 +41,7 @@ typedef struct DateTimeStruct {
     int minute;    /**< Current minute in the hour (starts from 0) */
     double second; /**< Current second (starts from 0) */
 } TDateTime;
+
 /**
  * @brief FromGnssTimeToDate converts a date/time from GNSS format (week number, time of week)
  *        to a real date (dd/mm/yyyy hh:mm:ss)
@@ -51,6 +52,7 @@ typedef struct DateTimeStruct {
  * @param datePtr points to the output structure
  */
 void FromGnssTimeToDate(TSatConstellation system, int wn, double tow, TDateTime *datePtr);
+
 /**
  * @brief FromDateToGnssTime converts a real date (dd/mm/yyyy hh:mm:ss)
  *        into a GNSS format (week number, time of week)
@@ -61,6 +63,7 @@ void FromGnssTimeToDate(TSatConstellation system, int wn, double tow, TDateTime 
  * @param datePtr points to the input structure
  */
 void FromDateToGnssTime(TSatConstellation system, int *wn, double *tow, TDateTime *datePtr);
+
 /**
  * @brief FromDayNumberToDate finds the date for a day whose
  *        number in the year is known. The year is known.
@@ -72,6 +75,7 @@ void FromDateToGnssTime(TSatConstellation system, int *wn, double *tow, TDateTim
  * @return 1 if the dayOfTheYear parameter is invalid, 0 else.
  */
 int FromDayNumberToDate(int dayOfTheYear, TDateTime *datePtr);
+
 /**
  * @brief FromDateToDayNumber finds the day number from the date.
  *
@@ -80,6 +84,7 @@ int FromDayNumberToDate(int dayOfTheYear, TDateTime *datePtr);
  * @return the dayOfTheYear.
  */
 int FromDateToDayNumber(TDateTime *datePtr);
+
 /**
  * @brief GetGstToGpsTimeOffset translates from Galileo System Time (GST)
  *        to GPS time.
@@ -94,6 +99,7 @@ int FromDateToDayNumber(TDateTime *datePtr);
  *         Galileo navigation message), TRUE_FLAG else.
  */
 int GetGstToGpsTimeOffset(TNGeneData *rx, int gstWn, double gstTow, double *gstToGpsTimeOffset);
+
 /**
  * @brief FromGnssTimeToUtcTime converts from GNSS time to UTC
  *        (week number, time of week). If parameters are not available,
@@ -111,6 +117,7 @@ int GetGstToGpsTimeOffset(TNGeneData *rx, int gstWn, double gstTow, double *gstT
 void FromGnssTimeToUtcTime(TGnssToUtcTimeConversion *utcData, int utcDataValid,
                            int defaultLeapSeconds, int gnssWn, double gnssTime, int *utcWn,
                            double *utcTime);
+
 /**
  * @brief TimeDifference returns the difference (in seconds) between two GNSS time.
  *
@@ -122,6 +129,7 @@ void FromGnssTimeToUtcTime(TGnssToUtcTimeConversion *utcData, int utcDataValid,
  * @return time1-time2 in seconds
  */
 double TimeDifference(int wn1, double tow1, int wn2, double tow2);
+
 /**
  * @brief TimeIncrement returns the sums between two GNSS time.
  *
@@ -131,12 +139,14 @@ double TimeDifference(int wn1, double tow1, int wn2, double tow2);
  * @param towIncrement is the time of week of the increment (in seconds)
  */
 void TimeIncrement(int *wn, double *tow, int wnIncrement, double towIncrement);
+
 /**
  * @brief GetPcTime reads the date and the time of the PC.
  *
  * @param currTime points to the structure where the current date and time are saved
  */
 void GetPcTime(TDateTime *currTime);
+
 /**
  * @brief FromPcTimeToGalileoTime reads the current local time on the PC and uses it to emulate a
  * receiver clock.

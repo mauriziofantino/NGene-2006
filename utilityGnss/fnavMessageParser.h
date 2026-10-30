@@ -11,6 +11,7 @@
  */
 #ifndef FNAV_MESSAGE_PARSER_H_INCLUDED
 #define FNAV_MESSAGE_PARSER_H_INCLUDED
+
 /**
  * @brief Initialize the data structure used for parse the Galileo F/NAV navigation message
  *
@@ -20,12 +21,14 @@
  * @return SUCCESS_RETURN when the function ends with success, FAILURE_RETURN otherwise
  */
 int InitFNavParser(TNGeneConfiguration *cfg, TChannel *ch);
+
 /**
  * @brief Deinit the data structure used for parse the Galileo F/NAV navigation message
  *
  * @param ch points to the current channel
  */
 void DeinitFNavParser(TChannel *ch);
+
 /**
  * @brief Called at the start of the tracking, it prepares the parse of the navigation message
  *
@@ -34,6 +37,7 @@ void DeinitFNavParser(TChannel *ch);
  * @param ch points to the current channel
  */
 void StartFNavParser(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch);
+
 /**
  * @brief Manages the parse of the Galileo F/NAV navigation message.
  *

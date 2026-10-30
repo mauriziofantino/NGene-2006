@@ -10,6 +10,7 @@
             return 1;                                                                              \
         }                                                                                          \
     } while (0)
+
 static void Gaussian(THackrfAdcHistogram *h, double muI, double muQ, double sigmaI, double sigmaQ)
 {
     const double n = 1048576;
@@ -29,6 +30,7 @@ static void Gaussian(THackrfAdcHistogram *h, double muI, double muQ, double sigm
         }
     }
 }
+
 int main(void)
 {
     THackrfAdcHistogram h;

@@ -69,6 +69,7 @@ int InitChannelScheduler(TNGeneConfiguration *cfg, TChannelScheduler *chSch,
     chSch->galileoChannelsInTracking = 0;
     return SUCCESS_RETURN;
 }
+
 void DeinitChannelScheduler(TChannelScheduler *chSch)
 {
     DestroyPrnList(&(chSch->prnList));
@@ -147,6 +148,7 @@ void FreeAcquisitionSpotAfterAcquisitionSuccess(TNGeneData *rx, TChannelSchedule
         chSch->galileoChannelsInAcquisition--;
     FindAndOccupyInPrnList(ch->satType, ch->satId, &(rx->acqCommon.nonCohManager.testedPrns));
 }
+
 void ResetChannelVariables(TNGeneConfiguration *cfg, TChannel *ch)
 {
     ch->satId = INVALID_PRN;
@@ -191,6 +193,7 @@ void FreeAcquisitionSpotAfterAcquisitionFailure(TNGeneConfiguration *cfg, TChann
     if (ch->satType == GALILEO_SAT)
         chSch->galileoChannelsInAcquisition--;
 }
+
 void ReleaseTracking(TNGeneConfiguration *cfg, TChannelScheduler *chSch, TChannel *ch)
 {
     /* if tracking is lost,
@@ -205,6 +208,7 @@ void ReleaseTracking(TNGeneConfiguration *cfg, TChannelScheduler *chSch, TChanne
     FindAndFreeInPrnList(ch->satType, ch->satId, &(chSch->prnList));
     ResetChannelVariables(cfg, ch);
 }
+
 void InitChannel(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch)
 {
     // init the state taking into account if the elaboration is enabled
@@ -261,6 +265,7 @@ void InitChannel(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch)
 #endif
     //**
 }
+
 void DenitChannel(TChannel *ch)
 {
     DeinitCoarseAcquisition(&(ch->coarse));
@@ -286,6 +291,7 @@ void DenitChannel(TChannel *ch)
     ReportProfilingData(&(ch->galileoSampleCompressionProfiling));
 #endif
 }
+
 void UpdateBlocksize(TNGeneConfiguration *cfg, TChannel *ch)
 {
     /* verify the goodness of codePhaseFrac */
@@ -297,6 +303,7 @@ void UpdateBlocksize(TNGeneConfiguration *cfg, TChannel *ch)
     ch->blocksizeNext =
         (unsigned int)((((double)GPS_CODE_LEN - ch->codePhaseFrac) / ch->codeRate) * cfg->fs) + 1;
 }
+
 unsigned int GetMaximumNumberOfSamplesNeeded(TNGeneConfiguration *cfg, TNGeneData *rx)
 {
     unsigned int neededSamples = (unsigned int)cfg->samplesPerMillisecond;
@@ -318,6 +325,7 @@ unsigned int GetMaximumNumberOfSamplesNeeded(TNGeneConfiguration *cfg, TNGeneDat
     }
     return neededSamples;
 }
+
 unsigned int GetNumberOfUsedSamples(TNGeneConfiguration *cfg, TNGeneData *rx)
 {
     unsigned int usedSamples = UINT_MAX;
@@ -379,6 +387,7 @@ void GetSamplePointersForChannel(TChannel *ch, TCircularBuffer *buf, char **firs
         *secondBunchSize = 0;
     }
 }
+
 int AllChannelsUnused(TNGeneConfiguration *cfg, TNGeneData *rx)
 {
     int allChannelsUnused = TRUE_FLAG;
@@ -611,6 +620,7 @@ void DoChannelManager(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch, ch
     /* Prepare next elaboration */
     UpdateBlocksize(cfg, ch);
 }
+
 int FindChId(TNGeneConfiguration *cfg, TNGeneData *rx, TSatConstellation satType, int satId)
 {
     int chIndex;
@@ -622,6 +632,7 @@ int FindChId(TNGeneConfiguration *cfg, TNGeneData *rx, TSatConstellation satType
     }
     return -1;
 }
+
 void HardRestartChannels(TNGeneConfiguration *cfg, TNGeneData *rx)
 {
     int chIndex;

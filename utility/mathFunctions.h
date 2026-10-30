@@ -33,6 +33,7 @@ typedef struct FirStruct {
     int nz;    /**< length of the delay line */
     double *z; /**< delay line */
 } TFir;
+
 /**
  * @brief Initializes a FIR filter. It allocates memory.
  *
@@ -43,6 +44,7 @@ typedef struct FirStruct {
  * @return EXIT_FAILURE if errors occur, EXIT_SUCCESS otherwise
  */
 int FirInit(TFir *fir, int nb, double *b);
+
 /**
  * @brief Initializes the current state of a FIR filter.
  *
@@ -57,18 +59,21 @@ int FirInit(TFir *fir, int nb, double *b);
  * @return EXIT_FAILURE if errors occur, EXIT_SUCCESS otherwise
  */
 void FirSetInitialState(TFir *fir, int nz, double *z);
+
 /**
  * @brief Deallocates memory used by FIR filter.
  *
  * @param fir points to the FIR data structure
  */
 void FirDeinit(TFir *fir);
+
 /**
  * @brief Cleans the FIR memory.
  *
  * @param fir points to the FIR data structure
  */
 void FirRestart(TFir *fir);
+
 /**
  * @brief Performs FIR filter (single sample input)
  *
@@ -78,6 +83,7 @@ void FirRestart(TFir *fir);
  * @return the filter output
  */
 double FirPerform(TFir *fir, double xin);
+
 /**
  * @brief Performs FIR filter (array of samples input)
  *
@@ -104,6 +110,7 @@ typedef struct IirStruct {
     int nz;    /**< size of the delay line */
     double *z; /**< length of the delay line */
 } TIir;
+
 /**
  * @brief Initializes a IIR filter. It allocates memory.
  *
@@ -116,6 +123,7 @@ typedef struct IirStruct {
  * @return EXIT_FAILURE if errors occur, EXIT_SUCCESS otherwise
  */
 int IirInit(TIir *iir, int nb, double *b, int na, double *a);
+
 /**
  * @brief Initializes the current state of an IIR filter.
  *
@@ -130,18 +138,21 @@ int IirInit(TIir *iir, int nb, double *b, int na, double *a);
  * @return EXIT_FAILURE if errors occur, EXIT_SUCCESS otherwise
  */
 void IirSetInitialState(TIir *iir, int nz, double *z);
+
 /**
  * @brief Deallocates memory used by IIR filter.
  *
  * @param iir points to the IIR data structure
  */
 void IirDeinit(TIir *iir);
+
 /**
  * @brief Cleans the IIR memory.
  *
  * @param fir points to the IIR data structure
  */
 void IirRestart(TIir *iir);
+
 /**
  * @brief Performs IIR filter (single sample input)
  *
@@ -151,6 +162,7 @@ void IirRestart(TIir *iir);
  * @return the filter output
  */
 double IirPerform(TIir *iir, double xin);
+
 /**
  * @brief Performs IIR filter (array of samples input)
  *
@@ -171,6 +183,7 @@ typedef struct AverageWindowStruct {
     double coeff1, coeff2; /**< filter coefficients */
     double filterValue;    /**< current averaged value */
 } TAverageWindow;
+
 /**
  * @brief Function to initialize the filter
  *
@@ -179,6 +192,7 @@ typedef struct AverageWindowStruct {
  * @param value to be stored as filter memory
  */
 void InitAverageWindow(TAverageWindow *a, int size, double value);
+
 /**
  * @brief Function which gets the current filter value (just a wrapper function)
  *
@@ -187,6 +201,7 @@ void InitAverageWindow(TAverageWindow *a, int size, double value);
  * @return the current stored filter value
  */
 double GetAverageWindowValue(TAverageWindow *a);
+
 /**
  * @brief Function which performs a smoothing filter operation on a block of data following the
  * recursive operation implemented is: \f$ y[n]=\frac{1}{N}x[n]+\frac{N-1}{N}\cdot y[n-1]\f$
@@ -197,12 +212,14 @@ double GetAverageWindowValue(TAverageWindow *a);
  * @return the filter output (it is the same value catch by GetFilterValue)
  */
 double PerformAverageWindow(TAverageWindow *a, double sample);
+
 /**
  * @brief Function to determine the factorial of an integer number
  * @param n is the integer number
  * @return \f$ n!\f$
  */
 unsigned Fact(unsigned n);
+
 /**
  * @brief Formula of the False Alarm Probability
  * @details The probability density function at the envelope detector input, in misalignment
@@ -225,6 +242,7 @@ unsigned Fact(unsigned n);
  * @return the false alarm probability \f$ P_{fa}\f$ evaluated for the threshold \f$ V_t^2\f$
  */
 double FalseAlarm(double x, double *eqn_arg);
+
 /**
  * @brief Formula to get the edges where a valid solution for the function threshold can be found.
  * The step is set equal to 3 times the variance of the rayleigh distribution estimated at the
@@ -251,6 +269,7 @@ void Edges(double *xa, double *xb, double (*f)(double, double *), double *eqn_ar
  * @brief  No algorithm convergence
  */
 #define EQN_ERROR_NO_CONVERGENCE 2
+
 /**
  * @brief Solve_eqn is a function for the root finding of non linear equation. It performs an
  * iterative search over a maximum of imax iteration.
@@ -271,6 +290,7 @@ void Edges(double *xa, double *xb, double (*f)(double, double *), double *eqn_ar
  */
 double SolveEqn(double x0, double x2, double (*f)(double, double *), double *eqn_arg, double eps,
                 unsigned int imax, unsigned int *error);
+
 /**
  * @brief Return the integer number nearest to the input floating number
  *
@@ -279,6 +299,7 @@ double SolveEqn(double x0, double x2, double (*f)(double, double *), double *eqn
  * @return The nearest integer number
  */
 int NearestInteger(float x);
+
 /**
  * @brief CeilLog2 evaluates the ceiling of the log2 of the input argument
  *

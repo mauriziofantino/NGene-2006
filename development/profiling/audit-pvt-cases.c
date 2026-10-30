@@ -42,18 +42,21 @@ int KalmanFilterPrediction(int, TKalmanFilterData *, double *, double *, double 
 void PreparePPost(TKalmanFilterData *, TSatConstellation);
 void UpdatePPostMulti(TKalmanFilterData *, TSatConstellation);
 /* Disable external corrections/logging only; tested mathematics is original. */
+
 int SwrxLog(int severity, const char *format, ...)
 {
     (void)severity;
     (void)format;
     return 0;
 }
+
 void CloseNGene(TNGeneConfiguration *cfg, int status)
 {
     (void)cfg;
     exit(status ? status : 99);
 }
 void ResetPvt(TNGeneConfiguration *, TPvtData *, TPvtResults *, int);
+
 double GetEgnosFastCorrection(TNGeneConfiguration *c, int i, TEgnosCorrections *e, double t)
 {
     (void)c;
@@ -82,6 +85,7 @@ void GetEgnosLongTermPositionCorrection(TNGeneConfiguration *c, int d, int i, TE
     (void)t;
     *x = *y = *z = 0;
 }
+
 void GetIonosphericPiercePoint(double *p, double a, double e, double *lat, double *lon, double *f)
 {
     (void)p;
@@ -103,6 +107,7 @@ static TNavigationMessage nav[8];
 static TNavigationMessage galBank[GALILEO_NUMBER_OF_PRNS];
 static TCarrierSmoothingData smoothing[8];
 static int mismatches;
+
 static void Fixture(int n, int mixed)
 {
     int i;
@@ -160,6 +165,7 @@ static void Fixture(int n, int mixed)
         nav[i].clk.toc = 100000;
     }
 }
+
 static void Result(const char *name, double actual, double expected, double tolerance)
 {
     if (!isfinite(actual) || fabs(actual - expected) > tolerance)
@@ -168,6 +174,7 @@ static void Result(const char *name, double actual, double expected, double tole
            isfinite(actual) && fabs(actual - expected) <= tolerance ? "PASS" : "MISMATCH");
 }
 /* Independent transcription of ICD orbit equations, with Newton's method. */
+
 static void OrbitReference(const TGnssEphemerides *e, double t, double mu, double p[3])
 {
     double a = e->sqrtA * e->sqrtA, tk = t - e->toe, n = sqrt(mu / (a * a * a)) + e->deltaN;
@@ -188,6 +195,7 @@ static void OrbitReference(const TGnssEphemerides *e, double t, double mu, doubl
     p[1] = x * sin(omega) + y * cos(inc) * cos(omega);
     p[2] = y * sin(inc);
 }
+
 static void PerfectKf(double bias)
 {
     int i, j;
@@ -218,6 +226,7 @@ static void PerfectKf(double bias)
         observations[i].velSigma2 = 1;
     }
 }
+
 static void CheckLeastSquares(int mixed, int weighted)
 {
     const double lat = 45.06538716666666 * DEGREE_TO_RADIAN,
@@ -285,6 +294,7 @@ static void CheckLeastSquares(int mixed, int weighted)
 /* Bit locations are transcribed from the ICD tables, not parser macros.
  * GPS decoded words retain two preceding parity bits and six trailing parity
  * bits in NGene's 32-bit container; this tests fields, not CRC/FEC recovery. */
+
 static void PutBits(unsigned char *bytes, int start, int count, uint32_t value)
 {
     int k;
@@ -294,6 +304,7 @@ static void PutBits(unsigned char *bytes, int start, int count, uint32_t value)
             (bytes[(start + k) / 8] & ~mask) | (((value >> (count - 1 - k)) & 1) ? mask : 0);
     }
 }
+
 static void CheckNavigationFields(void)
 {
     Fixture(1, 0);
@@ -369,6 +380,7 @@ static void CheckNavigationFields(void)
     Result("gps_iono_beta2", nav[0].iono.beta[2], ldexp(17., 16), 0);
     Result("gps_iono_beta3_signed", nav[0].iono.beta[3], ldexp(-19., 16), 0);
 }
+
 int main(int argc, char **argv)
 {
     int i, j;

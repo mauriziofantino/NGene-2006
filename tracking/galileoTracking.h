@@ -15,6 +15,7 @@
 #include "ngeneDataStructure.h"
 #include "channelDataStructure.h"
 #include "trackingDataStructure.h"
+
 /**
  * @brief Performs tracking for a Galileo PRN
  * @details Elaborates one millisecond of samples.

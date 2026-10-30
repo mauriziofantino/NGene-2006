@@ -13,6 +13,7 @@
 #define NGENE_INITIALIZATION_H_INCLUDED
 #include "ngeneConfiguration.h"
 #include "ngeneDataStructure.h"
+
 /**
  * @brief Initializes the paths for the receiver execution
  *
@@ -22,6 +23,7 @@
  * @return SUCCESS_RETURN when the function ends with success, FAILURE_RETURN otherwise
  */
 void PreparePaths(TNGeneConfiguration *cfg, TNGeneData *rx);
+
 /**
  * @brief Performs some preliminary initializations of the receiver
  *
@@ -31,6 +33,7 @@ void PreparePaths(TNGeneConfiguration *cfg, TNGeneData *rx);
  * @return SUCCESS_RETURN when the function ends with success, FAILURE_RETURN otherwise
  */
 int PreliminaryInitialization(TNGeneConfiguration *cfg, TNGeneData *rx);
+
 /**
  * @brief Initializes all the receiver structure (excluding configuration)
  *
@@ -40,6 +43,7 @@ int PreliminaryInitialization(TNGeneConfiguration *cfg, TNGeneData *rx);
  * @return SUCCESS_RETURN when the function ends with success, FAILURE_RETURN otherwise
  */
 int InitReceiver(TNGeneConfiguration *cfg, TNGeneData *rx);
+
 /**
  * @brief Frees the memory allocated for the receiver data structure
  *

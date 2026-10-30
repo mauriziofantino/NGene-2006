@@ -57,6 +57,7 @@ typedef enum FieldTypeEnum {
     F_STRING_WITH_SPACES,
     F_CHAR
 } TFieldType;
+
 /**
  * @brief ParsePath parses the string used to specify the source of the input samples
  *
@@ -68,6 +69,7 @@ typedef enum FieldTypeEnum {
  * @return SUCCESS_RETURN when the desired value is read, FAILURE_RETURN otherwise
  */
 int ParsePath(char *line, int *vid, int *pid, char *filename, int workFromFile);
+
 /**
  * @brief InitSwrxLog initializes some variables used by SwrxLog
  *
@@ -75,12 +77,14 @@ int ParsePath(char *line, int *vid, int *pid, char *filename, int workFromFile);
  * @params rx points to the receiver data structure
  */
 void InitSwrxLog(TNGeneConfiguration *cfg, TNGeneData *rx);
+
 /**
  * @brief RestartSwrxLog updates the pointer to the log (for the split)
  *
  * @param cfg points to the receiver configuration (log file included)
  */
 void RestartSwrxLog(TNGeneConfiguration *cfg);
+
 /**
  * @brief SwrxLog prints a message to the user. Behavior depends on the chosen interface
  *
@@ -90,6 +94,7 @@ void RestartSwrxLog(TNGeneConfiguration *cfg);
  * @return SUCCESS_RETURN when the desired value is read, FAILURE_RETURN otherwise
  */
 int SwrxLog(int severity, const char *format, ...);
+
 /**
  * @brief GetVal reads a specified data from a configuration file.
  *
@@ -105,8 +110,11 @@ int SwrxLog(int severity, const char *format, ...);
  * @return SUCCESS_RETURN when the desired value is read, FAILURE_RETURN otherwise
  */
 int GetVal(char *fileName, char *fieldName, void *variable, TFieldType fieldType, int fieldLen);
+
 int GetLineCountXml(FILE *PKRFile);
+
 int GetValXml(FILE *PKRFile, char *fieldName, void *variable, size_t *size);
+
 /**
  * @brief readAnInt reads an integer value from a void pointer,
  * 	      then updates the pointer
@@ -116,6 +124,7 @@ int GetValXml(FILE *PKRFile, char *fieldName, void *variable, size_t *size);
  * @return the read int value
  */
 int ReadAnInt(void **ptr);
+
 /**
  * @brief readAFloat reads a float value from a void pointer,
  * 	      then updates the pointer
@@ -125,6 +134,7 @@ int ReadAnInt(void **ptr);
  * @return the read float value
  */
 float ReadAFloat(void **ptr);
+
 /**
  * @brief readADouble reads a double value from a void pointer,
  * 	      then updates the pointer
@@ -134,6 +144,7 @@ float ReadAFloat(void **ptr);
  * @return the read double value
  */
 double ReadADouble(void **ptr);
+
 /**
  * @brief WriteAnInt writes an int value in the location pointed by a void pointer,
  * 	      then updates the pointer value
@@ -142,6 +153,7 @@ double ReadADouble(void **ptr);
  * @param value is the value that will be written
  */
 void WriteAnInt(void **ptr, int value);
+
 /**
  * @brief WriteAShort writes a short int value in the location pointed by a void pointer,
  * 	      then updates the pointer value
@@ -150,6 +162,7 @@ void WriteAnInt(void **ptr, int value);
  * @param value is the value that will be written
  */
 void WriteAShort(void **ptr, short int value);
+
 /**
  * @brief WriteAnUnsignedInt writes an unsigned int value in the location pointed by a void pointer,
  * 	      then updates the pointer value
@@ -158,6 +171,7 @@ void WriteAShort(void **ptr, short int value);
  * @param value is the value that will be written
  */
 void WriteAnUnsignedInt(void **ptr, unsigned int value);
+
 /**
  * @brief WriteAnUnsignedLongLongInt writes an unsigned long lomng int value in the location pointed
  * by a void pointer, then updates the pointer value
@@ -167,6 +181,7 @@ void WriteAnUnsignedInt(void **ptr, unsigned int value);
  * @param value is the value that will be written
  */
 void WriteAnUnsignedLongLongInt(void **ptr, unsigned long long int value);
+
 /**
  * @brief WriteAChar writes an char value in the location pointed by a void pointer,
  * 	      then updates the pointer value
@@ -175,6 +190,7 @@ void WriteAnUnsignedLongLongInt(void **ptr, unsigned long long int value);
  * @param value is the value that will be written
  */
 void WriteAChar(void **ptr, char value);
+
 /**
  * @brief WriteAnUnsignedChar writes an unsigned char value in the location pointed by a void
  * pointer, then updates the pointer value
@@ -183,6 +199,7 @@ void WriteAChar(void **ptr, char value);
  * @param value is the value that will be written
  */
 void WriteAnUnsignedChar(void **ptr, unsigned char value);
+
 /**
  * @brief WriteAFloat writes a float value in the location pointed by a void pointer,
  * 	      then updates the pointer value
@@ -191,6 +208,7 @@ void WriteAnUnsignedChar(void **ptr, unsigned char value);
  * @param value is the value that will be written
  */
 void WriteAFloat(void **ptr, float value);
+
 /**
  * @brief WriteADouble writes a double value in the location pointed by a void pointer,
  * 	      then updates the pointer value
@@ -199,6 +217,7 @@ void WriteAFloat(void **ptr, float value);
  * @param value is the value that will be written
  */
 void WriteADouble(void **ptr, double value);
+
 /**
  * @brief WriteALongLongInt writes a long long int value in the location pointed by a void pointer,
  * 	      then updates the pointer value
@@ -207,6 +226,7 @@ void WriteADouble(void **ptr, double value);
  * @param value is the value that will be written
  */
 void WriteALongLongInt(void **ptr, long long int value);
+
 /**
  * @brief WriteAString copy a string in the location pointed by a void pointer,
  * 	      then updates the pointer value
@@ -216,6 +236,7 @@ void WriteALongLongInt(void **ptr, long long int value);
  * @param arrayLength is the number of char that will be copied
  */
 void WriteAString(void **ptr, char *array, int arrayLength);
+
 /**
  * @brief PrintABitString print a string of 1 and 0 starting from a sequence of bytes.
  *        This string is printed in the text file pointed by outFile. At the end of the
@@ -227,6 +248,7 @@ void WriteAString(void **ptr, char *array, int arrayLength);
  *        of 8, remaining bits are ignored.
  */
 void PrintABitString(FILE *outFile, unsigned char *array, int numBits);
+
 /**
  * @brief Check if the file with the given filename does exist or not
  *

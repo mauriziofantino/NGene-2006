@@ -45,6 +45,7 @@
  *        of noise variance for confirmation
  */
 #define THRESHOLD_NUMBER_OF_ESTIMATIONS 10000
+
 /**
  * @brief Initializes acquisition variable common to all the channels
  *
@@ -54,12 +55,14 @@
  * @return SUCCESS_RETURN when the function ends with success, FAILURE_RETURN otherwise
  */
 int InitAcquisitionCommon(TNGeneConfiguration *cfg, TNGeneData *rx);
+
 /**
  * @brief Deinitializes acquisition variable common to all the channels
  *
  * @param acqCommon points to the structure storing these variables
  */
 void DeinitAcquisitionCommon(TAcqCommon *acqCommon);
+
 /**
  * @brief Calculates the threshold for coarse acquisition of one constellation.
  * @details Called by the the coarse acquisition function, uses the results of the coarse
@@ -69,6 +72,7 @@ void DeinitAcquisitionCommon(TAcqCommon *acqCommon);
  * @param nonCoherentSums is the number of non coherent sums
  */
 void UpdateCoarseThreshold(TNGeneConfiguration *cfg, TChannel *ch, int nonCoherentSums);
+
 /**
  * @brief Performs preliminary operations in order to enable the calculus of the threshold for
  * confirmation.
@@ -78,6 +82,7 @@ void UpdateCoarseThreshold(TNGeneConfiguration *cfg, TChannel *ch, int nonCohere
  */
 void UpdateVariablesForConfirmationThresholds(TNGeneConfiguration *cfg, TNGeneData *rx);
 #ifndef DISABLE_CONFIRMATION_THRESHOLD
+
 /**
  * @brief Calculates the threshold for confirmation.
  * @details Called by main, it performs correlation over incoming samples in the buffer. Uses fixed
@@ -88,6 +93,7 @@ void UpdateVariablesForConfirmationThresholds(TNGeneConfiguration *cfg, TNGeneDa
  */
 void UpdateConfirmationThresholds(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch);
 #else
+
 /**
  * @brief Calculates the threshold for confirmation.
  * @details Called by main, it performs correlation over incoming samples in the buffer. Uses fixed

@@ -28,8 +28,12 @@ typedef struct MegaBufferStruct {
     int bufferFull;
     double flushedSeconds;
 } TMegaBuffer;
+
 void InitMegaBuffer(TMegaBuffer *buf, double fs);
+
 void DeinitMegaBuffer(TMegaBuffer *buf);
+
 void StartMegaBuffer(TMegaBuffer *buf);
+
 void UpdateMegaBuffer(TMegaBuffer *buf, char *v, unsigned int n);
 #endif /* MEGA_BUFFER_H_INCLUDED */

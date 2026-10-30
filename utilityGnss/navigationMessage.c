@@ -23,6 +23,7 @@
 #include "closeManager.h"
 #include "galileoMessageParser.h"
 #include "pvtChecks.h"
+
 void ResetEphemerides(TGnssEphemerides *eph)
 {
     eph->iode1 = INVALID_VALUE;
@@ -49,6 +50,7 @@ void ResetEphemerides(TGnssEphemerides *eph)
     eph->sisa = 0;
     eph->galileoDataValidity = NAVIGATION_DATA_VALID;
 }
+
 void ResetClockCorrections(TGnssClk *clk)
 {
     clk->toc = 0.0;
@@ -58,6 +60,7 @@ void ResetClockCorrections(TGnssClk *clk)
     clk->tGroupDelay = 0.0;
     clk->iodc = INVALID_VALUE;
 }
+
 int InitNavigationMessage(TNGeneConfiguration *cfg, TNGeneData *rx)
 {
     int index;
@@ -196,6 +199,7 @@ int InitNavigationMessage(TNGeneConfiguration *cfg, TNGeneData *rx)
     }
     return SUCCESS_RETURN;
 }
+
 void DeinitNavigationMessage(TNGeneConfiguration *cfg, TNGeneData *rx)
 {
     SaveAlmanacIntoYumaFile(cfg, rx);
@@ -204,6 +208,7 @@ void DeinitNavigationMessage(TNGeneConfiguration *cfg, TNGeneData *rx)
     free(rx->galNavigationMessage);
     free(rx->fnavNavigationMessage);
 }
+
 void CopyFromTmpToOperative(TNavigationMessage *navMsg)
 {
     TGnssEphemerides *ephTmp = &(navMsg->ephTmp);
@@ -273,6 +278,7 @@ static void PrintAlmanac(FILE *logFile, TGnssAlmanac *alm, int prn, int wna,
         fprintf(logFile, "week:                       %d\n", wna + alm->wna);
     fprintf(logFile, "\n");
 }
+
 void SaveAlmanacIntoYumaFile(TNGeneConfiguration *cfg, TNGeneData *rx)
 {
     char filename[MAX_ROW_LENGTH];
@@ -351,6 +357,7 @@ void SaveAlmanacIntoYumaFile(TNGeneConfiguration *cfg, TNGeneData *rx)
         }
     }
 }
+
 void SaveGalileoAlmanacIntoXmlFile(TNGeneConfiguration *cfg, TNGeneData *rx)
 {
     time_t currentTime;

@@ -14,6 +14,7 @@
 #ifndef NEQ_UTILS_H_INCLUDED
 #define NEQ_UTILS_H_INCLUDED
 #include "nequickDataStructures.h"
+
 /**
  * @brief This function is a clipped exponential function. It always returns a valid
  *        double.
@@ -23,6 +24,7 @@
  * @return the clipped exponential value
  */
 double NeqClipExp(double dPower);
+
 /**
  * @brief  This function calculates:
  *
@@ -43,6 +45,7 @@ double NeqClipExp(double dPower);
  * @return The value of the exponential above
  */
 double NeqJoin(double dF1, double dF2, double dAlpha, double dX);
+
 /**
  * @brief This function calculates the square of a number.
  *

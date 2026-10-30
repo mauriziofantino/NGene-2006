@@ -25,6 +25,7 @@
  *        declare this define to enable this debug behavior
  */
 // #define SPLIT_PERIOD_IN_MINUTES
+
 void InitLogSplitter(TNGeneConfiguration *cfg, TNGeneData *rx)
 {
     char cfgFilename[MAX_ROW_LENGTH];
@@ -70,6 +71,7 @@ void InitLogSplitter(TNGeneConfiguration *cfg, TNGeneData *rx)
 /*******
  * TODO IMPORTANTE!!! FARE CHECK DELLA GESTIONE LOG IN CASO DI MULTI_THREAD!!!
  */
+
 void ManageLogSplitter(TNGeneConfiguration *cfg, TNGeneData *rx)
 {
     TLogSplitter *logSplitter = &(rx->logSplitter);

@@ -20,6 +20,7 @@
 #include "simd.h"
 #include "ioFunctions.h"
 #include "closeManager.h"
+
 int InitCarrierTable(TNGeneConfiguration *cfg, TSinCosTable *t, double f)
 {
     double normalizedF;
@@ -72,6 +73,7 @@ int InitCarrierTable(TNGeneConfiguration *cfg, TSinCosTable *t, double f)
     }
     return SUCCESS_RETURN;
 }
+
 void DeinitCarrierTable(TSinCosTable *t)
 {
     free(t->table);

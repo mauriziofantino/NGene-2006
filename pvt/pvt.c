@@ -42,6 +42,7 @@
  *        when the PVT results are discarded as not good. Enable for debug.
  */
 #define SAVE_BAD_PVT_RESULTS
+
 void InitOperativeChannels(TNGeneConfiguration *cfg, TPvtData *pvtData)
 {
     int idx;
@@ -70,6 +71,7 @@ void InitOperativeChannels(TNGeneConfiguration *cfg, TPvtData *pvtData)
         pvtCh->pseudorangeResidual = 0.0;
     }
 }
+
 static void UpdatePvtMinimumChannels(TPvtData *pvtData)
 {
     pvtData->minNumOfChannels =
@@ -79,6 +81,7 @@ static void UpdatePvtMinimumChannels(TPvtData *pvtData)
                    ? LS_MULTI_SIZE
                    : LS_SINGLE_SIZE);
 }
+
 void DeleteOperativeChannel(TPvtData *pvtData, int chIdx)
 {
     TChannel *ch;
@@ -100,6 +103,7 @@ void DeleteOperativeChannel(TPvtData *pvtData, int chIdx)
     pvtData->numOfOperativeChannels--;
     UpdatePvtMinimumChannels(pvtData);
 }
+
 int InitPvtData(TNGeneConfiguration *cfg, TNGeneData *rx)
 {
     TPvtData *pvtData = &(rx->pvtData);
@@ -242,6 +246,7 @@ int InitPvtData(TNGeneConfiguration *cfg, TNGeneData *rx)
     }
     return SUCCESS_RETURN;
 }
+
 void DeinitPvtData(TNGeneData *rx)
 {
     TPvtData *pvtData = &(rx->pvtData);
@@ -283,6 +288,7 @@ void DeinitPvtData(TNGeneData *rx)
         pvtData->gnssTimeLogFile = NULL;
     }
 }
+
 void ResetPvtInformationForChannels(TNGeneConfiguration *cfg, TNGeneData *rx)
 {
     int index;
@@ -290,6 +296,7 @@ void ResetPvtInformationForChannels(TNGeneConfiguration *cfg, TNGeneData *rx)
         rx->channelArray[index].pvtInfo.usedForPVT = FALSE_FLAG;
     }
 }
+
 void ResetPvt(TNGeneConfiguration *cfg, TPvtData *pvtData, TPvtResults *pvtRes, int hardReset)
 {
     int index;
@@ -332,6 +339,7 @@ void ResetPvt(TNGeneConfiguration *cfg, TPvtData *pvtData, TPvtResults *pvtRes, 
         pvtRes->galSatStatus[index].satInformationValid = FALSE_FLAG;
     }
 }
+
 int TimeForANewPvt(TNGeneConfiguration *cfg, TNGeneData *rx)
 {
     TPvtData *pvtData = &(rx->pvtData);
@@ -365,6 +373,7 @@ int TimeForANewPvt(TNGeneConfiguration *cfg, TNGeneData *rx)
 }
 #define MAXIMUM_EPH_AGE 12200
 #define MAXIMUM_REDCED_AGE 600
+
 void DeleteOldNavMesg(TNGeneConfiguration *cfg, TNGeneData *rx)
 {
     TPvtData *pvtData = &(rx->pvtData);
@@ -410,6 +419,7 @@ void DeleteOldNavMesg(TNGeneConfiguration *cfg, TNGeneData *rx)
         }
     }
 }
+
 int SelectChannelsForPvt(TNGeneConfiguration *cfg, TNGeneData *rx)
 {
     TPvtConfiguration *pvtCfg = &(cfg->pvtConfiguration);
@@ -465,6 +475,7 @@ int SelectChannelsForPvt(TNGeneConfiguration *cfg, TNGeneData *rx)
     }
     return FAILURE_RETURN;
 }
+
 void PlotPvtLogFile(TNGeneData *rx, TPvtData *pvtData)
 {
     if (pvtData->pvtLogFile != NULL) {
@@ -486,6 +497,7 @@ void PlotPvtLogFile(TNGeneData *rx, TPvtData *pvtData)
         fprintf(pvtData->pvtLogFile, "\n");
     }
 }
+
 void ComputeTransmissionTime(TNGeneConfiguration *cfg, TPvtData *pvtData)
 {
     TPvtChannel *pvtCh;
@@ -529,6 +541,7 @@ void ComputeTransmissionTime(TNGeneConfiguration *cfg, TPvtData *pvtData)
         fprintf(pvtData->pvtLogFile, "\n");
     }
 }
+
 int VerifyTransmissionTime(TPvtData *pvtData)
 {
     const TSatConstellation types[2] = {GPS_SAT, GALILEO_SAT};
@@ -755,6 +768,7 @@ void ComputeSatsPositions(TNGeneConfiguration *cfg, TNGeneData *rx, TPvtData *pv
         }
     }
 }
+
 int ApplyElevationMask(TNGeneConfiguration *cfg, TPvtData *pvtData)
 {
     int chIdx;
@@ -788,6 +802,7 @@ int ApplyElevationMask(TNGeneConfiguration *cfg, TPvtData *pvtData)
         return FALSE_FLAG;
     }
 }
+
 int ApplyUrbanCanyonMask(TNGeneConfiguration *cfg, TPvtData *pvtData)
 {
     int chIdx;
@@ -863,6 +878,7 @@ int ApplyUrbanCanyonMask(TNGeneConfiguration *cfg, TPvtData *pvtData)
 }
 /* minimum value: 2 */
 #define MINIMUM_CSM_ITERATION_BEFORE_USE 10
+
 void DeleteNotSmoothed(TNGeneConfiguration *cfg, TPvtData *pvtData)
 {
     int chIdx;
@@ -911,6 +927,7 @@ void DeleteNotSmoothed(TNGeneConfiguration *cfg, TPvtData *pvtData)
         }
     }
 }
+
 void AdjustMissingRxTime(TNGeneConfiguration *cfg, TNGeneData *rx, TPvtData *pvtData)
 {
     double gstToGpsTimeOffset;
@@ -1216,6 +1233,7 @@ void GetPseudorangeCorrections(TNGeneConfiguration *cfg, TNGeneData *rx, TPvtDat
         }
     }
 }
+
 void SetRxTimeForNextPvt(TNGeneConfiguration *cfg, TNGeneData *rx)
 {
     TPvtData *pvtData = &(rx->pvtData);
@@ -1255,6 +1273,7 @@ void SetRxTimeForNextPvt(TNGeneConfiguration *cfg, TNGeneData *rx)
     }
     // else the sample counter will be used to schedule the next PVT (in TimeForANewPvt)
 }
+
 void ComputePseudorangeResiduals(TPvtData *pvtData, TPvtResults *pvtRes)
 {
     int index;
@@ -1297,6 +1316,7 @@ void ComputePseudorangeResiduals(TPvtData *pvtData, TPvtResults *pvtRes)
         fprintf(pvtData->pvtLogFile, "\n\n");
     }
 }
+
 void PrintPvtResults(TNGeneConfiguration *cfg, TNGeneData *rx, int performedPvt)
 {
     TPvtData *pvtData = &(rx->pvtData);
@@ -1561,6 +1581,7 @@ void PrintPvtResults(TNGeneConfiguration *cfg, TNGeneData *rx, int performedPvt)
     /* Optional NMEA file */
     NmeaSavePvt(cfg, rx);
 }
+
 void PrintBadPvtResults(TNGeneConfiguration *cfg, TNGeneData *rx, int performedPvt)
 {
     TPvtData *pvtData = &(rx->pvtData);
@@ -1723,6 +1744,7 @@ void PrintBadPvtResults(TNGeneConfiguration *cfg, TNGeneData *rx, int performedP
         }
     }
 }
+
 void PerformGnssTimeAnalysis(TNGeneData *rx)
 {
     TPvtData *pvtData = &(rx->pvtData);
@@ -1757,6 +1779,7 @@ void PerformGnssTimeAnalysis(TNGeneData *rx)
     fprintf(pvtData->gnssTimeLogFile, "%9.2f  ", timeDiff * 1.0e9);               // [ns]
     fprintf(pvtData->gnssTimeLogFile, "%9.2f\n", ggto * 1.0e9);                   // [ns]
 }
+
 void ExtractPvtInformationForChannels(TNGeneConfiguration *cfg, TNGeneData *rx)
 {
     TPvtData *pvtData = &(rx->pvtData);
@@ -1778,6 +1801,7 @@ void ExtractPvtInformationForChannels(TNGeneConfiguration *cfg, TNGeneData *rx)
         pvtInfo->satEcefZ = pvtCh->satStatus->ecefSatPos[2];
     }
 }
+
 void PositionVelocityConversions(TPvtResults *pvtRes)
 {
     Ecef2Geod(pvtRes->ecefPosition, pvtRes->geodPosition);
@@ -1788,6 +1812,7 @@ void PositionVelocityConversions(TPvtResults *pvtRes)
     EcefVelToEnuVel(pvtRes->ecefPosition, pvtRes->ecefVelocity, pvtRes->enuPosition,
                     pvtRes->enuVelocity);
 }
+
 void CopySatStatusStructure(TSatStatus *dst, TSatStatus *src)
 {
     dst->satInformationValid = src->satInformationValid;
@@ -1797,6 +1822,7 @@ void CopySatStatusStructure(TSatStatus *dst, TSatStatus *src)
     dst->azimuth = src->azimuth;
     dst->elevation = src->elevation;
 }
+
 void CopyPvtResultsStructure(TPvtResults *dst, TPvtResults *src)
 {
     int index;
@@ -1831,6 +1857,7 @@ void CopyPvtResultsStructure(TPvtResults *dst, TPvtResults *src)
         memcpy(&(dst->galSatStatus[index]), &(src->galSatStatus[index]), sizeof(TSatStatus));
     }
 }
+
 int PvtManager(TNGeneConfiguration *cfg, TNGeneData *rx)
 {
     TPvtData *pvtData = &(rx->pvtData);

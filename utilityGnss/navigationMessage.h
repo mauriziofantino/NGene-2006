@@ -11,8 +11,11 @@
  */
 #ifndef NAVIGATION_MESSAGE_H_INCLUDED
 #define NAVIGATION_MESSAGE_H_INCLUDED
+
 void ResetEphemerides(TGnssEphemerides *eph);
+
 void ResetClockCorrections(TGnssClk *clk);
+
 /**
  * @brief Initializes the structure used to store the navigation message
  *
@@ -22,6 +25,7 @@ void ResetClockCorrections(TGnssClk *clk);
  * @return SUCCESS_RETURN when the function ends with success, FAILURE_RETURN otherwise
  */
 int InitNavigationMessage(TNGeneConfiguration *cfg, TNGeneData *rx);
+
 /**
  * @brief De-initializes the structure used to store the navigation message
  *
@@ -29,12 +33,14 @@ int InitNavigationMessage(TNGeneConfiguration *cfg, TNGeneData *rx);
  * @param rx points to the receiver base data structure
  */
 void DeinitNavigationMessage(TNGeneConfiguration *cfg, TNGeneData *rx);
+
 /**
  * @brief Copies ephTmp into eph and clkTmp into clk
  *
  * @param navMsg points to the target navigation message
  */
 void CopyFromTmpToOperative(TNavigationMessage *navMsg);
+
 /**
  * @brief Save two YUMA files containing the almanacs for GPS and Galileo respectively
  *
@@ -42,6 +48,7 @@ void CopyFromTmpToOperative(TNavigationMessage *navMsg);
  * @param rx points to the receiver base data structure
  */
 void SaveAlmanacIntoYumaFile(TNGeneConfiguration *cfg, TNGeneData *rx);
+
 /**
  * @brief Save one XML file containing the almanac for Galileo
  *
@@ -49,6 +56,7 @@ void SaveAlmanacIntoYumaFile(TNGeneConfiguration *cfg, TNGeneData *rx);
  * @param rx points to the receiver base data structure
  */
 void SaveGalileoAlmanacIntoXmlFile(TNGeneConfiguration *cfg, TNGeneData *rx);
+
 /**
  * @brief Look for one valid TOW in all tracked channels
  *

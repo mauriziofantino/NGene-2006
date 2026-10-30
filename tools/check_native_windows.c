@@ -14,11 +14,13 @@
             return 1;                                                                              \
         }                                                                                          \
     } while (0)
+
 static void *worker(void *argument)
 {
     *(int *)argument = 42;
     return NULL;
 }
+
 int main(void)
 {
     struct timespec before, after, wall, wait = {0, 2000000};

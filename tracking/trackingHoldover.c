@@ -10,6 +10,7 @@
 #include "galileoMessageParser.h"
 #include "egnosMessageParser.h"
 #include "osnmaManagement.h"
+
 static void DiscardPartialNavigation(TChannel *ch)
 {
     /* Keep validated ephemerides and WN, but require a new decoded TOW.
@@ -46,6 +47,7 @@ static void DiscardPartialNavigation(TChannel *ch)
         p->expectedPreamble = EGNOS_PREAMBLE_INVALID_INDEX;
     }
 }
+
 void RememberTrackingNco(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch)
 {
     TTracking *trk = &ch->tracking;
@@ -74,6 +76,7 @@ void RememberTrackingNco(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch)
         h->anchorValid = TRUE_FLAG;
     }
 }
+
 void EnterTrackingHoldover(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch)
 {
     TTracking *trk = &ch->tracking;
@@ -128,6 +131,7 @@ void EnterTrackingHoldover(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *c
     trk->pIForNav = 0;
     DiscardPartialNavigation(ch);
 }
+
 int ManageTrackingHoldover(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch)
 {
     TTracking *trk = &ch->tracking;
@@ -191,10 +195,12 @@ int ManageTrackingHoldover(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *c
     }
     return TRUE_FLAG;
 }
+
 int TrackingLoopsEnabled(const TTracking *trk)
 {
     return trk->trkStatus != TRACKING_HOLDOVER && trk->trkStatus != TRACKING_LOST;
 }
+
 int TrackingNavigationEnabled(TTracking *trk)
 {
     if (trk->holdover.active)

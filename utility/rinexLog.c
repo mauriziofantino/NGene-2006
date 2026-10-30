@@ -20,6 +20,7 @@
 #include "ioFunctions.h"
 #include "pvtChecks.h"
 #include "ngeneDataStructure.h"
+
 static void SubstituteChar(char *s, char old, char new)
 {
     int idx;
@@ -29,6 +30,7 @@ static void SubstituteChar(char *s, char old, char new)
         }
     }
 }
+
 static double GpsSisaToMeters(double sisa)
 {
     double accuracy;
@@ -47,6 +49,7 @@ static double GpsSisaToMeters(double sisa)
     }
     return accuracy;
 }
+
 static double GalSisaToMeters(double sisa)
 {
     double accuracy;
@@ -67,6 +70,7 @@ static double GalSisaToMeters(double sisa)
     }
     return accuracy;
 }
+
 static int MarkerTypeValid(char *markerType)
 {
     if ((strcmp(markerType, "GEODETIC            ") != 0) &&
@@ -117,6 +121,7 @@ static void LoadRinexParamString(char *cfgFilename, char *tag, char *defaultStri
     }
     dest[desiredLen] = '\0';
 }
+
 int ManageRinexConfiguration(TNGeneConfiguration *cfg, char *cfgFilename)
 {
     TNGeneLogConfiguration *logCfg = &(cfg->logConfiguration);
@@ -202,6 +207,7 @@ int ManageRinexConfiguration(TNGeneConfiguration *cfg, char *cfgFilename)
     }
     return SUCCESS_RETURN;
 }
+
 void InitRinexLog(TRinexLog *rinex)
 {
     rinex->currDayNav = INVALID_VALUE;
@@ -213,6 +219,7 @@ void InitRinexLog(TRinexLog *rinex)
     rinex->currDayObs = INVALID_VALUE;
     rinex->obsFile = NULL;
 }
+
 void DeinitRinexLog(TRinexLog *rinex)
 {
     if (rinex->navFile != NULL) {
@@ -376,6 +383,7 @@ void RinexSaveGpsNav(TNGeneConfiguration *cfg, TRinexLog *rinex, TChannel *ch,
     SubstituteChar(row, 'e', CHAR_FOR_EXPONENTIAL);
     fprintf(navFile, "%s", row);
 }
+
 void RinexAddGpsIono(TNGeneConfiguration *cfg, TRinexLog *rinex, TNavigationMessage *navMsg)
 {
     TNGeneLogConfiguration *logCfg = &(cfg->logConfiguration);
@@ -407,6 +415,7 @@ void RinexAddGpsIono(TNGeneConfiguration *cfg, TRinexLog *rinex, TNavigationMess
         fsetpos(navFile, &currPos);
     }
 }
+
 void RinexAddGput(TNGeneConfiguration *cfg, TRinexLog *rinex, TNavigationMessage *navMsg)
 {
     TNGeneLogConfiguration *logCfg = &(cfg->logConfiguration);
@@ -579,6 +588,7 @@ void RinexSaveGalNav(TNGeneConfiguration *cfg, TRinexLog *rinex, TChannel *ch,
     SubstituteChar(row, 'e', CHAR_FOR_EXPONENTIAL);
     fprintf(navFile, "%s", row);
 }
+
 void RinexAddGalIono(TNGeneConfiguration *cfg, TRinexLog *rinex, TNavigationMessage *navMsg)
 {
     TNGeneLogConfiguration *logCfg = &(cfg->logConfiguration);
@@ -605,6 +615,7 @@ void RinexAddGalIono(TNGeneConfiguration *cfg, TRinexLog *rinex, TNavigationMess
         fsetpos(navFile, &currPos);
     }
 }
+
 void RinexAddGaut(TNGeneConfiguration *cfg, TRinexLog *rinex, TNavigationMessage *navMsg)
 {
     TNGeneLogConfiguration *logCfg = &(cfg->logConfiguration);
@@ -635,6 +646,7 @@ void RinexAddGaut(TNGeneConfiguration *cfg, TRinexLog *rinex, TNavigationMessage
         fsetpos(navFile, &currPos);
     }
 }
+
 void RinexAddGpga(TNGeneConfiguration *cfg, TRinexLog *rinex, TNavigationMessage *navMsg)
 {
     TNGeneLogConfiguration *logCfg = &(cfg->logConfiguration);
@@ -685,6 +697,7 @@ int CheckNewDayNumberObs(TNGeneConfiguration *cfg, TRinexLog *rinex, TSatConstel
         return TRUE_FLAG;
     }
 }
+
 void RinexSaveObs(TNGeneConfiguration *cfg, TNGeneData *rx)
 {
     TPvtData *pvtData = &(rx->pvtData);

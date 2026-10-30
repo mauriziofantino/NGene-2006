@@ -18,6 +18,7 @@
 #include "neqIntegrate.h"
 #include "nequickDataStructures.h"
 #include "nequickConstants.h"
+
 /**
  * @brief This function calculates the total electron content (TEC) between two
  *        points. It calculates STEC between the points or VTEC if point 2 is almost

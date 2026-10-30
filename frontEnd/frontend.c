@@ -19,6 +19,7 @@
 #include "ioFunctions.h"
 #include "closeManager.h"
 #include "hackrfFrontend.h"
+
 int InitializeRxFrontEnd(TNGeneConfiguration *cfg, TRxFe *rxFe)
 {
     TUsbFe *usbFe = &(rxFe->usbFe);
@@ -63,6 +64,7 @@ int InitializeRxFrontEnd(TNGeneConfiguration *cfg, TRxFe *rxFe)
     return SUCCESS_RETURN;
 }
 // Wrapper function to shut down the Front End together with its data structure
+
 int DeinitializeRxFrontEnd(TNGeneConfiguration *cfg, TRxFe *rxFe)
 {
     if (rxFe->feInitialized == FALSE_FLAG) {
@@ -83,6 +85,7 @@ int DeinitializeRxFrontEnd(TNGeneConfiguration *cfg, TRxFe *rxFe)
     return SUCCESS_RETURN;
 }
 // Wrapper function to enable the data transmission from the Front End
+
 int StartRxFrontEnd(TNGeneConfiguration *cfg, TRxFe *rxFe)
 {
     if (rxFe->feInitialized == FALSE_FLAG) {
@@ -100,6 +103,7 @@ int StartRxFrontEnd(TNGeneConfiguration *cfg, TRxFe *rxFe)
     return SUCCESS_RETURN;
 }
 // Shut down the Front End
+
 int StopRxFrontEnd(TRxFe *rxFe)
 {
     if (rxFe->feInitialized == FALSE_FLAG) {
@@ -117,6 +121,7 @@ int StopRxFrontEnd(TRxFe *rxFe)
     return SUCCESS_RETURN;
 }
 // Verify if the Front End is working properly
+
 int FrontEndCheckStatus(TRxFe *rxFe)
 {
     if (rxFe->incomingFile != NULL) {
@@ -133,6 +138,7 @@ int FrontEndCheckStatus(TRxFe *rxFe)
     return SUCCESS_RETURN;
 }
 // Get the data from the correct input
+
 unsigned int ReadRxFrontEnd(TRxFe *rxFe, char *buffer, int dim)
 {
     unsigned int readByte = 0;

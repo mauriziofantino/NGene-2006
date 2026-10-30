@@ -26,6 +26,7 @@
 #if defined(FAKE_OSNMA_RECEIVER) && !defined(FAKE_CHIMERA_RECEIVER)
 extern char navMesgFolderName[MAX_TAG_LEN];
 #endif
+
 void NcPrintString(TNCursesData *nc, int row, int col, const char *str)
 {
     /* if str is not already the temporary string in TNCursesData structure, copy it!
@@ -46,12 +47,14 @@ void NcPrintString(TNCursesData *nc, int row, int col, const char *str)
     /* print! */
     mvwprintw(nc->uiWin, row, col, nc->tmpStr);
 }
+
 void NcCleanRow(TNCursesData *nc, int row)
 {
     memset(nc->tmpStr, ' ', COLS - 1);
     nc->tmpStr[COLS - 1] = '\0';
     NcPrintString(nc, row, 0, nc->tmpStr);
 }
+
 void NcSetColorScheme(TNCursesData *nc, int scheme)
 {
     if (nc->colorsEnabled == TRUE_FLAG) {
@@ -59,6 +62,7 @@ void NcSetColorScheme(TNCursesData *nc, int scheme)
     }
     refresh();
 }
+
 void NcUnsetColorScheme(TNCursesData *nc, int scheme)
 {
     if (nc->colorsEnabled == TRUE_FLAG) {
@@ -66,6 +70,7 @@ void NcUnsetColorScheme(TNCursesData *nc, int scheme)
     }
     refresh();
 }
+
 int InitNCurses(TNGeneConfiguration *cfg, TNGeneData *rx, int firstExecution)
 {
     TNCursesData *nc = &(rx->ncursesData);
@@ -191,11 +196,13 @@ int InitNCurses(TNGeneConfiguration *cfg, TNGeneData *rx, int firstExecution)
     cfg->ncursesData = nc;
     return SUCCESS_RETURN;
 }
+
 void DeinitNCurses(TNCursesData *nc)
 {
     free(nc->tmpStr);
     endwin();
 }
+
 int NcDrawRxLog(TNCursesData *nc, char *logString, int severity)
 {
     if (nc == NULL) {
@@ -233,6 +240,7 @@ int NcDrawRxLog(TNCursesData *nc, char *logString, int severity)
     }
     return SUCCESS_RETURN;
 }
+
 void NcCompleteLog(TNGeneConfiguration *cfg, TNGeneData *rx)
 {
     TNCursesData *nc = &(rx->ncursesData);

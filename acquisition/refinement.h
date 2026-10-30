@@ -15,6 +15,7 @@
 #include "channelDataStructure.h"
 #include "ngeneConfiguration.h"
 #include "ngeneDataStructure.h"
+
 /**
  * @brief Initializes the refinement data structure for each channel
  * @param cfg points to the receiver configuration
@@ -22,6 +23,7 @@
  * @param ch points to the current channel
  */
 void InitRefinement(TNGeneConfiguration *cfg, TRefinement *ref, TChannel *ch);
+
 /**
  * @brief Initializes the refinement data structure for the Doppler refinement execution
  * @param cfg points to the receiver configuration
@@ -29,6 +31,7 @@ void InitRefinement(TNGeneConfiguration *cfg, TRefinement *ref, TChannel *ch);
  * @param ch points to the current channel
  */
 void StartDopplerRefinement(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch);
+
 /**
  * @brief Refines the current Doppler shift estimation
  * @details Used for all supported signals. Elaborates one millisecond of samples at each call.
@@ -45,6 +48,7 @@ void StartDopplerRefinement(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *
 TAcquisitionStatus PerformDopplerRefinement(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch,
                                             char *firstBunch, unsigned int firstBunchSize,
                                             char *secondBunch, unsigned int secondBunchSize);
+
 /**
  * @brief Initializes the refinement data structure for the code delay refinement execution
  * @details It takes into account the initial displacement in the input buffer introduced in order
@@ -55,6 +59,7 @@ TAcquisitionStatus PerformDopplerRefinement(TNGeneConfiguration *cfg, TNGeneData
  * @param ch points to the current channel
  */
 void StartCodeRefinement(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch);
+
 /**
  * @brief Refines the current code delay estimation
  * @details Used for all supported signals. Elaborates one millisecond of samples at each call.

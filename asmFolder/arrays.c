@@ -22,6 +22,7 @@
 /* global variable for the backup of XMM registers */
 extern char *ngeneXmmsBackup;
 /* XOR PRODUCT FUNCTIONS */
+
 void ArrayXorAligned123(s128 *a, s128 *b, s128 *c, unsigned int n)
 {
     // pointers 'a', 'b', 'c' are aligned
@@ -40,6 +41,7 @@ void ArrayXorAligned123(s128 *a, s128 *b, s128 *c, unsigned int n)
     /* RESTORE */
     movdqa_m2r(ngeneXmmsBackup[XMM_REGISTER_SIZE * 0], xmm0);
 }
+
 void ArrayXorAligned23(char *a, s128 *b, s128 *c, unsigned int n)
 {
     // can be further optimized by unrolling the loops
@@ -57,6 +59,7 @@ void ArrayXorAligned23(char *a, s128 *b, s128 *c, unsigned int n)
     /* RESTORE */
     movdqa_m2r(ngeneXmmsBackup[XMM_REGISTER_SIZE * 0], xmm0);
 }
+
 void ArrayXorAligned3(char *a, char *b, s128 *c, unsigned int n)
 {
     // can be further optimized by unrolling the loops
@@ -79,6 +82,7 @@ void ArrayXorAligned3(char *a, char *b, s128 *c, unsigned int n)
 }
 /* Change w.r.t. Nordio function:
  * Now it aligns output pointer, because write operation is the slowest with unaligned pointers */
+
 void ArrayXor(char *a, char *b, char *c, unsigned int n)
 {
     unsigned int i;
@@ -164,6 +168,7 @@ void ArrayXor(char *a, char *b, char *c, unsigned int n)
                  depending on 'n' and the input dynamic.
 
  */
+
 int ArrayMacAligned(s128 *a, s128 *b, unsigned int n)
 {
     unsigned int i;
@@ -284,6 +289,7 @@ int ArrayMacAligned(s128 *a, s128 *b, unsigned int n)
                  depending on 'n' and the input dynamic.
 
  */
+
 int ArrayMacUnaligned(char *a, s128 *b, unsigned int n)
 {
     unsigned int i;
@@ -374,6 +380,7 @@ int ArrayMacUnaligned(char *a, s128 *b, unsigned int n)
     movdqa_m2r(ngeneXmmsBackup[XMM_REGISTER_SIZE * 7], xmm7);
     return y;
 }
+
 int ArrayMac(char *a, char *b, unsigned int n)
 {
     int y;
@@ -427,6 +434,7 @@ When pointers are not aligned then dot product is computed in 3 steps (head,body
     return y;
 }
 /* OTHERS FUNCTIONS */
+
 void ArrayProductComplex(TNGeneConfiguration *cfg, short *a, short *b, short *c, unsigned int n)
 {
     unsigned int blocks;
@@ -495,6 +503,7 @@ void ArrayProductComplex(TNGeneConfiguration *cfg, short *a, short *b, short *c,
     movdqa_m2r(ngeneXmmsBackup[XMM_REGISTER_SIZE * 0], xmm0);
     movdqa_m2r(ngeneXmmsBackup[XMM_REGISTER_SIZE * 1], xmm1);
 }
+
 int ArrayAbs2(TNGeneConfiguration *cfg, short *c, unsigned int *s, unsigned int n)
 {
     /* BACKUP */
@@ -522,6 +531,7 @@ int ArrayAbs2(TNGeneConfiguration *cfg, short *c, unsigned int *s, unsigned int 
     movdqa_m2r(ngeneXmmsBackup[XMM_REGISTER_SIZE * 0], xmm0);
     return SUCCESS_RETURN;
 }
+
 void ArrayMax(unsigned int *v, unsigned int *max, unsigned int *index, unsigned int n)
 {
     unsigned int i;
@@ -534,6 +544,7 @@ void ArrayMax(unsigned int *v, unsigned int *max, unsigned int *index, unsigned 
         }
     }
 }
+
 void ArrayAdd(char *a, char *b, char *c, int arrayLength)
 {
     unsigned int offset_a, offset_b, offset_out;
@@ -599,6 +610,7 @@ void ArrayAdd(char *a, char *b, char *c, int arrayLength)
     movdqa_m2r(ngeneXmmsBackup[XMM_REGISTER_SIZE * 0], xmm0);
     movdqa_m2r(ngeneXmmsBackup[XMM_REGISTER_SIZE * 1], xmm1);
 }
+
 void ArrayAddUnsignedInt(unsigned int *a, unsigned int *b, unsigned int *c, int arrayLength)
 {
     int xmmSize = XMM_REGISTER_SIZE / sizeof(unsigned int);
@@ -622,6 +634,7 @@ void ArrayAddUnsignedInt(unsigned int *a, unsigned int *b, unsigned int *c, int 
     movdqa_m2r(ngeneXmmsBackup[XMM_REGISTER_SIZE * 0], xmm0);
     movdqa_m2r(ngeneXmmsBackup[XMM_REGISTER_SIZE * 1], xmm1);
 }
+
 void ArraySub(char *a, char *b, char *c, int arrayLength)
 {
     unsigned int offset_a, offset_b, offset_out;
@@ -687,6 +700,7 @@ void ArraySub(char *a, char *b, char *c, int arrayLength)
     movdqa_m2r(ngeneXmmsBackup[XMM_REGISTER_SIZE * 0], xmm0);
     movdqa_m2r(ngeneXmmsBackup[XMM_REGISTER_SIZE * 1], xmm1);
 }
+
 void ArrayClean(char *outputArray, int arrayLength)
 {
     unsigned int offsetOut;
@@ -716,6 +730,7 @@ void ArrayClean(char *outputArray, int arrayLength)
     /* RESTORE */
     movdqa_m2r(ngeneXmmsBackup[XMM_REGISTER_SIZE * 0], xmm0);
 }
+
 void ArrayCopy(char *inputArray, char *outputArray, int arrayLength)
 {
     unsigned int inputOffset;

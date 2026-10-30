@@ -43,24 +43,34 @@
  * enabled
  * */
 #define TEST_CRYPTO_FUNCTION
+
 int SHA256Native(unsigned char *ibuf, size_t ibufSize, unsigned char *obuf);
+
 int SHA256InitUpdateFinalPattern(unsigned char *ibuf, size_t ibufSize, unsigned char *obuf);
+
 int EVP_HASH(unsigned char *ibuf, size_t ibufSize, unsigned char *obuf, const EVP_MD *function);
+
 int EVP_HMAC(unsigned char *ibuf, size_t ibufSize, unsigned char *obuf, const EVP_MD *function,
              const unsigned char *key, size_t keySize);
+
 int HMACNative(unsigned char *ibuf, size_t ibufSize, unsigned char *obuf, const EVP_MD *function,
                const unsigned char *key, size_t keySize);
+
 int CMAC_AES_function(unsigned char *ibuf, size_t ibufSize, unsigned char *obuf,
                       const unsigned char *key, size_t KSBytes);
+
 int ECDSA(int nid, int generateKeyFLag, unsigned char *digest, int digestLenght);
+
 int EVP_ECDSA(unsigned char *ibuf, size_t ibufSize, int nid, const EVP_MD *function,
               int generateKeyFLag, int digestLenght);
 /*Following functions are borrowed from bearssl library
  * (source code available at
  * https://git.lecbna.org/daminetreg/xxhr/commit/088733e177c04c950303c0d04e55153969436117?view=parallel)*/
 /*Decode the ASN1/DER encoded signature to raw binary*/
+
 size_t br_ecdsa_asn1_to_raw(void *sig, size_t sig_len);
 /*Encode the raw binary signature to ASN1/DER encoded*/
+
 size_t br_ecdsa_raw_to_asn1(void *sig, size_t sig_len);
 /*
  * Compute ASN.1 encoded length for the provided integer. The ASN.1
@@ -68,6 +78,7 @@ size_t br_ecdsa_raw_to_asn1(void *sig, size_t sig_len);
  * also be of minimal length (so leading bytes of value 0 must be
  * removed, except if that would contradict the rule about the sign
  * bit).*/
+
 size_t _opt_libs_BearSSL_src_ec_ecdsa_rta_c_asn1_int_length(const unsigned char *x, size_t xlen);
 /*Generation of TESLA key K(m) from K(m+1)
  * Knext: Received TESKA key K(m+1)
@@ -96,6 +107,7 @@ size_t _opt_libs_BearSSL_src_ec_ecdsa_rta_c_asn1_int_length(const unsigned char 
  * @return 0 if successful
  */
 #ifdef DEBUG
+
 int TESLAKeyGenerationAndVerification(unsigned char *Knext, size_t KnextNumOfElem,
                                       unsigned char *GST_SF, size_t GST_SFNumOfElem,
                                       unsigned char *alpha, size_t alphaNumOfElem, unsigned int P3,
@@ -104,6 +116,7 @@ int TESLAKeyGenerationAndVerification(unsigned char *Knext, size_t KnextNumOfEle
                                       unsigned char *hashedInput, size_t hashedInputSize,
                                       unsigned char *hashedInputRef, unsigned char *Km);
 #else
+
 int TESLAKeyGenerationAndVerification(unsigned char *Knext, size_t KnextNumOfElem,
                                       unsigned char *GST_SF, size_t GST_SFNumOfElem,
                                       unsigned char *alpha, size_t alphaNumOfElem, unsigned int P3,
@@ -111,6 +124,7 @@ int TESLAKeyGenerationAndVerification(unsigned char *Knext, size_t KnextNumOfEle
                                       unsigned char *hashedInput, size_t hashedInputSize,
                                       unsigned char *Km);
 #endif
+
 /**
  * @brief One step of TESLA chain verification
  *
@@ -127,6 +141,7 @@ int TESLAKeyGenerationAndVerification(unsigned char *Knext, size_t KnextNumOfEle
  */
 void oneStepOfTESLAChainVerification(TOsnmaData *rxOsnma, int indexKey, unsigned int P3,
                                      int blockIdx, int i, int enableLog);
+
 /**
  * @brief One step of TESLA chain verification called by TESLAKeyVerificationThreadFunction
  *
@@ -137,6 +152,7 @@ void oneStepOfTESLAChainVerification(TOsnmaData *rxOsnma, int indexKey, unsigned
 void oneStepOfTESLAChainVerificationThread(
     TTeslaKeyVerificationThreadFunctionParametersStruct *teslaKeyVerificationThFuncParam,
     int enableLog);
+
 /**
  * @brief TESLA key verification: the number of steps of the TESLA chain to be executed depends on
  * the index of the key to be verified and the index of the last key verified.
@@ -156,6 +172,7 @@ void oneStepOfTESLAChainVerificationThread(
  */
 int TESLAKeyVerification(TOsnmaData *rxOsnma, unsigned char *key, int prnA, int indexKeyToStart,
                          int indexKeyToEnd, unsigned int P3, int blockIdx);
+
 /**
  * @brief Initialize the structure used by the thread in charge of performing the TESLA key
  * verification (in case the number of TESLA chain steps to be performed is too high for a real-time
@@ -175,6 +192,7 @@ void InitTESLAKeyVerificationThreadFunction(
     TTeslaKeyVerificationThreadFunctionParametersStruct *teslaKeyVerificationThFuncParam,
     TOsnmaData *rxOsnma, unsigned char *key, int prnA, int wnMackStart, int towMackStart,
     int indexKey, int blockIdx);
+
 /**
  * @brief TESLA key verification allocated to a separate thread. It is executed only in case the
  * number of steps of the TESLA chain to be performed is too high for real-time running.
@@ -184,6 +202,7 @@ void InitTESLAKeyVerificationThreadFunction(
  */
 void *TESLAKeyVerificationThreadFunction(
     TTeslaKeyVerificationThreadFunctionParametersStruct *teslaKeyVerificationThFuncParam);
+
 /**
  * @brief Verification of the DS field (Digital Signature) of the DSM-ROOT, using the Public Key as
  * raw binary
@@ -199,6 +218,7 @@ void *TESLAKeyVerificationThreadFunction(
  */
 int DSM_KROOT_SignatureVerification(unsigned char *M, size_t MSize, int NPKT, unsigned char *DS,
                                     unsigned char *pubKey, size_t pubKeySize);
+
 /**
  * @brief Verification of the DS field (Digital Signature) of the DSM-ROOT, reading the PEM format
  * file (?) of Public Key from a server (?)
@@ -213,6 +233,7 @@ int DSM_KROOT_SignatureVerification(unsigned char *M, size_t MSize, int NPKT, un
  */
 int DSM_KROOT_SignatureVerification_fromPEM(unsigned char *M, size_t MSize, int NPKT,
                                             unsigned char *DS, char *filename);
+
 /**
  * @brief Conversion of the Public Key from PEM format file to internal format EVP_PKEY
  *
@@ -221,6 +242,7 @@ int DSM_KROOT_SignatureVerification_fromPEM(unsigned char *M, size_t MSize, int 
  * @return evp_key that is the pointer to a structure containing the Public Key (internal format)
  */
 EVP_PKEY *PublicKey_PEMToEVPKEY(FILE *PEMFile);
+
 /**
  * @brief Conversion of the Public Key from Raw Binary to internal format EVP_PKEY
  *
@@ -232,6 +254,7 @@ EVP_PKEY *PublicKey_PEMToEVPKEY(FILE *PEMFile);
  * @return 0 if successful
  */
 int PublicKey_BNToEVPKEY(int nid, unsigned char *pubKey, size_t pubKeySize, EVP_PKEY *evp_key);
+
 /**
  * @brief Conversion of the Public Key from Raw Binary to internal format EVP_PKEY
  *
@@ -244,6 +267,7 @@ int PublicKey_BNToEVPKEY(int nid, unsigned char *pubKey, size_t pubKeySize, EVP_
  */
 int PublicKey_PkrToEVPKEY(TNewPublicKeyType npkt, unsigned char *pubKey, size_t pubKeySize,
                           EVP_PKEY *evp_key);
+
 /**
  * @brief Verification of the DS field (Digital Signature) of the DSM-ROOT, using the Public Key
  * expressed as EVP_KEY type
@@ -258,6 +282,7 @@ int PublicKey_PkrToEVPKEY(TNewPublicKeyType npkt, unsigned char *pubKey, size_t 
 int DSM_KROOT_SignatureVerification_fromEVPKEY(unsigned char *dsmBlocks, TOsnmaData *rxOsnma,
                                                TOsnmaParameters *osnmaPars,
                                                TChannelOsnmaVariables *chOsnma);
+
 /**
  * @brief Verification of the Padding Field P1 of the DSM-ROOT. (This verification is optional)
  *
@@ -269,6 +294,7 @@ int DSM_KROOT_SignatureVerification_fromEVPKEY(unsigned char *dsmBlocks, TOsnmaD
  */
 int DSM_KROOT_P1Verification(unsigned char *dsmBlocks, TOsnmaData *rxOsnma,
                              TOsnmaParameters *osnmaPars);
+
 /**
  * @brief Conversion of the Public Key from PEM format (string) to raw binary
  *
@@ -284,6 +310,7 @@ int DSM_KROOT_P1Verification(unsigned char *dsmBlocks, TOsnmaData *rxOsnma,
 int PEM_ASN1DER_decoding(unsigned char *pubKeyPEMEncapsulated, size_t pubKeyPEMEncapsulatedSize,
                          unsigned char *pubKeyPEM, size_t pubKeyPEMSize,
                          unsigned char *pubKeyDecoded, size_t pubKeyUncompressedSize);
+
 /**
  * @brief MAC verification
  *
@@ -305,6 +332,7 @@ int MACVerificationOld(unsigned char *m, size_t mSize, unsigned char *CIDKR_NMAC
                        unsigned char *mHashed, unsigned char *mHashedRef, unsigned char *K,
                        size_t KSBytes, unsigned char *KS_MS, unsigned char *tag,
                        unsigned char *MAC);
+
 /**
  * @brief MAC verification
  *
@@ -321,6 +349,7 @@ int MACVerificationOld(unsigned char *m, size_t mSize, unsigned char *CIDKR_NMAC
  */
 TValidationStatus MACVerification(TOsnmaData *rxOsnma, TMackList *mackPtr, TMacList *macPtr,
                                   unsigned char *K, unsigned char *MAC, int flagMAC0);
+
 /**
  * @brief MACSEQ verification
  *
@@ -335,6 +364,7 @@ TValidationStatus MACVerification(TOsnmaData *rxOsnma, TMackList *mackPtr, TMacL
  */
 TValidationStatus MACSEQVerification(TOsnmaData *rxOsnma, TMackList *mackPtr, TMacList *macPtr,
                                      unsigned char *K, unsigned char *MACSEQ);
+
 /**
  * @brief MAC verification of all MAC to be verified in the MACK LIST
  *
@@ -343,8 +373,10 @@ TValidationStatus MACSEQVerification(TOsnmaData *rxOsnma, TMackList *mackPtr, TM
  * @return the number of validated MACs
  */
 int MACVerificationAll(TNGeneConfiguration *ngeneCfg, TNGeneData *ngene);
+
 unsigned char *FindKeyForMacVerification(TOsnmaParameters *pars, TOsnmaData *rxOsnma,
                                          TMackList *mackPtr, int wnMackStart, int towMackStart);
+
 /**
  * @brief MACSEQ verification
  *
@@ -365,6 +397,7 @@ int MACSEQVerificationForTestVector(unsigned char *m, size_t mSize,
                                     unsigned char *CIDKR_NMACK_HF_MF, unsigned char *mHashed,
                                     unsigned char *mHashedRef, unsigned char *K, size_t KSBytes,
                                     unsigned char *MACSEQGenerated, unsigned char *MACSEQ);
+
 /**
  * @brief Public Key Verification through the Merkle Tree
  *
@@ -390,6 +423,7 @@ int MerkleTreePublicKeyVerificationTestVector(
     unsigned char *IT0, unsigned char *IT1, unsigned char *IT2, unsigned char *IT3, int MID,
     unsigned char *leaf, size_t leafSizeBytes, unsigned char ***nodeMatrix,
     unsigned char *nodesConcatenated, size_t nodesConcatenatedBytes, unsigned char *rootMerkleTree);
+
 /**
  * @brief Public Key Verification through the Merkle Tree
  *
@@ -400,5 +434,6 @@ int MerkleTreePublicKeyVerificationTestVector(
  */
 int MerkleTreePublicKeyVerification(TOsnmaData *rxOsnma, TOsnmaParameters *pars,
                                     unsigned char *dsmBlocks);
+
 int DSM_PKR_P2Verification(TOsnmaData *rxOsnma, TOsnmaParameters *osnmaPars);
 #endif /* OSNMA_CRYPTOFUNCTIONS_H_ */

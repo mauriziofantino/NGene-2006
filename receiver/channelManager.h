@@ -13,6 +13,7 @@
 #define CHANNEL_MANAGER_H_INCLUDED
 #include "ngeneConfiguration.h"
 #include "channelDataStructure.h"
+
 /**
  * @brief Initializes the structure used to manage the scheduling of the channels
  *        (i.e. allocates PRNs to the channels and chooses which channels can go in acquisition)
@@ -27,12 +28,14 @@
  */
 int InitChannelScheduler(TNGeneConfiguration *cfg, TChannelScheduler *chSch,
                          int numOfRealGalileoPrns, int *realGalileoPrns);
+
 /**
  * @brief De-initializes the structure used to manage the scheduling of the channels
  *
  * @param  chSch points to the scheduling structure
  */
 void DeinitChannelScheduler(TChannelScheduler *chSch);
+
 /**
  * @brief Initializes the structure used to manage a channel
  *
@@ -41,12 +44,14 @@ void DeinitChannelScheduler(TChannelScheduler *chSch);
  * @param ch points to the channel to be initialized
  */
 void InitChannel(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch);
+
 /**
  * @brief Deinitializes the structure used to manage a channel
  *
  * @param ch points to the channel to be deinitialized
  */
 void DenitChannel(TChannel *ch);
+
 /**
  * @brief Analyzes how many samples are required to continue elaboration
  *
@@ -56,6 +61,7 @@ void DenitChannel(TChannel *ch);
  * @return The maximum number of required samples
  */
 unsigned int GetMaximumNumberOfSamplesNeeded(TNGeneConfiguration *cfg, TNGeneData *rx);
+
 /**
  * @brief Analyzes how many samples have been elaborated by all the channels
  *        and then can be discarded from the input buffer
@@ -66,6 +72,7 @@ unsigned int GetMaximumNumberOfSamplesNeeded(TNGeneConfiguration *cfg, TNGeneDat
  * @return Number of samples that can be discarded
  */
 unsigned int GetNumberOfUsedSamples(TNGeneConfiguration *cfg, TNGeneData *rx);
+
 /**
  * @brief Updates the buffer offset in each channel taking into account the number of samples
  *        discarded from the input buffer
@@ -76,6 +83,7 @@ unsigned int GetNumberOfUsedSamples(TNGeneConfiguration *cfg, TNGeneData *rx);
  */
 void CleanBufferOffsetForAllChannels(TNGeneConfiguration *cfg, TNGeneData *rx,
                                      unsigned int deletedSamples);
+
 /**
  * @brief Finds the pointer to the first samples to be elaborated by a given channel.
  *        Takes into account the channel offset
@@ -91,6 +99,7 @@ void CleanBufferOffsetForAllChannels(TNGeneConfiguration *cfg, TNGeneData *rx,
 void GetSamplePointersForChannel(TChannel *ch, TCircularBuffer *buf, char **firstBunch,
                                  unsigned int *firstBunchSize, char **secondBunch,
                                  unsigned int *secondBunchSize);
+
 /**
  * @brief This function verifies if all the channels are in the UNUSED_STATE.
  *        Used to debug purpose in order to stop the receiver when no more useful elaboration is
@@ -102,6 +111,7 @@ void GetSamplePointersForChannel(TChannel *ch, TCircularBuffer *buf, char **firs
  * @return TRUE_FLAG if all channels are in UNUSED_STATE, FALSE_FLAG elsewhere
  */
 int AllChannelsUnused(TNGeneConfiguration *cfg, TNGeneData *rx);
+
 /**
  * @brief Implements the channel state machine (for the current channel) and calls functions
  * performing the signal elaboration!
@@ -116,7 +126,10 @@ int AllChannelsUnused(TNGeneConfiguration *cfg, TNGeneData *rx);
  */
 void DoChannelManager(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch, char *firstBunch,
                       unsigned int firstBunchSize, char *secondBunch, unsigned int secondBunchSize);
+
 int FindChId(TNGeneConfiguration *cfg, TNGeneData *rx, TSatConstellation satType, int satId);
+
 void ReleaseTracking(TNGeneConfiguration *cfg, TChannelScheduler *chSch, TChannel *ch);
+
 void HardRestartChannels(TNGeneConfiguration *cfg, TNGeneData *rx);
 #endif /* CHANNEL_MANAGER_H_INCLUDED */

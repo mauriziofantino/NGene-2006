@@ -13,6 +13,7 @@
  */
 #include <math.h>
 #include "neqUtils.h"
+
 double NeqClipExp(double dPower)
 {
     double dReturn; /* Return value, clipped value of exponential */
@@ -27,6 +28,7 @@ double NeqClipExp(double dPower)
     /* Return the result */
     return (dReturn);
 }
+
 double NeqJoin(double dF1, double dF2, double dAlpha, double dX)
 {
     double dTemp; /* Intermediate e ^ (dAlpha * dX) term (via NeqClipExp) */
@@ -34,6 +36,7 @@ double NeqJoin(double dF1, double dF2, double dAlpha, double dX)
     dTemp = NeqClipExp(dAlpha * dX);
     return (((dF1 * dTemp) + dF2) / (dTemp + 1.0));
 }
+
 double NeqSquared(double dValue)
 {
     return (dValue * dValue);

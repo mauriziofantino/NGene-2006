@@ -17,6 +17,7 @@
 #include "neqCalcBottomsideNe.h"
 #include "nequickDataStructures.h"
 #include "neqUtils.h"
+
 double NeqCalcBottomsideNe(double dHH, TLayerProperties *pstLayers)
 {
     double dAN0;                /* Anchor Points */

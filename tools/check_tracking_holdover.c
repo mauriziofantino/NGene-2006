@@ -29,29 +29,36 @@ static TNavigationMessage nav;
 static double testCno, testI, testQ;
 static int decodedBits;
 static short wide;
+
 int SwrxLog(int severity, const char *format, ...)
 {
     return 0;
 }
+
 void CloseNGene(TNGeneConfiguration *c, int status)
 {
     abort();
 }
+
 void ArrayClean(char *p, int n)
 {
     memset(p, 0, n);
 }
+
 void ArrayCopy(char *p, char *q, int n)
 {
     memcpy(q, p, n);
 }
+
 void ArrayXor(char *a, char *b, char *out, unsigned n)
 {
 }
+
 int ArrayMac(char *a, char *b, unsigned n)
 {
     return 0;
 }
+
 float CorrelateWide(const short *s, const char *code, unsigned n)
 {
     return 0;
@@ -93,6 +100,7 @@ int GenerateCode(TNGeneConfiguration *c, TPrnTable *t, TSatConstellation type, i
     *frac = value - floor(value);
     return 0;
 }
+
 void AddCodePhases(TSatConstellation type, double phase, double add, double *out, double *frac)
 {
     *out = fmod(phase + add, type == GALILEO_SAT ? 4092 : 1023);
@@ -100,24 +108,30 @@ void AddCodePhases(TSatConstellation type, double phase, double add, double *out
         *out += type == GALILEO_SAT ? 4092 : 1023;
     *frac = *out - floor(*out);
 }
+
 double MeasureCno(TCnoTable *c, double i, double q, TNGeneConfiguration *conf)
 {
     return testCno;
 }
+
 double ComputeEquivalentBandwidth(TCnoTable *c, double t, int n, double r)
 {
     return 0;
 }
+
 void ComputeSigmaJ(TCnoTable *c, double value)
 {
 }
+
 void SetCnoMeasurement(TCnoTable *c, double i, double q, int n, int m, double last)
 {
 }
+
 void ParseGpsMessage(TNGeneConfiguration *c, TNGeneData *r, TChannel *channel, float v)
 {
     decodedBits++;
 }
+
 void ParseGalMessage(TNGeneConfiguration *c, TNGeneData *r, TChannel *channel, float v)
 {
     decodedBits++;
@@ -127,20 +141,25 @@ void ParseEgnosMessage(TNGeneConfiguration *c, TNGeneData *r, TChannel *channel,
 {
     decodedBits++;
 }
+
 void PredictRxTime(TNGeneConfiguration *c, TNGeneData *r)
 {
 }
+
 void ResetReedSolomonData(TGalParser *p)
 {
 }
+
 void InitChannelOsnmaVariables(TChannel *channel, TChannelOsnmaVariables *v)
 {
     memset(v, 0, sizeof(*v));
 }
+
 void CleanEgnosParserArrays(TEgnosParser *p, int clean)
 {
     memset(p->symbols, 0, sizeof(p->symbols));
 }
+
 static void Metrics(double ratio, double cno)
 {
     TTrackingStatusChecker *c = &ch.tracking.trkStatusChecker;
@@ -159,6 +178,7 @@ static void Metrics(double ratio, double cno)
     testCno = cno - (ch.satType == GALILEO_SAT ? GALILEO_CN0_CORRECTION_FACTOR
                                                : GPS_CN0_CORRECTION_FACTOR);
 }
+
 static void Setup(TSatConstellation type)
 {
     memset(&cfg, 0, sizeof(cfg));
@@ -215,16 +235,19 @@ static void Setup(TSatConstellation type)
     CheckTrackingLock(&cfg, &rx, &ch, &ch.tracking);
     decodedBits = 0;
 }
+
 static void Finish(void)
 {
     DeinitTrackingStatusChecker(&ch.tracking);
 }
+
 static void Tick(unsigned long long ms, double ratio, double cno)
 {
     ch.tracking.trkCounter = ms;
     Metrics(ratio, cno);
     CheckTrackingLock(&cfg, &rx, &ch, &ch.tracking);
 }
+
 static int CheckRecovery(void)
 {
     unsigned long long start, t;
@@ -254,6 +277,7 @@ static int CheckRecovery(void)
     Finish();
     return 0;
 }
+
 static int CheckDeadline(void)
 {
     unsigned long long start, t;
@@ -277,6 +301,7 @@ static int CheckDeadline(void)
     Finish();
     return 0;
 }
+
 static int CheckUnalignedCarrier(void)
 {
     unsigned long long start;
@@ -296,6 +321,7 @@ static int CheckUnalignedCarrier(void)
     Finish();
     return 0;
 }
+
 static int CheckPredictedPhase(void)
 {
     double carrier, code;
@@ -312,6 +338,7 @@ static int CheckPredictedPhase(void)
     Finish();
     return 0;
 }
+
 static int CheckCorrectedCarrier(void)
 {
     unsigned long long start, t;
@@ -334,6 +361,7 @@ static int CheckCorrectedCarrier(void)
     Finish();
     return 0;
 }
+
 static int CheckSignalTime(TSatConstellation type)
 {
     double frequency, rate, phase;
@@ -358,6 +386,7 @@ static int CheckSignalTime(TSatConstellation type)
     Finish();
     return 0;
 }
+
 static int CheckStartupAndInvalidMetrics(void)
 {
     Setup(GPS_SAT);
@@ -382,6 +411,7 @@ static int CheckStartupAndInvalidMetrics(void)
     Finish();
     return 0;
 }
+
 int main(void)
 {
     if (CheckRecovery() || CheckDeadline() || CheckUnalignedCarrier() || CheckPredictedPhase() ||

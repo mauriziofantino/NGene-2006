@@ -24,6 +24,7 @@
 #include "trackingDiscriminatorsLoops.h"
 #include "tracking.h"
 #include "cno.h"
+
 int InitTracking(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch)
 {
     TTracking *trk = &(ch->tracking);
@@ -174,6 +175,7 @@ int InitTracking(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch)
     InitTrackingStatusChecker(cfg, ch, trk);
     return SUCCESS_RETURN;
 }
+
 void DeinitTracking(TTracking *trk)
 {
     DeinitTrackingStatusChecker(trk);
@@ -184,6 +186,7 @@ void DeinitTracking(TTracking *trk)
         free(trk->multiOld);
     }
 }
+
 void StartTracking(TNGeneConfiguration *cfg, TChannel *ch, TTracking *trk)
 {
     int index;
@@ -247,6 +250,7 @@ void StartTracking(TNGeneConfiguration *cfg, TChannel *ch, TTracking *trk)
     trk->lastValidDataTransition = 0;
     StartTrackingStatusChecker(cfg, trk);
 }
+
 static float InputCorrelation(const short *wide, char *legacy, char *code, unsigned n)
 {
     return wide ? CorrelateWide(wide, code, n) : (float)ArrayMac(legacy, code, n) + (float)n / 2;
@@ -295,6 +299,7 @@ void PerformAllTrackingCorrelations(TChannel *ch, TTracking *trk, char *cosArray
                 (float)trk->integrationPeriod;
 #endif
 }
+
 void DumpCorrelationsToFile(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch, TTracking *trk)
 {
     double *tmpD = (double *)rx->trkLogArray;
@@ -329,6 +334,7 @@ void DumpCorrelationsToFile(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *
         fwrite(tmpF, sizeof(float), 4 + (2 * trk->numberOfMulti), rx->trkMultiCorrelatorsFile);
     }
 }
+
 void UpdateCorrelations(TChannel *ch, TTracking *trk)
 {
     int index;
@@ -394,6 +400,7 @@ void UpdateCorrelations(TChannel *ch, TTracking *trk)
  *        (it should be an even number)
  */
 #define GALILEO_FALSE_LOCKS_TO_BE_TESTED 8
+
 void InitTrackingStatusChecker(TNGeneConfiguration *cfg, TChannel *ch, TTracking *trk)
 {
     TTrackingStatusChecker *checker = &(trk->trkStatusChecker);
@@ -413,6 +420,7 @@ void InitTrackingStatusChecker(TNGeneConfiguration *cfg, TChannel *ch, TTracking
         CloseNGene(cfg, EXIT_FAILURE);
     }
 }
+
 void StartTrackingStatusChecker(TNGeneConfiguration *cfg, TTracking *trk)
 {
     TTrackingStatusChecker *checker = &(trk->trkStatusChecker);
@@ -440,6 +448,7 @@ void StartTrackingStatusChecker(TNGeneConfiguration *cfg, TTracking *trk)
     checker->cnoLastCheckCounter = 0;
     checker->trkCounterForCnoError = 0;
 }
+
 void DeinitTrackingStatusChecker(TTracking *trk)
 {
     TTrackingStatusChecker *checker = &(trk->trkStatusChecker);
@@ -533,6 +542,7 @@ TTrackingPflcStatus CorrectPllFalseLock(TNGeneConfiguration *cfg, TNGeneData *rx
     }
     return PFLC_RUNNING;
 }
+
 void CheckAndCorrectSidePeakLock(TNGeneConfiguration *cfg, TChannel *ch, TTracking *trk)
 {
     double codeDelayShiftTotalInChips = 0.5;
@@ -579,6 +589,7 @@ void CheckAndCorrectSidePeakLock(TNGeneConfiguration *cfg, TChannel *ch, TTracki
  * @param ch is the pointer to the actual channel
  * @param trk is the pointer to the tracking data structure for the Galileo structure.
  */
+
 void PerformPllChecks(TNGeneConfiguration *cfg, TChannel *ch, TTracking *trk)
 {
     TTrackingStatusChecker *checker = &(trk->trkStatusChecker);
@@ -625,6 +636,7 @@ void PerformPllChecks(TNGeneConfiguration *cfg, TChannel *ch, TTracking *trk)
         }
     }
 }
+
 void CheckTrackingLock(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch, TTracking *trk)
 {
     TTrackingStatusChecker *checker = &(trk->trkStatusChecker);

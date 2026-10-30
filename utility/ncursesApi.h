@@ -15,6 +15,7 @@
 #include "ngeneConfiguration.h"
 #include "ngeneDataStructure.h"
 #include "ncursesDataStructure.h"
+
 /**
  * @brief InitNCurses initializes the NCurse user interface
  *
@@ -26,12 +27,14 @@
  * @return SUCCESS_RETURN when the function ends with success, FAILURE_RETURN otherwise
  */
 int InitNCurses(TNGeneConfiguration *cfg, TNGeneData *rx, int firstExecution);
+
 /**
  * @brief Deinits the NCurses user interface
  *
  * @param nc points to the structure storing the NCurses support variables
  */
 void DeinitNCurses(TNCursesData *nc);
+
 /**
  * @brief Plots a text string in the NCurser user interface
  *
@@ -42,6 +45,7 @@ void DeinitNCurses(TNCursesData *nc);
  * @return SUCCESS_RETURN when the function ends with success, FAILURE_RETURN otherwise
  */
 int NcDrawRxLog(TNCursesData *nc, char *logString, int severity);
+
 /**
  * @brief Plots the results of the receiver in the NCurses user interface
  *

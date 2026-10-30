@@ -3,6 +3,7 @@
 #include <math.h>
 #include "arrays.h"
 #include "sige.h"
+
 static __m128i AdaptFour(__m128i values, __m128i dc, __m128i left, __m128i right, __m128i bias)
 {
     values = _mm_sll_epi32(_mm_sub_epi32(_mm_slli_epi32(values, 8), dc), left);
@@ -80,6 +81,7 @@ void AdaptIqClassic(const unsigned char *raw, char *iq, unsigned int pairs,
         iq[k] = (char)(value < -7 ? -7 : value > 7 ? 7 : value);
     }
 }
+
 int SigeDecodeNativeIq(const unsigned char *raw, char *iq, unsigned int pairs)
 {
     unsigned int n = 2 * pairs, k = 0;
@@ -100,6 +102,7 @@ int SigeDecodeNativeIq(const unsigned char *raw, char *iq, unsigned int pairs)
     }
     return 0;
 }
+
 static __m128i SignProduct(__m128i value, __m128i mask)
 {
     return _mm_sub_epi8(_mm_xor_si128(value, mask), mask);

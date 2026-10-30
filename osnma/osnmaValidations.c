@@ -17,6 +17,7 @@
 #include "osnmaUtilities.h"
 #include "ioFunctions.h"
 /* Manage MAC validations list */
+
 static int GetIndexInMacValidationMatrix(int nCh, int chIdxA, int chIdxN)
 {
     return ((chIdxN * nCh) + chIdxA);
@@ -51,6 +52,7 @@ void InsertMacValidation(TOsnmaAuthentication *auth, int chIdxA, int chIdxN, int
         ptr->nextMac = newPtr;
     }
 }
+
 TMacValidations *ExtractMacValidation(TOsnmaAuthentication *auth, int chIdxA, int chIdxN)
 {
     TMacValidations *ptr;
@@ -64,6 +66,7 @@ TMacValidations *ExtractMacValidation(TOsnmaAuthentication *auth, int chIdxA, in
     }
     return ptr;
 }
+
 void DeleteMacValidationsOneList(TOsnmaAuthentication *auth, int chIdxA, int chIdxN)
 {
     TMacValidations *ptr;
@@ -78,6 +81,7 @@ void DeleteMacValidationsOneList(TOsnmaAuthentication *auth, int chIdxA, int chI
     }
     auth->macs[index] = NULL;
 }
+
 void DeleteMacValidationsAuthenticatedChannel(TOsnmaAuthentication *auth, int chIdxN)
 {
     int chIdxA;
@@ -85,6 +89,7 @@ void DeleteMacValidationsAuthenticatedChannel(TOsnmaAuthentication *auth, int ch
         DeleteMacValidationsOneList(auth, chIdxA, chIdxN);
     }
 }
+
 void DeleteMacValidationsAuthenticatingChannel(TOsnmaAuthentication *auth, int chIdxA)
 {
     int chIdxN;
@@ -93,6 +98,7 @@ void DeleteMacValidationsAuthenticatingChannel(TOsnmaAuthentication *auth, int c
     }
 }
 /* Manage the overall validation structure */
+
 void InitOsnmaAuthenticationStruct(TNGeneConfiguration *cfg, TOsnmaAuthentication *auth)
 {
     int idx;
@@ -124,6 +130,7 @@ void InitOsnmaAuthenticationStruct(TNGeneConfiguration *cfg, TOsnmaAuthenticatio
         auth->rxCounter[idx] = 0;
     }
 }
+
 void ResetOsnmaAuthenticationStruct(TOsnmaAuthentication *auth)
 {
     int idx;
@@ -141,6 +148,7 @@ void ResetOsnmaAuthenticationStruct(TOsnmaAuthentication *auth)
         auth->authenticationFlags[idx] = TO_BE_VALIDATED;
     }
 }
+
 void ResetChannelAuthenticationStruct(TOsnmaAuthentication *auth, int chIndex)
 {
     int idx;
@@ -158,6 +166,7 @@ void ResetChannelAuthenticationStruct(TOsnmaAuthentication *auth, int chIndex)
     auth->rxCounter[chIndex] = 0;
     auth->authenticationFlags[chIndex] = TO_BE_VALIDATED;
 }
+
 void DeinitOsnmaAuthenticationStruct(TOsnmaAuthentication *auth)
 {
     int idx;
@@ -170,6 +179,7 @@ void DeinitOsnmaAuthenticationStruct(TOsnmaAuthentication *auth)
     free(auth->authenticationFlags);
     free(auth->rxCounter);
 }
+
 void CheckOsnmaDsmTeslaMacseq(TNGeneConfiguration *cfg, TNGeneData *rx)
 {
     int chIdx;
@@ -326,6 +336,7 @@ void ManageOsnmaAuthentication(unsigned long long int rxCounter, TOsnmaData *osn
         }
     } // for each authenticated channel
 }
+
 void ManageOsnmaTimeout(TNGeneConfiguration *cfg, TNGeneData *rx)
 {
     int chIdx;
@@ -380,6 +391,7 @@ void ManageOsnmaTimeout(TNGeneConfiguration *cfg, TNGeneData *rx)
         }
     }
 }
+
 void SaveAuthenticationLog(int wn, double tow, TOsnmaData *osnma, TOsnmaAuthentication *auth)
 {
     int chIdxN;
@@ -423,6 +435,7 @@ void SaveAuthenticationLog(int wn, double tow, TOsnmaData *osnma, TOsnmaAuthenti
         fprintf(osnma->authLogFile, "\n");
     }
 }
+
 void SaveOsnmaSimpleLog(TNGeneConfiguration *cfg, TNGeneData *rx)
 {
     int wn = rx->pvtData.rxGalWn;

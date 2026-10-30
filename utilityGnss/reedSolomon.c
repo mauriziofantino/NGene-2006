@@ -28,10 +28,12 @@ static unsigned char
 // erasures and erasuresIn contain the indexes of all the missing symbols
 static int erasures[GAL_RS_INFORMATION_VECTOR_LENGTH_BYTES + GAL_RS_PARITY_VECTOR_LENGTH_BYTES];
 static int erasuresIn[GAL_RS_INFORMATION_VECTOR_LENGTH_BYTES + GAL_RS_PARITY_VECTOR_LENGTH_BYTES];
+
 void InitReedSolomon()
 {
     rs = init_rs_char(symsize, gfpoly, fcr, prim, nroots, pad);
 }
+
 void DeinitReedSolomon()
 {
     if (rs == NULL)
@@ -39,6 +41,7 @@ void DeinitReedSolomon()
     free_rs_char(rs);
     rs = NULL;
 }
+
 int GetErasureIndexes(TGalParser *parser)
 {
     int numErasures = 0;
@@ -94,6 +97,7 @@ int GetErasureIndexes(TGalParser *parser)
     }
     return numErasures;
 }
+
 void CopySymbolsForRsDecoder(TGalParser *parser)
 {
     int idx;
@@ -107,6 +111,7 @@ void CopySymbolsForRsDecoder(TGalParser *parser)
                                              GAL_RS_PARITY_VECTOR_LENGTH_BYTES - 1 - idx];
     }
 }
+
 void RetrieveSymbolsFromRsDecoder(TGalParser *parser)
 {
     int idx;
@@ -119,6 +124,7 @@ void RetrieveSymbolsFromRsDecoder(TGalParser *parser)
                                              GAL_RS_PARITY_VECTOR_LENGTH_BYTES - 1 - idx];
     }
 }
+
 TRsCheckResult CheckReedSolomon(TGalParser *parser, int *numCorrections)
 {
     int idx;

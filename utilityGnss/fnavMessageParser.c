@@ -29,6 +29,7 @@
 #include "osnmaManagement.h"
 #include "osnmaUtilities.h"
 #include "mackList.h"
+
 int InitFNavParser(TNGeneConfiguration *cfg, TChannel *ch)
 {
     if ((ch->satType != GALILEO_SAT) || (ch->satSignal != E5_A)) {
@@ -44,6 +45,7 @@ int InitFNavParser(TNGeneConfiguration *cfg, TChannel *ch)
     ch->fnavParser->fnavParseLogFile = NULL;
     return SUCCESS_RETURN;
 }
+
 void DeinitFNavParser(TChannel *ch)
 {
     if (ch->fnavParser != NULL) {
@@ -54,6 +56,7 @@ void DeinitFNavParser(TChannel *ch)
         ch->fnavParser = NULL;
     }
 }
+
 void StartFNavParser(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch)
 {
     TFNavParser *parser = ch->fnavParser;
@@ -88,6 +91,7 @@ void StartFNavParser(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch)
         parser->fnavParseLogFile = fopen(filename, "a");
     }
 }
+
 TParseResult FNavSynchronization(TFNavParser *parser, unsigned char symbol)
 {
     TParseResult res = PREAMBLE_NOT_FOUND;
@@ -114,6 +118,7 @@ TParseResult FNavSynchronization(TFNavParser *parser, unsigned char symbol)
     }
     return res;
 }
+
 void FNavDeinterleaver(TFNavParser *parser)
 {
     unsigned short i, bitIdx, byteIdx;
@@ -132,6 +137,7 @@ void FNavDeinterleaver(TFNavParser *parser)
         bitStartVect[idx] = (bitStartVect[idx] + 1) & 0x00000007;
     }
 }
+
 int ParseFNavPage01(TFNavParser *parser)
 {
     unsigned char *dataBytes = parser->decodedPage;
@@ -162,6 +168,7 @@ int ParseFNavPage01(TFNavParser *parser)
     }
     return SUCCESS_RETURN;
 }
+
 int ParseFNavPage02(TFNavParser *parser)
 {
     unsigned char *dataBytes = parser->decodedPage;
@@ -188,6 +195,7 @@ int ParseFNavPage02(TFNavParser *parser)
     }
     return SUCCESS_RETURN;
 }
+
 int ParseFNavPage03(TFNavParser *parser)
 {
     unsigned char *dataBytes = parser->decodedPage;
@@ -215,6 +223,7 @@ int ParseFNavPage03(TFNavParser *parser)
     }
     return SUCCESS_RETURN;
 }
+
 int ParseFNavPage04(TFNavParser *parser)
 {
     unsigned char *dataBytes = parser->decodedPage;
@@ -235,6 +244,7 @@ int ParseFNavPage04(TFNavParser *parser)
     }
     return SUCCESS_RETURN;
 }
+
 int ParseFNavPage05(TFNavParser *parser)
 {
     unsigned char *dataBytes = parser->decodedPage;
@@ -271,6 +281,7 @@ int ParseFNavPage05(TFNavParser *parser)
     }
     return SUCCESS_RETURN;
 }
+
 int ParseFNavPage06(TFNavParser *parser)
 {
     unsigned char *dataBytes = parser->decodedPage;
@@ -300,6 +311,7 @@ int ParseFNavPage06(TFNavParser *parser)
     }
     return SUCCESS_RETURN;
 }
+
 int ParseFNavPage(TNGeneData *rx, TFNavParser *parser)
 {
     unsigned int wordType;
@@ -360,6 +372,7 @@ int ParseFNavPage(TNGeneData *rx, TFNavParser *parser)
     }
     return parseReturn;
 }
+
 TParseResult DecodeFNavPage(TNGeneData *rx, TFNavParser *parser, unsigned char symbol)
 {
     long metric;
@@ -384,6 +397,7 @@ TParseResult DecodeFNavPage(TNGeneData *rx, TFNavParser *parser, unsigned char s
     }
     return DECODING_ON_GOING;
 }
+
 void ParseFNavMessage(TNGeneData *rx, TChannel *ch, float corr)
 {
     TFNavParser *parser = ch->fnavParser;

@@ -14,6 +14,7 @@
 #include "ngeneConstants.h"
 #include "ioFunctions.h"
 #define MAX_LOG2_FFT_SIZE 14u
+
 int InitFftTable(TNGeneConfiguration *cfg, TFftTable *table)
 {
     unsigned i, width, bits;
@@ -55,6 +56,7 @@ int InitFftTable(TNGeneConfiguration *cfg, TFftTable *table)
     }
     return SUCCESS_RETURN;
 }
+
 void DeinitFftTable(TFftTable *table)
 {
     if (!table)

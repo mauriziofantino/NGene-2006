@@ -12,6 +12,7 @@
 #ifndef MANAGE_TRK_CONFIGURATION_H_INCLUDED
 #define MANAGE_TRK_CONFIGURATION_H_INCLUDED
 #include "ngeneConfiguration.h"
+
 /**
  * @brief Read the tracking parameters from the configuration file
  *

@@ -5,6 +5,7 @@
 /* MT0 advertises test/unusable service. Retain RF tracking, but discard the
  * shared correction bank and reject data for a minute after the last MT0.
  * NGene currently supports one SBAS channel. This is not an integrity system. */
+
 static inline int SbasAcceptMessage(TEgnosCorrections *bank, int type, double tow)
 {
     int i, j;

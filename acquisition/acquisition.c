@@ -37,6 +37,7 @@
  * duplicated to ease the execution of the coarse acquisition.
  */
 #define LOCAL_CODE_FFT_SIZE_FACTOR 4
+
 int InitLocalCodesFft(TNGeneConfiguration *cfg, TNGeneData *rx)
 {
     TAcqConfiguration *acqCfg = &(cfg->acqConfiguration);
@@ -273,6 +274,7 @@ int InitLocalCodesFft(TNGeneConfiguration *cfg, TNGeneData *rx)
 #endif
     return SUCCESS_RETURN;
 }
+
 int InitThresholds(TNGeneConfiguration *cfg, TNGeneData *rx)
 {
     TThresholdManager *thr = &(rx->acqCommon.thr);
@@ -319,6 +321,7 @@ int InitThresholds(TNGeneConfiguration *cfg, TNGeneData *rx)
     thr->numberOfEstimationsForConfirmation = 0;
     return SUCCESS_RETURN;
 }
+
 void DeinitThresholds(TThresholdManager *thr)
 {
     free(thr->code);
@@ -327,6 +330,7 @@ void DeinitThresholds(TThresholdManager *thr)
     free(thr->demodulatedCos);
     free(thr->demodulatedSin);
 }
+
 int InitAcquisitionCommon(TNGeneConfiguration *cfg, TNGeneData *rx)
 {
     TAcqCommon *acq = &(rx->acqCommon);
@@ -434,6 +438,7 @@ int InitAcquisitionCommon(TNGeneConfiguration *cfg, TNGeneData *rx)
     }
     return SUCCESS_RETURN;
 }
+
 void DeinitAcquisitionCommon(TAcqCommon *acqCommon)
 {
     int index;
@@ -476,6 +481,7 @@ double FindAcquisitionThreshold(double noiseVariance, int nonCoherentSums,
     acqThreshold = SolveEqn(x1, x2, FalseAlarm, equationParameters, 1E-3, 1000000, &errore);
     return acqThreshold;
 }
+
 void UpdateCoarseThreshold(TNGeneConfiguration *cfg, TChannel *ch, int nonCoherentSums)
 {
     TAcqConfiguration *acqCfg = &(cfg->acqConfiguration);
@@ -527,6 +533,7 @@ void UpdateCoarseThreshold(TNGeneConfiguration *cfg, TChannel *ch, int nonCohere
                 (unsigned long long)acqCoarse->threshold);
     }
 }
+
 void UpdateVariablesForConfirmationThresholds(TNGeneConfiguration *cfg, TNGeneData *rx)
 {
     TAcqCommon *acqCommon = &(rx->acqCommon);
@@ -580,6 +587,7 @@ void UpdateVariablesForConfirmationThresholds(TNGeneConfiguration *cfg, TNGeneDa
     }
 }
 #ifndef DISABLE_CONFIRMATION_THRESHOLD
+
 void UpdateConfirmationThresholds(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch)
 {
     TConfirmation *conf = &(ch->confirmation);
@@ -623,6 +631,7 @@ void UpdateConfirmationThresholds(TNGeneConfiguration *cfg, TNGeneData *rx, TCha
     }
 }
 #else
+
 void UpdateConfirmationThresholds(TChannel *ch)
 {
     TConfirmation *conf = &(ch->confirmation);

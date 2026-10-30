@@ -15,6 +15,7 @@
  */
 #ifndef DATA_SHIFT_H_INCLUDED
 #define DATA_SHIFT_H_INCLUDED
+
 /**
  * @brief Function which converts from unsigned to signed and apply a shift to the data
  *
@@ -41,6 +42,7 @@
  */
 void RightShiftU2sByte(char *inputArray, char *outputArray, int arrayLength, int shiftedBits,
                        unsigned char *correction);
+
 /**
  * @brief Function which shifts the data to reduce their dynamic
  *
@@ -54,6 +56,7 @@ void RightShiftU2sByte(char *inputArray, char *outputArray, int arrayLength, int
  * @param shiftedBits is the right shift to apply to the data
  */
 void RightShiftByte(char *inputArray, char *outputArray, int arrayLength, int shiftedBits);
+
 /**
  * @brief Used to perform left shift of values in a short int array
  *
@@ -63,6 +66,7 @@ void RightShiftByte(char *inputArray, char *outputArray, int arrayLength, int sh
  * @param shiftedBits is the right shift to apply to the data
  */
 void LeftShiftWord(short int *inputArray, short int *outputArray, int arrayLength, int shiftedBits);
+
 /**
  * @brief Used to perform right shift of values in a unsigned int array
  *

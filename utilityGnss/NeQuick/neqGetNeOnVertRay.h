@@ -16,6 +16,7 @@
 #ifndef NEQ_GET_NE_ON_VERT_RAY_H_INCLUDED
 #define NEQ_GET_NE_ON_VERT_RAY_H_INCLUDED
 #include "nequickDataStructures.h"
+
 /**
  * @brief This function calculates the electron content at a specified point along a
  *        vertical ray.

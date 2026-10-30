@@ -51,6 +51,7 @@
 #define YUMA_HEALTH_TAG "Health:"
 #define YUMA_HEADER_LINE "******** Week"
 /* Parser */
+
 int LoadGpsAlmanacFromYumaFile(TWarmStartConfiguration *warmCfg, TNavigationMessage *navMesg)
 {
     FILE *filePtr;
@@ -445,6 +446,7 @@ static int LoadAlmanacsFromFiles(TWarmStartConfiguration *warmCfg, TNavigationMe
     //
     return SUCCESS_RETURN;
 }
+
 int InitWarmStartData(TNGeneConfiguration *cfg, TNGeneData *rx)
 {
     TWarmStartConfiguration *warmCfg = &(cfg->warmConfiguration);
@@ -501,6 +503,7 @@ int InitWarmStartData(TNGeneConfiguration *cfg, TNGeneData *rx)
     UpdateVisibilityList(cfg, rx);
     return SUCCESS_RETURN;
 }
+
 void DeinitWarmStartData(TWarmStartData *warmData)
 {
     if (warmData->gpsPrediction != NULL) {
@@ -512,6 +515,7 @@ void DeinitWarmStartData(TWarmStartData *warmData)
         warmData->galPrediction = NULL;
     }
 }
+
 void UpdateVisibilityList(TNGeneConfiguration *cfg, TNGeneData *rx)
 {
     TWarmStartConfiguration *warmCfg = &(cfg->warmConfiguration);

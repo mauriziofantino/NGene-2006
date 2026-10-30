@@ -22,6 +22,7 @@
  * @brief Timeout (ms) for the libusb_control_transfer function
  */
 #define USB_CONTROL_TRANSFER_TIMEOUT 1000
+
 /**
  * @brief Open the USB Interface
  *
@@ -31,6 +32,7 @@
  * @return 0 when everything is ok 1 on error
  */
 int OpenUsbFrontend(TNGeneConfiguration *cfg, TRxFe *rxFe);
+
 /**
  * @brief Close the USB Interface
  *
@@ -39,6 +41,7 @@ int OpenUsbFrontend(TNGeneConfiguration *cfg, TRxFe *rxFe);
  * @return 0 when everything is ok 1 on error
  */
 int CloseUsbFrontend(TRxFe *rxFe);
+
 /**
  * @brief Start the transfer from the USB Interface
  *
@@ -47,6 +50,7 @@ int CloseUsbFrontend(TRxFe *rxFe);
  * @return 0 when everything is ok 1 on error
  */
 int StartUsbInterface(TRxFe *rxFe);
+
 /**
  * @brief Stop the transfer from the USB Interface
  *
@@ -55,12 +59,14 @@ int StartUsbInterface(TRxFe *rxFe);
  * @return 0 when everything is ok 1 on error
  */
 int StopUsbInterface(TRxFe *rxFe);
+
 /**
  * @brief Read data from the USB buffer into the USB intermediate buffer
  *
  * @param rxFe pointer to the Front End structure
  */
 void CopySamplesIntoUsbIntermediateBuffer(TRxFe *rxFe);
+
 /**
  * @brief Read data from the USB Intermediate buffer to the circular buffer
  *
@@ -71,6 +77,7 @@ void CopySamplesIntoUsbIntermediateBuffer(TRxFe *rxFe);
  * @return number of read bytes
  */
 int ReadUsbInterface(TRxFe *rxFe, char *buffer, int dim);
+
 /**
  * @brief Check if there is a USB Buffer overrun
  *

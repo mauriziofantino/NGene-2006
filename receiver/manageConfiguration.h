@@ -21,6 +21,7 @@
  */
 // #define DISABLE_CONFIGURATION_CHECK
 #ifndef DISABLE_CONFIGURATION_CHECK
+
 /**
  * @brief Checks whether the configuration folder is updated or not.
  *
@@ -30,6 +31,7 @@
  */
 int ConfigurationFilesValid(TNGeneConfiguration *cfg);
 #endif
+
 /**
  * @brief Parses configuration files in order to initialize receiver parameters.
  *
@@ -38,6 +40,7 @@ int ConfigurationFilesValid(TNGeneConfiguration *cfg);
  * @return SUCCESS_RETURN when the function ends with success, FAILURE_RETURN otherwise
  */
 int ParseConfigurationFiles(TNGeneConfiguration *cfg);
+
 /**
  * @brief If the receiver is executed with verbose option,
  *        this function plots the current configuration!
@@ -45,6 +48,7 @@ int ParseConfigurationFiles(TNGeneConfiguration *cfg);
  * @param cfg points to the receiver configuration
  */
 void PlotConfiguration(TNGeneConfiguration *cfg);
+
 /**
  * @brief Complete the configuration initializing variables
  *        whose values depend on the parameters chosen by the user,
@@ -53,12 +57,14 @@ void PlotConfiguration(TNGeneConfiguration *cfg);
  * @param cfg points to the receiver configuration
  */
 void CompleteConfiguration(TNGeneConfiguration *cfg);
+
 /**
  * @brief Frees memory allocated for configuration structure.
  *
  * @param cfg points to the receiver configuration
  */
 void DeleteConfiguration(TNGeneConfiguration *cfg);
+
 /**
  * @brief Read the configuration parameters for the NGene Classic logs
  *

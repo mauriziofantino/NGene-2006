@@ -160,6 +160,7 @@ TReturnValue NeQuickComputation(TNeQuickInputData *pstNeQuickInputData, TCurrent
  *
  * @return TRUE if error found, otherwise FALSE
  */
+
 static int NeqCheckInputs(TNeQuickInputData *pstNeQuickInputData)
 {
     TBoolean bError = FALSE; /* Return value for function */

@@ -14,6 +14,7 @@
 #ifndef NEQUICK_NEQUICK_H_INCLUDED
 #define NEQUICK_NEQUICK_H_INCLUDED
 #include "nequickDataStructures.h"
+
 /**
  * @brief Initializes the NeQuick model data structures loading the parameters tables
  *
@@ -21,12 +22,14 @@
  * @param nq points to the NeQuick model data structure
  */
 void InitNeQuickModel(TNGeneConfiguration *cfg, TNeQuickData *nq);
+
 /**
  * @brief De-initializes the NeQuick model data structures loading the parameters tables
  *
  * @param nq points to the NeQuick model data structure
  */
 void DeinitNeQuickModel(TNeQuickData *nq);
+
 /**
  * @brief Manages the inputs for the NeQuick model, then execute NeQuick model and returns the iono
  * correction

@@ -63,6 +63,7 @@ will be an in-phase (0x02) or a quadrature one (0x00) */
         unsignedToSignedCorrection[XMM_REGISTER_SIZE]; /**< Array containing the correction to be
                                                           used in unsigned to signed conversion */
 } TCircularBuffer;
+
 /**
  * @brief Initializes the buffer where input samples are stored
  *
@@ -72,12 +73,14 @@ will be an in-phase (0x02) or a quadrature one (0x00) */
  * @return SUCCESS_RETURN when the function ends with success, FAILURE_RETURN otherwise
  */
 int InitCircularBuffer(TNGeneConfiguration *cfg, TCircularBuffer *buf);
+
 /**
  * @brief De-initializes the buffer where input samples are stored
  *
  * @param buf points to the buffer structure
  */
 void DeinitCircularBuffer(TCircularBuffer *buf);
+
 /**
  * @brief Update the pointers of the Circular buffer after some new samples are inserted
  *
@@ -87,6 +90,7 @@ void DeinitCircularBuffer(TCircularBuffer *buf);
  * @return SUCCESS_RETURN when the function ends with success, FAILURE_RETURN otherwise
  */
 int InsertIntoCircularBuffer(TCircularBuffer *buf, unsigned int displacement);
+
 /**
  * @brief Update the pointers of the Circular buffer after some samples are discarded
  *
@@ -96,6 +100,7 @@ int InsertIntoCircularBuffer(TCircularBuffer *buf, unsigned int displacement);
  * @return The number of effectively deleted samples
  */
 unsigned int DeleteFromCircularBuffer(TCircularBuffer *buf, unsigned int displacement);
+
 /**
  * @brief Translates samples from the format employed by the used front-end
  *        to the internal format supported by NGene (schar)
@@ -107,6 +112,7 @@ unsigned int DeleteFromCircularBuffer(TCircularBuffer *buf, unsigned int displac
  */
 void ConvertSamplesIntoNGeneFormat(TNGeneConfiguration *cfg, TCircularBuffer *buf, char *ptr,
                                    int n);
+
 /**
  * @brief This function tries to fill the circular buffer, reading samples from the input
  *        file or USB front-end. Read samples are converted into internal NGene Classic format.
@@ -119,6 +125,7 @@ void ConvertSamplesIntoNGeneFormat(TNGeneConfiguration *cfg, TCircularBuffer *bu
  *    	   still exhibits empty space.
  */
 int FillInputBuffer(TNGeneConfiguration *cfg, TCircularBuffer *buf, TRxFe *rxFe);
+
 /**
  * @brief This function copies the most recent samples in the input buffer into an output array
  *
@@ -130,6 +137,7 @@ int FillInputBuffer(TNGeneConfiguration *cfg, TCircularBuffer *buf, TRxFe *rxFe)
  */
 int CopyABunchOfContiguousSamples(TCircularBuffer *buf, int neededSamples, char *outputArray);
 /* Copy a single component for existing real-valued diagnostic displays. */
+
 int CopyCircularBufferComponent(TCircularBuffer *buf, int neededSamples, unsigned int component,
                                 char *outputArray);
 #endif

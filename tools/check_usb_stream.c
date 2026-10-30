@@ -21,18 +21,21 @@ static pthread_cond_t progressCondition = PTHREAD_COND_INITIALIZER;
 /* Internal production helpers used to construct the simulated endpoint. */
 TUsbEndpointHandle *MakeEndpointHandle(TUsbFe *usb, libusb_device_handle *handle);
 void DeleteEndpointHandle(TUsbEndpointHandle *endpoint);
+
 int SwrxLog(int severity, const char *format, ...)
 {
     (void)severity;
     (void)format;
     return 0;
 }
+
 void CloseNGene(TNGeneConfiguration *cfg, int result)
 {
     (void)cfg;
     (void)result;
     abort();
 }
+
 void ArrayCopy(char *input, char *output, int length)
 {
     /* Production ArrayCopy saves XMM registers in a global receiver buffer.
@@ -50,6 +53,7 @@ int LIBUSB_CALL __wrap_libusb_handle_events_timeout(libusb_context *context,
     lastEventWait = timeout->tv_usec;
     return 0;
 }
+
 int LIBUSB_CALL __wrap_libusb_submit_transfer(struct libusb_transfer *transfer)
 {
     (void)transfer;
@@ -74,17 +78,20 @@ int LIBUSB_CALL __wrap_libusb_control_transfer(libusb_device_handle *handle, uin
         startCommands++;
     return 0;
 }
+
 int LIBUSB_CALL __wrap_libusb_cancel_transfer(struct libusb_transfer *transfer)
 {
     TUsbTransferElement *element = transfer->user_data;
     element->status = NGENE_USB_TRANSFER_CANCELLED;
     return 0;
 }
+
 static void *Produce(void *frontend)
 {
     CopySamplesIntoUsbIntermediateBuffer(frontend);
     return NULL;
 }
+
 int main(void)
 {
     TRxFe frontend = {0};

@@ -14,6 +14,7 @@
 #include <string.h>
 #include "osnmaDataStructures.h"
 #include "ioFunctions.h"
+
 void InitMacLut(TOsnmaParameters *pars)
 {
     TMacLut *lut = &(pars->macLut);
@@ -25,6 +26,7 @@ void InitMacLut(TOsnmaParameters *pars)
     lut->sequenceLen = 0;
     lut->sequences = NULL;
 }
+
 void DeinitMacLut(TOsnmaParameters *pars)
 {
     TMacLut *lut = &(pars->macLut);
@@ -52,6 +54,7 @@ void DeinitMacLut(TOsnmaParameters *pars)
     lut->macsPerBlock = -1;
     lut->sequenceLen = 0;
 }
+
 void LoadMacSequence(TOsnmaParameters *pars)
 {
     TMacLut *lut = &(pars->macLut);

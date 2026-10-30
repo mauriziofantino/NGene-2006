@@ -20,6 +20,7 @@
 #include "matrices.h"
 #include "pvtUtility.h"
 #include "pntNumerics.h"
+
 void InitKalmanFilterPhi(double *phi, double *phiMulti, double dt)
 {
     int idx;
@@ -48,6 +49,7 @@ void InitKalmanFilterPhi(double *phi, double *phiMulti, double dt)
         }
     }
 }
+
 void InitKalmanFilterPostCovarianceMatrices(double *pPost, double *pPostMulti)
 {
     /* Initialize  P a posteriori covariance matrices for Kalman filter */
@@ -71,6 +73,7 @@ void InitKalmanFilterPostCovarianceMatrices(double *pPost, double *pPostMulti)
     pPostMulti[70] = 1.0;
     pPostMulti[80] = 1000.0;
 }
+
 void InitQStateNoiseCovarianceMatrices(double *q, double *qMulti, double dt)
 {
     /* Initialize Q noise covariance matrices for Kalman filter */
@@ -100,6 +103,7 @@ void InitQStateNoiseCovarianceMatrices(double *q, double *qMulti, double dt)
     qMulti[69] = qMulti[71] = (KF_SG / 2) * pow(dt, 2.0);
     qMulti[61] = qMulti[79] = (KF_SG / 2) * pow(dt, 2.0);
 }
+
 int InitKalmanFilterData(TNGeneConfiguration *cfg, TNGeneData *rx)
 {
     int nCh = cfg->numberOfChannels;
@@ -157,6 +161,7 @@ int InitKalmanFilterData(TNGeneConfiguration *cfg, TNGeneData *rx)
     InitQStateNoiseCovarianceMatrices(kfData->q, kfData->qMulti, cfg->pvtPeriodSeconds);
     return SUCCESS_RETURN;
 }
+
 void ClearKalmanFilterData(TNGeneConfiguration *cfg, TKalmanFilterData *kfData)
 {
     int n = cfg->numberOfChannels;
@@ -178,6 +183,7 @@ void ClearKalmanFilterData(TNGeneConfiguration *cfg, TKalmanFilterData *kfData)
     MatrixInit(kfData->stateAPosteriori, KF_MULTI_STATES, 1);
     MatrixInit(kfData->xPred, KF_MULTI_STATES, 1);
 }
+
 void DeinitKalmanFilterData(TNGeneData *rx)
 {
     TKalmanFilterData *kfData = &(rx->pvtData.kfData);
@@ -212,6 +218,7 @@ int KalmanFilterRoutine(int nCh, int nStates, TKalmanFilterData *kfData, double 
                ? SUCCESS_RETURN
                : FAILURE_RETURN;
 }
+
 void PreparePPost(TKalmanFilterData *kfData, TSatConstellation satType)
 {
     int rowIdx;
@@ -258,6 +265,7 @@ void PreparePPost(TKalmanFilterData *kfData, TSatConstellation satType)
  * @brief After a Single constellation PVT has been performed, the pPost matrix is updated.
  * This function updates the pPostMulti matrix accordingly
  */
+
 void UpdatePPostMulti(TKalmanFilterData *kfData, TSatConstellation satType)
 {
     int rowIdx;
@@ -302,6 +310,7 @@ void UpdatePPostMulti(TKalmanFilterData *kfData, TSatConstellation satType)
         /* GPS clock bias variables are maintained */
     }
 }
+
 int PerformKalmanFilter(TNGeneConfiguration *cfg, TNGeneData *rx)
 {
     TPvtData *pvtData = &(rx->pvtData);

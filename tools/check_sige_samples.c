@@ -10,6 +10,7 @@ char *ngeneXmmsBackup = backup; /**< Scratch required by the classic SIMD ABI. *
 /** @brief Check byte values, alignment, vector boundaries and in-place conversion.
  * @return Zero when all retained conversion cases match their scalar mappings.
  */
+
 int main(void)
 {
     static const int lengths[] = {0, 1, 15, 16, 17, 31, 95, 96, 97, 127, 128, 255, 256};

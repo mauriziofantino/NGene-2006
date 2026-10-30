@@ -13,12 +13,14 @@
 #include "inputProcessing.h"
 #include "hackrfThreshold.h"
 char *ngeneXmmsBackup;
+
 int SwrxLog(int severity, const char *format, ...)
 {
     (void)severity;
     (void)format;
     return 0;
 }
+
 void CloseNGene(TNGeneConfiguration *cfg, int result)
 {
     (void)cfg;
@@ -32,6 +34,7 @@ void CloseNGene(TNGeneConfiguration *cfg, int result)
             return 1;                                                                              \
         }                                                                                          \
     } while (0)
+
 static int MixerAndMac(void)
 {
     THackrfMixer mixer = {0};
@@ -113,6 +116,7 @@ static int MixerAndMac(void)
     DeinitHackrfMixer(&mixer);
     return 0;
 }
+
 static int ConfirmationNoise(void)
 {
     TNGeneConfiguration cfg = {0};
@@ -170,6 +174,7 @@ static int ConfirmationNoise(void)
     free(ring);
     return 0;
 }
+
 static int CompressionAndFft(void)
 {
     char a[9000], b[9000], boc[9000], bc[9000], bs[9000];
@@ -222,6 +227,7 @@ static int CompressionAndFft(void)
     DeinitFftTable(&fft);
     return 0;
 }
+
 static int Doppler(void)
 {
     TNGeneConfiguration cfg = {0};
@@ -280,6 +286,7 @@ static int Doppler(void)
     DeinitHackrfMixer(&mixer);
     return 0;
 }
+
 static int HeadroomAndProduct(void)
 {
     TNGeneConfiguration cfg = {0};
@@ -388,6 +395,7 @@ static int HeadroomAndProduct(void)
         }
     return 0;
 }
+
 int main(void)
 {
     int result;

@@ -269,6 +269,7 @@ void NeqCalcEpstParams(TNeQuickInputData *pstNeQuickInputData, TSPoint stPactual
  *
  * @return Interpolated Modip for position lat/lng (deg)
  */
+
 static double NeqCalcModip(double dLat, double dLng, TModip *pstModip)
 {
     int siLatBaseInd;  /* Lat base index (ie. -1pt index in pdPDip) */
@@ -338,6 +339,7 @@ static double NeqCalcModip(double dLat, double dLng, TModip *pstModip)
  *
  * @return The interpolated value at the point
  */
+
 static double NeqInterpolate(const double pdZ[NUM_INTER_PTS_SI], const double dDeltaX)
 {
     double dIntZ;                 /* Return value for this function */
@@ -386,6 +388,7 @@ static double NeqInterpolate(const double pdZ[NUM_INTER_PTS_SI], const double dD
  *
  * @return The calculated Az for given Modip
  */
+
 static double NeqModipToAz(double dModip, int siNumCoeff, double *pdCoeff)
 {
     double dFlx;  /* The flux (Az) value */
@@ -412,6 +415,7 @@ static double NeqModipToAz(double dModip, int siNumCoeff, double *pdCoeff)
  * @param dUT        The universal time (I)
  * @param ptCurrCCIR In: pdF0F2 and pdM3000F2 Out: pdLegCoeffs_F0 and pdLegCoeffs_M3000
  */
+
 static void NeqCalcSphLegCoeffs(double dUT, TCurrentCcir *pstCurrCCIR)
 {
     double dSunLng;                     /* Sun Longitude, where the sun is directly overhead */
@@ -547,6 +551,7 @@ static double NeqGetF2FreqFromCCIR(double dCosLat, double dLng, double pdLegCoef
  *
  * @return Electron density
  */
+
 static double NeqCriticalFreqToNe(double dF0)
 {
     /* Return the electron density */
@@ -568,6 +573,7 @@ static double NeqCriticalFreqToNe(double dF0)
  *
  * @return Height at which electron density peak occurs in F2
  */
+
 static double NeqCalcF2PeakHeight(double dM3000, double dF0E, double dF0F2)
 {
     double dM3000Squared;  /* M(3000)F2 squared */
@@ -624,6 +630,7 @@ static double NeqCalcF2PeakHeight(double dM3000, double dF0E, double dF0F2)
  *
  * @return 1/4 of the electron density at the point
  */
+
 static double NeqEpstein(double dNmax, double dHmax, double dB, double dH)
 {
     double dExpTerm; /* Temporary variable used to store e^[(h-hm)/B] */

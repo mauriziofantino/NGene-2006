@@ -16,15 +16,18 @@
     } while (0)
 static double capturedAz, capturedHeight, capturedLat, capturedUT;
 static TNeQuickData model;
+
 int SwrxLog(int severity, const char *format, ...)
 {
     return 0;
 }
+
 TBoolean IonoCalcModip(TModip *m, double lat, double lon, double *out)
 {
     *out = 40;
     return FALSE;
 }
+
 TReturnValue NeQuickComputation(TNeQuickInputData *in, TCurrentCcir *c, double *stec)
 {
     capturedAz = in->pdCoeff[0];
@@ -34,6 +37,7 @@ TReturnValue NeQuickComputation(TNeQuickInputData *in, TCurrentCcir *c, double *
     *stec = 1e17; /* 10 TECU, electrons/m^2 */
     return E_OK;
 }
+
 int main(void)
 {
     TGnssIono gps = {0};

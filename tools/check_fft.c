@@ -18,27 +18,32 @@
     } while (0)
 static unsigned checked;
 static uint32_t randomState = 0x4e47454eu;
+
 int SwrxLog(int severity, const char *format, ...)
 {
     (void)severity;
     (void)format;
     return 0;
 }
+
 static uint32_t Random(void)
 {
     randomState = randomState * 1664525u + 1013904223u;
     return randomState;
 }
 /** Independent signed64 arithmetic, scalar scatter and breadth-first schedule. */
+
 static int64_t FloorShift(int64_t value, unsigned shift)
 {
     int64_t divisor = (int64_t)1 << shift;
     return value >= 0 ? value / divisor : -1 - ((-1 - value) / divisor);
 }
+
 static short Narrow(int64_t value)
 {
     return (short)(value < SHRT_MIN ? SHRT_MIN : value > SHRT_MAX ? SHRT_MAX : value);
 }
+
 static void Reference(const short *input, short *output, unsigned bits, int gain)
 {
     unsigned n = 1u << bits, i, width, stage;
@@ -70,6 +75,7 @@ static void Reference(const short *input, short *output, unsigned bits, int gain
         }
     }
 }
+
 static void Compare(TFftTable *table, const short *input, unsigned bits, int gain, unsigned skew)
 {
     unsigned n = 1u << bits, i, clipped, trialClipped;
@@ -108,6 +114,7 @@ static void Compare(TFftTable *table, const short *input, unsigned bits, int gai
     free(workspace);
     free(expected);
 }
+
 static void CheckDft(TFftTable *table)
 {
     short input[128], output[128];
@@ -149,6 +156,7 @@ typedef struct {
     short input[2048], expected[2048];
     int ok;
 } TParallelCase;
+
 static void *Parallel(void *argument)
 {
     TParallelCase *test = argument;
@@ -164,6 +172,7 @@ static void *Parallel(void *argument)
     }
     return NULL;
 }
+
 int main(void)
 {
     TFftTable table;

@@ -83,6 +83,7 @@ void DeinitUsbFrontEndThreadFunction(
     fclose(ngeneFe->usbFe.percentageIntBufFullFile);
 #endif
 }
+
 void *UsbFrontEndThreadFunction(TFrontEndThreadFunctionParameters *frontEndThreadFunctionParameters)
 {
     TUsbFe *usbFe = &(frontEndThreadFunctionParameters->ngeneFrontEnd->usbFe);
@@ -173,6 +174,7 @@ void *UsbFrontEndThreadFunction(TFrontEndThreadFunctionParameters *frontEndThrea
         stopThread, stopFrontEndFlagLocal);
     return NULL;
 }
+
 void SetCpuPriorityAndPolicy(int indexCpu, int policy, int priority)
 {
 #ifdef NGENE_NATIVE_WINDOWS

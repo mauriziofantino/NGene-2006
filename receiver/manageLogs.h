@@ -13,6 +13,7 @@
 #define MANAGE_LOGS_H_INCLUDED
 #include "ngeneConfiguration.h"
 #include "ngeneDataStructure.h"
+
 /**
  * @brief InitLogSplitter initializes the variables used to split the receiver logs
  *
@@ -20,6 +21,7 @@
  * @param rx points to the receiver
  */
 void InitLogSplitter(TNGeneConfiguration *cfg, TNGeneData *rx);
+
 /**
  * @brief ManageLogSplitter manages the split of the logs
  *

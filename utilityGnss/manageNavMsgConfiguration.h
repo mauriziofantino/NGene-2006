@@ -14,6 +14,7 @@
 #ifndef MANAGE_NAV_MSG_CONFIGURATION_H_INCLUDED
 #define MANAGE_NAV_MSG_CONFIGURATION_H_INCLUDED
 #include "ngeneConfiguration.h"
+
 /**
  * @brief Read the Navigation Message parameters from the configuration file
  *

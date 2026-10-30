@@ -13,6 +13,7 @@
 typedef struct {
     double r, i;
 } Complex;
+
 static void Transform(Complex *a, int inverse)
 {
     unsigned i, j = 0, width, k, base;
@@ -52,6 +53,7 @@ static void Transform(Complex *a, int inverse)
             a[i].i /= FFT_N;
         }
 }
+
 static unsigned Peak(Complex *signal, const Complex *code, double *strength)
 {
     unsigned k, best = 0;
@@ -74,6 +76,7 @@ static unsigned Peak(Complex *signal, const Complex *code, double *strength)
     *strength = maximum / (sum / WINDOW);
     return best;
 }
+
 int main(int argc, char **argv)
 {
     FILE *input, *codes;

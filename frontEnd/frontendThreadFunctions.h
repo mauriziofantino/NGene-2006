@@ -26,13 +26,16 @@ typedef struct FrontEndThreadFunctionParametersStruct {
  * @return void
  */
 #ifndef MONITOR_INTERMEDIATE_BUFFER
+
 void InitUsbFrontEndThreadFunction(
     TRxFe *ngeneFe, TFrontEndThreadFunctionParameters *frontEndThreadFunctionParameters);
 #else
+
 void InitUsbFrontEndThreadFunction(
     TRxFe *ngeneFe, TFrontEndThreadFunctionParameters *frontEndThreadFunctionParameters,
     TNGeneConfiguration *ngeneCfg);
 #endif
+
 /**
  * @brief Destroy mutex and condition variables of the UsbFrontEndThreadFunction
  *
@@ -65,13 +68,16 @@ UsbFrontEndThreadFunction(TFrontEndThreadFunctionParameters *frontEndThreadFunct
  * @return void
  */
 #ifndef MONITOR_INTERMEDIATE_BUFFER
+
 void InitMqFrontEndThreadFunction(
     TRxFe *ngeneFe, TFrontEndThreadFunctionParameters *frontEndThreadFunctionParameters);
 #else
+
 void InitMqFrontEndThreadFunction(
     TRxFe *ngeneFe, TFrontEndThreadFunctionParameters *frontEndThreadFunctionParameters,
     TNGeneConfiguration *ngeneCfg);
 #endif
+
 /**
  * @brief Destroy mutex and condition variables of the MqFrontEndThreadFunction
  *
@@ -83,6 +89,7 @@ void InitMqFrontEndThreadFunction(
  */
 void DeinitMqFrontEndThreadFunction(
     TRxFe *ngeneFe, TFrontEndThreadFunctionParameters *frontEndThreadFunctionParameters);
+
 /**
  * @brief Set the real-time Scheduling Priority and Policy of the CPU
  *

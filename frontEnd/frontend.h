@@ -186,6 +186,7 @@ typedef struct RxFeStruct {
     struct HackrfFrontend *hackrf; /**< Owned native libhackrf receive state. */
 } TRxFe;
 /* Functions */
+
 /**
  * @brief InitializeRxFrontEnd performs suitable initialization on required FE
  *
@@ -196,6 +197,7 @@ typedef struct RxFeStruct {
  * @param rxFe pointer to the Front End structure
  */
 int InitializeRxFrontEnd(TNGeneConfiguration *cfg, TRxFe *rxFe);
+
 /**
  * @brief Perform the Front End de-initialization
  *
@@ -205,6 +207,7 @@ int InitializeRxFrontEnd(TNGeneConfiguration *cfg, TRxFe *rxFe);
  * @return 0 when everything is ok 1 on error
  */
 int DeinitializeRxFrontEnd(TNGeneConfiguration *cfg, TRxFe *rxFe);
+
 /**
  * @brief Start the Front End
  *
@@ -214,6 +217,7 @@ int DeinitializeRxFrontEnd(TNGeneConfiguration *cfg, TRxFe *rxFe);
  * @return 0 when everything is ok 1 on error
  */
 int StartRxFrontEnd(TNGeneConfiguration *cfg, TRxFe *rxFe);
+
 /**
  * @brief Stop the Front End
  *
@@ -221,6 +225,7 @@ int StartRxFrontEnd(TNGeneConfiguration *cfg, TRxFe *rxFe);
  * @return 0 when everything is ok 1 on error
  */
 int StopRxFrontEnd(TRxFe *rxFe);
+
 /**
  * @brief Evaluate if there are problem on the Front End (Buffer Overflow, EOF)
  *
@@ -229,6 +234,7 @@ int StopRxFrontEnd(TRxFe *rxFe);
  * @return 0 when everything is ok 1 on error
  */
 int FrontEndCheckStatus(TRxFe *rxFe);
+
 /**
  * @brief Read a new bunch of samples
  *

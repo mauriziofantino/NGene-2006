@@ -9,6 +9,7 @@ struct option {
 enum { no_argument, required_argument, optional_argument };
 extern char *optarg;
 extern int optind, opterr, optopt;
+
 int getopt_long(int argc, char *const argv[], const char *options, const struct option *longOptions,
                 int *longIndex);
 #endif

@@ -18,6 +18,7 @@
 #include "timeConstants.h"
 #include "ioFunctions.h"
 #include "closeManager.h"
+
 int ManageAcqConfiguration(TNGeneConfiguration *cfg)
 {
     TAcqConfiguration *acqCfg;
@@ -228,6 +229,7 @@ int ManageAcqConfiguration(TNGeneConfiguration *cfg)
     }
     return SUCCESS_RETURN;
 }
+
 int CompleteAcqConfiguration(TNGeneConfiguration *cfg)
 {
     TAcqConfiguration *acqCfg = &(cfg->acqConfiguration);

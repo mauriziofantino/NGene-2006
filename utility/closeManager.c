@@ -15,6 +15,7 @@
 #include "ngeneConstants.h"
 #include "ncursesDataStructure.h"
 #include "ncursesApi.h"
+
 void CloseNGene(TNGeneConfiguration *cfg, int returnValue)
 {
     switch (cfg->userInterface) {

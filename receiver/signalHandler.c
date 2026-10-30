@@ -25,6 +25,7 @@ static TNGeneConfiguration *signalHandlerCfg;
 static int *signalHandlerRun;
 volatile sig_atomic_t ngeneStopRequested = 0;
 #ifdef NGENE_NATIVE_WINDOWS
+
 static BOOL WINAPI NgConsoleHandler(DWORD event)
 {
     if (event != CTRL_C_EVENT && event != CTRL_BREAK_EVENT && event != CTRL_CLOSE_EVENT &&
@@ -36,6 +37,7 @@ static BOOL WINAPI NgConsoleHandler(DWORD event)
     return TRUE;
 }
 #endif
+
 void StartListeningSignals(TNGeneConfiguration *cfg, int *run)
 {
     ngeneStopRequested = 0;
@@ -65,6 +67,7 @@ void StartListeningSignals(TNGeneConfiguration *cfg, int *run)
 #endif
     return;
 }
+
 void SignalHandler(int signol)
 {
     ngeneStopRequested = 1;

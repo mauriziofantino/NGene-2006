@@ -18,6 +18,7 @@
 #include "closeManager.h"
 #include "timeConversions.h"
 #include "pvtUtility.h"
+
 int ManageWarmStartConfiguration(TNGeneConfiguration *cfg)
 {
     TWarmStartConfiguration *warmCfg;
@@ -172,6 +173,7 @@ int ManageWarmStartConfiguration(TNGeneConfiguration *cfg)
     FromDateToGnssTime(GALILEO_SAT, &(warmCfg->galWn), &(warmCfg->galTow), &refTime);
     return SUCCESS_RETURN;
 }
+
 void DeleteWarmStartConfiguration(TNGeneConfiguration *cfg)
 {
     if (cfg->warmConfiguration.almanacPathGps != NULL) {

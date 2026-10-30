@@ -17,6 +17,7 @@
 #include "navigationMessageDataStructure.h"
 #include "matrices.h"
 #include "spreadingCodes.h"
+
 double CheckT(double t1, double t2)
 {
     double time;
@@ -31,6 +32,7 @@ double CheckT(double t1, double t2)
     }
     return corrTime;
 }
+
 void ComputeAzEl(double *svPos, double *solPos, double *azimuth, double *elevation)
 {
     double p = 0; /* user distance from earth center projected on the equatorial plane */
@@ -241,6 +243,7 @@ double GpsIonosphericCorrection(TGnssIono *ionosphere, double elevation, double 
     }
     return dTiono;
 }
+
 double TropoHopfieldModel(double elevation, double h)
 {
     double tropoDelay;
@@ -344,6 +347,7 @@ double RotateSatellitePosition(const double satellite[3], const double receiver[
     }
     return range;
 }
+
 void EarthCorrection(double travelTime, double *x, double *rotX, int numOfSat, int channel)
 {
     double omegatau;
@@ -368,6 +372,7 @@ void EarthCorrection(double travelTime, double *x, double *rotX, int numOfSat, i
     rotX[channel + (numOfSat * 1)] = xSatRot[1];
     rotX[channel + (numOfSat * 2)] = xSatRot[2];
 }
+
 void Topocent(double *ecefCoord, double *satEcef, double *satAngle)
 {
     double dtr;
@@ -423,6 +428,7 @@ void Topocent(double *ecefCoord, double *satEcef, double *satAngle)
     satAngle[1] = az;
     satAngle[2] = d;
 }
+
 void GeodToEcef(double *geodCoord, double *ecefCoord)
 {
     double sLat, cLat, sLon, cLon, h;
@@ -437,6 +443,7 @@ void GeodToEcef(double *geodCoord, double *ecefCoord)
     ecefCoord[1] = (re + h) * cLat * sLon;
     ecefCoord[2] = (re * (1 - E_SQUARE_CONST) + h) * sLat;
 }
+
 void Ecef2Geod(double *ecefCoord, double *geodCoord)
 {
     double b, ep, p, th, lon, lat, n, alt;
@@ -470,6 +477,7 @@ void Ecef2Geod(double *ecefCoord, double *geodCoord)
     geodCoord[1] = lat;
     geodCoord[2] = alt;
 }
+
 void LlaToUtm(double lat, double lon, double alt, double *enu, double *utmZone)
 {
     double f;
@@ -546,6 +554,7 @@ void LlaToUtm(double lat, double lon, double alt, double *enu, double *utmZone)
     enu[2] = alt;
     *utmZone = Zone;
 }
+
 void EcefVelToEnuVel(double *ecefPos, double *ecefVel, double *enuPos, double *enuVel)
 {
     double deltaT = 0.01;
@@ -607,6 +616,7 @@ static int GEOID_DELTA[] = {
     34,  33,  34,  28,  23,  17,  13,  9,   4,   4,   1,   -2,  -2,  0,   2,   3,   2,   1,    1,
     3,   13,  13,  13,  13,  13,  13,  13,  13,  13,  13,  13,  13,  13,  13,  13,  13,  13,   13,
     13,  13,  13,  13,  13,  13,  13,  13,  13,  13,  13,  13,  13,  13,  13,  13,  13,  13,   13};
+
 double GetWgs84Separation(double lat, double lon)
 {
     int ilatitude = (int)floor((90 + lat) / 10);

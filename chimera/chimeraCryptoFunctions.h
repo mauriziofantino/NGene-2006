@@ -182,48 +182,68 @@
  * @brief This symbol defines the number of chips for each pylot symbol (10 ms)
  * */
 #define NUMBER_OF_CHIPS_PER_PILOT 10230
+
 void ReadHexBytes(char *hexArray, unsigned char *byteArray, int num);
+
 int InitChimeraParameters(TChimeraParameters *chimeraPars, char *directory);
+
 int InitChimeraData(TChimeraData *chimera);
+
 void DeinitChimeraData(TChimeraData *chimera);
+
 int Digital_SignatureVerification_fromEVPKEY(unsigned char *epoch, TChimeraData *chimera, int *toi);
+
 void SlowChannelMarkerKeyGeneration(unsigned char *digitalSignature, TChimeraData *chimera,
                                     int prn);
+
 int AESEncrypt(unsigned char *plaintext, int textLength, unsigned char *markerKey,
                unsigned char *ciphertext);
+
 int AESDecrypt(unsigned char *ciphertext, int ciphertextLen, unsigned char *markerKey,
                unsigned char *plaintext);
+
 void BuildPlaintext(TChimeraData *chimera, TMarkerFunctionEnum function,
                     unsigned char ciphertextBlockIndex, int pilotSymbolIndex, int indexMsg,
                     TChimeraChannelEnum channel);
+
 void MarkersGeneration(TChimeraData *chimera, TChimeraChannelEnum channel, int prn,
                        int pilotSymbolsToGenerate);
+
 int LoadSectorPatternTable(TChimeraData *chimera);
+
 void GeneratePatternList(TChimeraData *chimera);
+
 void CiphertextGeneration(TChimeraData *chimera, int ciphertextBlockNeeded,
                           TMarkerFunctionEnum function, TChimeraChannelEnum channel,
                           int pilotSymbolIndex, int indexMsg, int prn);
 #ifdef DEBUG
+
 void LocationsListGeneration(TChimeraData *chimera, TChimeraChannelEnum channel,
                              int ciphertextBytes, int numberOfSegmentsPerSector,
                              int pilotSymbolIndex);
 #else
+
 void LocationsListGeneration(TChimeraData *chimera, TChimeraChannelEnum channel,
                              int ciphertextBytes, int numberOfSegmentsPerSector);
 #endif
+
 void ValuesListGeneration(TChimeraData *chimera, int ciphertextBytesForValue,
                           int ciphertextResidualBitForValue);
+
 int LoadFastMarkerKey(TChimeraData *chimera);
+
 void MarkersLocationsGeneration(TChimeraData *chimera, TChimeraChannelEnum channel, int prn,
                                 int numberOfciphertextBlocksForLocation, int pilotSymbolIndex,
                                 int indexMsg, int ciphertextBytesForLocation,
                                 int numberOfSegmentsPerSector);
 #ifdef CHIMERA_PROFILING
+
 void MarkersValuesGeneration(TChimeraData *chimera, TChimeraChannelEnum channel, int prn,
                              int numberOfciphertextBlocksForValue, int pilotSymbolIndex,
                              int indexMsg, int ciphertextBytesForValue,
                              int ciphertextResidualBitForValue, int numberOfSegmentsPerSector);
 #else
+
 void MarkersValuesGeneration(TChimeraData *chimera, TChimeraChannelEnum channel, int prn,
                              int numberOfciphertextBlocksForValue, int pilotSymbolIndex,
                              int indexMsg, int ciphertextBytesForValue,

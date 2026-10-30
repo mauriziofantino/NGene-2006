@@ -22,17 +22,29 @@ typedef SSIZE_T ssize_t;
 #endif
 #define CLOCK_REALTIME 0
 #define CLOCK_MONOTONIC 1
+
 int NgClockGettime(int clockId, struct timespec *time);
+
 int NgGettimeofday(struct timeval *time, void *zone);
+
 int NgPosixMemalign(void **out, size_t alignment, size_t size);
+
 ssize_t NgGetline(char **line, size_t *capacity, FILE *file);
+
 unsigned int NgSleep(unsigned int seconds);
+
 int NgNanosleep(const struct timespec *duration, struct timespec *remaining);
+
 int NgFtruncate(int file, int64_t length);
+
 const char *NgNativeHome(void);
+
 int NgSocketInit(void);
+
 ssize_t NgSocketRead(SOCKET socket, void *buffer, size_t size);
+
 ssize_t NgSocketWrite(SOCKET socket, const void *buffer, size_t size);
+
 ssize_t NgSocketSendfile(SOCKET socket, int input, int64_t *offset, size_t count);
 #define clock_gettime NgClockGettime
 #define gettimeofday NgGettimeofday

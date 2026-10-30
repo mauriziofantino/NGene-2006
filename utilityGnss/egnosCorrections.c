@@ -29,6 +29,7 @@ static const double egnosGiveiEvaluationTable[1][16] = {
     {0.0084, 0.0333, 0.0749, 0.1331, 0.2079, 0.2994, 0.4075, 0.5322, 0.6735, 0.8315, 1.1974, 1.8709,
      3.3260, 20.7870, 187.0826, -1}};
 /* functions */
+
 int InitEgnosCorrections(TNGeneConfiguration *cfg, TEgnosCorrections *egnosCorr)
 {
     int idx;
@@ -147,6 +148,7 @@ int InitEgnosCorrections(TNGeneConfiguration *cfg, TEgnosCorrections *egnosCorr)
     }
     return SUCCESS_RETURN;
 }
+
 void DeinitEgnosCorrections(TEgnosCorrections *egnosCorr)
 {
     if (egnosCorr->ionoDebugFile != NULL) {
@@ -160,6 +162,7 @@ void DeinitEgnosCorrections(TEgnosCorrections *egnosCorr)
  * (vecchie e nuove) si potrebbero continuare ad usare le correzioni vecchie
  * finchè non arrivano quelle nuove. Ne vale la pena?
  */
+
 void CleanEgnosCorrections(TEgnosCorrections *egnosCorr)
 {
     int idx;
@@ -224,6 +227,7 @@ void CleanEgnosCorrections(TEgnosCorrections *egnosCorr)
         }
     }
 }
+
 void CleanEgnosIonoCorrections(TEgnosCorrections *egnosCorr, int bandNumber)
 {
     char maskIodi;
@@ -261,6 +265,7 @@ void CompleteUdreiInformation(unsigned int udrei, double *udreiMeters, double *s
         *sigma2Udre = egnosUdreiEvaluationTable[1][udrei];
     }
 }
+
 void CompleteFastDegradationFactorInformation(TEgnosFastCorrectionDegradationFactor *fastDegFact)
 {
     if (fastDegFact->valid == FALSE_FLAG)
@@ -270,6 +275,7 @@ void CompleteFastDegradationFactorInformation(TEgnosFastCorrectionDegradationFac
     fastDegFact->ifcLp = (int)egnosFastCorrectionDegradTable[2][fastDegFact->ai];
     fastDegFact->updateInterval = (int)egnosFastCorrectionDegradTable[3][fastDegFact->ai];
 }
+
 void CompleteGiveInformation(TEgnosIonoIgpDelayCorrections *ionoCorr)
 {
     if (ionoCorr->valid == FALSE_FLAG)
@@ -284,6 +290,7 @@ void CompleteGiveInformation(TEgnosIonoIgpDelayCorrections *ionoCorr)
         ionoCorr->sigma2Give = egnosGiveiEvaluationTable[0][ionoCorr->igpGivei];
     }
 }
+
 void SetEgnosPrnMaskIndex(int nChannels, TChannel *chArray, TEgnosCorrections *egnosCorr)
 {
     int chIdx;

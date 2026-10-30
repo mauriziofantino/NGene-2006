@@ -66,6 +66,7 @@ static pthread_t threadFrontEnd;
  *        The value is in milliseconds.
  */
 #define TIMEOUT_FOR_RX_OUTPUT 10
+
 int main(int argc, char *argv[])
 {
     int run = TRUE_FLAG;
@@ -378,6 +379,7 @@ int main(int argc, char *argv[])
     free(ngeneXmmsBackup);
     return 0;
 }
+
 void ManageFrontEndThreadInitialization(void)
 {
     if (ngeneCfg.inputMethod == USB_FRONTEND) {
@@ -391,6 +393,7 @@ void ManageFrontEndThreadInitialization(void)
     }
     // else do nothing
 }
+
 void ManageFrontEndThreadDeinitialization(void)
 {
     if (ngeneCfg.inputMethod == USB_FRONTEND) {

@@ -14,6 +14,7 @@
  */
 #ifndef SIGE_V3_H_INCLUDED
 #define SIGE_V3_H_INCLUDED
+
 /**
  * @brief Data are mapped from the SIGE notation {0,1} to the receiver one {1, -1}
  *

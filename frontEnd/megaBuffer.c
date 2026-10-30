@@ -14,6 +14,7 @@
 #include "megaBuffer.h"
 #include "osnmaConstants.h"
 #include "arrays.h"
+
 void InitMegaBuffer(TMegaBuffer *buf, double fs)
 {
     buf->fs = fs;
@@ -25,6 +26,7 @@ void InitMegaBuffer(TMegaBuffer *buf, double fs)
     buf->bufferFull = FALSE_FLAG;
     buf->flushedSeconds = 0.0;
 }
+
 void DeinitMegaBuffer(TMegaBuffer *buf)
 {
     if (buf->fOut != NULL) {
@@ -36,6 +38,7 @@ void DeinitMegaBuffer(TMegaBuffer *buf)
         buf->buffer = NULL;
     }
 }
+
 void StartMegaBuffer(TMegaBuffer *buf)
 {
     if (buf->buffer == NULL) {
@@ -44,6 +47,7 @@ void StartMegaBuffer(TMegaBuffer *buf)
     buf->fOut = fopen("RawSamplesForOsnma.bin", "wb");
     buf->flushEnabled = TRUE_FLAG;
 }
+
 void UpdateMegaBuffer(TMegaBuffer *buf, char *v, unsigned int n)
 {
     int n1;

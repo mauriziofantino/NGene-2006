@@ -35,6 +35,7 @@ int LIBUSB_CALL __wrap_libusb_cancel_transfer(struct libusb_transfer *);
 #define libusb_control_transfer __wrap_libusb_control_transfer
 #define libusb_cancel_transfer __wrap_libusb_cancel_transfer
 #endif
+
 static void RecordUsbServiceGap(double *lastTime, double *maximumGap)
 {
     struct timespec now;
@@ -48,6 +49,7 @@ static void RecordUsbServiceGap(double *lastTime, double *maximumGap)
     *lastTime = seconds;
 }
 /** @brief Recheck stop requests periodically while preserving the buffer mutex. */
+
 static void WaitForUsbBuffer(pthread_cond_t *condition, pthread_mutex_t *mutex)
 {
     struct timespec deadline;
@@ -62,6 +64,7 @@ static void WaitForUsbBuffer(pthread_cond_t *condition, pthread_mutex_t *mutex)
 /* Global variable */
 extern int USB_BLOCKSIZE; /**< Defined in manageUsbFrontEndConfiguration.c */
 /* internal functions */
+
 void FindUsbDevice(unsigned short vid, unsigned short pid, libusb_device **ppUsbDev)
 {
     libusb_device **list;
@@ -90,6 +93,7 @@ void FindUsbDevice(unsigned short vid, unsigned short pid, libusb_device **ppUsb
     }
     libusb_free_device_list(list, 1);
 }
+
 void OpenUsbDevice(TUsbFe *usbFe, libusb_device *pUsbDev, libusb_device_handle **ppUDH)
 {
     int returnValue;
@@ -169,6 +173,7 @@ void OpenUsbDevice(TUsbFe *usbFe, libusb_device *pUsbDev, libusb_device_handle *
     }
 #endif
 }
+
 void CloseUsbDevice(TUsbFe *usbFe, libusb_device_handle *pUDH)
 {
     if (pUDH == NULL) {
@@ -177,6 +182,7 @@ void CloseUsbDevice(TUsbFe *usbFe, libusb_device_handle *pUDH)
     libusb_release_interface(pUDH, usbFe->interface);
     libusb_close(pUDH);
 }
+
 void LIBUSB_CALL UsbReadCallback(struct libusb_transfer *transfer)
 {
     TUsbTransferElement *pTransferElem = (TUsbTransferElement *)(transfer->user_data);
@@ -217,6 +223,7 @@ void LIBUSB_CALL UsbReadCallback(struct libusb_transfer *transfer)
         break;
     }
 }
+
 TUsbEndpointHandle *MakeEndpointHandle(TUsbFe *usbFe, libusb_device_handle *usbDevHandle)
 {
     TUsbEndpointHandle *pTmpEpHandle;
@@ -264,6 +271,7 @@ TUsbEndpointHandle *MakeEndpointHandle(TUsbFe *usbFe, libusb_device_handle *usbD
     pTmpEpHandle->flagStarted = FALSE_FLAG;
     return pTmpEpHandle;
 }
+
 void DeleteEndpointHandle(TUsbEndpointHandle *eph)
 {
     int blkIdx;
@@ -283,6 +291,7 @@ void DeleteEndpointHandle(TUsbEndpointHandle *eph)
     free(eph);
 }
 /* interface functions */
+
 int OpenUsbFrontend(TNGeneConfiguration *cfg, TRxFe *rxFe)
 {
     TUsbFe *usbFe = &(rxFe->usbFe);
@@ -366,6 +375,7 @@ allocation_failure:
     usbFe->usbBuffer = NULL;
     return FAILURE_RETURN;
 }
+
 int CloseUsbFrontend(TRxFe *rxFe)
 {
     TUsbFe *usbFe = &(rxFe->usbFe);
@@ -387,6 +397,7 @@ int CloseUsbFrontend(TRxFe *rxFe)
     libusb_exit(NULL);
     return SUCCESS_RETURN;
 }
+
 int StartUsbInterface(TRxFe *rxFe)
 {
     TUsbFe *usbFe = &(rxFe->usbFe);
@@ -440,6 +451,7 @@ int StartUsbInterface(TRxFe *rxFe)
     epHandle->flagStarted = TRUE_FLAG;
     return SUCCESS_RETURN;
 }
+
 int StopUsbInterface(TRxFe *rxFe)
 {
     TUsbFe *usbFe = &(rxFe->usbFe);
@@ -500,6 +512,7 @@ int StopUsbInterface(TRxFe *rxFe)
     epHandle->flagStarted = FALSE_FLAG;
     return SUCCESS_RETURN;
 }
+
 void CopySamplesIntoUsbIntermediateBuffer(TRxFe *rxFe)
 {
     TUsbFe *usbFe = &(rxFe->usbFe);
@@ -627,6 +640,7 @@ void CopySamplesIntoUsbIntermediateBuffer(TRxFe *rxFe)
     }
     pthread_mutex_unlock(&usbFe->frontEndMutex);
 }
+
 int ReadUsbInterface(TRxFe *rxFe, char *buffer, int dim)
 {
     TUsbFe *usbFe = &(rxFe->usbFe);
@@ -707,6 +721,7 @@ int ReadUsbInterface(TRxFe *rxFe, char *buffer, int dim)
     pthread_mutex_unlock(&rxFe->usbFe.frontEndMutex);
     return nSamples;
 }
+
 int UsbCheckOverrun(TRxFe *rxFe)
 {
     if (rxFe->usbFe.usbStatus == NGENE_USB_OK) {

@@ -21,6 +21,7 @@
 #include "gpsMessageParser.h"
 #include "egnosMessageParser.h"
 #include "receiverTime.h"
+
 void CheckBitSynchronization(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch, TTracking *trk)
 {
     TTrkConfiguration *trkCfg = &(cfg->trkConfiguration);

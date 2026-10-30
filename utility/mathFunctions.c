@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include "mathFunctions.h"
 /* FIR */
+
 int FirInit(TFir *fir, int nb, double *b)
 {
     int idx;
@@ -37,6 +38,7 @@ int FirInit(TFir *fir, int nb, double *b)
     FirRestart(fir);
     return EXIT_SUCCESS;
 }
+
 void FirSetInitialState(TFir *fir, int nz, double *z)
 {
     int idx;
@@ -47,11 +49,13 @@ void FirSetInitialState(TFir *fir, int nz, double *z)
         fir->z[idx] = 0.0;
     }
 }
+
 void FirDeinit(TFir *fir)
 {
     free(fir->b);
     free(fir->z);
 }
+
 void FirRestart(TFir *fir)
 {
     int idx;
@@ -59,6 +63,7 @@ void FirRestart(TFir *fir)
         fir->z[idx] = 0.0;
     }
 }
+
 double FirPerform(TFir *fir, double xin)
 {
     double result = 0.0;
@@ -70,6 +75,7 @@ double FirPerform(TFir *fir, double xin)
     fir->z[idx - 1] = fir->b[idx] * xin;
     return result;
 }
+
 void FirPerformArray(TFir *fir, int nx, double *xin, double *yout)
 {
     int idx;
@@ -78,6 +84,7 @@ void FirPerformArray(TFir *fir, int nx, double *xin, double *yout)
     }
 }
 /* IIR */
+
 int IirInit(TIir *iir, int nb, double *b, int na, double *a)
 {
     int idx;
@@ -108,6 +115,7 @@ int IirInit(TIir *iir, int nb, double *b, int na, double *a)
     IirRestart(iir);
     return EXIT_SUCCESS;
 }
+
 void IirSetInitialState(TIir *iir, int nz, double *z)
 {
     int idx;
@@ -118,12 +126,14 @@ void IirSetInitialState(TIir *iir, int nz, double *z)
         iir->z[idx] = 0.0;
     }
 }
+
 void IirDeinit(TIir *iir)
 {
     free(iir->b);
     free(iir->a);
     free(iir->z);
 }
+
 void IirRestart(TIir *iir)
 {
     int idx;
@@ -131,6 +141,7 @@ void IirRestart(TIir *iir)
         iir->z[idx] = 0.0;
     }
 }
+
 double IirPerform(TIir *iir, double xin)
 {
     double result = 0.0;
@@ -142,6 +153,7 @@ double IirPerform(TIir *iir, double xin)
     iir->z[idx - 1] = (iir->b[idx] * xin) - (iir->a[idx] * result);
     return result;
 }
+
 void IirPerformArray(TIir *iir, int nx, double *xin, double *yout)
 {
     int idx;
@@ -150,6 +162,7 @@ void IirPerformArray(TIir *iir, int nx, double *xin, double *yout)
     }
 }
 /* AVERAGE WINDOW */
+
 void InitAverageWindow(TAverageWindow *a, int size, double value)
 {
     a->coeff1 = 1 / (double)size;
@@ -157,16 +170,19 @@ void InitAverageWindow(TAverageWindow *a, int size, double value)
     a->windowSize = size;
     a->filterValue = value;
 }
+
 double GetAverageWindowValue(TAverageWindow *a)
 {
     return (a->filterValue);
 }
+
 double PerformAverageWindow(TAverageWindow *a, double sample)
 {
     a->filterValue = a->coeff1 * sample + a->coeff2 * a->filterValue;
     return (a->filterValue);
 }
 /* OTHER FUNCTIONS */
+
 unsigned Fact(unsigned n)
 {
     if (n == 0)
@@ -178,6 +194,7 @@ unsigned Fact(unsigned n)
         eqn_arg[0] is the False Alarm Probability
         eqn_arg[1] is the Rayleigh distribution variance
         eqn_arg[2] is the number of Non-Coherent integrated periods */
+
 double FalseAlarm(double x, double *eqn_arg)
 {
     double sum = 0;
@@ -187,6 +204,7 @@ double FalseAlarm(double x, double *eqn_arg)
     sum = sum * exp(-x / (2.0 * eqn_arg[1])) - eqn_arg[0];
     return sum;
 }
+
 void Edges(double *xa, double *xb, double (*f)(double, double *), double *eqn_arg)
 {
     /* Set the starting interval */
@@ -269,6 +287,7 @@ double SolveEqn(double x0, double x2, double (*f)(double, double *), double *eqn
     *error = EQN_ERROR_NO_CONVERGENCE;
     return x1;
 }
+
 int NearestInteger(float x)
 {
     int y = 0;
@@ -278,6 +297,7 @@ int NearestInteger(float x)
         y = (int)floorf(x);
     return y;
 }
+
 int CeilLog2(int n)
 {
     int log2 = 0;

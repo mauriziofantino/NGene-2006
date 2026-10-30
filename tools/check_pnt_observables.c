@@ -8,12 +8,14 @@
 #include "egnosPrns.h"
 #include "prnList.h"
 #include "sbasValidity.h"
+
 int SwrxLog(int severity, const char *format, ...)
 {
     (void)severity;
     (void)format;
     return 0;
 }
+
 void CloseNGene(TNGeneConfiguration *cfg, int status)
 {
     (void)cfg;
@@ -27,6 +29,7 @@ void CloseNGene(TNGeneConfiguration *cfg, int status)
             return 1;                                                                              \
         }                                                                                          \
     } while (0)
+
 static int CheckSbasCodes(void)
 {
     const unsigned first10[] = {0671, 0160, 0013, 01037, 0536, 01545};
@@ -59,6 +62,7 @@ static int CheckSbasCodes(void)
     CHECK(DestroyPrnList(&list) == SUCCESS_RETURN);
     return 0;
 }
+
 static int CheckSmoothing(void)
 {
     TNGeneConfiguration cfg = {0};
@@ -123,6 +127,7 @@ static int CheckSmoothing(void)
     CHECK(observation.pseudorangeCsm == 123);
     return 0;
 }
+
 int main(void)
 {
     static TEgnosCorrections bank;

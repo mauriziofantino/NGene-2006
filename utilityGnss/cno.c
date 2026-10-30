@@ -35,6 +35,7 @@ void SetCnoMeasurement(TCnoTable *cno, double iStart, double qStart, int size, i
 }
 // Function to estimate the Carrier to Noise Power Spectral Density Ratio with Moments method and
 // Hatch filters - NL
+
 double MeasureCno(TCnoTable *cno, double iSample, double qSample, TNGeneConfiguration *cfg)
 {
     double ps;      /* Signal averaged power */
@@ -61,6 +62,7 @@ double MeasureCno(TCnoTable *cno, double iSample, double qSample, TNGeneConfigur
         return PerformAverageWindow(&(cno->cnoW), (double)cfg->trkConfiguration.cutoffCno / 2.0);
     }
 }
+
 void ComputeSigmaJ(TCnoTable *cno, double value)
 {
     double sigmaJ2;
@@ -70,6 +72,7 @@ void ComputeSigmaJ(TCnoTable *cno, double value)
               GetAverageWindowValue(&(cno->muX)) * GetAverageWindowValue(&(cno->muX));
     cno->sigmaJ2 = sigmaJ2;
 }
+
 double ComputeEquivalentBandwidth(TCnoTable *cno, double tchip, int blocksize, double rcFactor)
 {
     double sigma2;

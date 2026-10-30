@@ -21,6 +21,7 @@
 #define IS_LONG(month)                                                                             \
     ((month == JANUARY) || (month == MARCH) || (month == MAY) || (month == JULY) ||                \
      (month == AUGUST) || (month == OCTOBER) || (month == DECEMBER))
+
 void FromGnssTimeToDate(TSatConstellation system, int wn, double tow, TDateTime *datePtr)
 {
     /* TODO Da ottimizzare? */
@@ -91,6 +92,7 @@ void FromGnssTimeToDate(TSatConstellation system, int wn, double tow, TDateTime 
     datePtr->minute = floor(ssInHour / (double)SECONDS_IN_A_MINUTE);
     datePtr->second = fmod(ssInHour, (double)SECONDS_IN_A_MINUTE);
 }
+
 void FromDateToGnssTime(TSatConstellation system, int *wn, double *tow, TDateTime *datePtr)
 {
     /* TODO da ottimizzare? */
@@ -138,6 +140,7 @@ void FromDateToGnssTime(TSatConstellation system, int *wn, double *tow, TDateTim
     *wn = (int)floor(*tow / (double)SECONDS_IN_A_WEEK);
     *tow = fmod(*tow, (double)SECONDS_IN_A_WEEK);
 }
+
 int FromDayNumberToDate(int dayOfTheYear, TDateTime *datePtr)
 {
     int monthLength;
@@ -168,6 +171,7 @@ int FromDayNumberToDate(int dayOfTheYear, TDateTime *datePtr)
     datePtr->day = dayOfTheYear;
     return 0;
 }
+
 int FromDateToDayNumber(TDateTime *datePtr)
 {
     int dayOfTheYear = 0;
@@ -193,6 +197,7 @@ int FromDateToDayNumber(TDateTime *datePtr)
     dayOfTheYear += datePtr->day;
     return dayOfTheYear;
 }
+
 int GetGstToGpsTimeOffset(TNGeneData *rx, int gstWn, double gstTow, double *gstToGpsTimeOffset)
 {
     int idx;
@@ -229,10 +234,12 @@ int GetGstToGpsTimeOffset(TNGeneData *rx, int gstWn, double gstTow, double *gstT
     *gstToGpsTimeOffset = 0.0;
     return FALSE_FLAG;
 }
+
 int Sign(double a)
 {
     return ((a >= 0.0) ? 1 : -1);
 }
+
 double Module(double x, double y)
 {
     return (fmod(x, y) + y * (1 - Sign(x)) / 2);
@@ -331,6 +338,7 @@ void FromGnssTimeToUtcTime(TGnssToUtcTimeConversion *utcData, int utcDataValid,
         (*utcWn)++;
     }
 }
+
 double TimeDifference(int wn1, double tow1, int wn2, double tow2)
 {
     double difference = 0;
@@ -338,6 +346,7 @@ double TimeDifference(int wn1, double tow1, int wn2, double tow2)
     difference += (tow1 - tow2);
     return difference;
 }
+
 void TimeIncrement(int *wn, double *tow, int wnIncrement, double towIncrement)
 {
     *tow = *tow + towIncrement;
@@ -354,6 +363,7 @@ void TimeIncrement(int *wn, double *tow, int wnIncrement, double towIncrement)
         *wn = 0;
     }
 }
+
 void GetPcTime(TDateTime *currTime)
 {
     struct timespec ts;

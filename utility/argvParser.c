@@ -21,6 +21,7 @@
 extern char *optarg; ///< required by the getopt_long linux function used in handle_cmdline
 // It simply gets the executable file name and it stores the value
 // in the corresponding place in the receiver data structure
+
 void GetMainName(char *argv[], TNGeneConfiguration *cfg)
 {
     /* Get the name of the main file as it has been given from the command line
@@ -30,6 +31,7 @@ void GetMainName(char *argv[], TNGeneConfiguration *cfg)
 }
 // This function handle the parameters given as command line to the executable file
 // and it sets the corresponding variable and receiver data structure
+
 int HandleCmdLine(int argc, char *argv[], TNGeneConfiguration *cfg)
 {
     /* Add here more options if necessary */

@@ -11,6 +11,7 @@
  */
 #ifndef CLOSE_MANAGER_H_INCLUDED
 #define CLOSE_MANAGER_H_INCLUDED
+
 /**
  * @brief Release receiver resources, stop the frontend and terminate the process.
  *

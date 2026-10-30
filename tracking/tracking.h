@@ -29,6 +29,7 @@
  * 			Each value is saved as a float number.
  */
 #define TRACKING_LOG_SET_SIZE 16
+
 /**
  * @brief Initializes the tracking structure (during receiver initialization)
  *
@@ -39,12 +40,14 @@
  * @return SUCCESS_RETURN when the function ends with success, FAILURE_RETURN otherwise
  */
 int InitTracking(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch);
+
 /**
  * @brief Frees the memory allocated in the current tracking structure
  *
  * @param trk points to the tracking structure
  */
 void DeinitTracking(TTracking *trk);
+
 /**
  * @brief Initializes tracking data structure during receiver elaboration
  *
@@ -53,6 +56,7 @@ void DeinitTracking(TTracking *trk);
  * @param trk points to the tracking structure
  */
 void StartTracking(TNGeneConfiguration *cfg, TChannel *ch, TTracking *trk);
+
 /**
  * @brief Performs all the despreading operations required by ttracking
  *
@@ -63,6 +67,7 @@ void StartTracking(TNGeneConfiguration *cfg, TChannel *ch, TTracking *trk);
  */
 void PerformAllTrackingCorrelations(TChannel *ch, TTracking *trk, char *cosArray, char *sinArray,
                                     const short *wideI, const short *wideQ);
+
 /**
  * @brief this function writes tracking logs in the high rate correlation file
  *
@@ -72,6 +77,7 @@ void PerformAllTrackingCorrelations(TChannel *ch, TTracking *trk, char *cosArray
  * @param trk points to the tracking structure
  */
 void DumpCorrelationsToFile(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch, TTracking *trk);
+
 /**
  * @brief Clear computed correlations. Updates "old" variables.
  *
@@ -79,6 +85,7 @@ void DumpCorrelationsToFile(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *
  * @param trk points to the tracking structure
  */
 void UpdateCorrelations(TChannel *ch, TTracking *trk);
+
 /**
  * @brief Allocates the variables used to manage the status of the tracking
  *
@@ -87,6 +94,7 @@ void UpdateCorrelations(TChannel *ch, TTracking *trk);
  * @param trk points to the tracking structure
  */
 void InitTrackingStatusChecker(TNGeneConfiguration *cfg, TChannel *ch, TTracking *trk);
+
 /**
  * @brief Check if the Galileo signal is locked to a side peak after the Fast Re-acquisition and
  * correct it
@@ -96,6 +104,7 @@ void InitTrackingStatusChecker(TNGeneConfiguration *cfg, TChannel *ch, TTracking
  * @param trk points to the tracking structure
  */
 void CheckAndCorrectSidePeakLock(TNGeneConfiguration *cfg, TChannel *ch, TTracking *trk);
+
 /**
  * @brief Initializes the variables used to manage the status of the tracking
  *
@@ -103,12 +112,14 @@ void CheckAndCorrectSidePeakLock(TNGeneConfiguration *cfg, TChannel *ch, TTracki
  * @param trk points to the tracking structure
  */
 void StartTrackingStatusChecker(TNGeneConfiguration *cfg, TTracking *trk);
+
 /**
  * @brief Deinitializes the variables used to manage the status of the tracking
  *
  * @param trk points to the tracking structure
  */
 void DeinitTrackingStatusChecker(TTracking *trk);
+
 /**
  * @brief Evaluates the state of the tracking
  *
@@ -120,9 +131,14 @@ void DeinitTrackingStatusChecker(TTracking *trk);
 void CheckTrackingLock(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch, TTracking *trk);
 /* Bounded NCO holdover. Restore the trusted trajectory at the current sample;
  * no held observation is eligible for PNT or navigation message decoding. */
+
 void RememberTrackingNco(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch);
+
 void EnterTrackingHoldover(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch);
+
 int ManageTrackingHoldover(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch);
+
 int TrackingLoopsEnabled(const TTracking *trk);
+
 int TrackingNavigationEnabled(TTracking *trk);
 #endif /* TRACKING_H_INCLUDED */

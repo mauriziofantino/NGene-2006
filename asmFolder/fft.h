@@ -25,6 +25,7 @@ typedef struct FftTableStruct {
     s128 *twiddles; /**< Owned 4*(maxFftSize-1) int16 Q14 coefficients, accessed as short.
                         Full radix-2 stage tables use [Re,-Im,Im,Re]. Immutable after init. */
 } TFftTable;
+
 /**
  * @brief Initializes the FFT table structure, by computing twiddles and the reverse bit indices
  *
@@ -34,12 +35,14 @@ typedef struct FftTableStruct {
  * @return SUCCESS_RETURN when the function ends with success, FAILURE_RETURN otherwise
  */
 int InitFftTable(TNGeneConfiguration *cfg, TFftTable *t);
+
 /**
  * @brief Frees the memory allocated in the structure t
  *
  * @param t  Structure to free
  */
 void DeinitFftTable(TFftTable *t);
+
 /**
  * @brief Native x64 SSE2 FFT using EVO scheduling and Classic fixed-point gains.
  *        Computes b = fft(a) where a and b are complex vectors with N complex elements each.
@@ -70,11 +73,13 @@ int PerformFft(TNGeneConfiguration *cfg, TFftTable *table, short *a, short *b,
                unsigned int log2Size, int gain);
 /* Identical arithmetic, optional count of saturated int32->int16 narrowing
  * operations at every stage. Counter is reset per call, including errors. */
+
 int PerformFftChecked(TNGeneConfiguration *cfg, TFftTable *table, short *a, short *b,
                       unsigned int log2Size, int gain, unsigned *clipped);
 /* Acquisition scaling trial: stop after a kernel reports saturation. With
  * *clipped==0 the output is bit-identical to PerformFftChecked; otherwise the
  * partial output must be discarded. A non-NULL counter is required. */
+
 int PerformFftTrial(TNGeneConfiguration *cfg, TFftTable *table, short *a, short *b,
                     unsigned int log2Size, int gain, unsigned *clipped);
 #endif

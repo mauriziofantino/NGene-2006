@@ -20,6 +20,7 @@
 #include "timeConversions.h"
 #include "dop.h"
 #include "pvtUtility.h"
+
 static void FromDegreeToDm(double angle, int *deg, double *min)
 {
     int sign = (angle >= 0.0) ? 1 : -1;
@@ -31,6 +32,7 @@ static void FromDegreeToDm(double angle, int *deg, double *min)
     //
     *deg *= sign;
 }
+
 static void ConcatenateChecksum(char *string)
 {
     int idx;
@@ -43,6 +45,7 @@ static void ConcatenateChecksum(char *string)
     sprintf(&(string[len]), "%02x", checkSum);
     string[len + 2] = '\0';
 }
+
 static int GetNmeaSatId(TSatConstellation satType, int satId)
 {
     if (satType == GALILEO_SAT)
@@ -52,6 +55,7 @@ static int GetNmeaSatId(TSatConstellation satType, int satId)
     else
         return satId;
 }
+
 int ManageNmeaConfiguration(TNGeneConfiguration *cfg, char *cfgFilename)
 {
     TNGeneLogConfiguration *logCfg = &(cfg->logConfiguration);
@@ -116,6 +120,7 @@ int ManageNmeaConfiguration(TNGeneConfiguration *cfg, char *cfgFilename)
     }
     return SUCCESS_RETURN;
 }
+
 void NmeaSavePvt(TNGeneConfiguration *cfg, TNGeneData *rx)
 {
     TNGeneLogConfiguration *logCfg = &(cfg->logConfiguration);

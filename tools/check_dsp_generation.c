@@ -17,12 +17,14 @@
 #include "prnTable.h"
 #include "ngeneConstants.h"
 char *ngeneXmmsBackup;
+
 int SwrxLog(int severity, const char *format, ...)
 {
     (void)severity;
     (void)format;
     return 0;
 }
+
 void CloseNGene(TNGeneConfiguration *cfg, int result)
 {
     (void)cfg;
@@ -36,6 +38,7 @@ void CloseNGene(TNGeneConfiguration *cfg, int result)
             return 1;                                                                              \
         }                                                                                          \
     } while (0)
+
 static uint64_t Digest(uint64_t hash, const void *data, unsigned n)
 {
     const unsigned char *p = data;
@@ -46,6 +49,7 @@ static uint64_t Digest(uint64_t hash, const void *data, unsigned n)
     }
     return hash;
 }
+
 int main(int argc, char **argv)
 {
     const double rates[] = {8183800, 16367600};

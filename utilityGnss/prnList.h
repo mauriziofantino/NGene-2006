@@ -15,6 +15,7 @@
 #include "ngeneConfiguration.h"
 #include "pvtDataStructure.h"
 #include "ngeneDataStructure.h"
+
 /**
  * @brief Create a PRN list
  *
@@ -33,6 +34,7 @@
  */
 int CreatePrnList(TPrnList *ptr, int gpsEnabled, int galileoEnabled, int egnosEnabled,
                   int numOfRealGalileoPrns, int *realGalileoPrns);
+
 /**
  * @brief Delete a PRN list
  *
@@ -44,6 +46,7 @@ int CreatePrnList(TPrnList *ptr, int gpsEnabled, int galileoEnabled, int egnosEn
  * @return SUCCESS_RETURN if successful, FAILURE_RETURN otherwise
  */
 int DestroyPrnList(TPrnList *ptr);
+
 /**
  * @brief Get the number of all the elements in the list without regard of the availability
  *
@@ -52,6 +55,7 @@ int DestroyPrnList(TPrnList *ptr);
  * @return Return the number of elements in the list
  */
 int GetListLength(TPrnList *ptr);
+
 /**
  * @brief Delete an element from a PRN list
  *
@@ -65,6 +69,7 @@ int GetListLength(TPrnList *ptr);
  * @return SUCCESS_RETURN if successful, FAILURE_RETURN otherwise
  */
 int DeleteElementFromPrnList(TSatConstellation constellation, int prn, TPrnList *ptr);
+
 /**
  * @brief Insert an element into a PRN list
  *
@@ -78,6 +83,7 @@ int DeleteElementFromPrnList(TSatConstellation constellation, int prn, TPrnList 
  * @return SUCCESS_RETURN if successful, FAILURE_RETURN otherwise
  */
 int InsertElementIntoPrnList(TSatConstellation constellation, int prn, TPrnList *ptr);
+
 /**
  * @brief Copies a list of PRN into a new list (elements in the new list will be available)
  *
@@ -87,6 +93,7 @@ int InsertElementIntoPrnList(TSatConstellation constellation, int prn, TPrnList 
  * @return SUCCESS_RETURN if successful, FAILURE_RETURN otherwise
  */
 int CopyPrnList(TPrnList *srcPtr, TPrnList *dstPtr);
+
 /**
  * @brief Counts how many PRN in the list are tagged available
  *
@@ -95,6 +102,7 @@ int CopyPrnList(TPrnList *srcPtr, TPrnList *dstPtr);
  * @return Number of available PRNs
  */
 int GetNumberOfAvailableElementsInTheList(TPrnList *ptr);
+
 /**
  * @brief Finds and returns the first available PRN in the list.
  *
@@ -109,6 +117,7 @@ int GetNumberOfAvailableElementsInTheList(TPrnList *ptr);
  * @return selected PRN, INVALID_PRN if no suitable PRN is found in the list
  */
 int GetNextAvailableFromPrnList(TSatConstellation constellation, TPrnList *ptr);
+
 /**
  * @brief Checks if the desired PRN is in the list.
  *
@@ -120,6 +129,7 @@ int GetNextAvailableFromPrnList(TSatConstellation constellation, TPrnList *ptr);
  * @return FAILURE_RETURN if the required PRN does not exist, SUCCESS_RETURN elsewhere.
  */
 int FindInPrnList(TSatConstellation constellation, int prn, TPrnList *ptr);
+
 /**
  * @brief Finds the desired PRN in the list and makes it not available.
  *
@@ -135,6 +145,7 @@ int FindInPrnList(TSatConstellation constellation, int prn, TPrnList *ptr);
  * elsewhere.
  */
 int FindAndOccupyInPrnList(TSatConstellation constellation, int prn, TPrnList *ptr);
+
 /**
  * @brief Finds the desired PRN in the list and makes it again available.
  *
@@ -149,6 +160,7 @@ int FindAndOccupyInPrnList(TSatConstellation constellation, int prn, TPrnList *p
  * @return selected PRN, INVALID_PRN if no suitable PRN is found in the list
  */
 int FindAndFreeInPrnList(TSatConstellation constellation, int prn, TPrnList *ptr);
+
 /**
  * @brief Change the tag of all elements in the list to the PRN_AVAILABLE value
  *
@@ -158,6 +170,7 @@ int FindAndFreeInPrnList(TSatConstellation constellation, int prn, TPrnList *ptr
  * @param freeEgnos when FALSE_FLAG, elements related to EGNOS are not reset to PRN_AVAILABLE
  */
 void FreeAllElementsInTheList(TPrnList *ptr, int freeGps, int freeGal, int freeEgnos);
+
 /**
  * @brief It translates a string describing a PRN into constellation and prn index.
  *
@@ -168,6 +181,7 @@ void FreeAllElementsInTheList(TPrnList *ptr, int freeGps, int freeGal, int freeE
  * @param prn points to the PRN index.
  */
 void FromStringToPrn(char *prnDescription, TSatConstellation *constellation, int *prn);
+
 /**
  * @brief It translates a couple constellation and prn index into a string describing the PRN.
  *

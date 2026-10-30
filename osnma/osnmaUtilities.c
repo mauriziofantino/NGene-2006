@@ -17,6 +17,7 @@
 #include <openssl/sha.h>
 #include <openssl/evp.h>
 #include "osnmaConstants.h"
+
 TDsmType GetDsmTypeFromDsmId(int dsmId)
 {
     if ((dsmId >= 0) && (dsmId <= 11)) {
@@ -28,6 +29,7 @@ TDsmType GetDsmTypeFromDsmId(int dsmId)
         return DSM_INVALID_TYPE;
     }
 }
+
 int GetNumberOfBlocks(int nb)
 {
     /* nb=1 => 7  ...  nb=10 => 16 */
@@ -37,6 +39,7 @@ int GetNumberOfBlocks(int nb)
     /* other values are reserved */
     return -1;
 }
+
 int GetTeslaChainKeySize(int ks)
 {
     switch (ks) {
@@ -72,6 +75,7 @@ int GetTeslaChainKeySize(int ks)
         break;
     }
 }
+
 void GetHashFunctionForTeslaKeyVerification(TOsnmaParameters *osnma)
 {
     switch (osnma->hashFunction) {
@@ -96,6 +100,7 @@ void GetHashFunctionForTeslaKeyVerification(TOsnmaParameters *osnma)
         break;
     }
 }
+
 int GetMacSize(int ms)
 {
     switch (ms) {
@@ -134,6 +139,7 @@ int GetMacSize(int ms)
         break;
     }
 }
+
 void GetSatTypePrnFromOsnmaPrn(int osnmaPrn, TSatConstellation *satTypePtr, int *prnPtr)
 {
     if ((osnmaPrn >= 1) && (osnmaPrn <= 36)) {
@@ -156,6 +162,7 @@ void GetSatTypePrnFromOsnmaPrn(int osnmaPrn, TSatConstellation *satTypePtr, int 
         *prnPtr = INVALID_PRN;
     }
 }
+
 int GetOsnmaPrnFromSatTypePrn(TSatConstellation satType, int prn)
 {
     int osnmaPrn = 0;
@@ -170,6 +177,7 @@ int GetOsnmaPrnFromSatTypePrn(TSatConstellation satType, int prn)
     }
     return osnmaPrn;
 }
+
 int IsThisPrnOffset(int prn, int mackOffsetEnabled, int ns)
 {
     // MACK offset disabled
@@ -185,6 +193,7 @@ int IsThisPrnOffset(int prn, int mackOffsetEnabled, int ns)
         return TRUE_FLAG;
 }
 #ifdef MACK_OFFSET_ICD2_DEFINITION
+
 double GetMackOffsetSeconds(int prn, int mackOffsetEnabled, int nmack, int ns)
 {
     /* if MACK offset is disabled, return 0.0 */
@@ -213,6 +222,7 @@ double GetMackOffsetSeconds(int prn, int mackOffsetEnabled, int nmack, int ns)
     }
 }
 #else
+
 double GetMackOffsetSeconds(int prn, int mackOffsetEnabled, int nmack)
 {
     /* if MACK offset is disabled, return 0.0 */
@@ -245,6 +255,7 @@ double GetMackOffsetSeconds(int prn, int mackOffsetEnabled, int nmack)
     }
 }
 #endif
+
 int GetGalE1bSubframeStartTime(int tow, int *offsetPtr)
 {
     /* ICD at page 26 requires:
@@ -258,6 +269,7 @@ int GetGalE1bSubframeStartTime(int tow, int *offsetPtr)
     *offsetPtr = tow % GAL_SECONDS_PER_SUBFRAME;
     return tow - (*offsetPtr);
 }
+
 int FromTeslaChainKeyIndexToPrn(int maxNs, int ns, int *keyIndexTable, int indexKey, int prnIndex)
 {
     /* In each mack block there are 36/NS PRNs with the same key!
@@ -295,6 +307,7 @@ int FromTeslaChainKeyIndexToPrn(int maxNs, int ns, int *keyIndexTable, int index
     }
     return prn;
 }
+
 int FromTeslaChainKeyIndexToTime(int nmack, int ns, int krootTow, int indexKey)
 {
     int subframeIndex = (indexKey - 1) / (nmack * ns);
@@ -304,6 +317,7 @@ int FromTeslaChainKeyIndexToTime(int nmack, int ns, int krootTow, int indexKey)
     }
     return tow;
 }
+
 int IsThisKeyForMackOffset(int mackOffsetEnabled, int ns, int indexKey)
 {
     int indexKeyInTheMackBlock;

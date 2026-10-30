@@ -18,6 +18,7 @@
 #include "nequickDataStructures.h"
 static TBoolean ModipDegrees(TModip *pstModipFile, double dLat, double dLon, double *pdModip);
 static double Interpolate(double pdZ[NUM_INT_PTS_SI], double dDeltaX);
+
 TBoolean IonoCalcModip(TModip *pstModipFile, double dLatRads, double dLongRads, double *pdModip)
 {
     double dLatDegs;  /* Latitude in degrees */
@@ -42,6 +43,7 @@ TBoolean IonoCalcModip(TModip *pstModipFile, double dLatRads, double dLongRads, 
  *
  * @return the success status of the function (FALSE/TRUE)
  */
+
 static TBoolean ModipDegrees(TModip *pstModipFile, double dLat, double dLon, double *pdModip)
 {
     /*unsigned char uszInfo[EVENT_ADD_INF_SIZE_UI+1]; */
@@ -109,6 +111,7 @@ static TBoolean ModipDegrees(TModip *pstModipFile, double dLat, double dLon, dou
  *
  * @return the interpolated value at the point
  */
+
 static double Interpolate(double pdZ[NUM_INT_PTS_SI], double dDeltaX)
 {
     double dIntZ = 0.0;         /* Interpolated value */

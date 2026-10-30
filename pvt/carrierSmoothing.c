@@ -17,6 +17,7 @@
 #include "ngeneConstants.h"
 #include "ioFunctions.h"
 #include "closeManager.h"
+
 void ClearCsmDataChannel(TCarrierSmoothingData *csmDataCh)
 {
     csmDataCh->csmMeasure = 0.0;
@@ -27,6 +28,7 @@ void ClearCsmDataChannel(TCarrierSmoothingData *csmDataCh)
     csmDataCh->codeCorrectionOld = 0;
     csmDataCh->csmCounter = 0;
 }
+
 void ClearCsmData(TNGeneConfiguration *cfg, TPvtData *pvtData, TPvtResults *pvtRes)
 {
     int idx;
@@ -46,6 +48,7 @@ void ClearCsmData(TNGeneConfiguration *cfg, TPvtData *pvtData, TPvtResults *pvtR
     pvtRes->clockBiasGpsCumulated = 0.0;
     pvtRes->clockBiasGalileoCumulated = 0.0;
 }
+
 int InitCarrierSmoothing(TNGeneConfiguration *cfg, TPvtData *pvtData, TPvtResults *pvtRes)
 {
     pvtData->csmData =
@@ -57,6 +60,7 @@ int InitCarrierSmoothing(TNGeneConfiguration *cfg, TPvtData *pvtData, TPvtResult
     ClearCsmData(cfg, pvtData, pvtRes);
     return SUCCESS_RETURN;
 }
+
 void DeinitCarrierSmoothing(TPvtData *pvtData)
 {
     free(pvtData->csmData);
@@ -74,6 +78,7 @@ void UpdateCarrierSmoothingMeasure(TNGeneConfiguration *cfg, TChannel *ch, TPvtD
     fd = fd - (pvtRes->clockDrift / ((double)SPEED_OF_LIGHT / (double)L1_FREQUENCY));
     csmData->csmMeasure += (TWICE_M_PI * fd * (double)ch->blocksize * cfg->ts);
 }
+
 void PerformCarrierSmoothing(TNGeneConfiguration *cfg, TPvtData *pvtData, TPvtResults *pvtRes)
 {
     int chIdx;
@@ -193,6 +198,7 @@ void PerformCarrierSmoothing(TNGeneConfiguration *cfg, TPvtData *pvtData, TPvtRe
         fprintf(pvtData->pvtLogFile, "\n");
     }
 }
+
 void UpdateCumulatedBiases(TPvtResults *pvtRes, const TPvtData *data)
 {
     /* Only clocks rebased from observations changed the measurement origin. */

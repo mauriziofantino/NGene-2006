@@ -31,6 +31,7 @@
 #define KRONROD_TOL_1 (0.001)
 #define KRONROD_TOL_2 (0.01)
 #define RECURSION_LIMIT (50)
+
 static TModip *LoadModipGrid(TNGeneConfiguration *cfg, TModip *pstModip)
 {
     FILE *fpFile;
@@ -58,6 +59,7 @@ static TModip *LoadModipGrid(TNGeneConfiguration *cfg, TModip *pstModip)
     fclose(fpFile);
     return pstModip;
 }
+
 static TCcir *LoadCcirData(TNGeneConfiguration *cfg, TCcir *pstCCIR)
 {
     int siMonth;
@@ -109,6 +111,7 @@ static TCcir *LoadCcirData(TNGeneConfiguration *cfg, TCcir *pstCCIR)
     }
     return pstCCIR;
 }
+
 void InitNeQuickModel(TNGeneConfiguration *cfg, TNeQuickData *nq)
 {
     if (LoadModipGrid(cfg, &(nq->stModip)) == NULL) {
@@ -125,6 +128,7 @@ void InitNeQuickModel(TNGeneConfiguration *cfg, TNeQuickData *nq)
     nq->modipRegion = UNKNOWN_REGION;
     nq->modipValid = FALSE;
 }
+
 void DeinitNeQuickModel(TNeQuickData *nq)
 {
     nq->stModipValid = FALSE;

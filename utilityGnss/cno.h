@@ -48,6 +48,7 @@ typedef struct CnoTableStruct {
     TAverageWindow m4;   /**< moving average window for the fourth order moment */
     int cnoSize;         /**< size of the smoothing filter */
 } TCnoTable;
+
 /**
  * @brief Prepare the table for the CNo measure
  *
@@ -61,6 +62,7 @@ typedef struct CnoTableStruct {
  */
 void SetCnoMeasurement(TCnoTable *cno, double iStart, double qStart, int size, int cnoSize,
                        double lastCno);
+
 /**
  * @brief Function to estimate the Carrier to Noise Power Spectral Density Ratio
  *
@@ -89,12 +91,14 @@ void SetCnoMeasurement(TCnoTable *cno, double iStart, double qStart, int size, i
  * @param cfg points to the receiver configuration
  */
 double MeasureCno(TCnoTable *cno, double iSample, double qSample, TNGeneConfiguration *cfg);
+
 /**
  * @brief Function to compute the variance of the code delay tracking error
  * @param cno is the pointer to the CNo structure
  * @param value is the variable for which to compute the variance
  */
 void ComputeSigmaJ(TCnoTable *cno, double value);
+
 /**
  * @brief Function to compute the equivalent noise bandwidth for the C/N0 estimation
  *

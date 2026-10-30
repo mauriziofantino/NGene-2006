@@ -1,5 +1,6 @@
 #include "hackrfThreshold.h"
 #include "acquisition.h"
+
 int MeasureHackrfConfirmationNoise(TNGeneConfiguration *cfg, TNGeneData *rx, int64_t out[4])
 {
     TThresholdManager *thr = &rx->acqCommon.thr;

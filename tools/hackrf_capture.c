@@ -12,12 +12,14 @@ volatile sig_atomic_t ngeneStopRequested;
 static TRxFe frontend;
 static uint64_t deadline;
 static int streamFailed;
+
 static uint64_t MonotonicMilliseconds(void)
 {
     struct timespec now;
     clock_gettime(CLOCK_MONOTONIC, &now);
     return (uint64_t)now.tv_sec * 1000u + (unsigned long)now.tv_nsec / 1000000u;
 }
+
 int SwrxLog(int severity, const char *format, ...)
 {
     va_list arguments;
@@ -28,6 +30,7 @@ int SwrxLog(int severity, const char *format, ...)
     fputc('\n', stderr);
     return 0;
 }
+
 static void *Monitor(void *unused)
 {
     (void)unused;
@@ -45,6 +48,7 @@ static void *Monitor(void *unused)
     pthread_mutex_unlock(&frontend.usbFe.frontEndMutex);
     return NULL;
 }
+
 int main(int argc, char **argv)
 {
     TNGeneConfiguration cfg = {0};

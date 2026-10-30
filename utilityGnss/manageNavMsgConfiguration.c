@@ -15,6 +15,7 @@
 #include "ngeneConfiguration.h"
 #include "navigationMessageConfiguration.h"
 #include "ioFunctions.h"
+
 int ManageNavigationMessageConfiguration(TNGeneConfiguration *cfg)
 {
     TNavMsgConfiguration *navMsgCfg;

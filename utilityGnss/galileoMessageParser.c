@@ -62,6 +62,7 @@ static unsigned int galCrc24Table[256] = {
     0x0087B4A6, 0x0001F85D, 0x000D61AB, 0x008B2D50, 0x00145247, 0x00921EBC, 0x009E874A, 0x0018CBB1,
     0x00E37B16, 0x006537ED, 0x0069AE1B, 0x00EFE2E0, 0x00709DF7, 0x00F6D10C, 0x00FA48FA, 0x007C0401,
     0x0042FA2F, 0x00C4B6D4, 0x00C82F22, 0x004E63D9, 0x00D11CCE, 0x00575035, 0x005BC9C3, 0x00DD8538};
+
 int InitGalParser(TNGeneConfiguration *cfg, TChannel *ch)
 {
     if ((ch->satType != GALILEO_SAT) || (ch->satSignal != E1_BC)) {
@@ -79,6 +80,7 @@ int InitGalParser(TNGeneConfiguration *cfg, TChannel *ch)
     ch->galParser->galParseLogFile = NULL;
     return SUCCESS_RETURN;
 }
+
 void DeinitGalParser(TChannel *ch)
 {
     if (ch->galParser != NULL) {
@@ -89,6 +91,7 @@ void DeinitGalParser(TChannel *ch)
         ch->galParser = NULL;
     }
 }
+
 void ResetReedSolomonData(TGalParser *parser)
 {
     int idx;
@@ -102,6 +105,7 @@ void ResetReedSolomonData(TGalParser *parser)
     ArrayClean((char *)parser->rsInformationVector, GAL_RS_INFORMATION_VECTOR_LENGTH_BYTES);
     ArrayClean((char *)parser->rsParityVector, GAL_RS_PARITY_VECTOR_LENGTH_BYTES);
 }
+
 void StartGalParser(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch)
 {
     TGalParser *parser = ch->galParser;
@@ -143,6 +147,7 @@ void StartGalParser(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch)
         parser->galParseLogFile = fopen(filename, "a");
     }
 }
+
 TParseResult GalSynchronization(TGalParser *parser, unsigned char symbol)
 {
     TParseResult res = PREAMBLE_NOT_FOUND;
@@ -169,6 +174,7 @@ TParseResult GalSynchronization(TGalParser *parser, unsigned char symbol)
     }
     return res;
 }
+
 void GalDeinterleaver(TGalParser *parser)
 {
     unsigned short i, bitIdx, byteIdx;
@@ -188,6 +194,7 @@ void GalDeinterleaver(TGalParser *parser)
         bitStartVect[idx] = (bitStartVect[idx] + 1) & 0x00000007;
     }
 }
+
 void PrepareGalBits(TGalParser *parser)
 {
     int i;
@@ -218,6 +225,7 @@ void PrepareGalBits(TGalParser *parser)
             parser->bitsForParse[i] | ((parser->decodedPagePart2[i - 14 + 1] >> 6) & 0x03);
     }
 }
+
 void ExtractGalreservedBits(TGalParser *parser)
 {
     int i;
@@ -269,6 +277,7 @@ void ExtractGalreservedBits(TGalParser *parser)
         fprintf(parser->galParseLogFile, "    NO SSP (0x%02x)\n", parser->ssp);
     }
 }
+
 int GalCrc24qVerified(unsigned char *vec, int vecLen)
 {
     unsigned int r;
@@ -350,6 +359,7 @@ void WriteReedSolomonInformationVector(TGalParser *parser, unsigned int wordType
     parser->rsInformationReceived[wordType - 1] = TRUE_FLAG;
     parser->rsInformationValid[wordType - 1] = crcCheckResult;
 }
+
 int ParseGalWord00(TGalParser *parser)
 {
     unsigned char *dataBytes = parser->bitsForParse;
@@ -383,6 +393,7 @@ int ParseGalWord00(TGalParser *parser)
     }
     return SUCCESS_RETURN;
 }
+
 int ParseGalWord01(TGalParser *parser)
 {
     unsigned char *dataBytes = parser->bitsForParse;
@@ -417,6 +428,7 @@ int ParseGalWord01(TGalParser *parser)
     }
     return SUCCESS_RETURN;
 }
+
 int ParseGalWord02(TGalParser *parser)
 {
     unsigned char *dataBytes = parser->bitsForParse;
@@ -455,6 +467,7 @@ int ParseGalWord02(TGalParser *parser)
     }
     return SUCCESS_RETURN;
 }
+
 int ParseGalWord03(TGalParser *parser)
 {
     unsigned char *dataBytes = parser->bitsForParse;
@@ -511,6 +524,7 @@ int ParseGalWord03(TGalParser *parser)
     }
     return SUCCESS_RETURN;
 }
+
 int ParseGalWord04(TGalParser *parser)
 {
     unsigned char *dataBytes = parser->bitsForParse;
@@ -563,6 +577,7 @@ int ParseGalWord04(TGalParser *parser)
     }
     return SUCCESS_RETURN;
 }
+
 int ParseGalWord05(TNGeneData *rx, TGalParser *parser)
 {
     unsigned char *dataBytes = parser->bitsForParse;
@@ -657,6 +672,7 @@ int ParseGalWord05(TNGeneData *rx, TGalParser *parser)
     }
     return SUCCESS_RETURN;
 }
+
 int ParseGalWord06(TGalParser *parser)
 {
     unsigned char *dataBytes = parser->bitsForParse;
@@ -731,6 +747,7 @@ int ParseGalWord06(TGalParser *parser)
     }
     return SUCCESS_RETURN;
 }
+
 int ParseGalWord07(TNGeneData *rx, TGalParser *parser, int tow)
 {
     unsigned char *dataBytes = parser->bitsForParse;
@@ -818,6 +835,7 @@ int ParseGalWord07(TNGeneData *rx, TGalParser *parser, int tow)
     }
     return SUCCESS_RETURN;
 }
+
 int ParseGalWord08(TNGeneData *rx, TGalParser *parser, int tow)
 {
     unsigned char *dataBytes = parser->bitsForParse;
@@ -924,6 +942,7 @@ int ParseGalWord08(TNGeneData *rx, TGalParser *parser, int tow)
     }
     return SUCCESS_RETURN;
 }
+
 int ParseGalWord09(TNGeneData *rx, TGalParser *parser, int tow)
 {
     unsigned char *dataBytes = parser->bitsForParse;
@@ -1037,6 +1056,7 @@ int ParseGalWord09(TNGeneData *rx, TGalParser *parser, int tow)
     }
     return SUCCESS_RETURN;
 }
+
 int ParseGalWord10(TNGeneData *rx, TGalParser *parser, int tow)
 {
     unsigned char *dataBytes = parser->bitsForParse;
@@ -1164,6 +1184,7 @@ int ParseGalWord10(TNGeneData *rx, TGalParser *parser, int tow)
     }
     return SUCCESS_RETURN;
 }
+
 int ParseGalWord16(TGalParser *parser)
 {
     unsigned char *dataBytes = parser->bitsForParse;
@@ -1264,6 +1285,7 @@ int ParseGalWord16(TGalParser *parser)
     }
     return SUCCESS_RETURN;
 }
+
 int ParseGalWord17(TGalParser *parser, unsigned int wordType, int crcCheckResult)
 {
     /* this function parses Words 17, 18, 19, and 20 */
@@ -1296,6 +1318,7 @@ int ParseGalWord17(TGalParser *parser, unsigned int wordType, int crcCheckResult
     }
     return SUCCESS_RETURN;
 }
+
 void ManageReedSolomon(TGalParser *parser, unsigned int wordType)
 {
     TRsCheckResult rsCheckResult;
@@ -1365,6 +1388,7 @@ void ManageReedSolomon(TGalParser *parser, unsigned int wordType)
         }
     }
 }
+
 int ParseGalSubframeWithCrcErrors(TGalParser *parser)
 {
     unsigned int wordType;
@@ -1407,6 +1431,7 @@ int ParseGalSubframeWithCrcErrors(TGalParser *parser)
     ManageReedSolomon(parser, wordType);
     return SUCCESS_RETURN;
 }
+
 int ParseGalSubframe(TNGeneConfiguration *cfg, TNGeneData *rx, int chIndex, TGalParser *parser)
 {
     unsigned int wordType;
@@ -1552,6 +1577,7 @@ int ParseGalSubframe(TNGeneConfiguration *cfg, TNGeneData *rx, int chIndex, TGal
     ManageReedSolomon(parser, wordType);
     return SUCCESS_RETURN;
 }
+
 TParseResult DecodeGalEvenPagePart(TGalParser *parser, unsigned char symbol)
 {
     long metric;
@@ -1613,6 +1639,7 @@ TParseResult DecodeGalOddPagePart(TNGeneConfiguration *cfg, TNGeneData *rx, int 
     }
     return DECODING_ON_GOING;
 }
+
 void ParseGalMessage(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch, float corr)
 {
     int chIndex = ch->chIndex;

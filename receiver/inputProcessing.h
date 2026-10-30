@@ -5,6 +5,7 @@
 #include "arrays.h"
 /* Shared numeric boundary, selected once by the frontend. Oscillator/code
  * generation and all receiver decisions remain in their original modules. */
+
 static inline double GenerateAndMixReceiverInput(TNGeneConfiguration *cfg, TNGeneData *rx,
                                                  char *first, unsigned n1, char *second,
                                                  unsigned n2, unsigned n, double frequency,
@@ -20,10 +21,12 @@ static inline double GenerateAndMixReceiverInput(TNGeneConfiguration *cfg, TNGen
     return phase;
 }
 /* Keep HackRF integration in Q6 integers until the complete complex power. */
+
 static inline int64_t ReceiverPrompt(const short *wide, char *legacy, char *code, unsigned n)
 {
     return wide ? CorrelateWideInteger(wide, code, n) : ArrayMac(legacy, code, n) + (int)(n / 2);
 }
+
 static inline uint64_t ReceiverPower(int wide, int64_t i, int64_t q)
 {
     uint64_t power = (uint64_t)(i * i) + (uint64_t)(q * q);

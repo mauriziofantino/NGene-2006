@@ -31,9 +31,12 @@ typedef struct IgpInfoStruct {
     double verticalDelay[4]; /**< IGP vertical delay [m] */
     int validElements;       /**< number of valid elements in the array (<=4) */
 } TIgpInfo;
+
 void GetIgpLatLon(int band, int idx, int *lat, int *lon);
+
 void GetIonosphericPiercePoint(double *userPos, double az, double el, double *ippLat,
                                double *ippLon, double *fpp);
+
 int EgnosIonosphericCorrection(TNGeneConfiguration *cfg, TEgnosCorrections *egnosCorr,
                                double ippLat, double ippLon, double fpp, double *ionoCorrection);
 #endif /* EGNOS_IONO_CORRECTIONS_H_INCLUDED */

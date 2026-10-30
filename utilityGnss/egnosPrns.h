@@ -3,11 +3,13 @@
 #include "spreadingCodes.h"
 /* Keep the first four slots in the order of the legacy code/FFT files. */
 #define EGNOS_LEGACY_PRNS 4
+
 static inline int EgnosPrnAt(int index)
 {
     const int prns[EGNOS_NUMBER_OF_PRNS] = {120, 124, 126, 136, 121, 123};
     return index >= 0 && index < EGNOS_NUMBER_OF_PRNS ? prns[index] : -1;
 }
+
 static inline int EgnosPrnIndex(int prn)
 {
     int i;
@@ -19,6 +21,7 @@ static inline int EgnosPrnIndex(int prn)
 /* IS-GPS-200N Table 6-I, sheets 2/3, G1/G2 in section 3.3.2.3.
  * NGene's file convention is inverted: binary 0 -> -1, binary 1 -> +1
  * (BPSK) or 0 (sign-mask mixer). This preserves the historical code bytes. */
+
 static inline int GenerateEgnosCode(int prn, char *bpsk, char *mask)
 {
     const int delays[EGNOS_NUMBER_OF_PRNS] = {145, 237, 886, 595, 175, 21};

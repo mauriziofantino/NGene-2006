@@ -7,6 +7,7 @@
 /** @brief Enumerate devices, or inspect a SiGe VID/PID given in hexadecimal.
  * @return 0 if enumeration/access succeeds, 1 on error, 2 if the device is absent.
  */
+
 int main(int argc, char **argv)
 {
     libusb_context *context = NULL;

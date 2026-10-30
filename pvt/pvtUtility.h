@@ -13,6 +13,7 @@
 #define PVT_UTILITY_H_INCLUDED
 #include "navigationMessageDataStructure.h"
 #include "spreadingCodes.h"
+
 /**
  * @brief Keep into account for beginning or end of week crossover.
  *
@@ -22,6 +23,7 @@
 double CheckT(double t1, double t2);
 /* Broadcast ECEF at transmit time -> ECEF axes at reception. Iterated
  * geometric flight time is independent of receiver clock bias. */
+
 double RotateSatellitePosition(const double satellite[3], const double receiver[3],
                                double rotated[3]);
 /*
@@ -32,6 +34,7 @@ double RotateSatellitePosition(const double satellite[3], const double receiver[
  * @param azimuth is the output [rad]
  * @param elevation is the output [rad]
  */
+
 void ComputeAzEl(double *svPos, double *solPos, double *azimuth, double *elevation);
 /*
  * @brief Calculates position, velocity, azimuth and elevation w.r.t. the receiver position
@@ -48,6 +51,7 @@ void ComputeAzEl(double *svPos, double *solPos, double *azimuth, double *elevati
  * @param azimuth Output, is the azimuth of the satellite w.r.t. the receiver [rad]
  * @param elevation Output, is the elevation of the satellite w.r.t. the receiver  [rad]
  */
+
 void ComputeSatPositionFromAlmanac(TSatConstellation satType, TNavigationMessage *navMesg,
                                    double tow, double *ecefPosition, double *ecefSatPos,
                                    double *ecefSatVel, double *azimuth, double *elevation);
@@ -62,6 +66,7 @@ void ComputeSatPositionFromAlmanac(TSatConstellation satType, TNavigationMessage
  * @param transmissionTime is the transmission time
  * @return Ionosphere delay [s]
  */
+
 double GpsIonosphericCorrection(TGnssIono *ionosphere, double elevation, double azimuth,
                                 double latu, double lonu, double transmissionTime);
 /*
@@ -71,7 +76,9 @@ double GpsIonosphericCorrection(TGnssIono *ionosphere, double elevation, double 
  * @param h is the altitude of the receiver (geodetic reference system)
  * @return Troposphere delay [m]
  */
+
 double TropoHopfieldModel(double elevation, double h);
+
 /**
  * @brief This function calculate the troposphere correction.
  *
@@ -87,6 +94,7 @@ double TropoHopfieldModel(double elevation, double h);
  */
 double Tropo(double sinel, double hsta, double p, double tkel, double hum, double hp, double htkel,
              double hhum);
+
 /**
  * @brief Corrects the sat position due to Earth rotation
  *
@@ -97,6 +105,7 @@ double Tropo(double sinel, double hsta, double p, double tkel, double hum, doubl
  * @param channel index of the channel allocated to the satellite under elaboration
  */
 void EarthCorrection(double travelTime, double *x, double *rotX, int numOfSat, int channel);
+
 /**
  * @brief Transform vector dx (user - sat) into topocentric coordinate system with origin at X.
  *
@@ -106,6 +115,7 @@ void EarthCorrection(double travelTime, double *x, double *rotX, int numOfSat, i
  * (user - sat) (degrees)
  */
 void Topocent(double *ecefCoord, double *satEcef, double *satAngle);
+
 /**
  * @brief Convert the geographical coordinates (lon, lat, h) on the WSG84 reference ellipsoid to
  * Cartesian coordinates (X,Y,Z).
@@ -115,6 +125,7 @@ void Topocent(double *ecefCoord, double *satEcef, double *satAngle);
  * @param ecefCoord is the array containing the coordinates in ECEF
  */
 void GeodToEcef(double *geodCoord, double *ecefCoord);
+
 /**
  * @brief Convert the Cartesian coordinates (X,Y,Z) to geographical coordinates (lon, lat, h) on the
  * WSG84 reference ellipsoid.
@@ -124,6 +135,7 @@ void GeodToEcef(double *geodCoord, double *ecefCoord);
  * (degree), height (m)
  */
 void Ecef2Geod(double *ecefCoord, double *geodCoord);
+
 /**
  * @brief This function convert LLA coordinates in ENU coordinates (Intecs)
  *
@@ -134,6 +146,7 @@ void Ecef2Geod(double *ecefCoord, double *geodCoord);
  * @param utmZone is the UTM zone
  */
 void LlaToUtm(double lat, double lon, double alt, double *enu, double *utmZone);
+
 /**
  * @brief This function convert user velocity from ECEF to ENU (Intecs)
  *
@@ -143,6 +156,7 @@ void LlaToUtm(double lat, double lon, double alt, double *enu, double *utmZone);
  * @param enuVel is the array containing the user velocities in ENU (m/s)
  */
 void EcefVelToEnuVel(double *ecefPos, double *ecefVel, double *enuPos, double *enuVel);
+
 /**
  * @brief This function evaluates the geoid separation for the current position.
  *        From ASSIST2.

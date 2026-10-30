@@ -21,6 +21,7 @@
 #include "ngeneDataStructure.h"
 #include "arrays.h"
 #include "cno.h"
+
 void CalculateLoopCoefficients(TNGeneConfiguration *cfg, TChannel *ch, TTracking *trk)
 {
     TTrkConfiguration *trkCfg = &(cfg->trkConfiguration);
@@ -89,6 +90,7 @@ void CalculateLoopCoefficients(TNGeneConfiguration *cfg, TChannel *ch, TTracking
     /* CNo */
     trk->trkStatusChecker.cnoEstimator.dllBandwidth = blDll;
 }
+
 void RestartCarrierLoop(TChannel *ch, TTracking *trk)
 {
     trk->carrierLoop.initialCarrierFrequency = ch->carrierFrequency;
@@ -98,6 +100,7 @@ void RestartCarrierLoop(TChannel *ch, TTracking *trk)
     trk->carrierLoop.meanCarrierFreq.filterValue = ch->carrierFrequency;
     trk->carrierLoop.meanCarrierFreqOld = ch->carrierFrequency;
 }
+
 void RestartCodeLoop(TChannel *ch, TTracking *trk)
 {
     trk->codeLoop.initialCodeRate = ch->codeRate;
@@ -105,6 +108,7 @@ void RestartCodeLoop(TChannel *ch, TTracking *trk)
     trk->codeLoop.dllDiscriminatorOld = 0.0;
     trk->codeLoop.codeNcoOld = 0.0;
 }
+
 void InitTrackingLoops(TNGeneConfiguration *cfg, TChannel *ch, TTracking *trk)
 {
     CalculateLoopCoefficients(cfg, ch, trk);
@@ -155,6 +159,7 @@ TCarrierLoopChoice ChooseCarrierLoop(TNGeneConfiguration *cfg, TNGeneData *rx, T
     }
     return CARRIER_FLL;
 }
+
 void FllDiscriminator(TTracking *trk)
 {
     double dot;
@@ -174,6 +179,7 @@ void FllDiscriminator(TTracking *trk)
         /* trk->carrierLoop.errort = phase / (trk->carrierLoop.delta * 360.0); */
     }
 }
+
 void PllDiscriminator(TTracking *trk)
 {
     if (trk->pI != 0.0) {
@@ -185,6 +191,7 @@ void PllDiscriminator(TTracking *trk)
         trk->carrierLoop.errort = 0.0;
     }
 }
+
 void DllDiscriminator(TTracking *trk)
 {
     double num;
@@ -225,6 +232,7 @@ void DllDiscriminator(TTracking *trk)
     }
 #endif
 }
+
 void CarrierLoop(TNGeneConfiguration *cfg, TChannel *ch, TTracking *trk)
 {
     double carrierNco = 0.0;
@@ -245,6 +253,7 @@ void CarrierLoop(TNGeneConfiguration *cfg, TChannel *ch, TTracking *trk)
     filter->carrierNcoOld = carrierNco;
     filter->errortOld = filter->errort;
 }
+
 void CodeLoop(TChannel *ch, TTracking *trk)
 {
     double codeNco;

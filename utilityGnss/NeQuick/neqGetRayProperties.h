@@ -17,6 +17,7 @@
 #define NEQ_GET_RAY_PROPERTIES_H_INCLUDED
 #include "nequickDataStructures.h"
 #include "nequickConstants.h"
+
 /**
  * @brief This function checks if the ray is vertical and set P2 if it is. It then
  *        calculates the radius of P1 and P2 before calling NeqCalcRayProperties1 to

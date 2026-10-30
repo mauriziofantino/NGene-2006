@@ -15,6 +15,7 @@
 #include "prnList.h"
 #include "ngeneConstants.h"
 #include "ioFunctions.h"
+
 int InitNonCoherentSumsManager(TNGeneConfiguration *cfg, TNGeneData *rx)
 {
     TNonCoherentSumsManager *nonCohManager = &(rx->acqCommon.nonCohManager);
@@ -54,6 +55,7 @@ int InitNonCoherentSumsManager(TNGeneConfiguration *cfg, TNGeneData *rx)
     }
     return SUCCESS_RETURN;
 }
+
 void DeinitNonCoherentSumsManager(TNonCoherentSumsManager *nonCohManager)
 {
     DestroyPrnList(&(nonCohManager->testedPrns));

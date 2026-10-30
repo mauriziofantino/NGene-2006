@@ -16,6 +16,7 @@
 #include "neqGetNeOnVertRay.h"
 #include "neqCalcBottomsideNe.h"
 #include "neqCalcTopsideNe.h"
+
 double NeqGetNeOnVertRay(double dH, TLayerProperties *pstLayers, double *pdNmax)
 {
     double dReturn; /* Return value, electron content at point */

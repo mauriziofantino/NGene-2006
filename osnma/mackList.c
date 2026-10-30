@@ -60,6 +60,7 @@ TMackList *PushInMackList(TMackList *head, TSatConstellation satType, TSatSignal
     }
     return ptr;
 }
+
 void DeleteMackList(TMackList **head)
 {
     TMackList *ptr = *head;
@@ -77,6 +78,7 @@ void DeleteMackList(TMackList **head)
     // the list now is empty
     *head = NULL;
 }
+
 void DeleteAllKeysAndMacsFromMackList(TMackList *head)
 {
     TMackList *ptr = head;
@@ -88,6 +90,7 @@ void DeleteAllKeysAndMacsFromMackList(TMackList *head)
         ptr = next;
     }
 }
+
 TMackList *DeleteChannelFromMackList(TMackList *head, int chId)
 {
     TMackList *ptr = head;
@@ -116,6 +119,7 @@ TMackList *DeleteChannelFromMackList(TMackList *head, int chId)
     }
     return newHead;
 }
+
 TMacList *PushNewMac(TOsnmaParameters *osnmaPars, TMackList *mackList)
 {
     TMacList *ptr = mackList->macList;
@@ -142,6 +146,7 @@ TMacList *PushNewMac(TOsnmaParameters *osnmaPars, TMackList *mackList)
     }
     return ptr;
 }
+
 void DeleteAMacFromMacList(TMackList *mackPtr, TMacList *macPtr)
 {
     if (macPtr == NULL) {
@@ -163,6 +168,7 @@ void DeleteAMacFromMacList(TMackList *mackPtr, TMacList *macPtr)
     free(macPtr->macInfoFlex);
     free(macPtr);
 }
+
 void DeleteMacsOlderThan(TMackList *mackPtr, int wn, int tow)
 {
     /* only in the current MAC list i.e. for one channel */
@@ -178,6 +184,7 @@ void DeleteMacsOlderThan(TMackList *mackPtr, int wn, int tow)
         macPtr = nextPtr;
     }
 }
+
 void DeleteMacIfKeyOlderThan(TMackList *mackPtr, TMacList *macPtr, int wn, int tow)
 {
     if ((macPtr->wnKey < wn) || ((macPtr->wnKey == wn) && (macPtr->towKey < tow))) {
@@ -185,6 +192,7 @@ void DeleteMacIfKeyOlderThan(TMackList *mackPtr, TMacList *macPtr, int wn, int t
         DeleteAMacFromMacList(mackPtr, macPtr);
     }
 }
+
 void DeleteMacList(TMackList *mackList)
 {
     TMacList *ptr = mackList->macList;
@@ -199,6 +207,7 @@ void DeleteMacList(TMackList *mackList)
     }
     mackList->macList = NULL;
 }
+
 TKeyList *PushNewKey(TOsnmaParameters *osnmaPars, TMackList *mackList)
 {
     TKeyList *ptr = mackList->keyList;
@@ -222,6 +231,7 @@ TKeyList *PushNewKey(TOsnmaParameters *osnmaPars, TMackList *mackList)
     }
     return ptr;
 }
+
 void DeleteAKeyFromKeyList(TMackList *mackList, TKeyList *keyPtr)
 {
     if (keyPtr == NULL) {
@@ -241,6 +251,7 @@ void DeleteAKeyFromKeyList(TMackList *mackList, TKeyList *keyPtr)
     free(keyPtr->key);
     free(keyPtr);
 }
+
 void DeleteKeysOlderThan(TMackList *mackPtr, int wn, int tow)
 {
     /* only in the current key list i.e. for one channel */
@@ -255,6 +266,7 @@ void DeleteKeysOlderThan(TMackList *mackPtr, int wn, int tow)
         keyPtr = nextPtr;
     }
 }
+
 void DeleteKeyList(TMackList *mackList)
 {
     TKeyList *ptr = mackList->keyList;
@@ -267,6 +279,7 @@ void DeleteKeyList(TMackList *mackList)
     }
     mackList->keyList = NULL;
 }
+
 TNavDataList *FindNavData(TNavDataList *navData, int wn, int tow)
 {
     while (navData != NULL) {
@@ -277,6 +290,7 @@ TNavDataList *FindNavData(TNavDataList *navData, int wn, int tow)
     }
     return navData;
 }
+
 TNavDataList *PushNewNavData(TMackList *mackList)
 {
     TNavDataList *ptr = mackList->navDataList;
@@ -309,6 +323,7 @@ TNavDataList *PushNewNavData(TMackList *mackList)
     }
     return ptr;
 }
+
 void DeleteANavDataFromNavDataList(TMackList *mackList, TNavDataList *navPtr)
 {
     if (navPtr == NULL) {
@@ -329,6 +344,7 @@ void DeleteANavDataFromNavDataList(TMackList *mackList, TNavDataList *navPtr)
     free(navPtr->navData);
     free(navPtr);
 }
+
 void DeleteNavDataOlderThan(TMackList *mackPtr, int wn, int tow)
 {
     /* only in the current key list i.e. for one channel */
@@ -344,6 +360,7 @@ void DeleteNavDataOlderThan(TMackList *mackPtr, int wn, int tow)
         navPtr = nextPtr;
     }
 }
+
 void DeleteNavDataList(TMackList *mackList)
 {
     TNavDataList *ptr = mackList->navDataList;

@@ -3,6 +3,7 @@
 #include <limits.h>
 #include <stdlib.h>
 #include "hackrfGain.h"
+
 void HackrfAdcAccumulate(THackrfAdcHistogram *h, const unsigned char *iq, unsigned bytes)
 {
     unsigned k;
@@ -12,6 +13,7 @@ void HackrfAdcAccumulate(THackrfAdcHistogram *h, const unsigned char *iq, unsign
     }
     h->pairs += bytes / 2;
 }
+
 int HackrfAdcMeasure(const THackrfAdcHistogram *h, THackrfAdcStats *s)
 {
     unsigned c, b;
@@ -36,6 +38,7 @@ int HackrfAdcMeasure(const THackrfAdcHistogram *h, THackrfAdcStats *s)
     }
     return 1;
 }
+
 int HackrfGainNext(const THackrfAdcStats *s, double target, int *lna, int *vga)
 {
     double desired = DBL_MAX;

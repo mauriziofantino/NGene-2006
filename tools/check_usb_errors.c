@@ -10,6 +10,7 @@
 volatile sig_atomic_t ngeneStopRequested = 0; /**< Test stop request. */
 int USB_BLOCKSIZE = 8192;                     /**< Test transfer size. */
 /** @brief Test logger stand-in; no receiver logging is initialized here. */
+
 int SwrxLog(int severity, const char *format, ...)
 {
     (void)severity;
@@ -17,6 +18,7 @@ int SwrxLog(int severity, const char *format, ...)
     return 0;
 }
 /** @brief Treat unexpected receiver termination as a failed check. */
+
 void CloseNGene(TNGeneConfiguration *cfg, int result)
 {
     (void)cfg;
@@ -24,6 +26,7 @@ void CloseNGene(TNGeneConfiguration *cfg, int result)
     exit(1);
 }
 /** @brief Memory copy stand-in for unexercised streaming code. */
+
 void ArrayCopy(char *input, char *output, int length)
 {
     memcpy(output, input, (size_t)length);
@@ -33,6 +36,7 @@ void LIBUSB_CALL UsbReadCallback(struct libusb_transfer *transfer);
 /** @brief Verify statuses, short-transfer rejection and safe null-handle handling.
  * @return Zero when all checks pass.
  */
+
 int main(void)
 {
     TRxFe frontend = {0};

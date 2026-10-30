@@ -21,6 +21,7 @@
 #include "matrices.h"
 #include "pvtUtility.h"
 #include "pntNumerics.h"
+
 int InitLeastSquaresData(TNGeneConfiguration *cfg, TNGeneData *rx)
 {
     int n = cfg->numberOfChannels;
@@ -53,6 +54,7 @@ int InitLeastSquaresData(TNGeneConfiguration *cfg, TNGeneData *rx)
     }
     return SUCCESS_RETURN;
 }
+
 void ClearLeastSquaresData(TNGeneConfiguration *cfg, TLeastSquaresData *lsData)
 {
     int n = cfg->numberOfChannels;
@@ -71,6 +73,7 @@ void ClearLeastSquaresData(TNGeneConfiguration *cfg, TLeastSquaresData *lsData)
     MatrixInit(lsData->b, n, 1);
     MatrixInit(lsData->el, 1, n);
 }
+
 void DeinitLeastSquaresData(TNGeneData *rx)
 {
     TLeastSquaresData *lsData = &(rx->pvtData.lsData);
@@ -82,6 +85,7 @@ void DeinitLeastSquaresData(TNGeneData *rx)
     free(lsData->b);
     free(lsData->el);
 }
+
 int PerformLeastSquares(TNGeneConfiguration *cfg, TNGeneData *rx)
 {
     TPvtData *pvtData = &(rx->pvtData);

@@ -27,6 +27,7 @@
 #include "osnmaUtilities.h"
 static unsigned int gpsParityMatrix[6] = {0xbb1f3480, 0x5d8f9a40, 0xaec7cd00,
                                           0x5763e680, 0x6bb1f340, 0x8b7a89c0};
+
 int InitGpsParser(TNGeneConfiguration *cfg, TChannel *ch)
 {
     if (ch->satType != GPS_SAT) {
@@ -43,6 +44,7 @@ int InitGpsParser(TNGeneConfiguration *cfg, TChannel *ch)
     ch->gpsParser->gpsParseLogFile = NULL;
     return SUCCESS_RETURN;
 }
+
 void DeinitGpsParser(TChannel *ch)
 {
     if (ch->gpsParser != NULL) {
@@ -53,6 +55,7 @@ void DeinitGpsParser(TChannel *ch)
         ch->gpsParser = NULL;
     }
 }
+
 void StartGpsParser(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch)
 {
     TGpsParser *parser = ch->gpsParser;
@@ -83,6 +86,7 @@ void StartGpsParser(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch)
         parser->gpsParseLogFile = fopen(filename, "a");
     }
 }
+
 TParseResult GpsSynchronization(TGpsParser *parser, unsigned int symbol)
 {
     parser->lastWord = ((parser->lastWord << 1) | symbol) & (unsigned int)0x03ff;
@@ -103,6 +107,7 @@ TParseResult GpsSynchronization(TGpsParser *parser, unsigned int symbol)
     }
     return PREAMBLE_NOT_FOUND;
 }
+
 unsigned int OneCount32(unsigned int num)
 {
     unsigned int mask = 0x80000000;
@@ -114,6 +119,7 @@ unsigned int OneCount32(unsigned int num)
     }
     return cnt;
 }
+
 int GpsParityVerify(unsigned int *wordPtr)
 {
     unsigned int tmp, cnt;
@@ -136,6 +142,7 @@ int GpsParityVerify(unsigned int *wordPtr)
     }
     return FAILURE_RETURN;
 }
+
 int ParseGpsSubframe1(TGpsParser *parser)
 {
     TNavigationMessage *navMsg = parser->navMsg;
@@ -205,6 +212,7 @@ int ParseGpsSubframe1(TGpsParser *parser)
     }
     return SUCCESS_RETURN;
 }
+
 int ParseGpsSubframe2(TGpsParser *parser)
 {
     TNavigationMessage *navMsg = parser->navMsg;
@@ -280,6 +288,7 @@ int ParseGpsSubframe2(TGpsParser *parser)
     }
     return SUCCESS_RETURN;
 }
+
 int ParseGpsSubframe3(TGpsParser *parser)
 {
     TNavigationMessage *navMsg = parser->navMsg;
@@ -354,6 +363,7 @@ int ParseGpsSubframe3(TGpsParser *parser)
     }
     return SUCCESS_RETURN;
 }
+
 int ParseGpsSubframe4(TNGeneData *rx, TGpsParser *parser)
 {
     TNavigationMessage *navMsg = parser->navMsg;
@@ -663,6 +673,7 @@ int ParseGpsSubframe4(TNGeneData *rx, TGpsParser *parser)
     }
     return SUCCESS_RETURN;
 }
+
 int ParseGpsSubframe5(TNGeneData *rx, TGpsParser *parser)
 {
     TNavigationMessage *navMsg = parser->navMsg;
@@ -984,6 +995,7 @@ int ParseGpsSubframe5(TNGeneData *rx, TGpsParser *parser)
     }
     return SUCCESS_RETURN;
 }
+
 int ParseGpsSubframe(TNGeneData *rx, TGpsParser *parser)
 {
     unsigned int subFrameIndex;
@@ -1113,6 +1125,7 @@ TParseResult DecodeGpsSubframe(TNGeneConfiguration *cfg, TNGeneData *rx, int chI
     }
     return DECODING_ON_GOING;
 }
+
 void ParseGpsMessage(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch, float corr)
 {
     int chIndex = ch->chIndex;

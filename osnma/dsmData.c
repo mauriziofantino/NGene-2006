@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include "dsmData.h"
 #include "ngeneConstants.h"
+
 void InitDsmData(TDsmData *dsm, int nCh)
 {
     int idx;
@@ -40,6 +41,7 @@ void InitDsmData(TDsmData *dsm, int nCh)
     }
     ClearDsmValidityAll(dsm);
 }
+
 void ClearDsmValidityAll(TDsmData *dsm)
 {
     int idx;
@@ -56,6 +58,7 @@ void ClearDsmValidityAll(TDsmData *dsm)
     }
 }
 // int CheckDsmValidity(TDsmData *dsm,TOsnmaParameters *osnmaPars)
+
 int CheckDsmValidity(unsigned char *validity, int dsmNb)
 {
     int idx;
@@ -68,6 +71,7 @@ int CheckDsmValidity(unsigned char *validity, int dsmNb)
     }
     return numerOfValidDsmBlocks;
 }
+
 void ClearDsmDataValidity(TDsmData *dsm)
 {
     int idx;
@@ -76,6 +80,7 @@ void ClearDsmDataValidity(TDsmData *dsm)
         dsm->validity[idx] = FALSE_FLAG;
     }
 }
+
 void ClearDsmValidityOneChannel(TDsmData *dsm, int chId)
 {
     int idx;
@@ -83,6 +88,7 @@ void ClearDsmValidityOneChannel(TDsmData *dsm, int chId)
         dsm->dsmArray[chId].validity[idx] = FALSE_FLAG;
     }
 }
+
 void DeinitDsmData(TDsmData *dsm)
 {
     int idx;

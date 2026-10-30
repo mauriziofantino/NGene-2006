@@ -15,6 +15,7 @@
 #include <sys/stat.h>
 #include "ngeneConstants.h"
 #include "checkFolder.h"
+
 const char *GetExecutableDirectory(void)
 {
 #ifdef NGENE_NATIVE_WINDOWS
@@ -43,6 +44,7 @@ const char *GetExecutableDirectory(void)
     return directory;
 #endif
 }
+
 int IsFolderExistent(char *folder)
 {
     struct stat sb;
@@ -54,6 +56,7 @@ int IsFolderExistent(char *folder)
         return FALSE_FLAG;
     }
 }
+
 int GetFilenameFromFilePointer(FILE *fp, char *filename)
 {
     char tmpPath[MAX_ROW_LENGTH]; // temp variable used to get the filename

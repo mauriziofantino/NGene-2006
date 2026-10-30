@@ -10,12 +10,15 @@ typedef struct {
     uint32_t *coefficients;
 } THackrfMixer;
 /* Q15 unit-circle coefficients. No stream gain, AGC or amplitude limiter. */
+
 int InitHackrfMixer(THackrfMixer *mixer);
+
 void DeinitHackrfMixer(THackrfMixer *mixer);
 /* Original CI8 -> centred, rotated int16 Q6. DC is estimated over the exact
  * requested window, independently of USB chunks and physical ring splits.
  * Per-sample processing uses integer SSE2; double is used once per NCO block.
  * Outputs are bounded by +/-23100; <=16384 samples fit int32 dot products. */
+
 double MixHackrfInput(const THackrfMixer *mixer, const THackrfIq8 *first, unsigned count1,
                       const THackrfIq8 *second, unsigned count2, unsigned count, double frequency,
                       double phase, double fs, short *real, short *imaginary);

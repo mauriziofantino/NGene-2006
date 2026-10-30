@@ -25,6 +25,7 @@
 #include "data_shift.h"
 #include "closeManager.h"
 #include "nonCoherentSumsManager.h"
+
 void InitCoarseAcquisition(TNGeneConfiguration *cfg, TAcqCommon *acqCommon, TChannel *ch)
 {
     TCoarseAcquisition *acq = &(ch->coarse);
@@ -121,6 +122,7 @@ void InitCoarseAcquisition(TNGeneConfiguration *cfg, TAcqCommon *acqCommon, TCha
         CloseNGene(cfg, EXIT_FAILURE);
     }
 }
+
 void DeinitCoarseAcquisition(TCoarseAcquisition *acq)
 {
     free(acq->wideCompressed);

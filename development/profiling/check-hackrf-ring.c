@@ -10,11 +10,13 @@
 static int fragmented;
 static unsigned randomState;
 static uint64_t delivered;
+
 static unsigned Next(void)
 {
     randomState = randomState * 1664525u + 1013904223u;
     return randomState;
 }
+
 int SwrxLog(int severity, const char *format, ...)
 {
     va_list args;
@@ -25,11 +27,13 @@ int SwrxLog(int severity, const char *format, ...)
     fputc('\n', stderr);
     return 0;
 }
+
 void CloseNGene(TNGeneConfiguration *cfg, int result)
 {
     (void)cfg;
     exit(result);
 }
+
 unsigned int ReadRxFrontEnd(TRxFe *fe, char *out, int capacity)
 {
     unsigned n = (unsigned)capacity;
@@ -43,6 +47,7 @@ unsigned int ReadRxFrontEnd(TRxFe *fe, char *out, int capacity)
     return n;
 }
 /* These adapters must never be invoked by the HackRF branch under test. */
+
 void SigeSamplesElab(char *a, char *b, int n, int m)
 {
     (void)a;
@@ -51,6 +56,7 @@ void SigeSamplesElab(char *a, char *b, int n, int m)
     (void)m;
     abort();
 }
+
 void SigeV3SamplesElab(char *a, char *b, int n)
 {
     (void)a;
@@ -58,6 +64,7 @@ void SigeV3SamplesElab(char *a, char *b, int n)
     (void)n;
     abort();
 }
+
 int SigeDecodeNativeIq(const unsigned char *a, char *b, unsigned n)
 {
     (void)a;
@@ -65,6 +72,7 @@ int SigeDecodeNativeIq(const unsigned char *a, char *b, unsigned n)
     (void)n;
     abort();
 }
+
 int main(int argc, char **argv)
 {
     int mode;

@@ -48,6 +48,7 @@
  */
 #define VERSION_INDEX_FILENAME "rxver.dat"
 #ifndef DISABLE_CONFIGURATION_CHECK
+
 int ConfigurationFilesValid(TNGeneConfiguration *cfg)
 {
     char cfgFilename[2 * MAX_ROW_LENGTH];
@@ -96,6 +97,7 @@ int ConfigurationFilesValid(TNGeneConfiguration *cfg)
     return TRUE_FLAG;
 }
 #endif
+
 int ManageLogsConfiguration(TNGeneConfiguration *cfg)
 {
     TNGeneLogConfiguration *logCfg = &(cfg->logConfiguration);
@@ -217,6 +219,7 @@ int ManageLogsConfiguration(TNGeneConfiguration *cfg)
     ManageNmeaConfiguration(cfg, cfgFilename);
     return SUCCESS_RETURN;
 }
+
 int ParseConfigurationFiles(TNGeneConfiguration *cfg)
 {
     char cfgFilename[MAX_ROW_LENGTH];
@@ -440,6 +443,7 @@ int ParseConfigurationFiles(TNGeneConfiguration *cfg)
     cfg->configurationValid = TRUE_FLAG;
     return SUCCESS_RETURN;
 }
+
 void PlotConfiguration(TNGeneConfiguration *cfg)
 {
     TPvtConfiguration *pvtCfg = &(cfg->pvtConfiguration);
@@ -569,6 +573,7 @@ void PlotConfiguration(TNGeneConfiguration *cfg)
                 warmCfg->warmMinute, warmCfg->warmSecond);
     }
 }
+
 void DeleteConfiguration(TNGeneConfiguration *cfg)
 {
     if (cfg->configurationValid == TRUE_FLAG) {
@@ -588,6 +593,7 @@ void DeleteConfiguration(TNGeneConfiguration *cfg)
         cfg->configurationValid = FALSE_FLAG;
     }
 }
+
 void CompleteConfiguration(TNGeneConfiguration *cfg)
 {
     int index = 0;

@@ -15,6 +15,7 @@
 #include "ngeneConstants.h"
 #include "ioFunctions.h"
 #include "closeManager.h"
+
 int ManagePvtConfiguration(TNGeneConfiguration *cfg)
 {
     TPvtConfiguration *pvtCfg;

@@ -4,6 +4,7 @@
 #include <string.h>
 #include <sys/stat.h>
 #include "getopt.h"
+
 int NgClockGettime(int clockId, struct timespec *out)
 {
     if (!out) {
@@ -32,6 +33,7 @@ int NgClockGettime(int clockId, struct timespec *out)
     }
     return 0;
 }
+
 int NgGettimeofday(struct timeval *out, void *zone)
 {
     struct timespec now;
@@ -42,6 +44,7 @@ int NgGettimeofday(struct timeval *out, void *zone)
     out->tv_usec = now.tv_nsec / 1000;
     return 0;
 }
+
 int NgPosixMemalign(void **out, size_t alignment, size_t size)
 {
     if (!out || alignment < sizeof(void *) || (alignment & (alignment - 1)))
@@ -53,6 +56,7 @@ int NgPosixMemalign(void **out, size_t alignment, size_t size)
     *out = malloc(size ? size : alignment);
     return *out ? 0 : ENOMEM;
 }
+
 ssize_t NgGetline(char **line, size_t *capacity, FILE *file)
 {
     size_t length = 0;
@@ -84,11 +88,13 @@ ssize_t NgGetline(char **line, size_t *capacity, FILE *file)
     (*line)[length] = '\0';
     return length ? (ssize_t)length : -1;
 }
+
 unsigned int NgSleep(unsigned int seconds)
 {
     Sleep(seconds * 1000u);
     return 0;
 }
+
 int NgFtruncate(int file, int64_t length)
 {
     errno_t error = _chsize_s(file, length);
@@ -98,6 +104,7 @@ int NgFtruncate(int file, int64_t length)
     }
     return 0;
 }
+
 int NgNanosleep(const struct timespec *duration, struct timespec *remaining)
 {
     LONGLONG ticks;
@@ -127,6 +134,7 @@ int NgNanosleep(const struct timespec *duration, struct timespec *remaining)
         memset(remaining, 0, sizeof(*remaining));
     return 0;
 }
+
 const char *NgNativeHome(void)
 {
     static char directory[32768];
@@ -140,11 +148,13 @@ const char *NgNativeHome(void)
         *last = '\0';
     return directory;
 }
+
 int NgSocketInit(void)
 {
     WSADATA data;
     return WSAStartup(MAKEWORD(2, 2), &data);
 }
+
 ssize_t NgSocketRead(SOCKET socket, void *buffer, size_t size)
 {
     size_t received = 0;
@@ -166,6 +176,7 @@ ssize_t NgSocketRead(SOCKET socket, void *buffer, size_t size)
     }
     return (ssize_t)received;
 }
+
 ssize_t NgSocketWrite(SOCKET socket, const void *buffer, size_t size)
 {
     size_t sent = 0;
@@ -183,6 +194,7 @@ ssize_t NgSocketWrite(SOCKET socket, const void *buffer, size_t size)
     }
     return (ssize_t)sent;
 }
+
 ssize_t NgSocketSendfile(SOCKET socket, int input, int64_t *offset, size_t count)
 {
     char buffer[16384];

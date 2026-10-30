@@ -14,6 +14,7 @@
 #include "warmStartConfiguration.h"
 #include "ngeneConfiguration.h"
 #include "ngeneDataStructure.h"
+
 /**
  * @brief Initialization of the variables used to manage the Warm Start.
  *        It parses the almanac files.
@@ -24,12 +25,14 @@
  * @return SUCCESS_RETURN when the function ends with success, FAILURE_RETURN otherwise
  */
 int InitWarmStartData(TNGeneConfiguration *cfg, TNGeneData *rx);
+
 /**
  * @brief Deinit the variables used to manage the Warm Start.
  *
  * @param warmData points to the Warm Start data structure
  */
 void DeinitWarmStartData(TWarmStartData *warmData);
+
 /**
  * @brief Updates the visibility list.
  *
@@ -40,6 +43,7 @@ void DeinitWarmStartData(TWarmStartData *warmData);
  * @param rx points to the receiver
  */
 void UpdateVisibilityList(TNGeneConfiguration *cfg, TNGeneData *rx);
+
 /**
  * @brief Check the visibility of a satellite.
  *
@@ -55,6 +59,7 @@ void UpdateVisibilityList(TNGeneConfiguration *cfg, TNGeneData *rx);
  */
 int CheckSatVisibility(TWarmStartConfiguration *warmCfg, TWarmStartData *warmData,
                        TSatConstellation satType, int satId);
+
 /**
  * @brief Mark the satellite as available in the visibility list.
  *

@@ -15,6 +15,7 @@
 #include "ngeneConfiguration.h"
 #include "ngeneDataStructure.h"
 #ifndef DISABLE_CONFIRMATION_THRESHOLD
+
 /**
  * @brief Initializes the confirmation data structure for each channel
  * @param cfg points to the receiver configuration
@@ -23,6 +24,7 @@
  */
 void InitConfirmation(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch);
 #else
+
 /**
  * @brief Initializes the confirmation data structure for each channel
  * @param cfg points to the receiver configuration
@@ -31,6 +33,7 @@ void InitConfirmation(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch);
 void InitConfirmation(TNGeneConfiguration *cfg, TChannel *ch);
 #endif
 #ifndef DISABLE_CONFIRMATION_THRESHOLD
+
 /**
  * @brief Initializes the confirmation data structure for the next execution
  * @param cfg points to the receiver configuration
@@ -39,6 +42,7 @@ void InitConfirmation(TNGeneConfiguration *cfg, TChannel *ch);
  */
 void StartConfirmation(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch);
 #else
+
 /**
  * @brief Initializes the confirmation data structure for the next execution
  *
@@ -46,6 +50,7 @@ void StartConfirmation(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch);
  */
 void StartConfirmation(TChannel *ch);
 #endif
+
 /**
  * @brief Performs a M-on-N confirmation (the signal is present if the confirmation obtains at least
  * M correlations over the threshold out of N trials correlations.

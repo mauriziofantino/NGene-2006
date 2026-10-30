@@ -24,6 +24,7 @@ struct HackrfFrontend {
     unsigned calibrationSkip;
     int calibrationDone, calibrationInvalid, gainsTuned;
 };
+
 static void WaitBriefly(pthread_cond_t *condition, pthread_mutex_t *mutex)
 {
     struct timespec deadline;
@@ -35,6 +36,7 @@ static void WaitBriefly(pthread_cond_t *condition, pthread_mutex_t *mutex)
     }
     pthread_cond_timedwait(condition, mutex, &deadline);
 }
+
 static int OnHackrfSamples(hackrf_transfer *transfer)
 {
     TRxFe *fe = transfer->rx_ctx;
@@ -70,6 +72,7 @@ static int OnHackrfSamples(hackrf_transfer *transfer)
     pthread_mutex_unlock(&usb->frontEndMutex);
     return result;
 }
+
 static int VendorResult(int code, const char *operation)
 {
     if (code == HACKRF_SUCCESS)
@@ -80,6 +83,7 @@ static int VendorResult(int code, const char *operation)
 }
 /* Local bounded parser: optional settings, exact tags, no commented tag matches
  * and no silently accepted malformed values. Existing receiver parsers stay put. */
+
 static int ReadSettings(const char *filename, int values[8], char *serial, size_t serialSize)
 {
     static const char *tags[] = {
@@ -153,6 +157,7 @@ invalid:
         if (VendorResult((call), #call) != SUCCESS_RETURN)                                         \
             goto failed;                                                                           \
     } while (0)
+
 int ConfigureHackrfFrontend(TNGeneConfiguration *cfg)
 {
     THackrfConfiguration *settings = &cfg->hackrfConfiguration;
@@ -198,6 +203,7 @@ int ConfigureHackrfFrontend(TNGeneConfiguration *cfg)
     settings->loaded = 1;
     return SUCCESS_RETURN;
 }
+
 int OpenHackrfFrontend(TNGeneConfiguration *cfg, TRxFe *fe)
 {
     struct HackrfFrontend *h;
@@ -264,6 +270,7 @@ failed:
 /* Separate pre-stream callback: calibration bytes never enter the DSP ring.
  * The operational callback remains a copy-only callback after calibration. */
 #define CALIBRATION_PAIRS 524288u
+
 static int OnCalibrationSamples(hackrf_transfer *transfer)
 {
     TRxFe *fe = transfer->rx_ctx;
@@ -289,12 +296,14 @@ static int OnCalibrationSamples(hackrf_transfer *transfer)
     pthread_mutex_unlock(&fe->usbFe.frontEndMutex);
     return ngeneStopRequested ? -1 : 0;
 }
+
 static uint64_t CalibrationClock(void)
 {
     struct timespec now;
     clock_gettime(CLOCK_MONOTONIC, &now);
     return (uint64_t)now.tv_sec * 1000u + (unsigned long)now.tv_nsec / 1000000u;
 }
+
 static int MeasureCalibrationWindow(TRxFe *fe, THackrfAdcStats *stats)
 {
     struct HackrfFrontend *h = fe->hackrf;
@@ -328,6 +337,7 @@ static int MeasureCalibrationWindow(TRxFe *fe, THackrfAdcStats *stats)
     }
     return HackrfAdcMeasure(&h->calibration, stats) ? SUCCESS_RETURN : FAILURE_RETURN;
 }
+
 static int AutoTuneGains(TRxFe *fe)
 {
     struct HackrfFrontend *h = fe->hackrf;
@@ -370,6 +380,7 @@ static int AutoTuneGains(TRxFe *fe)
         s->autoTuneTargetRms, stats.skew[0], stats.skew[1], stats.kurtosis[0], stats.kurtosis[1]);
     return SUCCESS_RETURN;
 }
+
 int StartHackrfFrontend(TRxFe *fe)
 {
     struct HackrfFrontend *h = fe->hackrf;
@@ -392,6 +403,7 @@ int StartHackrfFrontend(TRxFe *fe)
         h->started = 1;
     return result;
 }
+
 int StopHackrfFrontend(TRxFe *fe)
 {
     struct HackrfFrontend *h = fe->hackrf;
@@ -406,6 +418,7 @@ int StopHackrfFrontend(TRxFe *fe)
     }
     return result;
 }
+
 void CloseHackrfFrontend(TRxFe *fe)
 {
     struct HackrfFrontend *h = fe->hackrf;
@@ -420,6 +433,7 @@ void CloseHackrfFrontend(TRxFe *fe)
     free(h);
     fe->hackrf = NULL;
 }
+
 unsigned int ReadHackrfFrontend(TRxFe *fe, char *buffer, unsigned int bytes)
 {
     struct HackrfFrontend *h = fe->hackrf;
@@ -443,6 +457,7 @@ unsigned int ReadHackrfFrontend(TRxFe *fe, char *buffer, unsigned int bytes)
     pthread_mutex_unlock(&usb->frontEndMutex);
     return n;
 }
+
 int CheckHackrfFrontend(TRxFe *fe)
 {
     struct HackrfFrontend *h = fe->hackrf;
@@ -477,6 +492,7 @@ int CheckHackrfFrontend(TRxFe *fe)
                 highWater, HACKRF_QUEUE_BYTES);
     return failure ? FAILURE_RETURN : SUCCESS_RETURN;
 }
+
 void ServiceHackrfFrontend(TRxFe *fe)
 {
     /* libhackrf owns USB event servicing. This worker only monitors lifecycle;

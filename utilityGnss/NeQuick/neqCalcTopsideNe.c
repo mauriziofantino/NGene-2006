@@ -19,6 +19,7 @@
 #include "nequickDataStructures.h"
 #include "nequickConstants.h"
 #include "neqUtils.h"
+
 double NeqCalcTopsideNe(double dH, TLayerProperties *pstLayers, double *pdNmax)
 {
     double dDeltaH;  /* Height above F2 Peak */

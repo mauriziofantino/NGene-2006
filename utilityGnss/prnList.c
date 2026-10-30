@@ -59,6 +59,7 @@ int CreatePrnList(TPrnList *ptr, int gpsEnabled, int galileoEnabled, int egnosEn
     }
     return SUCCESS_RETURN;
 }
+
 int DestroyPrnList(TPrnList *ptr)
 {
     TPrnListElement *currentElement;
@@ -72,6 +73,7 @@ int DestroyPrnList(TPrnList *ptr)
     ptr->head = NULL; /* the list is empty */
     return SUCCESS_RETURN;
 }
+
 int GetListLength(TPrnList *ptr)
 {
     int n = 0;
@@ -83,6 +85,7 @@ int GetListLength(TPrnList *ptr)
     }
     return n;
 }
+
 int DeleteElementFromPrnList(TSatConstellation constellation, int prn, TPrnList *ptr)
 {
     TPrnListElement
@@ -112,6 +115,7 @@ int DeleteElementFromPrnList(TSatConstellation constellation, int prn, TPrnList 
     free(toBeDeleted);
     return SUCCESS_RETURN;
 }
+
 int InsertElementIntoPrnList(TSatConstellation constellation, int prn, TPrnList *ptr)
 {
     TPrnListElement *currentElement; /* last PRN in the list */
@@ -138,6 +142,7 @@ int InsertElementIntoPrnList(TSatConstellation constellation, int prn, TPrnList 
     currentElement->nextPrn = toBeInserted;
     return SUCCESS_RETURN;
 }
+
 int CopyPrnList(TPrnList *srcPtr, TPrnList *dstPtr)
 {
     TPrnListElement *prnPtr;
@@ -162,6 +167,7 @@ int CopyPrnList(TPrnList *srcPtr, TPrnList *dstPtr)
  *
  * @return SUCCESS_RETURN if successful, FAILURE_RETURN otherwise
  */
+
 int MoveToTheTail(TSatConstellation constellation, int prn, TPrnList *ptr)
 {
     TPrnListElement *toBeMoved; /* points to the element that will be moved to the last position */
@@ -200,6 +206,7 @@ int MoveToTheTail(TSatConstellation constellation, int prn, TPrnList *ptr)
     toBeMoved->nextPrn = NULL;
     return SUCCESS_RETURN;
 }
+
 int GetNumberOfAvailableElementsInTheList(TPrnList *ptr)
 {
     TPrnListElement *currentElement;
@@ -212,6 +219,7 @@ int GetNumberOfAvailableElementsInTheList(TPrnList *ptr)
     }
     return available;
 }
+
 int GetNextAvailableFromPrnList(TSatConstellation constellation, TPrnList *ptr)
 {
     TPrnListElement *currentElement;
@@ -228,6 +236,7 @@ int GetNextAvailableFromPrnList(TSatConstellation constellation, TPrnList *ptr)
     currentElement->available = PRN_NOT_AVAILABLE;
     return currentElement->prn;
 }
+
 int FindInPrnList(TSatConstellation constellation, int prn, TPrnList *ptr)
 {
     TPrnListElement *currentElement;
@@ -242,6 +251,7 @@ int FindInPrnList(TSatConstellation constellation, int prn, TPrnList *ptr)
     }
     return SUCCESS_RETURN;
 }
+
 int FindAndOccupyInPrnList(TSatConstellation constellation, int prn, TPrnList *ptr)
 {
     TPrnListElement *currentElement;
@@ -262,6 +272,7 @@ int FindAndOccupyInPrnList(TSatConstellation constellation, int prn, TPrnList *p
     currentElement->available = PRN_NOT_AVAILABLE;
     return SUCCESS_RETURN;
 }
+
 int FindAndFreeInPrnList(TSatConstellation constellation, int prn, TPrnList *ptr)
 {
     TPrnListElement *currentElement;
@@ -277,6 +288,7 @@ int FindAndFreeInPrnList(TSatConstellation constellation, int prn, TPrnList *ptr
     currentElement->available = PRN_AVAILABLE;
     return SUCCESS_RETURN;
 }
+
 void FreeAllElementsInTheList(TPrnList *ptr, int freeGps, int freeGal, int freeEgnos)
 {
     TPrnListElement *currentElement;
@@ -292,6 +304,7 @@ void FreeAllElementsInTheList(TPrnList *ptr, int freeGps, int freeGal, int freeE
         currentElement = currentElement->nextPrn;
     }
 }
+
 void FromStringToPrn(char *prnDescription, TSatConstellation *constellation, int *prn)
 {
     *constellation = INVALID_SAT;
@@ -308,6 +321,7 @@ void FromStringToPrn(char *prnDescription, TSatConstellation *constellation, int
         sscanf(&(prnDescription[7]), "%d", prn);
     }
 }
+
 void FromPrnToString(TSatConstellation constellation, int prn, char *prnDescription)
 {
     if ((prn == INVALID_PRN) && (constellation == EGNOS_SAT))

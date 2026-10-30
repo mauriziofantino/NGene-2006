@@ -16,6 +16,7 @@
 #ifndef NEQ_CALC_TOPSIDE_NE_H_INCLUDED
 #define NEQ_CALC_TOPSIDE_NE_H_INCLUDED
 #include "nequickDataStructures.h"
+
 /**
  * @brief This function calculates electron content at the specified height (in the
  *        top part of the ionosphere above pdPeakHeight[LAYER_F2], the F2 electron

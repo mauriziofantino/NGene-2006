@@ -17,6 +17,7 @@
 #define VDOP_INDEX_IN_DOP_ARRAY 3
 #define TDOP_INDEX_IN_DOP_ARRAY 4
 #include "ngeneDataStructure.h"
+
 /**
  * @brief DopEvaluation evaluates the DOP related to the current position
  *        and the constellation used to evaluate the position.

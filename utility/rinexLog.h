@@ -22,6 +22,7 @@
 #define DEFAULT_AGENCY_NAME "AgencyName          "
 #define DEFAULT_MARKER_TYPE "NON_GEODETIC        "
 #define DEFAULT_RINEX_STRING "Unknown                                                     "
+
 /**
  * @brief Read the configuration parameters for the RINEX logs
  *
@@ -31,18 +32,21 @@
  * @return SUCCESS_RETURN when the function ends with success, FAILURE_RETURN otherwise
  */
 int ManageRinexConfiguration(TNGeneConfiguration *cfg, char *cfgFilename);
+
 /**
  * @brief Initializes all the structure used to save RINEX logs
  *
  * @param rinex points to the data structure used to save RINEX logs
  */
 void InitRinexLog(TRinexLog *rinex);
+
 /**
  * @brief Deinitializes all the structure used to save RINEX logs
  *
  * @param rinex points to the data structure used to save RINEX logs
  */
 void DeinitRinexLog(TRinexLog *rinex);
+
 /**
  * @brief Save in the RINEX format the navigation message for one GPS satellite
  *
@@ -53,6 +57,7 @@ void DeinitRinexLog(TRinexLog *rinex);
  */
 void RinexSaveGpsNav(TNGeneConfiguration *cfg, TRinexLog *rinex, TChannel *ch,
                      TNavigationMessage *navMsg);
+
 /**
  * @brief Add the GPS iono parameter to a RINEX file (if not present)
  *
@@ -61,6 +66,7 @@ void RinexSaveGpsNav(TNGeneConfiguration *cfg, TRinexLog *rinex, TChannel *ch,
  * @param navMsg points to the navigation message to be saved
  */
 void RinexAddGpsIono(TNGeneConfiguration *cfg, TRinexLog *rinex, TNavigationMessage *navMsg);
+
 /**
  * @brief Add the GPS-UTC parameters to a RINEX file (if not present)
  *
@@ -69,6 +75,7 @@ void RinexAddGpsIono(TNGeneConfiguration *cfg, TRinexLog *rinex, TNavigationMess
  * @param navMsg points to the navigation message to be saved
  */
 void RinexAddGput(TNGeneConfiguration *cfg, TRinexLog *rinex, TNavigationMessage *navMsg);
+
 /**
  * @brief Save in the RINEX format the navigation message for one Galileo satellite
  *
@@ -79,6 +86,7 @@ void RinexAddGput(TNGeneConfiguration *cfg, TRinexLog *rinex, TNavigationMessage
  */
 void RinexSaveGalNav(TNGeneConfiguration *cfg, TRinexLog *rinex, TChannel *ch,
                      TNavigationMessage *navMsg);
+
 /**
  * @brief Add the Galileo iono parameter to a RINEX file (if not present)
  *
@@ -87,6 +95,7 @@ void RinexSaveGalNav(TNGeneConfiguration *cfg, TRinexLog *rinex, TChannel *ch,
  * @param navMsg points to the navigation message to be saved
  */
 void RinexAddGalIono(TNGeneConfiguration *cfg, TRinexLog *rinex, TNavigationMessage *navMsg);
+
 /**
  * @brief Add the Galileo-UTC parameters to a RINEX file (if not present)
  *
@@ -95,6 +104,7 @@ void RinexAddGalIono(TNGeneConfiguration *cfg, TRinexLog *rinex, TNavigationMess
  * @param navMsg points to the navigation message to be saved
  */
 void RinexAddGaut(TNGeneConfiguration *cfg, TRinexLog *rinex, TNavigationMessage *navMsg);
+
 /**
  * @brief Add the Galileo-GPS parameters to a RINEX file (if not present)
  *
@@ -103,6 +113,7 @@ void RinexAddGaut(TNGeneConfiguration *cfg, TRinexLog *rinex, TNavigationMessage
  * @param navMsg points to the navigation message to be saved
  */
 void RinexAddGpga(TNGeneConfiguration *cfg, TRinexLog *rinex, TNavigationMessage *navMsg);
+
 /**
  * @brief Save in the RINEX format the observables used in the PVT computation
  *

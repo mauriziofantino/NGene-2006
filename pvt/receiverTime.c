@@ -14,6 +14,7 @@
 #include "timeConstants.h"
 #include "timeConversions.h"
 #include "gnssTimeMath.h"
+
 void ResetReferenceRxTime(TNGeneData *rx)
 {
     TPvtData *pvtData = &(rx->pvtData);
@@ -30,6 +31,7 @@ void ResetReferenceRxTime(TNGeneData *rx)
     pvtRes->rxUtcTime.referenceValid = FALSE_FLAG;
     pvtRes->rxUtcTime.referenceUpdated = FALSE_FLAG;
 }
+
 void SetReferenceRxTime(TNGeneData *rx, int defaultLeapSeconds)
 {
     int index;
@@ -159,6 +161,7 @@ void SetReferenceRxTime(TNGeneData *rx, int defaultLeapSeconds)
         pvtRes->utcFromDefault = TRUE_FLAG;
     }
 }
+
 void PredictRxTime(TNGeneConfiguration *cfg, TNGeneData *rx)
 {
     unsigned long long int currentSample = rx->buf.discardedSamples;

@@ -9,6 +9,7 @@
             return 1;                                                                              \
         }                                                                                          \
     } while (0)
+
 int main(void)
 {
     double a[100], b[20], x[5], q[25], truth[5] = {120, -32, 5, 900, -400};
