@@ -92,7 +92,7 @@ Per vedere il log testuale:
 [SiGe native IQ]
 1
 [SiGe IQ intermediate frequency (Hz)]
-38400
+38500
 ```
 
 `Input method = 0` usa la USB. Il SiGe deve essere collegato, con firmware caricato

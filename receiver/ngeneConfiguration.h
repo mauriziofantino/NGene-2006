@@ -154,8 +154,8 @@ typedef struct NGeneConfigurationStruct {
     THackrfConfiguration
         hackrfConfiguration; /**< Validated settings shared by receiver and hardware. */
     int frontEndOverride;    /**< Optional --frontend selector, zero means use configuration. */
-    double sigeIqIntermediateFrequency; /**< Native complex IF in Hz (Colorado nominal value:
-                                           38400). */
+    double sigeIqIntermediateFrequency; /**< Native complex IF in Hz (Classic SiGe frequency
+                                           plan: 38500). */
     char *sampleFilename;               /**< Path of the input samples file */
     const char *inputFileOverride; /**< Optional --input argument; does not change the configuration
                                       file. */

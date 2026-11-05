@@ -1,0 +1,313 @@
+{
+    "Date":  "2026-11-05",
+    "InputSha256":  "FA0BDD1330E0F22D8B83F12ED288E7C5D167F700150A4A9511E69ECD306365B8",
+    "Profiling":  "OFF",
+    "CtestPassed":  14,
+    "Runs":  [
+                 {
+                     "Name":  "mixed-before",
+                     "ChannelsGpsGalileoEgnos":  "4/4/0",
+                     "Run":  {
+                                 "Run":  1,
+                                 "Frontend":  "sige",
+                                 "Input":  "C:\\Users\\MaurizioFantino\\Downloads\\Projects\\NGene Classic\\recordings\\native-ab.raw",
+                                 "PvtMethodOverride":  null,
+                                 "WeightedLsOverride":  null,
+                                 "SigeNativeIqOverride":  1,
+                                 "SigeIqIfHzOverride":  38400,
+                                 "InputBytes":  794615808,
+                                 "ExecutableSha256":  "C8A18A26BBF677E019BD8020A5D06B30C807D7F5C063E4A88C69C72E0B20BB47",
+                                 "WallSeconds":  5.2618515,
+                                 "CpuSeconds":  4.53125,
+                                 "ExitCode":  0,
+                                 "Directory":  "C:\\Users\\MaurizioFantino\\Downloads\\Projects\\NGene Classic\\build\\profile-20261105-215734-290-62180b7f\\run-1"
+                             },
+                     "Fixes":  23,
+                     "FixesWithGalileo":  0,
+                     "PllCorrections":  4,
+                     "TrackingLosses":  0,
+                     "NavigationLogBytes":  [
+                                                {
+                                                    "Name":  "navigationMessage_GAL13.txt",
+                                                    "Length":  0
+                                                },
+                                                {
+                                                    "Name":  "navigationMessage_GAL18.txt",
+                                                    "Length":  0
+                                                },
+                                                {
+                                                    "Name":  "navigationMessage_GAL21.txt",
+                                                    "Length":  28
+                                                },
+                                                {
+                                                    "Name":  "navigationMessage_GAL27.txt",
+                                                    "Length":  0
+                                                }
+                                            ]
+                 },
+                 {
+                     "Name":  "mixed-after",
+                     "ChannelsGpsGalileoEgnos":  "4/4/0",
+                     "Run":  {
+                                 "Run":  1,
+                                 "Frontend":  "sige",
+                                 "Input":  "C:\\Users\\MaurizioFantino\\Downloads\\Projects\\NGene Classic\\recordings\\native-ab.raw",
+                                 "PvtMethodOverride":  null,
+                                 "WeightedLsOverride":  null,
+                                 "SigeNativeIqOverride":  1,
+                                 "SigeIqIfHzOverride":  38500,
+                                 "InputBytes":  794615808,
+                                 "ExecutableSha256":  "C8A18A26BBF677E019BD8020A5D06B30C807D7F5C063E4A88C69C72E0B20BB47",
+                                 "WallSeconds":  5.2105128,
+                                 "CpuSeconds":  4.421875,
+                                 "ExitCode":  0,
+                                 "Directory":  "C:\\Users\\MaurizioFantino\\Downloads\\Projects\\NGene Classic\\build\\profile-20261105-215734-198-099a81c0\\run-1"
+                             },
+                     "Fixes":  23,
+                     "FixesWithGalileo":  13,
+                     "PllCorrections":  0,
+                     "TrackingLosses":  0,
+                     "NavigationLogBytes":  [
+                                                {
+                                                    "Name":  "navigationMessage_GAL13.txt",
+                                                    "Length":  3737
+                                                },
+                                                {
+                                                    "Name":  "navigationMessage_GAL18.txt",
+                                                    "Length":  5351
+                                                },
+                                                {
+                                                    "Name":  "navigationMessage_GAL21.txt",
+                                                    "Length":  4133
+                                                },
+                                                {
+                                                    "Name":  "navigationMessage_GAL27.txt",
+                                                    "Length":  4496
+                                                }
+                                            ]
+                 },
+                 {
+                     "Name":  "final-build",
+                     "ChannelsGpsGalileoEgnos":  "4/4/0",
+                     "Run":  {
+                                 "Run":  1,
+                                 "Frontend":  "sige",
+                                 "Input":  "C:\\Users\\MaurizioFantino\\Downloads\\Projects\\NGene Classic\\recordings\\native-ab.raw",
+                                 "PvtMethodOverride":  null,
+                                 "WeightedLsOverride":  null,
+                                 "SigeNativeIqOverride":  null,
+                                 "SigeIqIfHzOverride":  null,
+                                 "InputBytes":  794615808,
+                                 "ExecutableSha256":  "93E4F809934EE0691FD4A061B413F9893CD04B6B9E27BC3D80A86B98D0DD6DE7",
+                                 "WallSeconds":  4.1079544,
+                                 "CpuSeconds":  3.296875,
+                                 "ExitCode":  0,
+                                 "Directory":  "C:\\Users\\MaurizioFantino\\Downloads\\Projects\\NGene Classic\\build\\profile-20261105-215835-637-d986d1d7\\run-1"
+                             },
+                     "Fixes":  23,
+                     "FixesWithGalileo":  13,
+                     "PllCorrections":  0,
+                     "TrackingLosses":  0,
+                     "NavigationLogBytes":  [
+                                                {
+                                                    "Name":  "navigationMessage_GAL13.txt",
+                                                    "Length":  3737
+                                                },
+                                                {
+                                                    "Name":  "navigationMessage_GAL18.txt",
+                                                    "Length":  5351
+                                                },
+                                                {
+                                                    "Name":  "navigationMessage_GAL21.txt",
+                                                    "Length":  4133
+                                                },
+                                                {
+                                                    "Name":  "navigationMessage_GAL27.txt",
+                                                    "Length":  4496
+                                                }
+                                            ]
+                 },
+                 {
+                     "Name":  "operational-before",
+                     "ChannelsGpsGalileoEgnos":  "8/4/1",
+                     "Run":  {
+                                 "Run":  1,
+                                 "Frontend":  "sige",
+                                 "Input":  "C:\\Users\\MaurizioFantino\\Downloads\\Projects\\NGene Classic\\recordings\\native-ab.raw",
+                                 "PvtMethodOverride":  null,
+                                 "WeightedLsOverride":  null,
+                                 "SigeNativeIqOverride":  1,
+                                 "SigeIqIfHzOverride":  38400,
+                                 "InputBytes":  794615808,
+                                 "ExecutableSha256":  "C8A18A26BBF677E019BD8020A5D06B30C807D7F5C063E4A88C69C72E0B20BB47",
+                                 "WallSeconds":  11.6648625,
+                                 "CpuSeconds":  10.71875,
+                                 "ExitCode":  0,
+                                 "Directory":  "C:\\Users\\MaurizioFantino\\Downloads\\Projects\\NGene Classic\\build\\profile-20261105-215702-616-bd29428c\\run-1"
+                             },
+                     "Fixes":  23,
+                     "FixesWithGalileo":  0,
+                     "PllCorrections":  0,
+                     "TrackingLosses":  0,
+                     "NavigationLogBytes":  [
+                                                {
+                                                    "Name":  "navigationMessage_GAL13.txt",
+                                                    "Length":  0
+                                                },
+                                                {
+                                                    "Name":  "navigationMessage_GAL21.txt",
+                                                    "Length":  0
+                                                }
+                                            ]
+                 },
+                 {
+                     "Name":  "operational-after",
+                     "ChannelsGpsGalileoEgnos":  "8/4/1",
+                     "Run":  {
+                                 "Run":  1,
+                                 "Frontend":  "sige",
+                                 "Input":  "C:\\Users\\MaurizioFantino\\Downloads\\Projects\\NGene Classic\\recordings\\native-ab.raw",
+                                 "PvtMethodOverride":  null,
+                                 "WeightedLsOverride":  null,
+                                 "SigeNativeIqOverride":  1,
+                                 "SigeIqIfHzOverride":  38500,
+                                 "InputBytes":  794615808,
+                                 "ExecutableSha256":  "C8A18A26BBF677E019BD8020A5D06B30C807D7F5C063E4A88C69C72E0B20BB47",
+                                 "WallSeconds":  10.9626988,
+                                 "CpuSeconds":  10.28125,
+                                 "ExitCode":  0,
+                                 "Directory":  "C:\\Users\\MaurizioFantino\\Downloads\\Projects\\NGene Classic\\build\\profile-20261105-215632-793\\run-1"
+                             },
+                     "Fixes":  23,
+                     "FixesWithGalileo":  0,
+                     "PllCorrections":  0,
+                     "TrackingLosses":  0,
+                     "NavigationLogBytes":  [
+                                                {
+                                                    "Name":  "navigationMessage_GAL13.txt",
+                                                    "Length":  0
+                                                },
+                                                {
+                                                    "Name":  "navigationMessage_GAL21.txt",
+                                                    "Length":  1512
+                                                },
+                                                {
+                                                    "Name":  "navigationMessage_GAL26.txt",
+                                                    "Length":  4767
+                                                }
+                                            ]
+                 },
+                 {
+                     "Name":  "galileo-native-before",
+                     "ChannelsGpsGalileoEgnos":  "0/4/0",
+                     "Run":  {
+                                 "Run":  1,
+                                 "Frontend":  "sige",
+                                 "Input":  "C:\\Users\\MaurizioFantino\\Downloads\\Projects\\NGene Classic\\recordings\\native-ab.raw",
+                                 "PvtMethodOverride":  null,
+                                 "WeightedLsOverride":  null,
+                                 "InputBytes":  794615808,
+                                 "ExecutableSha256":  "C8A18A26BBF677E019BD8020A5D06B30C807D7F5C063E4A88C69C72E0B20BB47",
+                                 "WallSeconds":  4.0565555999999994,
+                                 "CpuSeconds":  3.046875,
+                                 "ExitCode":  0,
+                                 "Directory":  "C:\\Users\\MaurizioFantino\\Downloads\\Projects\\NGene Classic\\build\\profile-20261105-215332-753\\run-1"
+                             },
+                     "Fixes":  0,
+                     "FixesWithGalileo":  0,
+                     "PllCorrections":  3,
+                     "TrackingLosses":  0,
+                     "NavigationLogBytes":  [
+                                                {
+                                                    "Name":  "navigationMessage_GAL13.txt",
+                                                    "Length":  0
+                                                },
+                                                {
+                                                    "Name":  "navigationMessage_GAL18.txt",
+                                                    "Length":  0
+                                                },
+                                                {
+                                                    "Name":  "navigationMessage_GAL21.txt",
+                                                    "Length":  0
+                                                },
+                                                {
+                                                    "Name":  "navigationMessage_GAL27.txt",
+                                                    "Length":  0
+                                                }
+                                            ]
+                 },
+                 {
+                     "Name":  "galileo-native-after",
+                     "ChannelsGpsGalileoEgnos":  "0/4/0",
+                     "Run":  {
+                                 "Run":  1,
+                                 "Frontend":  "sige",
+                                 "Input":  "C:\\Users\\MaurizioFantino\\Downloads\\Projects\\NGene Classic\\recordings\\native-ab.raw",
+                                 "PvtMethodOverride":  null,
+                                 "WeightedLsOverride":  null,
+                                 "SigeNativeIqOverride":  1,
+                                 "SigeIqIfHzOverride":  38500,
+                                 "InputBytes":  794615808,
+                                 "ExecutableSha256":  "C8A18A26BBF677E019BD8020A5D06B30C807D7F5C063E4A88C69C72E0B20BB47",
+                                 "WallSeconds":  4.6390601,
+                                 "CpuSeconds":  4.015625,
+                                 "ExitCode":  0,
+                                 "Directory":  "C:\\Users\\MaurizioFantino\\Downloads\\Projects\\NGene Classic\\build\\profile-20261105-215611-880\\run-1"
+                             },
+                     "Fixes":  0,
+                     "FixesWithGalileo":  0,
+                     "PllCorrections":  0,
+                     "TrackingLosses":  0,
+                     "NavigationLogBytes":  [
+                                                {
+                                                    "Name":  "navigationMessage_GAL13.txt",
+                                                    "Length":  4550
+                                                },
+                                                {
+                                                    "Name":  "navigationMessage_GAL18.txt",
+                                                    "Length":  2613
+                                                },
+                                                {
+                                                    "Name":  "navigationMessage_GAL21.txt",
+                                                    "Length":  4557
+                                                }
+                                            ]
+                 },
+                 {
+                     "Name":  "galileo-real-if",
+                     "ChannelsGpsGalileoEgnos":  "0/4/0",
+                     "Run":  {
+                                 "Run":  1,
+                                 "Frontend":  "sige",
+                                 "Input":  "C:\\Users\\MaurizioFantino\\Downloads\\Projects\\NGene Classic\\recordings\\native-ab.raw",
+                                 "PvtMethodOverride":  null,
+                                 "WeightedLsOverride":  null,
+                                 "SigeNativeIqOverride":  0,
+                                 "InputBytes":  794615808,
+                                 "ExecutableSha256":  "C8A18A26BBF677E019BD8020A5D06B30C807D7F5C063E4A88C69C72E0B20BB47",
+                                 "WallSeconds":  6.6291642,
+                                 "CpuSeconds":  5.90625,
+                                 "ExitCode":  0,
+                                 "Directory":  "C:\\Users\\MaurizioFantino\\Downloads\\Projects\\NGene Classic\\build\\profile-20261105-215513-407\\run-1"
+                             },
+                     "Fixes":  0,
+                     "FixesWithGalileo":  0,
+                     "PllCorrections":  0,
+                     "TrackingLosses":  0,
+                     "NavigationLogBytes":  [
+                                                {
+                                                    "Name":  "navigationMessage_GAL13.txt",
+                                                    "Length":  4734
+                                                },
+                                                {
+                                                    "Name":  "navigationMessage_GAL18.txt",
+                                                    "Length":  2613
+                                                },
+                                                {
+                                                    "Name":  "navigationMessage_GAL21.txt",
+                                                    "Length":  4965
+                                                }
+                                            ]
+                 }
+             ]
+}

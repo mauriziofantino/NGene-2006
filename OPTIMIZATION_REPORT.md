@@ -1,5 +1,15 @@
 # NGene Classic — ottimizzazioni, profiling e distribuzione del carico
 
+**Aggiornamento 5 novembre:** corretta la IF SiGe nativa da 38400 a 38500 Hz,
+coerente con il percorso IF storico. Il riferimento errato poteva attivare
+correzioni PLL Galileo spurie da 125 Hz e impedire I/NAV. Stesso RF/binario,
+configurazione diagnostica 4/4/0: 23 fix totali prima/dopo, fix con Galileo
+0 -> 13, correzioni PLL 4 -> 0, zero perdite. Nel breve record con configurazione
+operativa 8/4/1 mancano ancora effemeridi complete: nessun fix misto dimostrato
+in quel caso. 14/14 CTest, profiling OFF, main e logica acquisizione invariati.
+Live/Linux e accuratezza non verificati; dettagli in
+[sige-galileo-20261105](development/profiling/sige-galileo-20261105/README.md).
+
 **Aggiornamento successivo 30 ottobre:** Kalman ora adattativo Q/R, senza
 scelta statico/dinamico. 110/110 contratti, venti traiettorie accoppiate e
 14/14 CTest. Dispersione H del replay misto 4.346 -> 3.981 m; GPS

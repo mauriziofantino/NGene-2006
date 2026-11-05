@@ -25,6 +25,12 @@ wall e CPU del processo, exit code. Per confrontare il carico solo GPS aggiunger
 `-GpsChannels 8 -GalileoChannels 0 -EgnosChannels 0`; questi override richiedono
 configurazione automatica e modificano soltanto la copia della prova.
 
+Per confrontare i due percorsi SiGe usare `-SigeNativeIq 0` oppure
+`-SigeNativeIq 1`; `-SigeIqIfHz 38500` modifica soltanto l'IF della copia.
+I nomi delle sessioni includono un identificatore univoco per prove concorrenti.
+La diagnosi Galileo del 5 novembre e' in
+[sige-galileo-20261105](sige-galileo-20261105/README.md).
+
 Dopo le misure:
 
 ```powershell

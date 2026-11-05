@@ -7,6 +7,8 @@ param(
     [ValidateRange(0,1)][Nullable[int]]$EgnosChannels,
     [ValidateRange(0,1)][Nullable[int]]$PvtMethod,
     [ValidateRange(0,1)][Nullable[int]]$WeightedLs,
+    [ValidateRange(0,1)][Nullable[int]]$SigeNativeIq,
+    [Nullable[double]]$SigeIqIfHz,
     [switch]$TrackingLog,
     [switch]$NavigationLog,
     [ValidateRange(1,20)][int]$Repetitions = 3,
@@ -17,7 +19,7 @@ $taskRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../..'))
 if (!$Executable) { $Executable = Join-Path $taskRoot 'ngene.exe' }
 $taskExe = (Resolve-Path -LiteralPath $Executable).Path
 $taskInput = (Resolve-Path -LiteralPath $InputFile).Path
-$taskSession = Join-Path $taskRoot ('build/profile-' + (Get-Date -Format 'yyyyMMdd-HHmmss-fff'))
+$taskSession = Join-Path $taskRoot ('build/profile-' + (Get-Date -Format 'yyyyMMdd-HHmmss-fff') + '-' + [guid]::NewGuid().ToString('N').Substring(0,8))
 New-Item -ItemType Directory -Path $taskSession | Out-Null
 $taskResults = @()
 for ($taskRun=1; $taskRun -le $Repetitions; $taskRun++) {
@@ -28,6 +30,20 @@ for ($taskRun=1; $taskRun -le $Repetitions; $taskRun++) {
     Copy-Item -LiteralPath (Join-Path $taskRoot 'otherData') -Destination $taskDirectory -Recurse
     $taskRxConfig = Join-Path $taskDirectory 'configuration/GNSS_RX.conf'
     $taskRxText = [IO.File]::ReadAllText($taskRxConfig)
+    if ($null -ne $SigeNativeIq) {
+        if ($Frontend -ne 'sige') { throw 'SigeNativeIq requires the SiGe frontend.' }
+        $taskPattern = '(\[SiGe native IQ\][ \t]*\r?\n)[ \t]*\d+'
+        if ($taskRxText -notmatch $taskPattern) { throw 'Missing SiGe native IQ tag.' }
+        $taskRxText = [regex]::Replace($taskRxText, $taskPattern, ('${1}' + $SigeNativeIq))
+        [IO.File]::WriteAllText($taskRxConfig, $taskRxText)
+    }
+    if ($null -ne $SigeIqIfHz) {
+        if ($Frontend -ne 'sige') { throw 'SigeIqIfHz requires the SiGe frontend.' }
+        $taskPattern = '(\[SiGe IQ intermediate frequency \(Hz\)\][ \t]*\r?\n)[ \t]*[-+\d.eE]+'
+        if ($taskRxText -notmatch $taskPattern) { throw 'Missing SiGe IQ IF tag.' }
+        $taskRxText = [regex]::Replace($taskRxText, $taskPattern, ('${1}' + $SigeIqIfHz.ToString('R', [Globalization.CultureInfo]::InvariantCulture)))
+        [IO.File]::WriteAllText($taskRxConfig, $taskRxText)
+    }
     $taskOverrides = @{
         'Number of supported GPS channels' = $GpsChannels
         'Number of supported Galileo channels' = $GalileoChannels
@@ -95,6 +111,8 @@ for ($taskRun=1; $taskRun -le $Repetitions; $taskRun++) {
     [IO.File]::WriteAllText((Join-Path $taskDirectory 'stderr.log'), $taskError.Result)
     $taskResult = [pscustomobject]@{
         Run = $taskRun; Frontend = $Frontend; Input = $taskInput; PvtMethodOverride = $PvtMethod; WeightedLsOverride = $WeightedLs
+        SigeNativeIqOverride = $SigeNativeIq
+        SigeIqIfHzOverride = $SigeIqIfHz
         InputBytes = (Get-Item -LiteralPath $taskInput).Length
         ExecutableSha256 = (Get-FileHash -LiteralPath $taskExe -Algorithm SHA256).Hash
         WallSeconds = $taskWatch.Elapsed.TotalSeconds

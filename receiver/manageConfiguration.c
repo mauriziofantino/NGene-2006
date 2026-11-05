@@ -252,7 +252,9 @@ int ParseConfigurationFiles(TNGeneConfiguration *cfg)
     strcat(cfgFilename, cfg->configurationPath);
     strcat(cfgFilename, "GNSS_RX.conf");
     cfg->sigeNativeIq = 0;
-    cfg->sigeIqIntermediateFrequency = 38400.0;
+    /* Match the SiGe real-IF frequency plan: 4130400 - 16367600/4.
+     * A 100 Hz offset here also biases the DLL/PLL false-lock comparison. */
+    cfg->sigeIqIntermediateFrequency = 38500.0;
     GetVal(cfgFilename, "SiGe native IQ", &cfg->sigeNativeIq, F_INTEGER, 1);
     GetVal(cfgFilename, "SiGe IQ intermediate frequency (Hz)", &cfg->sigeIqIntermediateFrequency,
            F_DOUBLE, 1);

@@ -17,7 +17,7 @@ tags to the active `GNSS_RX.conf`:
 [SiGe native IQ]
 1
 [SiGe IQ intermediate frequency (Hz)]
-38400
+38500
 ```
 
 Setting `SiGe native IQ` to zero, or omitting it, selects the working real-IF
@@ -27,11 +27,21 @@ No firmware mode-switch command is sent.
 
 Native `fs` is half the configured transport component rate: 8,183,800 complex
 samples/s for the existing 16,367,600 byte/s entry. The native IF defaults to
-38,400 Hz and is explicit in the configuration. The old real configuration's
-IF minus one quarter of its sampling frequency is 38,500 Hz. Consequently a
-comparison of reported Doppler must add 100 Hz to the real-path Doppler before
-comparing it with the native-path Doppler. Their physical residual frequencies
-then have the same reference.
+38,500 Hz, matching the working real configuration:
+`4,130,400 - 16,367,600/4 = 38,500 Hz`. Reported Doppler therefore uses the same
+reference in both paths. An explicit IF remains available for other frequency
+plans; the wire format alone does not determine it.
+
+The earlier 38,400 Hz default was corrected on 2026-11-05. The resulting 100 Hz
+Doppler bias triggered erroneous 125 Hz Galileo PLL false-lock corrections,
+preventing I/NAV decoding despite apparently stable tracking. On the retained
+capture, an isolated 4 GPS / 4 Galileo replay changes from zero mixed fixes to
+13 fixes using Galileo (up to two Galileo satellites); both settings produce
+23 total fixes and zero tracking losses. This verifies Galileo participation,
+not improved position accuracy or live USB operation. With the operational
+8 GPS / 4 Galileo / 1 EGNOS configuration, the 48.55-second capture ends before
+Galileo has collected a complete ephemeris set, even with the corrected IF.
+See `development/profiling/sige-galileo-20261105/` for the run references.
 
 ## Input boundary
 
@@ -107,7 +117,7 @@ histories in the two paths, and is excluded from this stable-channel comparison.
 
 The original raw capture is retained as `recordings/native-ab.raw`.
 Temporary comparison logs and CSV files have been removed. This comparison validates the
-native input path and resulting PVT on this recording, not general equivalence
+native input path and resulting GPS PVT on this recording, not general equivalence
 under all signals or the stability of the USB transport.
 
 A bounded direct USB run also reached native acquisition, tracking and bit

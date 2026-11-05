@@ -1,5 +1,24 @@
 # Logbook NGene Classic
 
+## 5 novembre 2026 - SiGe Galileo fermo in Tracking
+
+Segnalato dall'utente sia live sia da file. Riprodotto su native-ab.raw:
+con IF nativa 38400 Hz i Galileo agganciano ma non decodificano I/NAV.
+La IF reale storica equivale a 4130400 - 16367600/4 = 38500 Hz.
+Lo scarto di 100 Hz altera il confronto DLL/PLL e puo' provocare correzioni
+spurie di 125 Hz, incompatibili con la decodifica dei simboli Galileo.
+Corretto default, template e configurazione locale a 38500 Hz; valori espliciti
+sempre rispettati. Nessuna modifica ad acquisizione, soglie, loop o parser.
+
+Confronto stesso binario/RF, copie isolate 4 GPS / 4 Galileo / 0 EGNOS:
+23 fix in entrambi, ma fix con Galileo 0 -> 13 (fino a due Galileo), correzioni
+PLL 4 -> 0, zero perdite RF. Build finale riproduce il risultato, 14/14 CTest,
+profiling OFF, main invariato. Runner esteso con override SiGe e sessioni univoche.
+Con la configurazione operativa 8/4/1 il record di 48.55 s termina prima delle
+effemeridi complete Galileo: ancora 23 fix solo GPS, pur decodificando I/NAV.
+La prova live/Linux e l'accuratezza non sono validate da questi conteggi.
+Dettagli/hash/log in development/profiling/sige-galileo-20261105/.
+
 ## 30 ottobre 2026 - Kalman adattativo, EGNOS e autotune visibile
 
 L'utente richiede un unico modello adattativo, senza opzioni statico/dinamico.

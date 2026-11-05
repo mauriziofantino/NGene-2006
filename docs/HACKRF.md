@@ -54,7 +54,7 @@ SiGe marker-tagged bytes: replay it with `--frontend sige` instead.
 | --- | --- | --- |
 | NGene complex sample rate | 8,183,800 pairs/s | 8,183,800 pairs/s |
 | Original transport | 16,367,600 marker-tagged bytes/s | 16,367,600 signed CI8 bytes/s |
-| Classic positive-sign NCO IF | +38,400 Hz, current setting | centre minus GPS L1; 0 in supplied profile |
+| Classic positive-sign NCO IF | +38,500 Hz, current setting | centre minus GPS L1; 0 in supplied profile |
 | RF centre setting | Fixed hardware frequency plan | Configurable; supplied profile 1,575,420,000 Hz |
 | Native component amplitude in the ring | -1 or +1 | original signed ADC byte (-128..127), no digital gain or limiter |
 | Existing Doppler correction | +1 | -1 |
@@ -70,8 +70,9 @@ Thus the RF frequency plan matters; considering only the change of `fs/4` misses
 the factor of 96 in the RF reference. These identities alone do not establish
 an additional automatic 100 Hz shift in the physical IQ generator. Classic's
 existing real-path settings give `4130400 - 16367600/4 = 38500 Hz`, whereas its
-native IQ path uses the documented Colorado value of 38400 Hz. The 100 Hz
-reference difference is retained and discussed in [NATIVE_IQ.md](NATIVE_IQ.md).
+native IQ path now uses the same 38500 Hz reference. The former 38400 Hz
+setting biased Galileo's DLL/PLL false-lock comparison and prevented I/NAV
+decoding in the retained replay; see [NATIVE_IQ.md](NATIVE_IQ.md).
 The sample rate matches the working Classic IQ settings; this does not assert
 measured equality of independent hardware clocks. The optional 38.4 kHz HackRF
 offset was chosen to match the documented IQ setting, not inferred from a
