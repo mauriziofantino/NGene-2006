@@ -9,6 +9,7 @@ param(
     [ValidateRange(0,1)][Nullable[int]]$WeightedLs,
     [ValidateRange(0,1)][Nullable[int]]$SigeNativeIq,
     [Nullable[double]]$SigeIqIfHz,
+    [ValidateRange(0,10000)][Nullable[int]]$TrackingHoldoverMs,
     [switch]$TrackingLog,
     [switch]$NavigationLog,
     [ValidateRange(1,20)][int]$Repetitions = 3,
@@ -30,6 +31,15 @@ for ($taskRun=1; $taskRun -le $Repetitions; $taskRun++) {
     Copy-Item -LiteralPath (Join-Path $taskRoot 'otherData') -Destination $taskDirectory -Recurse
     $taskRxConfig = Join-Path $taskDirectory 'configuration/GNSS_RX.conf'
     $taskRxText = [IO.File]::ReadAllText($taskRxConfig)
+    if ($null -ne $TrackingHoldoverMs) {
+        $taskTrackingPath = Join-Path $taskDirectory 'configuration/Tracking.conf'
+        $taskTrackingText = [IO.File]::ReadAllText($taskTrackingPath)
+        $taskPattern = '(\[Tracking holdover ms\][ \t]*\r?\n)[ \t]*\d+'
+        if ($taskTrackingText -match $taskPattern) {
+            $taskTrackingText = [regex]::Replace($taskTrackingText, $taskPattern, ('${1}' + $TrackingHoldoverMs))
+        } else { $taskTrackingText += "`r`n[Tracking holdover ms]`r`n$TrackingHoldoverMs`r`n" }
+        [IO.File]::WriteAllText($taskTrackingPath, $taskTrackingText)
+    }
     if ($null -ne $SigeNativeIq) {
         if ($Frontend -ne 'sige') { throw 'SigeNativeIq requires the SiGe frontend.' }
         $taskPattern = '(\[SiGe native IQ\][ \t]*\r?\n)[ \t]*\d+'
@@ -113,6 +123,7 @@ for ($taskRun=1; $taskRun -le $Repetitions; $taskRun++) {
         Run = $taskRun; Frontend = $Frontend; Input = $taskInput; PvtMethodOverride = $PvtMethod; WeightedLsOverride = $WeightedLs
         SigeNativeIqOverride = $SigeNativeIq
         SigeIqIfHzOverride = $SigeIqIfHz
+        TrackingHoldoverMsOverride = $TrackingHoldoverMs
         InputBytes = (Get-Item -LiteralPath $taskInput).Length
         ExecutableSha256 = (Get-FileHash -LiteralPath $taskExe -Algorithm SHA256).Hash
         WallSeconds = $taskWatch.Elapsed.TotalSeconds

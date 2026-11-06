@@ -1,5 +1,47 @@
 # Logbook NGene Classic
 
+## 6 novembre 2026 - Audit input/ring/canali e prova timeout ritirata
+
+Su richiesta dell'utente verificati ingresso, ring e finestre dei canali.
+Harness separato con ring/decoder produzione e tre funzioni esatte estratte
+da channelManager: ordine e finestre di otto canali verificati su tutti i
+794615808 byte SiGe e 1964112000 byte HackRF, sia letture intere sia frammentate
+e vuote. Contratto USB esteso a completamenti fuori ordine, letture parziali
+e wrap coda. Nessuna corruzione riprodotta; non e' una prova USB hardware.
+
+Provato limite recupero 3000 contro 5000 ms con stesso binario/RF/config8/4/1.
+RF originale: 24 output PNT e 10 perdite in entrambi. Calo artificiale400ms:
+3000 ms peggiora recuperi 5 -> 4 e perdite 1 -> 2. Quindi default/template
+e configurazione locale provvisori a 3000 sono stati RIPRISTINATI a quelli
+precedenti; il solo timeout corto non risolve il difetto. Conservati test
+sintetici, override del runner e dati della regressione. SiGe corto:23 fix/0perdite.
+
+Resta il limite documentato: restart SiGe gestito come riallineamento I/Q,
+senza propagare il salto ignoto alla timeline GNSS; holdover senza ricerca
+del nuovo ritardo. Non dimostrato come causa della caduta live dell'utente.
+14/14 CTest nella verifica; build finale normale profiling OFF, main invariato.
+Dettagli e riferimenti in development/profiling/input-timeline-20261106/.
+
+## 5 novembre 2026 - Cadute sincrone: verifica dei percorsi esistenti
+
+L'utente segnala Navigation -> Acquisition simultaneo. Verificato che il
+recupero intermedio esiste gia' (holdover/relock, limite default 5000 ms) e
+HardRestartChannels non ha chiamanti operativi. Un errore PVT non provoca
+un riavvio globale RF. Il mantenimento segue gli NCO precedenti e non esegue
+una ricerca del nuovo ritardo dopo un salto ignoto di campioni. Il cambio
+generazione USB riallinea I/Q ma non ripristina la timeline GNSS.
+
+Nuovo analizzatore separato analyze-tracking-transitions.ps1, nessuna modifica
+operativa o al main. Sul replay HackRF storico del 29 ottobre: sette ingressi
+in holdover a 77.220 s entro 70.664 ms, cinque Galileo a 77.748 s entro
+65.006 ms; le perdite corrispondenti arrivano cinque secondi dopo. Totale
+13 perdite, 12 holdover, zero recuperi. Conferma il tentativo di Tracking
+prima dell'acquisizione sul salto RF gia' documentato; non identifica la causa
+dell'episodio SiGe attuale, per cui e' stato richiesto il record/log specifico.
+File SiGe locale breve: zero perdite; dispositivo SiGe assente dall'host.
+Contratto tracking esistente PASS, fixture dell'analizzatore verificata.
+Dettagli nel README profiling, output in build/tracking-transition-review/.
+
 ## 5 novembre 2026 - SiGe Galileo fermo in Tracking
 
 Segnalato dall'utente sia live sia da file. Riprodotto su native-ab.raw:

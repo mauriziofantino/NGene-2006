@@ -1,5 +1,9 @@
 # Strumenti di sviluppo, esclusi dalla produzione
 
+Audit input/ring/finestre canali del 5-6 novembre e prova ritirata del limite
+di recupero a tre secondi:
+[input-timeline-20261106](input-timeline-20261106/README.md).
+
 Questa cartella conserva il lavoro temporaneo del 26-27 ottobre 2026. Nessun
 file qui viene compilato o installato da CMake. Il main operativo mantiene solo
 il profiling storico, disattivato nella build normale.
@@ -30,6 +34,34 @@ Per confrontare i due percorsi SiGe usare `-SigeNativeIq 0` oppure
 I nomi delle sessioni includono un identificatore univoco per prove concorrenti.
 La diagnosi Galileo del 5 novembre e' in
 [sige-galileo-20261105](sige-galileo-20261105/README.md).
+
+Per correlare perdite simultanee senza strumentare il ricevitore:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File development/profiling/analyze-tracking-transitions.ps1 -LogFile path/to/stdout.log -OutputDirectory build/tracking-transitions
+```
+
+L'analizzatore usa il campione assoluto e la frequenza dello startup, non il
+contatore tracking relativo al singolo canale. Per vecchi log senza frequenza
+aggiungere `-SampleRateHz` con il valore della sessione. `-WindowMs` (default
+100) definisce la finestra dal primo evento del gruppo; richiede almeno due
+canali distinti. Analizzare una sola sessione per file. Esporta transizioni,
+gruppi simultanei, eventi ingresso e riepilogo. La vicinanza temporale non
+dimostra una causa comune; i messaggi USB conservano la riga del log e non
+vengono convertiti artificialmente in epoche campione.
+
+Verifica del 5 novembre sui log conservati: SiGe corretto 4/4/0, zero perdite;
+replay HackRF `build/profile-20261029-194109-764/run-1/stdout.log`, 13 perdite,
+12 ingressi in holdover e zero recuperi. Sette canali entrano in holdover a
+77.220 s entro 70.664 ms e scadono a 82.220 s; cinque Galileo entrano a 77.748 s
+entro 65.006 ms e scadono a 82.748 s. Questo replay esercita il salto RF gia'
+documentato, non l'USB live SiGe. Il log Linux `recordings/diagnosi/ngene-live.log`
+contiene zero perdite RF e due messaggi finali d'interruzione ingresso.
+Risultati locali: `build/tracking-transition-review/`. Verificati anche un
+gruppo sintetico con contatori canale diversi, ripetizione dello stesso canale
+e separazione di una catena di eventi oltre la finestra. Il contratto tracking
+esistente passa; nessuna modifica operativa di tracking/frontend in questa
+analisi. Il SiGe non e' collegato all'host, nessuna prova USB hardware eseguita.
 
 Dopo le misure:
 

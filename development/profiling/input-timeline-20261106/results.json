@@ -1,0 +1,49 @@
+{
+    "Date":  "2026-11-06",
+    "Disposition":  "3000 ms default trial withdrawn after RF recovery regression; existing 5000 ms default restored",
+    "Profiling":  "OFF",
+    "CtestPassed":  14,
+    "ReplayExecutableSha256":  "2B8A4DFDCE7D6A4967068D9FF75C7AC43FB46A2DBF88F802D14CC025DC9AFAB3",
+    "Runs":  [
+                 {
+                     "Name":  "original-5000",
+                     "RunManifest":  "build/profile-20261105-223009-683-2c4f4448/results.json",
+                     "OutputPnt":  24,
+                     "Holdovers":  10,
+                     "Recovered":  0,
+                     "Lost":  10
+                 },
+                 {
+                     "Name":  "original-3000",
+                     "RunManifest":  "build/profile-20261105-223009-587-20b3bb73/results.json",
+                     "OutputPnt":  24,
+                     "Holdovers":  10,
+                     "Recovered":  0,
+                     "Lost":  10
+                 },
+                 {
+                     "Name":  "fade400-5000",
+                     "RunManifest":  "build/profile-20261105-223106-531-56ef31f9/results.json",
+                     "OutputPnt":  1,
+                     "Holdovers":  6,
+                     "Recovered":  5,
+                     "Lost":  1
+                 },
+                 {
+                     "Name":  "fade400-3000",
+                     "RunManifest":  "build/profile-20261105-223009-596-3c6d46cf/results.json",
+                     "OutputPnt":  1,
+                     "Holdovers":  6,
+                     "Recovered":  4,
+                     "Lost":  2
+                 },
+                 {
+                     "Name":  "sige-3000",
+                     "RunManifest":  "build/profile-20261105-223106-775-41132f37/results.json",
+                     "OutputPnt":  23,
+                     "Holdovers":  0,
+                     "Recovered":  0,
+                     "Lost":  0
+                 }
+             ]
+}

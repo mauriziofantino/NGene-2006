@@ -353,6 +353,7 @@ static int CheckCorrectedCarrier(void)
     unsigned long long start, t;
     double previous;
     Setup(GPS_SAT);
+    cfg.trkConfiguration.holdoverTimeoutMs = 3000;
     Tick(301, .1, 20);
     start = ch.tracking.holdover.firstFailureCounter;
     for (t = start + 1; t <= start + 600; t++)
@@ -367,6 +368,21 @@ static int CheckCorrectedCarrier(void)
     for (; t <= start + 2700; t++)
         Tick(t, .9, 40);
     CHECK(ch.tracking.trkStatus == TRACKING_LOCKED);
+    Finish();
+    return 0;
+}
+
+static int CheckShortDeadline(void)
+{
+    unsigned long long start;
+    Setup(GPS_SAT);
+    cfg.trkConfiguration.holdoverTimeoutMs = 3000;
+    Tick(301, .1, 20);
+    start = ch.tracking.holdover.firstFailureCounter;
+    Tick(start + 2999, .1, 20);
+    CHECK(ch.tracking.trkStatus == TRACKING_HOLDOVER);
+    Tick(start + 3000, .1, 20);
+    CHECK(ch.tracking.trkStatus == TRACKING_LOST);
     Finish();
     return 0;
 }
@@ -439,7 +455,7 @@ static int CheckSbasDecodingWithoutGpsTime(void)
 
 int main(void)
 {
-    if (CheckRecovery() || CheckDeadline() || CheckUnalignedCarrier() || CheckPredictedPhase() ||
+    if (CheckRecovery() || CheckDeadline() || CheckShortDeadline() || CheckUnalignedCarrier() || CheckPredictedPhase() ||
         CheckCorrectedCarrier() || CheckSignalTime(GPS_SAT) || CheckSignalTime(GALILEO_SAT) ||
         CheckSignalTime(EGNOS_SAT) || CheckStartupAndInvalidMetrics() ||
         CheckSbasDecodingWithoutGpsTime())

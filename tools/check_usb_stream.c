@@ -169,6 +169,48 @@ int main(void)
     CopySamplesIntoUsbIntermediateBuffer(&frontend);
     if (lastEventWait != 100000)
         return 1;
+    /* A later completed transfer must wait for the earlier pending one.
+     * Once both are ready, partial consumer reads must preserve byte order. */
+    memset(endpoint->transferArray[1].destinationBuffer, 0x22, USB_BLOCKSIZE);
+    memset(endpoint->transferArray[2].destinationBuffer, 0x33, USB_BLOCKSIZE);
+    endpoint->transferArray[2].status = NGENE_USB_TRANSFER_COMPLETED;
+    CopySamplesIntoUsbIntermediateBuffer(&frontend);
+    if (usb->usbIntermediateBufferReadIndex != usb->usbIntermediateBufferWriteIndex ||
+        usb->usbBufferIndex != 1)
+        return 1;
+    endpoint->transferArray[1].status = NGENE_USB_TRANSFER_COMPLETED;
+    CopySamplesIntoUsbIntermediateBuffer(&frontend);
+    if (usb->usbBufferIndex != 3 || ReadUsbInterface(&frontend, output, 7) != 7)
+        return 1;
+    for (index = 0; index < 7; index++)
+        if (output[index] != 0x22)
+            return 1;
+    if (ReadUsbInterface(&frontend, output, 9) != 9)
+        return 1;
+    for (index = 0; index < 9; index++)
+        if (output[index] != 0x22)
+            return 1;
+    if (ReadUsbInterface(&frontend, output, sizeof(output)) != sizeof(output))
+        return 1;
+    for (index = 0; index < (int)sizeof(output); index++)
+        if (output[index] != 0x33)
+            return 1;
+    /* Cross the physical end of the intermediate USB queue in one read. */
+    {
+        char wrapped[32];
+        usb->usbIntermediateBufferWriteIndex = usb->usbIntermediateBufferReadIndex =
+            USB_INTERMEDIATE_BUFFER_SIZE - 1;
+        memset(endpoint->transferArray[3].destinationBuffer, 0x44, USB_BLOCKSIZE);
+        memset(endpoint->transferArray[4].destinationBuffer, 0x66, USB_BLOCKSIZE);
+        endpoint->transferArray[3].status = endpoint->transferArray[4].status =
+            NGENE_USB_TRANSFER_COMPLETED;
+        CopySamplesIntoUsbIntermediateBuffer(&frontend);
+        if (ReadUsbInterface(&frontend, wrapped, sizeof(wrapped)) != sizeof(wrapped))
+            return 1;
+        for (index = 0; index < (int)sizeof(wrapped); index++)
+            if (wrapped[index] != (index < USB_BLOCKSIZE ? 0x44 : 0x66))
+                return 1;
+    }
     if (StopUsbInterface(&frontend) != SUCCESS_RETURN)
         return 1;
     if (startCommands != 1 || stopCommands != 2)
@@ -180,6 +222,6 @@ int main(void)
     pthread_cond_destroy(&usb->intermediateBufferEmpty);
     pthread_mutex_destroy(&usb->frontEndMutex);
     puts(
-        "USB producer isolation, full-buffer shutdown, empty read and ordered timeout restart passed.");
+        "USB producer isolation, backpressure shutdown, empty/partial reads, ordered completions, queue wrap and timeout restart passed.");
     return 0;
 }
