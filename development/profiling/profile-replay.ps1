@@ -13,6 +13,7 @@ param(
     [ValidateRange(0,10000)][Nullable[int]]$TrackingHoldoverMs,
     [switch]$TrackingLog,
     [switch]$NavigationLog,
+    [ValidateRange(1024,65000)][Nullable[int]]$WebPort,
     [ValidateRange(1,20)][int]$Repetitions = 3,
     [ValidateRange(1,3600)][int]$TimeoutSeconds = 180
 )
@@ -109,7 +110,15 @@ for ($taskRun=1; $taskRun -le $Repetitions; $taskRun++) {
     $taskProcess = New-Object Diagnostics.Process
     $taskProcess.StartInfo.FileName = Join-Path $taskDirectory 'ngene.exe'
     $taskProcess.StartInfo.WorkingDirectory = $taskDirectory
-    $taskProcess.StartInfo.Arguments = '-t --frontend ' + $Frontend + ' --input "' + $taskInput + '" -W ' + $taskWorkers
+    # The user interface is chosen per session: the web one is served on the loopback address, so a
+    # distinct port is given to each repetition to avoid binding the same port twice (see utility/webApi.h)
+    $taskUiArgument = '-t'
+    $taskUiName = 'text'
+    if ($null -ne $WebPort) {
+        $taskUiArgument = '-w ' + ($WebPort + $taskRun - 1)
+        $taskUiName = 'web'
+    }
+    $taskProcess.StartInfo.Arguments = $taskUiArgument + ' --frontend ' + $Frontend + ' --input "' + $taskInput + '" -W ' + $taskWorkers
     $taskProcess.StartInfo.UseShellExecute = $false
     $taskProcess.StartInfo.CreateNoWindow = $true
     $taskProcess.StartInfo.RedirectStandardOutput = $true
