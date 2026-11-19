@@ -199,7 +199,7 @@ TAcquisitionStatus PerformCoarseAcquisition(TNGeneConfiguration *cfg, TNGeneData
                                             char *secondBunch, unsigned int secondBunchSize)
 {
     TCoarseAcquisition *acq = &(ch->coarse);
-    TAcqCommon *acqCom = &(rx->acqCommon);
+    TDspContext *dsp = rx->dsp;
     int curDelay = acq->delays[acq->delayIndex];
     char *input1;
     unsigned int size1;
@@ -238,41 +238,41 @@ TAcquisitionStatus PerformCoarseAcquisition(TNGeneConfiguration *cfg, TNGeneData
         ch->carrierFrequency = fc = cfg->fif + (double)acq->dopplers[acq->dopplerIndex];
         ch->dopplerShift = (double)acq->dopplers[acq->dopplerIndex];
     }
-    if (!rx->wideI)
+    if (!dsp->wideI)
         ch->carrierPhase = GenerateCarrier(cfg, &(rx->fifTable), fc, ch->carrierPhase,
-                                           ch->blocksize, rx->sinArray, rx->cosArray);
+                                           ch->blocksize, dsp->sinArray, dsp->cosArray);
     /* remove the carrier (and, for Galileo, also subcarrier) */
-    if (rx->wideI) {
+    if (dsp->wideI) {
         ch->carrierPhase = MixHackrfInput(&rx->hackrfMixer, (THackrfIq8 *)input1, size1,
                                           (THackrfIq8 *)input2, size2, ch->blocksize, fc,
-                                          ch->carrierPhase, cfg->fs, rx->wideI, rx->wideQ);
+                                          ch->carrierPhase, cfg->fs, dsp->wideI, dsp->wideQ);
     } else if (ch->satType == GALILEO_SAT && !cfg->nativeIq) {
-        GenerateSine(cfg, &(rx->fscTable), ch->codeRate, 0.0, ch->blocksize, rx->subcarrierArray);
-        CarrierRealWipeOff(input1, size1, input2, size2, rx->subcarrierArray, ch->blocksize,
-                           acqCom->demodulatedSin);
-        ArraySub(acqCom->demodulatedSin, rx->subcarrierArray, acqCom->demodulatedSin,
+        GenerateSine(cfg, &(rx->fscTable), ch->codeRate, 0.0, ch->blocksize, dsp->subcarrierArray);
+        CarrierRealWipeOff(input1, size1, input2, size2, dsp->subcarrierArray, ch->blocksize,
+                           dsp->demodulatedSin);
+        ArraySub(dsp->demodulatedSin, dsp->subcarrierArray, dsp->demodulatedSin,
                  ch->blocksize);
-        ArrayXor(acqCom->demodulatedSin, rx->cosArray, acqCom->demodulatedCos, ch->blocksize);
-        ArrayXor(acqCom->demodulatedSin, rx->sinArray, acqCom->demodulatedSin, ch->blocksize);
-        ArraySub(acqCom->demodulatedCos, rx->cosArray, acqCom->demodulatedCos, ch->blocksize);
-        ArraySub(acqCom->demodulatedSin, rx->sinArray, acqCom->demodulatedSin, ch->blocksize);
+        ArrayXor(dsp->demodulatedSin, dsp->cosArray, dsp->demodulatedCos, ch->blocksize);
+        ArrayXor(dsp->demodulatedSin, dsp->sinArray, dsp->demodulatedSin, ch->blocksize);
+        ArraySub(dsp->demodulatedCos, dsp->cosArray, dsp->demodulatedCos, ch->blocksize);
+        ArraySub(dsp->demodulatedSin, dsp->sinArray, dsp->demodulatedSin, ch->blocksize);
     } else {
-        CarrierInputWipeOff(cfg->nativeIq, input1, size1, input2, size2, rx->cosArray, rx->sinArray,
-                            ch->blocksize, acqCom->demodulatedCos, acqCom->demodulatedSin);
-        ArraySub(acqCom->demodulatedCos, rx->cosArray, acqCom->demodulatedCos, ch->blocksize);
-        ArraySub(acqCom->demodulatedSin, rx->sinArray, acqCom->demodulatedSin, ch->blocksize);
+        CarrierInputWipeOff(cfg->nativeIq, input1, size1, input2, size2, dsp->cosArray, dsp->sinArray,
+                            ch->blocksize, dsp->demodulatedCos, dsp->demodulatedSin);
+        ArraySub(dsp->demodulatedCos, dsp->cosArray, dsp->demodulatedCos, ch->blocksize);
+        ArraySub(dsp->demodulatedSin, dsp->sinArray, dsp->demodulatedSin, ch->blocksize);
     }
-    if (ch->satType == GALILEO_SAT && cfg->nativeIq && !rx->wideI) {
+    if (ch->satType == GALILEO_SAT && cfg->nativeIq && !dsp->wideI) {
         /* The complex input has two components; remove BOC from both after
          * the input rotation. The remaining acquisition steps are unchanged. */
-        GenerateSine(cfg, &(rx->fscTable), ch->codeRate, 0.0, ch->blocksize, rx->subcarrierArray);
-        ArrayXor(acqCom->demodulatedCos, rx->subcarrierArray, acqCom->demodulatedCos,
+        GenerateSine(cfg, &(rx->fscTable), ch->codeRate, 0.0, ch->blocksize, dsp->subcarrierArray);
+        ArrayXor(dsp->demodulatedCos, dsp->subcarrierArray, dsp->demodulatedCos,
                  ch->blocksize);
-        ArraySub(acqCom->demodulatedCos, rx->subcarrierArray, acqCom->demodulatedCos,
+        ArraySub(dsp->demodulatedCos, dsp->subcarrierArray, dsp->demodulatedCos,
                  ch->blocksize);
-        ArrayXor(acqCom->demodulatedSin, rx->subcarrierArray, acqCom->demodulatedSin,
+        ArrayXor(dsp->demodulatedSin, dsp->subcarrierArray, dsp->demodulatedSin,
                  ch->blocksize);
-        ArraySub(acqCom->demodulatedSin, rx->subcarrierArray, acqCom->demodulatedSin,
+        ArraySub(dsp->demodulatedSin, dsp->subcarrierArray, dsp->demodulatedSin,
                  ch->blocksize);
     }
     /* compress */
@@ -284,17 +284,17 @@ TAcquisitionStatus PerformCoarseAcquisition(TNGeneConfiguration *cfg, TNGeneData
         StartProfilingUpdate(&(ch->galileoSampleCompressionProfiling));
     }
 #endif
-    if (rx->wideI) {
+    if (dsp->wideI) {
         char *boc = NULL;
         if (ch->satType == GALILEO_SAT) {
             GenerateSine(cfg, &(rx->fscTable), ch->codeRate, 0.0, ch->blocksize,
-                         rx->subcarrierArray);
-            boc = rx->subcarrierArray;
+                         dsp->subcarrierArray);
+            boc = dsp->subcarrierArray;
         }
-        CompressWide(rx->wideI, rx->wideQ, boc, ch->blocksize, acq->wideCompressed + outputIndex,
+        CompressWide(dsp->wideI, dsp->wideQ, boc, ch->blocksize, acq->wideCompressed + outputIndex,
                      acq->compressedLength);
     } else
-        SampleCompression(0, 0, acqCom->demodulatedCos, acqCom->demodulatedSin, ch->blocksize,
+        SampleCompression(0, 0, dsp->demodulatedCos, dsp->demodulatedSin, ch->blocksize,
                           &(acq->signalCompressed[outputIndex]), acq->compressedLength);
 #ifdef RX_PROFILING
     if (ch->satType == GPS_SAT) {
@@ -314,7 +314,7 @@ TAcquisitionStatus PerformCoarseAcquisition(TNGeneConfiguration *cfg, TNGeneData
             StartProfilingUpdate(&(ch->galileoFftProfiling));
         }
 #endif
-        if (rx->wideI) {
+        if (dsp->wideI) {
             for (;;) {
                 unsigned clipped;
                 if (!PackWideFft(acq->wideCompressed, acq->signalCompressed, acq->fftSize,
@@ -354,7 +354,7 @@ TAcquisitionStatus PerformCoarseAcquisition(TNGeneConfiguration *cfg, TNGeneData
             StopProfilingUpdate(&(ch->galileoFftProfiling), 1);
         }
 #endif
-        if (rx->wideI) {
+        if (dsp->wideI) {
             /* Carry the block exponent through both transforms. Restoring it here
              * would overflow the inverse transform at raw HackRF ADC amplitudes. */
             if (!ProductWideFft(acq->signalFft, acq->localCode, acq->signalFft, acq->fftSize, 0)) {
@@ -372,7 +372,7 @@ TAcquisitionStatus PerformCoarseAcquisition(TNGeneConfiguration *cfg, TNGeneData
         }
 #endif
         /* do ifft (since we call fft, the output time is reversed) */
-        if (rx->wideI) {
+        if (dsp->wideI) {
             for (;;) {
                 unsigned clipped;
                 if (PerformFftTrial(cfg, &rx->fftTable, acq->signalFft, acq->ifftOut,
@@ -405,7 +405,7 @@ TAcquisitionStatus PerformCoarseAcquisition(TNGeneConfiguration *cfg, TNGeneData
             UpdateCoarseThreshold(cfg, ch, acq->numOfNonCoherentSums);
             uint64_t tmp = (acq->threshold >> acq->shiftsForNonCohSums);
             if (acq->acqBinLog != NULL) {
-                if (rx->wideI)
+                if (dsp->wideI)
                     fwrite(&tmp, sizeof(tmp), 1, acq->acqBinLog);
                 else {
                     unsigned int legacy = (unsigned int)tmp;
@@ -413,7 +413,7 @@ TAcquisitionStatus PerformCoarseAcquisition(TNGeneConfiguration *cfg, TNGeneData
                 }
             }
         } else {
-            if (rx->wideI) {
+            if (dsp->wideI) {
                 if (!AccumulateWideFftPower(acq->ifftOut, acq->wideNonCoherentSums, acq->fftSize,
                                             acq->widePowerShift, acq->shiftsForNonCohSums,
                                             acq->nonCoherentSumsIndex == 0)) {
@@ -433,7 +433,7 @@ TAcquisitionStatus PerformCoarseAcquisition(TNGeneConfiguration *cfg, TNGeneData
             }
             acq->nonCoherentSumsIndex++;
             if (acq->nonCoherentSumsIndex >= acq->numOfNonCoherentSums) {
-                if (rx->wideI) {
+                if (dsp->wideI) {
                     unsigned k;
                     curMax = 0;
                     curIndexMax = 0;
@@ -465,7 +465,7 @@ TAcquisitionStatus PerformCoarseAcquisition(TNGeneConfiguration *cfg, TNGeneData
                             (unsigned long long)acq->maximum, acq->delayMax, acq->dopplerMax);
                 }
                 if (acq->acqBinLog != NULL) {
-                    if (rx->wideI)
+                    if (dsp->wideI)
                         fwrite(acq->wideNonCoherentSums, sizeof(uint64_t), acq->fftSize,
                                acq->acqBinLog);
                     else

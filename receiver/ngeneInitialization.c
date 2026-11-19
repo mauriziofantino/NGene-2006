@@ -142,7 +142,6 @@ int PreliminaryInitialization(TNGeneConfiguration *cfg, TNGeneData *rx)
 int InitReceiver(TNGeneConfiguration *cfg, TNGeneData *rx)
 {
     int errorsFound = 0;
-    unsigned int arraySize = NGENE_ARRAYS_SIZE * cfg->samplesPerMillisecond;
     int index;
     TChannel *ch;
     char filename[MAX_ROW_LENGTH];
@@ -155,59 +154,18 @@ int InitReceiver(TNGeneConfiguration *cfg, TNGeneData *rx)
         InitSwrxLog(cfg, rx);
     }
     rx->rxCounter = 0;
-    posix_memalign((void **)&(rx->codeArray), POSIX_ALIGNMENT, arraySize * sizeof(char));
-    if (rx->codeArray == NULL)
+    rx->dsp = (TDspContext *)malloc(sizeof(TDspContext));
+    if (rx->dsp == NULL || InitDspContext(cfg, rx->dsp) != SUCCESS_RETURN)
         errorsFound++;
-    if (cfg->lowFsElaboration == TRUE_FLAG) {
-        posix_memalign((void **)&(rx->codeEarlyArray), POSIX_ALIGNMENT, arraySize * sizeof(char));
-        if (rx->codeEarlyArray == NULL)
-            errorsFound++;
-        posix_memalign((void **)&(rx->codeLateArray), POSIX_ALIGNMENT, arraySize * sizeof(char));
-        if (rx->codeLateArray == NULL)
-            errorsFound++;
-    } else {
-        rx->codeEarlyArray = NULL;
-        rx->codeLateArray = NULL;
-    }
-    posix_memalign((void **)&(rx->cosArray), POSIX_ALIGNMENT, arraySize * sizeof(char));
-    if (rx->cosArray == NULL)
-        errorsFound++;
-    posix_memalign((void **)&(rx->sinArray), POSIX_ALIGNMENT, arraySize * sizeof(char));
-    if (rx->sinArray == NULL)
-        errorsFound++;
-    rx->wideI = rx->wideQ = NULL;
     rx->hackrfMixer.coefficients = NULL;
     if (cfg->usedFrontEnd == NGENE_FE_HACKRF) {
         if (!InitHackrfMixer(&rx->hackrfMixer))
             errorsFound++;
-        posix_memalign((void **)&rx->wideI, POSIX_ALIGNMENT, arraySize * sizeof(short));
-        posix_memalign((void **)&rx->wideQ, POSIX_ALIGNMENT, arraySize * sizeof(short));
-        if (!rx->wideI || !rx->wideQ)
-            errorsFound++;
     }
-    posix_memalign((void **)&(rx->subcarrierArray), POSIX_ALIGNMENT, arraySize * sizeof(char));
-    if (rx->subcarrierArray == NULL)
-        errorsFound++;
-    posix_memalign((void **)&(rx->subcarrierArrayEarly), POSIX_ALIGNMENT, arraySize * sizeof(char));
-    if (rx->subcarrierArrayEarly == NULL)
-        errorsFound++;
-    posix_memalign((void **)&(rx->subcarrierArrayLate), POSIX_ALIGNMENT, arraySize * sizeof(char));
-    if (rx->subcarrierArrayLate == NULL)
-        errorsFound++;
     if (errorsFound > 0) {
         SwrxLog(NGENE_LOG_SEVERITY_ERROR, "Malloc returned a NULL pointer in InitReceiver");
         CloseNGene(cfg, EXIT_FAILURE);
     }
-    ArrayClean(rx->codeArray, arraySize * sizeof(char));
-    if (cfg->lowFsElaboration == TRUE_FLAG) {
-        ArrayClean(rx->codeEarlyArray, arraySize * sizeof(char));
-        ArrayClean(rx->codeLateArray, arraySize * sizeof(char));
-    }
-    ArrayClean(rx->cosArray, arraySize * sizeof(char));
-    ArrayClean(rx->sinArray, arraySize * sizeof(char));
-    ArrayClean(rx->subcarrierArray, arraySize * sizeof(char));
-    ArrayClean(rx->subcarrierArrayEarly, arraySize * sizeof(char));
-    ArrayClean(rx->subcarrierArrayLate, arraySize * sizeof(char));
     /* other initializations */
     if (InitCircularBuffer(cfg, &(rx->buf)) != SUCCESS_RETURN)
         return FAILURE_RETURN;
@@ -333,19 +291,9 @@ void DeinitReceiver(TNGeneConfiguration *cfg, TNGeneData *rx)
 #ifdef RX_PROFILING
         ReportProfilingData(&(rx->pvtProfiling));
 #endif
-        free(rx->codeArray);
-        if (cfg->lowFsElaboration == TRUE_FLAG) {
-            free(rx->codeEarlyArray);
-            free(rx->codeLateArray);
-        }
-        free(rx->cosArray);
-        free(rx->wideI);
-        free(rx->wideQ);
+        DeinitDspContext(rx->dsp);
+        free(rx->dsp);
         DeinitHackrfMixer(&rx->hackrfMixer);
-        free(rx->sinArray);
-        free(rx->subcarrierArray);
-        free(rx->subcarrierArrayEarly);
-        free(rx->subcarrierArrayLate);
         DeinitCircularBuffer(&(rx->buf));
         DeinitPrnTable(&(rx->prnTable));
         DeinitCarrierTable(&(rx->fifTable));

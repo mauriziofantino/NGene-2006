@@ -12,8 +12,8 @@
  */
 #include "ngeneConstants.h"
 #include "simd.h"
-/* global variable for the backup of XMM registers */
-extern char *ngeneXmmsBackup;
+/* backup of XMM registers, one buffer per executing thread (see xmmsBackup.h) */
+#include "xmmsBackup.h"
 static char sigeMask1[16] = {0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
                              0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01};
 static char *sigeMask2;

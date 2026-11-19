@@ -11,13 +11,14 @@ static inline double GenerateAndMixReceiverInput(TNGeneConfiguration *cfg, TNGen
                                                  unsigned n2, unsigned n, double frequency,
                                                  double phase)
 {
-    if (rx->wideI)
+    if (rx->dsp->wideI)
         return MixHackrfInput(&rx->hackrfMixer, (const THackrfIq8 *)first, n1,
                               (const THackrfIq8 *)second, n2, n, frequency, phase, cfg->fs,
-                              rx->wideI, rx->wideQ);
-    phase = GenerateCarrier(cfg, &rx->fifTable, frequency, phase, n, rx->sinArray, rx->cosArray);
-    CarrierInputWipeOff(cfg->nativeIq, first, n1, second, n2, rx->cosArray, rx->sinArray, n,
-                        rx->cosArray, rx->sinArray);
+                              rx->dsp->wideI, rx->dsp->wideQ);
+    phase = GenerateCarrier(cfg, &rx->fifTable, frequency, phase, n, rx->dsp->sinArray,
+                            rx->dsp->cosArray);
+    CarrierInputWipeOff(cfg->nativeIq, first, n1, second, n2, rx->dsp->cosArray, rx->dsp->sinArray,
+                        n, rx->dsp->cosArray, rx->dsp->sinArray);
     return phase;
 }
 /* Keep HackRF integration in Q6 integers until the complete complex power. */

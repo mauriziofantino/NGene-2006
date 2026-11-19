@@ -78,6 +78,7 @@ TAcquisitionStatus PerformConfirmation(TNGeneConfiguration *cfg, TNGeneData *rx,
                                        char *secondBunch, unsigned int secondBunchSize)
 {
     TConfirmation *conf = &(ch->confirmation);
+    TDspContext *dsp = rx->dsp;
     uint64_t p;
     /* generate and remove carrier */
     ch->carrierPhase = GenerateAndMixReceiverInput(cfg, rx, firstBunch, firstBunchSize, secondBunch,
@@ -87,20 +88,20 @@ TAcquisitionStatus PerformConfirmation(TNGeneConfiguration *cfg, TNGeneData *rx,
     if (ch->satType == GALILEO_SAT) {
         /* if Galileo, generate also the subcarrier */
         GenerateSine(cfg, &(rx->fscTable), ch->codeRate, TWICE_M_PI * ch->codePhaseFrac,
-                     ch->blocksize, rx->subcarrierArray);
+                     ch->blocksize, dsp->subcarrierArray);
     }
     GenerateCode(cfg, &(rx->prnTable), ch->satType, ch->satId, ch->codeRate, &(ch->codePhase),
-                 &(ch->codePhaseFrac), NGENE_MODULATION, ch->blocksize, rx->codeArray);
+                 &(ch->codePhaseFrac), NGENE_MODULATION, ch->blocksize, dsp->codeArray);
     if (ch->satType == GALILEO_SAT) {
         /* if Galileo, remove also the subcarrier */
-        ArrayXor(rx->subcarrierArray, rx->codeArray, rx->codeArray, ch->blocksize);
+        ArrayXor(dsp->subcarrierArray, dsp->codeArray, dsp->codeArray, ch->blocksize);
     }
-    conf->pI += ReceiverPrompt(rx->wideI, rx->cosArray, rx->codeArray, ch->blocksize);
-    conf->pQ += ReceiverPrompt(rx->wideQ, rx->sinArray, rx->codeArray, ch->blocksize);
+    conf->pI += ReceiverPrompt(dsp->wideI, dsp->cosArray, dsp->codeArray, ch->blocksize);
+    conf->pQ += ReceiverPrompt(dsp->wideQ, dsp->sinArray, dsp->codeArray, ch->blocksize);
     /* analyze the result */
     conf->msCounter++;
     if (conf->msCounter == ch->codeDuration) {
-        p = ReceiverPower(rx->wideI != NULL, conf->pI, conf->pQ);
+        p = ReceiverPower(dsp->wideI != NULL, conf->pI, conf->pQ);
         conf->msCounter = 0;
         conf->pI = 0;
         conf->pQ = 0;

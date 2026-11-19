@@ -133,7 +133,8 @@ TTrackingStatus PerformGpsTracking(TNGeneConfiguration *cfg, TNGeneData *rx, TCh
                      ch->blocksize, trk->lateCode);
     }
     // correlation
-    PerformAllTrackingCorrelations(ch, trk, rx->cosArray, rx->sinArray, rx->wideI, rx->wideQ);
+    PerformAllTrackingCorrelations(ch, trk, rx->dsp->cosArray, rx->dsp->sinArray, rx->dsp->wideI,
+                                   rx->dsp->wideQ);
     /* try to obtain bit synchronization (if not reached yet) */
     CheckBitSynchronization(cfg, rx, ch, trk);
     /* update ms counter, evaluate loops */

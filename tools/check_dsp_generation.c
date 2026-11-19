@@ -16,7 +16,8 @@
 #include "carrierTable.h"
 #include "prnTable.h"
 #include "ngeneConstants.h"
-char *ngeneXmmsBackup;
+#include "xmmsBackup.h"
+NGENE_THREAD_LOCAL char *ngeneXmmsBackup;
 
 int SwrxLog(int severity, const char *format, ...)
 {

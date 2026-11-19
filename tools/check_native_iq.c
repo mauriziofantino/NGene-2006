@@ -7,7 +7,8 @@
 #include "sige.h"
 #include "circularBuffer.h"
 #include "ngeneConstants.h"
-char *ngeneXmmsBackup;
+#include "xmmsBackup.h"
+NGENE_THREAD_LOCAL char *ngeneXmmsBackup;
 static unsigned char wire[81];
 static unsigned int wireIndex, readCalls;
 

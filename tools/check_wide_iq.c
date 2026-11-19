@@ -12,7 +12,8 @@
 #include "ngeneConstants.h"
 #include "inputProcessing.h"
 #include "hackrfThreshold.h"
-char *ngeneXmmsBackup;
+#include "xmmsBackup.h"
+NGENE_THREAD_LOCAL char *ngeneXmmsBackup;
 
 int SwrxLog(int severity, const char *format, ...)
 {
@@ -121,17 +122,19 @@ static int ConfirmationNoise(void)
 {
     TNGeneConfiguration cfg = {0};
     TNGeneData *rx = calloc(1, sizeof(*rx));
+    TDspContext *dsp = calloc(1, sizeof(*dsp));
     THackrfIq8 logical[32736], *ring = malloc(40000 * sizeof(*ring));
     char code[32736];
     short i[8184], q[8184];
     int64_t baseline[4], actual[4];
     unsigned k, scale, tail;
     uint32_t random = 19;
-    CHECK(rx && ring && InitHackrfMixer(&rx->hackrfMixer));
+    CHECK(rx && dsp && ring && InitHackrfMixer(&rx->hackrfMixer));
     cfg.fs = 8183800;
     cfg.fif = 0;
-    rx->wideI = i;
-    rx->wideQ = q;
+    rx->dsp = dsp;
+    dsp->wideI = i;
+    dsp->wideQ = q;
     rx->buf.buffer = (char *)ring;
     rx->buf.dim = 40000;
     rx->acqCommon.thr.code = code;
@@ -170,6 +173,7 @@ static int ConfirmationNoise(void)
     rx->buf.fill1 = rx->buf.fill2 = 0;
     CHECK(!MeasureHackrfConfirmationNoise(&cfg, rx, actual));
     DeinitHackrfMixer(&rx->hackrfMixer);
+    free(rx->dsp);
     free(rx);
     free(ring);
     return 0;

@@ -82,9 +82,7 @@ typedef struct AcqCommonStruct {
     short int *gpsCodesFft[GPS_NUMBER_OF_PRNS];         /**< conj FFT of GPS codes */
     short int *egnosCodesFft[EGNOS_NUMBER_OF_PRNS];     /**< conj FFT of EGNOS codes */
     short int *galileoCodesFft[GALILEO_NUMBER_OF_PRNS]; /**< conj FFT of Galileo codes */
-    /* Arrays */
-    char *demodulatedCos; /**< Array used to store the input samples demodulated using cosine */
-    char *demodulatedSin; /**< Array used to store the input samples demodulated using sin */
+    /* Arrays (demodulated scratch moved to TDspContext, see dspContextDataStructure.h) */
     /* Non coherent sums */
     TNonCoherentSumsManager nonCohManager; /**< Structure used to manage run time change of the
                                               number of non-coherent sums */

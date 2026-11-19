@@ -117,17 +117,17 @@ int InitTracking(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch)
 #endif
     promptDisp = ((promptDisp / XMM_REGISTER_SIZE) + 1) * XMM_REGISTER_SIZE;
     if (cfg->lowFsElaboration == FALSE_FLAG) {
-        trk->promptCode = &(rx->codeArray[promptDisp]);
-        trk->earlyCode = &(rx->codeArray[promptDisp - earlyDisp]);
-        trk->lateCode = &(rx->codeArray[promptDisp + earlyDisp]);
+        trk->promptCode = &(rx->dsp->codeArray[promptDisp]);
+        trk->earlyCode = &(rx->dsp->codeArray[promptDisp - earlyDisp]);
+        trk->lateCode = &(rx->dsp->codeArray[promptDisp + earlyDisp]);
     } else {
-        trk->promptCode = &(rx->codeArray[promptDisp]);
-        trk->earlyCode = rx->codeEarlyArray;
-        trk->lateCode = rx->codeLateArray;
+        trk->promptCode = &(rx->dsp->codeArray[promptDisp]);
+        trk->earlyCode = rx->dsp->codeEarlyArray;
+        trk->lateCode = rx->dsp->codeLateArray;
     }
 #ifdef CSC_DISCRIMINATOR_FUNCTION
-    trk->veryEarlyCode = &(rx->codeArray[promptDisp - veryEarlyDisp]);
-    trk->veryLateCode = &(rx->codeArray[promptDisp + veryEarlyDisp]);
+    trk->veryEarlyCode = &(rx->dsp->codeArray[promptDisp - veryEarlyDisp]);
+    trk->veryLateCode = &(rx->dsp->codeArray[promptDisp + veryEarlyDisp]);
 #endif
     if (trkCfg->multipleCorrelatorsFlag == TRUE_FLAG) {
         trk->numberOfMulti = trkCfg->numberOfMultipleCorrelators;
@@ -136,7 +136,7 @@ int InitTracking(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch)
             SwrxLog(NGENE_LOG_SEVERITY_ERROR, "Malloc returned a NULL pointer in InitTracking");
             CloseNGene(cfg, EXIT_FAILURE);
         }
-        trk->multiCodes[0] = &(rx->codeArray[promptDisp - multipleCorrMaxDisp]);
+        trk->multiCodes[0] = &(rx->dsp->codeArray[promptDisp - multipleCorrMaxDisp]);
         if (ch->satType == GPS_SAT) {
             for (index = 1; index < trkCfg->numberOfMultipleCorrelators; index++) {
                 trk->multiCodes[index] =

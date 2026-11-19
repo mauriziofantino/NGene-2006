@@ -5,8 +5,9 @@
 #include <string.h>
 #include "sige.h"
 #include "sigeV3.h"
+#include "xmmsBackup.h"
 static char backup[128] __attribute__((aligned(16)));
-char *ngeneXmmsBackup = backup; /**< Scratch required by the classic SIMD ABI. */
+NGENE_THREAD_LOCAL char *ngeneXmmsBackup = backup; /**< Scratch required by the classic SIMD ABI. */
 /** @brief Check byte values, alignment, vector boundaries and in-place conversion.
  * @return Zero when all retained conversion cases match their scalar mappings.
  */

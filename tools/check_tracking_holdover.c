@@ -20,6 +20,7 @@
     } while (0)
 static TNGeneConfiguration cfg;
 static TNGeneData rx;
+static TDspContext dsp;
 static TChannel ch;
 static TUsbFePars frontend;
 static TGpsParser gps;
@@ -235,7 +236,8 @@ static void Setup(TSatConstellation type)
     ch.egnosParser = &sbas;
     gps.navMsg = gal.navMsg = &nav;
     nav.towValid = nav.wnValid = nav.ephemeridesReceived = TRUE_FLAG;
-    rx.wideI = rx.wideQ = &wide;
+    rx.dsp = &dsp;
+    dsp.wideI = dsp.wideQ = &wide;
     InitTrackingStatusChecker(&cfg, &ch, &ch.tracking);
     StartTrackingStatusChecker(&cfg, &ch.tracking);
     InitTrackingLoops(&cfg, &ch, &ch.tracking);

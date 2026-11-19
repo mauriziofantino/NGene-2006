@@ -91,6 +91,7 @@ TAcquisitionStatus PerformDopplerRefinement(TNGeneConfiguration *cfg, TNGeneData
                                             char *secondBunch, unsigned int secondBunchSize)
 {
     TRefinement *ref = &(ch->refinement);
+    TDspContext *dsp = rx->dsp;
     double fcCorrection = (double)rx->acqCommon.dopplerRefSteps[ref->indexBin];
     uint64_t p;
     double codeRateNew;
@@ -106,20 +107,20 @@ TAcquisitionStatus PerformDopplerRefinement(TNGeneConfiguration *cfg, TNGeneData
     if (ch->satType == GALILEO_SAT) {
         /* if Galileo, generate also the subcarrier */
         GenerateSine(cfg, &(rx->fscTable), ch->codeRate, TWICE_M_PI * ch->codePhaseFrac,
-                     ch->blocksize, rx->subcarrierArray);
+                     ch->blocksize, dsp->subcarrierArray);
     }
     GenerateCode(cfg, &(rx->prnTable), ch->satType, ch->satId, ch->codeRate, &(ch->codePhase),
-                 &(ch->codePhaseFrac), NGENE_MODULATION, ch->blocksize, rx->codeArray);
+                 &(ch->codePhaseFrac), NGENE_MODULATION, ch->blocksize, dsp->codeArray);
     if (ch->satType == GALILEO_SAT) {
         /* if Galileo, remove also the subcarrier */
-        ArrayXor(rx->subcarrierArray, rx->codeArray, rx->codeArray, ch->blocksize);
+        ArrayXor(dsp->subcarrierArray, dsp->codeArray, dsp->codeArray, ch->blocksize);
     }
-    ref->pI += ReceiverPrompt(rx->wideI, rx->cosArray, rx->codeArray, ch->blocksize);
-    ref->pQ += ReceiverPrompt(rx->wideQ, rx->sinArray, rx->codeArray, ch->blocksize);
+    ref->pI += ReceiverPrompt(dsp->wideI, dsp->cosArray, dsp->codeArray, ch->blocksize);
+    ref->pQ += ReceiverPrompt(dsp->wideQ, dsp->sinArray, dsp->codeArray, ch->blocksize);
     /* analyze the result */
     ref->msCounter++;
     if (ref->msCounter == ch->codeDuration) {
-        p = ReceiverPower(rx->wideI != NULL, ref->pI, ref->pQ);
+        p = ReceiverPower(dsp->wideI != NULL, ref->pI, ref->pQ);
         ref->msCounter = 0;
         ref->pI = 0;
         ref->pQ = 0;
@@ -135,7 +136,7 @@ TAcquisitionStatus PerformDopplerRefinement(TNGeneConfiguration *cfg, TNGeneData
                 ref->indexBinMax = ref->indexBin;
             }
             if (ch->coarse.acqBinLog != NULL) {
-                if (rx->wideI)
+                if (dsp->wideI)
                     fwrite(&ref->p, sizeof(ref->p), 1, ch->coarse.acqBinLog);
                 else {
                     unsigned int legacyPower = (unsigned int)ref->p;
@@ -223,6 +224,7 @@ TAcquisitionStatus PerformCodeRefinement(TNGeneConfiguration *cfg, TNGeneData *r
                                          char *secondBunch, unsigned int secondBunchSize)
 {
     TRefinement *ref = &(ch->refinement);
+    TDspContext *dsp = rx->dsp;
     int curDelay = rx->acqCommon.codeRefSteps[ref->indexBin];
     char *input1;
     unsigned int size1;
@@ -252,20 +254,20 @@ TAcquisitionStatus PerformCodeRefinement(TNGeneConfiguration *cfg, TNGeneData *r
     if (ch->satType == GALILEO_SAT) {
         /* if Galileo, generate also the subcarrier */
         GenerateSine(cfg, &(rx->fscTable), ch->codeRate, TWICE_M_PI * ch->codePhaseFrac,
-                     ch->blocksize, rx->subcarrierArray);
+                     ch->blocksize, dsp->subcarrierArray);
     }
     GenerateCode(cfg, &(rx->prnTable), ch->satType, ch->satId, ch->codeRate, &(ch->codePhase),
-                 &(ch->codePhaseFrac), NGENE_MODULATION, ch->blocksize, rx->codeArray);
+                 &(ch->codePhaseFrac), NGENE_MODULATION, ch->blocksize, dsp->codeArray);
     if (ch->satType == GALILEO_SAT) {
         /* if Galileo, remove also the subcarrier */
-        ArrayXor(rx->subcarrierArray, rx->codeArray, rx->codeArray, ch->blocksize);
+        ArrayXor(dsp->subcarrierArray, dsp->codeArray, dsp->codeArray, ch->blocksize);
     }
-    ref->pI += ReceiverPrompt(rx->wideI, rx->cosArray, rx->codeArray, ch->blocksize);
-    ref->pQ += ReceiverPrompt(rx->wideQ, rx->sinArray, rx->codeArray, ch->blocksize);
+    ref->pI += ReceiverPrompt(dsp->wideI, dsp->cosArray, dsp->codeArray, ch->blocksize);
+    ref->pQ += ReceiverPrompt(dsp->wideQ, dsp->sinArray, dsp->codeArray, ch->blocksize);
     /* analyze the result */
     ref->msCounter++;
     if (ref->msCounter == ch->codeDuration) {
-        p = ReceiverPower(rx->wideI != NULL, ref->pI, ref->pQ);
+        p = ReceiverPower(dsp->wideI != NULL, ref->pI, ref->pQ);
         ref->msCounter = 0;
         ref->pI = 0;
         ref->pQ = 0;
@@ -281,7 +283,7 @@ TAcquisitionStatus PerformCodeRefinement(TNGeneConfiguration *cfg, TNGeneData *r
                 ref->indexBinMax = ref->indexBin;
             }
             if (ch->coarse.acqBinLog != NULL) {
-                if (rx->wideI)
+                if (dsp->wideI)
                     fwrite(&ref->p, sizeof(ref->p), 1, ch->coarse.acqBinLog);
                 else {
                     unsigned int legacyPower = (unsigned int)ref->p;

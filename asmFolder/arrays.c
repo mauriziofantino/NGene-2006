@@ -19,8 +19,8 @@
 #include "ioFunctions.h"
 #include "closeManager.h"
 #include "ngeneConstants.h"
-/* global variable for the backup of XMM registers */
-extern char *ngeneXmmsBackup;
+/* backup of XMM registers, one buffer per executing thread (see xmmsBackup.h) */
+#include "xmmsBackup.h"
 /* XOR PRODUCT FUNCTIONS */
 
 void ArrayXorAligned123(s128 *a, s128 *b, s128 *c, unsigned int n)

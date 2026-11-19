@@ -34,14 +34,14 @@ TTrackingStatus PerformGalileoTracking(TNGeneConfiguration *cfg, TNGeneData *rx,
     // generate the subcarrier
     // prompt
     GenerateSine(cfg, &(rx->fscTable), ch->codeRate, TWICE_M_PI * ch->codePhaseFrac, ch->blocksize,
-                 rx->subcarrierArray);
+                 rx->dsp->subcarrierArray);
     if (cfg->lowFsElaboration == TRUE_FLAG) {
         // early
         GenerateSine(cfg, &(rx->fscTable), ch->codeRate, TWICE_M_PI * trk->codeEarlyPhaseFrac,
-                     ch->blocksize, rx->subcarrierArrayEarly);
+                     ch->blocksize, rx->dsp->subcarrierArrayEarly);
         // late
         GenerateSine(cfg, &(rx->fscTable), ch->codeRate, TWICE_M_PI * trk->codeLatePhaseFrac,
-                     ch->blocksize, rx->subcarrierArrayLate);
+                     ch->blocksize, rx->dsp->subcarrierArrayLate);
     }
     // generate the code
     // prompt
@@ -58,13 +58,14 @@ TTrackingStatus PerformGalileoTracking(TNGeneConfiguration *cfg, TNGeneData *rx,
                      ch->blocksize, trk->lateCode);
     }
     // add subcarrier to the code
-    ArrayXor(rx->subcarrierArray, trk->promptCode, trk->promptCode, ch->blocksize);
+    ArrayXor(rx->dsp->subcarrierArray, trk->promptCode, trk->promptCode, ch->blocksize);
     if (cfg->lowFsElaboration == TRUE_FLAG) {
-        ArrayXor(rx->subcarrierArrayEarly, trk->earlyCode, trk->earlyCode, ch->blocksize);
-        ArrayXor(rx->subcarrierArrayLate, trk->lateCode, trk->lateCode, ch->blocksize);
+        ArrayXor(rx->dsp->subcarrierArrayEarly, trk->earlyCode, trk->earlyCode, ch->blocksize);
+        ArrayXor(rx->dsp->subcarrierArrayLate, trk->lateCode, trk->lateCode, ch->blocksize);
     }
     // correlations
-    PerformAllTrackingCorrelations(ch, trk, rx->cosArray, rx->sinArray, rx->wideI, rx->wideQ);
+    PerformAllTrackingCorrelations(ch, trk, rx->dsp->cosArray, rx->dsp->sinArray, rx->dsp->wideI,
+                                   rx->dsp->wideQ);
     /* update ms counter, evaluate loops */
     trk->msCounter++;
     if (checkedBeforeLoops)

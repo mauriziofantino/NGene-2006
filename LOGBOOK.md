@@ -1,5 +1,31 @@
 # Logbook NGene Classic
 
+## 19 novembre 2026 - Stage 1 multi-core: privatization of the shared state
+
+For prepara la pool DSP worker privatizato gli state shared by the kernels
+SIMD: the backup XMM registers of the main thread now declared per thread in
+new receiver/xmmsBackup.h/.c (macro NGENE_THREAD_LOCAL, __thread for GCC/Clang
+and __declspec(thread) for MSVC, fallback empty), with InitXmmsBackup() at
+start per thread e' and DeallocateXmmsBackup(); the modules four asmFolder
+include the header instead of extern global; the tools check keep the
+definition local with the qualifier. The scratch arrays re-computed per
+channel (code, code early/late, cos, sin, subcarrier early/late, demodulated
+cos/sin of the acquisition, wide I/Q of HackRF) are moved from TNGeneData
+and TAcqCommon to new TDspContext (receiver/dspContextDataStructure.h,
+receiver/dspContext.c) with a single instance owned InitReceiver e'
+allocated InitDspContext with size and cleaning precedent identical.
+
+Execution serial e' still and unchanged logic acquisition per satellite
+SiGe IF: the modification and relocation of the pointers only. Verificazi
+build native Windows clang-cl green, 14/14 CTest, replay native-ab.raw
+config 8/4/1 IF 38500 Hz reproduce the baseline of 5 novembre, namely
+23 fixes all GPS, 0 losses, 0 corrections PLL and equal sequence of the
+48 lines of the event GNSS of two repli; the logs navigation match the
+length 1512 GAL21 and 4767 GAL26. Limits: no worker pool still introduzi
+sharing scheduler, list PRN, nonCohManager and commit ring min offset
+remain serie and belong stage 2, with together split Compute/Commit of
+DoChannelManager. Changes still uncommitted.
+
 ## 6 novembre 2026 - Audit input/ring/canali e prova timeout ritirata
 
 Su richiesta dell'utente verificati ingresso, ring e finestre dei canali.

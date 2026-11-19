@@ -10,13 +10,12 @@
  * @brief Main file of NGene receiver
  */
 #include "ngeneConstants.h"
+#include "xmmsBackup.h"
 int threadTESLAKeyVerificationStopIsRunning =
     FALSE_FLAG; /**< Flag indicating whether the TESLA Key Verification Thread has finished or not*/
 int stopFrontEndFlag =
     FALSE_FLAG; /**< Flag to stop the thread handling the front-end (threadFrontEnd) */
 int stopReceiverFlag = FALSE_FLAG; /**< Flag to stop the receiver, in case a USB error occurs */
-/* define global variables for the backup of xmm registers' values */
-char *ngeneXmmsBackup;
 #if !defined(FAKE_OSNMA_RECEIVER) && !defined(FAKE_CHIMERA_RECEIVER)
 // #ifndef FAKE_OSNMA_RECEIVER
 #include <stdio.h>
@@ -96,10 +95,9 @@ int main(int argc, char *argv[])
 #ifdef MONITOR_INTERMEDIATE_BUFFER
     float percentageIntermediateBufferFull = 0.0;
 #endif
-    /* prepare the XMM registers' backup */
-    posix_memalign((void **)&(ngeneXmmsBackup), POSIX_ALIGNMENT,
-                   NUM_XMM_REGISTERS * POSIX_ALIGNMENT * sizeof(char));
-    if (ngeneXmmsBackup == NULL) {
+    /* prepare the XMM registers' backup of the main thread (every future DSP
+     * worker thread must call InitXmmsBackup() at its start) */
+    if (InitXmmsBackup() != SUCCESS_RETURN) {
         fprintf(stderr, "Malloc returned a NULL pointer in main");
         exit(EXIT_FAILURE);
     }
@@ -376,7 +374,7 @@ int main(int argc, char *argv[])
     DeinitReceiver(&ngeneCfg, &ngene);
     DeinitializeRxFrontEnd(&ngeneCfg, &ngeneFe);
     DeleteConfiguration(&ngeneCfg);
-    free(ngeneXmmsBackup);
+    DeallocateXmmsBackup();
     return 0;
 }
 

@@ -335,22 +335,9 @@ int InitAcquisitionCommon(TNGeneConfiguration *cfg, TNGeneData *rx)
 {
     TAcqCommon *acq = &(rx->acqCommon);
     TAcqConfiguration *acqPars = &(cfg->acqConfiguration);
-    int errorsFound = 0;
-    unsigned int arraySize = NGENE_ARRAYS_SIZE * cfg->samplesPerMillisecond;
     int index;
     float compressionRatio;
     int codeStep;
-    posix_memalign((void **)&(acq->demodulatedCos), POSIX_ALIGNMENT, arraySize * sizeof(char));
-    if (acq->demodulatedCos == NULL)
-        errorsFound++;
-    posix_memalign((void **)&(acq->demodulatedSin), POSIX_ALIGNMENT, arraySize * sizeof(char));
-    if (acq->demodulatedSin == NULL)
-        errorsFound++;
-    if (errorsFound > 0) {
-        SwrxLog(NGENE_LOG_SEVERITY_ERROR,
-                "Malloc returned a NULL pointer in InitAcquisitionCommon");
-        CloseNGene(cfg, EXIT_FAILURE);
-    }
     /* Coarse acquisition */
     InitLocalCodesFft(cfg, rx);
     /* Non coherent sums */
@@ -451,8 +438,6 @@ void DeinitAcquisitionCommon(TAcqCommon *acqCommon)
     for (index = 0; index < GALILEO_NUMBER_OF_PRNS; index++) {
         free(acqCommon->galileoCodesFft[index]);
     }
-    free(acqCommon->demodulatedCos);
-    free(acqCommon->demodulatedSin);
     free(acqCommon->gpsDopplers);
     free(acqCommon->gpsDelays);
     free(acqCommon->egnosDopplers);
@@ -542,7 +527,7 @@ void UpdateVariablesForConfirmationThresholds(TNGeneConfiguration *cfg, TNGeneDa
     double pi;
     double pq;
     int gpsBlocksize = thr->blocksize / 4;
-    if (rx->wideI) {
+    if (rx->dsp->wideI) {
         int64_t measured[4];
         if (!MeasureHackrfConfirmationNoise(cfg, rx, measured))
             return;

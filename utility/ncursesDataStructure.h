@@ -48,7 +48,7 @@
 #define NC_COL_TABLE_KEY 115
 #define NC_COL_TABLE_NAVMSG 130
 /* Labels */
-#define NC_STR_TITLE "NGene Classic"
+#define NC_STR_TITLE "Pippo"
 #define NC_STR_LATITUDE "Latitude"
 #define NC_STR_LONGITUDE "Longitude"
 #define NC_STR_ALTITUDE "h WGS84 [m]"

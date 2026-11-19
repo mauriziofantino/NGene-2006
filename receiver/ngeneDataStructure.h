@@ -13,6 +13,7 @@
 #define NGENE_DATA_STRUCTURE_H_INCLUDED
 #include "ngeneConstants.h"
 #include "circularBuffer.h"
+#include "dspContextDataStructure.h"
 #include "prnTable.h"
 #include "carrierTable.h"
 #include "fft.h"
@@ -41,18 +42,9 @@ typedef struct NGeneDataStruct {
     int dataValid; /**< if FALSE_FLAG, the de-initialization function has already been executed */
     unsigned long long int rxCounter; /**< counts the execution cycles of the receiver (about, the
                                          number of ms from the start ) */
-    char *codeArray;                  /**< contains the despreading code at fs */
-    char *codeEarlyArray; /**< contains the despreading code early replica, at fs (low fs only) */
-    char *codeLateArray;  /**< contains the despreading code late replica, at fs (low fs only) */
-    char *cosArray;       /**< contains the cosine carrier at fs */
-    char *sinArray;       /**< contains the sine carrier at fs */
-    short *wideI, *wideQ; /**< HackRF full precision demodulated samples; NULL for legacy paths. */
+    TDspContext *dsp; /**< per DSP worker scratch (code, carrier, subcarrier, demodulated,
+                        wide I/Q); Stage 1: the receiver owns a single context */
     THackrfMixer hackrfMixer; /**< HackRF unit-circle Q15 NCO coefficients. */
-    char *subcarrierArray; /**< contains the subcarrier used to wipe-off the BOC(1,1) in Galileo */
-    char *subcarrierArrayEarly; /**< contains the subcarrier used to wipe-off the BOC(1,1) in
-                                   Galileo (Trk Early replica with low fs) */
-    char *subcarrierArrayLate; /**< contains the subcarrier used to wipe-off the BOC(1,1) in Galileo
-                                  (Trk Late replica with low fs) */
     TCircularBuffer buf;       /**< buffer storing input samples */
     TPrnTable prnTable;        /**< table used to generate despreading codes at fs */
     TSinCosTable fifTable;     /**< table used to generate carrier */

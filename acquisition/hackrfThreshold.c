@@ -4,6 +4,7 @@
 int MeasureHackrfConfirmationNoise(TNGeneConfiguration *cfg, TNGeneData *rx, int64_t out[4])
 {
     TThresholdManager *thr = &rx->acqCommon.thr;
+    TDspContext *dsp = rx->dsp;
     unsigned offset = 0, ms, gps = thr->blocksize / 4;
     double phase = 0;
     out[0] = out[1] = out[2] = out[3] = 0;
@@ -19,9 +20,10 @@ int MeasureHackrfConfirmationNoise(TNGeneConfiguration *cfg, TNGeneData *rx, int
         phase =
             MixHackrfInput(&rx->hackrfMixer, (THackrfIq8 *)rx->buf.buffer + pos, first,
                            (THackrfIq8 *)rx->buf.buffer, n - first, n,
-                           cfg->fif + THRESHOLD_FAKE_DOPPLER, phase, cfg->fs, rx->wideI, rx->wideQ);
-        i = CorrelateWideInteger(rx->wideI, thr->code + offset, n);
-        q = CorrelateWideInteger(rx->wideQ, thr->code + offset, n);
+                           cfg->fif + THRESHOLD_FAKE_DOPPLER, phase, cfg->fs, dsp->wideI,
+                           dsp->wideQ);
+        i = CorrelateWideInteger(dsp->wideI, thr->code + offset, n);
+        q = CorrelateWideInteger(dsp->wideQ, thr->code + offset, n);
         if (!ms) {
             out[0] = i;
             out[1] = q;

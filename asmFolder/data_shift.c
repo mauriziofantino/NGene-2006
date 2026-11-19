@@ -14,8 +14,8 @@
 #include "simd.h"
 #include "data_shift.h"
 #include "arrays.h"
-/* global variable for the backup of XMM registers */
-extern char *ngeneXmmsBackup;
+/* backup of XMM registers, one buffer per executing thread (see xmmsBackup.h) */
+#include "xmmsBackup.h"
 // Table for the data manipulation
 static char sampleShiftMasks[][16] = {{0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
                                        0xff, 0xff, 0xff, 0xff, 0xff, 0xff},

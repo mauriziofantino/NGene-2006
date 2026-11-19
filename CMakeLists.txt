@@ -69,6 +69,8 @@ target_compile_options(ngene_fft PRIVATE ${NGENE_OPTIMIZE})
 include(cmake/pnt-numerics.cmake)
 add_executable(ngene
     receiver/ngene.c
+    receiver/xmmsBackup.c
+    receiver/dspContext.c
     receiver/manageConfiguration.c
     receiver/signalHandler.c
     receiver/manageLogs.c
