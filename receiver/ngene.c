@@ -40,6 +40,7 @@ int stopReceiverFlag = FALSE_FLAG; /**< Flag to stop the receiver, in case a USB
 #include "pvt.h"
 #include "warmStart.h"
 #include "ncursesApi.h"
+#include "webApi.h"
 #include "osnmaDataStructures.h"
 #include "mackList.h"
 #include "osnmaManagement.h"
@@ -134,6 +135,20 @@ int main(int argc, char *argv[])
     StartProfilingUpdate(&(ngene.osnmaData.mainLoop));
 #endif
     while (run == TRUE_FLAG) {
+        /* the commands asked in the pages of the web interface are applied here, on the main thread,
+         * before any channel of the execution cycle is prepared, and they may ask to end the
+         * elaboration as the failure of the front end does (see utility/webApi.h) */
+        if (ExecuteWebApiCommands(&ngeneCfg, &ngene) == TRUE_FLAG) {
+            run = FALSE_FLAG;
+            break;
+        }
+        if (ngene.webApiData.pausedFlag == TRUE_FLAG) {
+            /* the pause asked in a page stops both the reading of the input and the elaboration, so
+             * the buffer of samples is not filled ahead of the channels (see utility/webApi.c). The
+             * wait is one second, so the command resume takes effect at once on the next cycle. */
+            sleep(1);
+            continue;
+        }
 /* Read input samples when needed */
 #ifdef RX_PROFILING
         StartProfilingUpdate(&receiverIterationProfiling);
@@ -144,6 +159,10 @@ int main(int argc, char *argv[])
         }
         /* Executes elaboration required by each channel (see receiver/dspWorkerPool.h) */
         RunChannelsCycle(&ngeneCfg, &ngene);
+        /* the state of the channels of this execution cycle is published to the pages of the web
+         * interface here, that is after the commit of all the channels of the cycle, so what the
+         * browser shows is what the terminal interface would have shown (see utility/webApi.h) */
+        PublishWebApiChannels(&ngeneCfg, &ngene);
         //***OSNMA: TESLA and MAC verification****************************
         /* Checks about OSNMA */
         if ((ngene.rxCounter % TESLA_THREAD_UPDATE_INTERVAL) == 0) {
@@ -250,6 +269,10 @@ int main(int argc, char *argv[])
             if (ngeneCfg.userInterface == RX_UI_NCURSES) {
                 // -n
                 NcCompleteLog(&ngeneCfg, &ngene);
+            } else if (ngeneCfg.userInterface == RX_UI_WEB) {
+                // -w
+                PublishWebApiPvt(&ngeneCfg, &ngene);
+                ngene.pvtResults.pvtPlotted = TRUE_FLAG;
             } else {
                 // -t
                 if ((ngene.pvtResults.pvtValid == FALSE_FLAG) ||

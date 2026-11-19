@@ -25,6 +25,7 @@
 #include "egnosCorrectionsDataStructure.h"
 #include "pvtDataStructure.h"
 #include "ncursesDataStructure.h"
+#include "webApiDataStructure.h"
 #include "rinexDataStructure.h"
 #include "osnmaDataStructures.h"
 #include "osnmaValidationsDataStructures.h"
@@ -100,6 +101,7 @@ typedef struct NGeneDataStruct {
     FILE *nmeaFile;     /**< File where the NMEA sentences are saved */
     char *trkLogArray;  /**< Array used to write the tracking related logs */
     TNCursesData ncursesData; /**< Variables used to manage the NCurses interface */
+    TWebApiData webApiData;   /**< state of the web user interface, see utility/webApi.h */
 #ifdef RX_PROFILING
     TProfilingSupport pvtProfiling; /**< profiling of the PVT */
     int pvtTime;                    /**< flag indicating if it's time for a new PVT computation*/

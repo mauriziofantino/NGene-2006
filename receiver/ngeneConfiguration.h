@@ -23,6 +23,7 @@
 #include "spreadingCodes.h"
 #include "prnListDataStructure.h"
 #include "ncursesDataStructure.h"
+#include "webApiDataStructure.h"
 #include "rinexDataStructure.h"
 #include "navigationMessageConfiguration.h"
 /**
@@ -33,8 +34,10 @@
 typedef enum UserInterfaceEnum {
     RX_UI_TEXT,   /**< Symbol used in configuration structure to indicate that the user interface is
                      textual */
-    RX_UI_NCURSES /**< Symbol used in configuration structure to indicate that the user interface is
-                     ncurses based */
+    RX_UI_NCURSES, /**< Symbol used in configuration structure to indicate that the user interface is
+                    ncurses based */
+    RX_UI_WEB      /**< Symbol used in configuration structure to indicate that the user interface is
+                    served over HTTP on the loopback address (see utility/webApi.h) */
 } TUserInterface;
 /**
  * @def USB_FRONTEND
@@ -167,6 +170,9 @@ typedef struct NGeneConfigurationStruct {
     int numberOfDspWorkers;         /**< Number of DSP workers elaborating the channels of one
                                       execution cycle in parallel, limited to the bounded pool
                                       (see receiver/dspWorkerPool.h) */
+    int webUiPort;                  /**< Port of the loopback address served when the user interface
+                                      is the web one, see utility/webApi.h. It is set only from the
+                                      command line, and it is ignored by the other interfaces */
     int receiverClockEmulation;     /**< TRUE_FLAG if PC date/time are used to emulate the receiver
                                        clock */
     int receiverClockError;         /**< Absolute value of the maximum error of the receiver clock
@@ -194,6 +200,9 @@ typedef struct NGeneConfigurationStruct {
     /* Additional information for NCurses log */
     int ncursesDataInitialized;
     TNCursesData *ncursesData;
+    /* Additional information for the web user interface (see utility/webApi.h) */
+    int webUiInitialized;
+    TWebApiData *webApiData;
     /* Variable whose values derive from the previous parameter */
     TUsbFePars *fePars;           /**< Points to the parameters of the selected front-end */
     double fs;                    /**< Sampling frequency [Hz] */

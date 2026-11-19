@@ -36,6 +36,7 @@
 #include "egnosCorrections.h"
 #include "pvt.h"
 #include "ncursesApi.h"
+#include "webApi.h"
 #include "viterbi.h"
 #include "reedSolomon.h"
 #include "tracking.h"
@@ -152,6 +153,13 @@ int InitReceiver(TNGeneConfiguration *cfg, TNGeneData *rx)
         cfg->ncursesDataInitialized = TRUE_FLAG;
         /* update the management of the generic text logs through the SwrxLog function */
         InitSwrxLog(cfg, rx);
+    }
+    if (cfg->userInterface == RX_UI_WEB) {
+        /* the web interface is served on the loopback address, and the log keeps going to the
+         * standard output and to the log file, as the textual interface does (see utility/webApi.h) */
+        InitSwrxLog(cfg, rx);
+        if (InitWebApi(cfg, &(rx->webApiData)) != SUCCESS_RETURN)
+            errorsFound++;
     }
     rx->rxCounter = 0;
     rx->dsp = (TDspContext *)malloc(sizeof(TDspContext));
@@ -296,6 +304,9 @@ void DeinitReceiver(TNGeneConfiguration *cfg, TNGeneData *rx)
 #ifdef RX_PROFILING
         ReportProfilingData(&(rx->pvtProfiling));
 #endif
+        /* the thread of the interface is joined first, so the port of the browser is released while
+         * the state of the receiver is still valid to answer a last request (see utility/webApi.c) */
+        DeinitWebApi(&(rx->webApiData));
         DeinitDspWorkerPool(&(rx->dspWorkerPool));
         DeinitDspContext(rx->dsp);
         free(rx->dsp);

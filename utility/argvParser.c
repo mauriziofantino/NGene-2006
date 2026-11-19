@@ -40,7 +40,7 @@ int HandleCmdLine(int argc, char *argv[], TNGeneConfiguration *cfg)
         {"version", 0, 0, 'V'}, {"textual", 0, 0, 't'},  {"ncurses", 0, 0, 'n'},
         {"input", 1, 0, 'i'},   {"frontend", 1, 0, 'f'}, {"googleEarth", 1, 0, 'g'},
         {"logfile", 1, 0, 'l'}, {"verbose", 0, 0, 'v'},  {"credits", 0, 0, 'c'},
-        {"workers", 1, 0, 'W'}, {"help", 0, 0, 'h'},    {NULL, 0, 0, 0}};
+        {"workers", 1, 0, 'W'}, {"web", 1, 0, 'w'}, {"help", 0, 0, 'h'}, {NULL, 0, 0, 0}};
     // and its relative help output
     const char *optsHelp[] = {
         "Print the actual version of NGene receiver.",
@@ -53,12 +53,14 @@ int HandleCmdLine(int argc, char *argv[], TNGeneConfiguration *cfg)
         "Verbose output.",
         "Print the credits.",
         "Elaborate the channels on this number of DSP workers, from 1 to 4.",
+        "Serve the interface of the channels, of the log and of the position on this loopback port.",
         "Print this message."};
     struct option *opt;
     const char **hlp;
     int max, size;
     int i;
     long int requestedWorkers; /**< workers parsed from the -W option (see dspWorkerPool.h) */
+    long int requestedPort;    /**< port parsed from the -w option (see utility/webApi.h) */
     char *conversionEnd;       /**< first character not converted by strtol() */
     /* Setting default values for the flags */
     cfg->userInterface = RX_UI_NCURSES;
@@ -73,9 +75,11 @@ int HandleCmdLine(int argc, char *argv[], TNGeneConfiguration *cfg)
     cfg->frontEndOverride = 0;
     /* one worker elaborates the channels on the main thread, as the historical execution */
     cfg->numberOfDspWorkers = DSP_WORKERS_MINIMUM;
+    /* the web interface is off unless it is selected, and the port below is the default one */
+    cfg->webUiPort = WEB_UI_DEFAULT_PORT;
     /* Parse options */
     while (1) {
-        i = getopt_long(argc, argv, "Vtni:f:g:l:vcrW:h", opts, NULL);
+        i = getopt_long(argc, argv, "Vtni:f:g:l:vcrW:hw:h", opts, NULL);
         if (i == -1) {
             break;
         }
@@ -136,6 +140,25 @@ int HandleCmdLine(int argc, char *argv[], TNGeneConfiguration *cfg)
                 exit(EXIT_FAILURE);
             }
             cfg->numberOfDspWorkers = (int)requestedWorkers;
+            break;
+        case 'w':
+            /* the web interface is exclusive of the terminal ones, as the textual and the ncurses
+             * interfaces are exclusive of each other (see receiver/ngeneConfiguration.h) */
+            if (optarg == NULL) {
+                fprintf(stderr, "Missing port for the web interface (use %d to %d)\n",
+                        WEB_UI_PORT_MINIMUM, WEB_UI_PORT_MAXIMUM);
+                exit(EXIT_FAILURE);
+            }
+            requestedPort = strtol(optarg, &(conversionEnd), 10);
+            if ((conversionEnd == optarg) || ((*conversionEnd) != '\0') ||
+                (requestedPort < (long int)WEB_UI_PORT_MINIMUM) ||
+                (requestedPort > (long int)WEB_UI_PORT_MAXIMUM)) {
+                fprintf(stderr, "Invalid port for the web interface: %s (use %d to %d)\n", optarg,
+                        WEB_UI_PORT_MINIMUM, WEB_UI_PORT_MAXIMUM);
+                exit(EXIT_FAILURE);
+            }
+            cfg->webUiPort = (int)requestedPort;
+            cfg->userInterface = RX_UI_WEB;
             break;
         case 'v':
             cfg->verbose = TRUE_FLAG;

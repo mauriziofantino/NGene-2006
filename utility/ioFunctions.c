@@ -20,6 +20,7 @@
 #include "ioFunctions.h"
 #include "logCapture.h"
 #include "ncursesApi.h"
+#include "webApi.h"
 #include <stdlib.h>
 // Function to parse the input path
 
@@ -56,6 +57,7 @@ static pthread_mutex_t *swrxLog_stdLogMutexPtr;
 static TUserInterface swrxLog_userInterface;
 static TNCursesData *swrxLog_ncursesData;
 static int swrxLog_ncursesDataInitialized;
+static TWebApiData *swrxLog_webApiData;
 
 void InitSwrxLog(TNGeneConfiguration *cfg, TNGeneData *rx)
 {
@@ -65,6 +67,10 @@ void InitSwrxLog(TNGeneConfiguration *cfg, TNGeneData *rx)
     swrxLog_userInterface = cfg->userInterface;
     swrxLog_ncursesData = &(rx->ncursesData);
     swrxLog_ncursesDataInitialized = cfg->ncursesDataInitialized;
+    /* the state of the web interface is read through this pointer, and the interface may be
+     * initialized after this function, so the flag of the interface is not copied here (see
+     * utility/webApi.c) */
+    swrxLog_webApiData = &(rx->webApiData);
 }
 
 void RestartSwrxLog(TNGeneConfiguration *cfg)
@@ -154,6 +160,13 @@ int SwrxLog(int severity, const char *format, ...)
                                                                       : logStringWithTime,
                         severity);
         }
+    }
+    if ((swrxLog_userInterface == RX_UI_WEB) && swrxLog_webApiData != NULL &&
+        swrxLog_webApiData->stateInitialized == TRUE_FLAG) {
+        /* the rows of the log of the interface are kept with the same severity as in the terminal
+         * interfaces, and the NOTE rows are kept only when the interface asks for them (see
+         * utility/webApi.c) */
+        DrawWebApiLog(swrxLog_webApiData, logStringWithTime, severity);
     }
     /* All logs performed */
     pthread_mutex_unlock(swrxLog_stdLogMutexPtr);

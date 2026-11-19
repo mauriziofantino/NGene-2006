@@ -116,6 +116,7 @@ add_executable(ngene
     utility/closeManager.c
     utility/mathFunctions.c
     utility/ncursesApi.c
+    utility/webApi.c
     utility/profilingSupport.c
     utility/sampleCompression.c
     osnma/base64.c
@@ -268,6 +269,10 @@ if(NGENE_BUILD_PLATFORM_CHECKS)
     target_compile_definitions(ngene_check_usb_stream PRIVATE NGENE_USB_TEST_IO)
     add_test(NAME usb_stream_shutdown_restart COMMAND ngene_check_usb_stream)
     set_tests_properties(usb_stream_shutdown_restart PROPERTIES TIMEOUT 10)
+    add_executable(ngene_check_web_api tools/check_web_api.c utility/webApi.c)
+    target_link_libraries(ngene_check_web_api PRIVATE ngene_platform PkgConfig::USB Threads::Threads)
+    add_test(NAME web_user_interface COMMAND ngene_check_web_api)
+    set_tests_properties(web_user_interface PROPERTIES TIMEOUT 30)
     if(NGENE_NATIVE_WINDOWS)
         add_executable(ngene_check_windows tools/check_native_windows.c)
         target_link_libraries(ngene_check_windows PRIVATE ngene_windows)
