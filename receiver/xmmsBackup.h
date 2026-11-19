@@ -23,7 +23,8 @@
 #endif
 #endif
 /** @brief Backup of the XMM registers, one buffer per executing thread. */
-NGENE_THREAD_LOCAL extern char *ngeneXmmsBackup;
+/* Order extern first: GCC rejects a thread-storage specifier before extern. */
+extern NGENE_THREAD_LOCAL char *ngeneXmmsBackup;
 /** @brief Allocates the calling thread's register backup, if not allocated yet. */
 int InitXmmsBackup(void);
 /** @brief Releases the calling thread's register backup. */
