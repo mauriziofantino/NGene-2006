@@ -13,6 +13,7 @@
 #define RECEIVER_XMMS_BACKUP_H_INCLUDED
 #ifndef NGENE_THREAD_LOCAL
 #if defined(__GNUC__) || defined(__clang__)
+/* GCC and clang extension: no additional header or library is required. */
 #define NGENE_THREAD_LOCAL __thread
 #elif defined(_MSC_VER)
 #define NGENE_THREAD_LOCAL __declspec(thread)

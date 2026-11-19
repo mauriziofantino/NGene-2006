@@ -15,6 +15,7 @@
 #include "trackingDataStructure.h"
 #include "prnListDataStructure.h"
 #include "ngeneConstants.h"
+#include "logCapture.h"
 #include "navigationMessageParser.h"
 #include "osnmaDataStructures.h"
 /**
@@ -37,6 +38,26 @@ typedef enum ChannelStateEnum {
     TRACKING_STATE,           /**< Here signal of assigned PRN is tracked */
     UNUSED_STATE              /**< Channel in this state will not be scheduled during execution */
 } TChannelState;
+/**
+ * @struct ChannelCycleStruct
+ *
+ * @brief Data of one execution cycle of one channel, prepared by the main thread and used
+ *        also by the DSP worker elaborating the channel and by the commit of the main thread
+ *        (see receiver/dspWorkerPool.h).
+ * @note The state and the samples are read before any channel of the cycle is elaborated, and
+ *       the result of the acquisition is stored here, so the transitions of the state machine
+ *       are taken by the main thread in channel index order, exactly as the single threaded
+ *       execution took them (see receiver/channelManager.c).
+ */
+typedef struct ChannelCycleStruct {
+    int elaborates;              /**< TRUE_FLAG when this execution cycle elaborates the channel */
+    TChannelState state;         /**< state of the channel at the beginning of the cycle */
+    char *firstBunch;            /**< address of the first sample of the current cycle */
+    unsigned int firstBunchSize; /**< number of samples starting from firstBunch */
+    char *secondBunch;           /**< address of the first sample of the second bunch, if any */
+    unsigned int secondBunchSize; /**< number of samples starting from secondBunch */
+    TAcquisitionStatus acqStatus; /**< result of the acquisition elaborated in the cycle */
+} TChannelCycle;
 /**
  * @struct PvtInfoAbouChannelStruct
  * @brief This structure contains information about the use of the channel in the PVT computation
@@ -116,6 +137,10 @@ typedef struct ChannelStruct {
     int checkSidePeakTrackingFlag; /**< Flag used only for Galileo satellites which has been fast
                                       re-acquired, to check whether the tracking is locked to the
                                       main or the side peaks*/
+    TChannelCycle cycle; /**< data of the execution cycle of this channel (see
+                            receiver/dspWorkerPool.h) */
+    TLogCapture logCapture; /**< log messages queued by the elaboration of this channel (see
+                               utility/logCapture.h) */
 #ifdef RX_PROFILING
     TProfilingSupport gpsCoarseAcqProfiling;     /**< profiling of the GPS coarse acquisition */
     TProfilingSupport galileoCoarseAcqProfiling; /**< profiling of the GALILEO coarse acquisition */

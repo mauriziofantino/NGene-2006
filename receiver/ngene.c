@@ -69,13 +69,7 @@ static pthread_t threadFrontEnd;
 int main(int argc, char *argv[])
 {
     int run = TRUE_FLAG;
-    int index;
     unsigned int samplesNeeded;
-    TChannel *ch;
-    char *firstBunchOfSamples;
-    unsigned int firstBunchSize;
-    char *secondBunchOfSamples;
-    unsigned int secondBunchSize;
     unsigned int samplesToBeDiscarded;
     unsigned int samplesDiscarded;
     unsigned int samplesDiscardedTotal = 0;
@@ -148,14 +142,8 @@ int main(int argc, char *argv[])
         if (samplesNeeded > (ngene.buf.fill1 + ngene.buf.fill2)) {
             FillInputBuffer(&ngeneCfg, &(ngene.buf), &ngeneFe);
         }
-        /* Executes elaboration required by each channel */
-        for (index = 0; index < ngeneCfg.numberOfChannels; index++) {
-            ch = &(ngene.channelArray[index]);
-            GetSamplePointersForChannel(ch, &(ngene.buf), &firstBunchOfSamples, &firstBunchSize,
-                                        &secondBunchOfSamples, &secondBunchSize);
-            DoChannelManager(&ngeneCfg, &ngene, ch, firstBunchOfSamples, firstBunchSize,
-                             secondBunchOfSamples, secondBunchSize);
-        }
+        /* Executes elaboration required by each channel (see receiver/dspWorkerPool.h) */
+        RunChannelsCycle(&ngeneCfg, &ngene);
         //***OSNMA: TESLA and MAC verification****************************
         /* Checks about OSNMA */
         if ((ngene.rxCounter % TESLA_THREAD_UPDATE_INTERVAL) == 0) {

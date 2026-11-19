@@ -13,7 +13,9 @@
 #include "inputProcessing.h"
 #include "hackrfThreshold.h"
 #include "xmmsBackup.h"
+#include "dspContextDataStructure.h"
 NGENE_THREAD_LOCAL char *ngeneXmmsBackup;
+NGENE_THREAD_LOCAL TDspContext *ngeneDspOverride;
 
 int SwrxLog(int severity, const char *format, ...)
 {

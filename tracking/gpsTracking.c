@@ -105,12 +105,19 @@ void ManageUserIntegrationPeriod(TNGeneConfiguration *cfg, TNGeneData *rx, TChan
             rx->buf.discardedSamples + ch->bufferOffset + ch->blocksize);
 }
 
-TTrackingStatus PerformGpsTracking(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch,
-                                   char *firstBunch, unsigned int firstBunchSize, char *secondBunch,
-                                   unsigned int secondBunchSize)
+void ComputeGpsTracking(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch, char *firstBunch,
+                        unsigned int firstBunchSize, char *secondBunch,
+                        unsigned int secondBunchSize)
 {
     TTracking *trk = &(ch->tracking);
-    int checkedBeforeLoops = trk->holdover.anchorValid || trk->holdover.active;
+    /* the elaboration of one channel runs on the worker owning this scratch (see
+     * receiver/dspWorkerPool.c), so the replicas of the spreading code are re-anchored here */
+    TDspContext *dsp = NGENE_DSP(rx);
+    /* the committing half reads the flag below (see CommitGpsTracking). The holdover state
+     * cannot change while the channels of one execution cycle are elaborated, so the value
+     * is the one the single threaded execution read at the beginning of the millisecond */
+    trk->checkedBeforeLoops = trk->holdover.anchorValid || trk->holdover.active;
+    PointTrackingScratchToDsp(trk, dsp);
     /* carrier wipe-off */
     ch->carrierPhase = GenerateAndMixReceiverInput(cfg, rx, firstBunch, firstBunchSize, secondBunch,
                                                    secondBunchSize, ch->blocksize,
@@ -133,8 +140,14 @@ TTrackingStatus PerformGpsTracking(TNGeneConfiguration *cfg, TNGeneData *rx, TCh
                      ch->blocksize, trk->lateCode);
     }
     // correlation
-    PerformAllTrackingCorrelations(ch, trk, rx->dsp->cosArray, rx->dsp->sinArray, rx->dsp->wideI,
-                                   rx->dsp->wideQ);
+    PerformAllTrackingCorrelations(ch, trk, dsp->cosArray, dsp->sinArray, dsp->wideI, dsp->wideQ);
+}
+
+void CommitGpsTracking(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch)
+{
+    TTracking *trk = &(ch->tracking);
+    /* value of (holdover.anchorValid || holdover.active) read by ComputeGpsTracking */
+    int checkedBeforeLoops = trk->checkedBeforeLoops;
     /* try to obtain bit synchronization (if not reached yet) */
     CheckBitSynchronization(cfg, rx, ch, trk);
     /* update ms counter, evaluate loops */
@@ -180,5 +193,13 @@ TTrackingStatus PerformGpsTracking(TNGeneConfiguration *cfg, TNGeneData *rx, TCh
         trk->msCounter = 0;
     }
     trk->trkCounter++;
-    return trk->trkStatus;
+}
+
+TTrackingStatus PerformGpsTracking(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch,
+                                   char *firstBunch, unsigned int firstBunchSize, char *secondBunch,
+                                   unsigned int secondBunchSize)
+{
+    ComputeGpsTracking(cfg, rx, ch, firstBunch, firstBunchSize, secondBunch, secondBunchSize);
+    CommitGpsTracking(cfg, rx, ch);
+    return ch->tracking.trkStatus;
 }

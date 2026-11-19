@@ -157,6 +157,11 @@ int InitReceiver(TNGeneConfiguration *cfg, TNGeneData *rx)
     rx->dsp = (TDspContext *)malloc(sizeof(TDspContext));
     if (rx->dsp == NULL || InitDspContext(cfg, rx->dsp) != SUCCESS_RETURN)
         errorsFound++;
+    /* the workers of the pool elaborate the channels of one execution cycle in parallel, each
+     * one with its own scratch and its own backup of the XMM registers (see
+     * receiver/dspWorkerPool.h) */
+    if (InitDspWorkerPool(cfg, &(rx->dspWorkerPool), cfg->numberOfDspWorkers) != SUCCESS_RETURN)
+        errorsFound++;
     rx->hackrfMixer.coefficients = NULL;
     if (cfg->usedFrontEnd == NGENE_FE_HACKRF) {
         if (!InitHackrfMixer(&rx->hackrfMixer))
@@ -291,6 +296,7 @@ void DeinitReceiver(TNGeneConfiguration *cfg, TNGeneData *rx)
 #ifdef RX_PROFILING
         ReportProfilingData(&(rx->pvtProfiling));
 #endif
+        DeinitDspWorkerPool(&(rx->dspWorkerPool));
         DeinitDspContext(rx->dsp);
         free(rx->dsp);
         DeinitHackrfMixer(&rx->hackrfMixer);

@@ -78,7 +78,7 @@ TAcquisitionStatus PerformConfirmation(TNGeneConfiguration *cfg, TNGeneData *rx,
                                        char *secondBunch, unsigned int secondBunchSize)
 {
     TConfirmation *conf = &(ch->confirmation);
-    TDspContext *dsp = rx->dsp;
+    TDspContext *dsp = NGENE_DSP(rx);
     uint64_t p;
     /* generate and remove carrier */
     ch->carrierPhase = GenerateAndMixReceiverInput(cfg, rx, firstBunch, firstBunchSize, secondBunch,

@@ -2,6 +2,7 @@ param(
     [Parameter(Mandatory=$true)][string]$InputFile,
     [ValidateSet('sige','hackrf')][string]$Frontend = 'sige',
     [string]$Executable,
+    [string]$WorkersList = '1',
     [ValidateRange(0,64)][Nullable[int]]$GpsChannels,
     [ValidateRange(0,64)][Nullable[int]]$GalileoChannels,
     [ValidateRange(0,1)][Nullable[int]]$EgnosChannels,
@@ -16,6 +17,10 @@ param(
     [ValidateRange(1,3600)][int]$TimeoutSeconds = 180
 )
 $ErrorActionPreference = 'Stop'
+$taskWorkersCohort = @($WorkersList -split ',' | ForEach-Object { [int]$_.Trim() })
+foreach ($taskWorker in $taskWorkersCohort) {
+    if ($taskWorker -lt 1 -or $taskWorker -gt 4) { throw "Invalid DSP worker count: $taskWorker (use 1 to 4)" }
+}
 $taskRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../..'))
 if (!$Executable) { $Executable = Join-Path $taskRoot 'ngene.exe' }
 $taskExe = (Resolve-Path -LiteralPath $Executable).Path
@@ -24,7 +29,8 @@ $taskSession = Join-Path $taskRoot ('build/profile-' + (Get-Date -Format 'yyyyMM
 New-Item -ItemType Directory -Path $taskSession | Out-Null
 $taskResults = @()
 for ($taskRun=1; $taskRun -le $Repetitions; $taskRun++) {
-    $taskDirectory = Join-Path $taskSession "run-$taskRun"
+  foreach ($taskWorkers in $taskWorkersCohort) {
+    $taskDirectory = Join-Path $taskSession ("run-" + $taskRun + "-w" + $taskWorkers)
     New-Item -ItemType Directory -Path $taskDirectory | Out-Null
     Copy-Item -LiteralPath $taskExe -Destination (Join-Path $taskDirectory 'ngene.exe')
     Copy-Item -LiteralPath (Join-Path $taskRoot 'configuration') -Destination $taskDirectory -Recurse
@@ -103,7 +109,7 @@ for ($taskRun=1; $taskRun -le $Repetitions; $taskRun++) {
     $taskProcess = New-Object Diagnostics.Process
     $taskProcess.StartInfo.FileName = Join-Path $taskDirectory 'ngene.exe'
     $taskProcess.StartInfo.WorkingDirectory = $taskDirectory
-    $taskProcess.StartInfo.Arguments = '-t --frontend ' + $Frontend + ' --input "' + $taskInput + '"'
+    $taskProcess.StartInfo.Arguments = '-t --frontend ' + $Frontend + ' --input "' + $taskInput + '" -W ' + $taskWorkers
     $taskProcess.StartInfo.UseShellExecute = $false
     $taskProcess.StartInfo.CreateNoWindow = $true
     $taskProcess.StartInfo.RedirectStandardOutput = $true
@@ -120,7 +126,7 @@ for ($taskRun=1; $taskRun -le $Repetitions; $taskRun++) {
     [IO.File]::WriteAllText((Join-Path $taskDirectory 'stdout.log'), $taskOutput.Result)
     [IO.File]::WriteAllText((Join-Path $taskDirectory 'stderr.log'), $taskError.Result)
     $taskResult = [pscustomobject]@{
-        Run = $taskRun; Frontend = $Frontend; Input = $taskInput; PvtMethodOverride = $PvtMethod; WeightedLsOverride = $WeightedLs
+        Run = $taskRun; Frontend = $Frontend; Input = $taskInput; DspWorkers = $taskWorkers; PvtMethodOverride = $PvtMethod; WeightedLsOverride = $WeightedLs
         SigeNativeIqOverride = $SigeNativeIq
         SigeIqIfHzOverride = $SigeIqIfHz
         TrackingHoldoverMsOverride = $TrackingHoldoverMs
@@ -136,5 +142,6 @@ for ($taskRun=1; $taskRun -le $Repetitions; $taskRun++) {
     $taskResult
     if ($taskTimedOut) { throw "Replay timeout; diagnostics: $taskDirectory" }
     if ($taskResult.ExitCode -ne 0) { throw "Replay failed: $taskDirectory" }
+  }
 }
 Write-Host "Profiles and logs: $taskSession"

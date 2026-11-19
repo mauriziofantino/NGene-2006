@@ -127,6 +127,56 @@ int AllChannelsUnused(TNGeneConfiguration *cfg, TNGeneData *rx);
 void DoChannelManager(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch, char *firstBunch,
                       unsigned int firstBunchSize, char *secondBunch, unsigned int secondBunchSize);
 
+/**
+ * @brief Prepares the execution cycle of one channel on the main thread (stage 2 of the DSP pool)
+ * @details Reads the state of the channel, the samples of the current cycle and the eligibility of
+ *          the elaboration, before any channel of the cycle is elaborated.
+ *
+ * @param cfg points to the receiver configuration
+ * @param rx points to the receiver base data structure
+ * @param ch points to the current channel
+ * @param firstBunch is the address of the first sample to be elaborated
+ * @param firstBunchSize is the number of samples starting from firstBunch
+ * @param secondBunch is the address of the first sample in the second bunch of samples (if any)
+ * @param secondBunchSize is the number of samples starting from secondBunch (if any)
+ */
+void PrepareChannelCycle(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch, char *firstBunch,
+                         unsigned int firstBunchSize, char *secondBunch,
+                         unsigned int secondBunchSize);
+
+/**
+ * @brief Computes the execution cycle of one channel on the DSP worker (stage 2 of the DSP pool)
+ * @details Performs the elaboration of the samples prepared by PrepareChannelCycle() with the
+ *          scratch of the calling worker, and queues the log messages of the channel.
+ *
+ * @param cfg points to the receiver configuration
+ * @param rx points to the receiver base data structure
+ * @param ch points to the current channel
+ */
+void ComputeChannelCycle(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch);
+
+/**
+ * @brief Commits the execution cycle of one channel on the main thread (stage 2 of the DSP pool)
+ * @details Replays the log of the channel and applies the transitions of the state machine, in the
+ *          order of the channel index (see receiver/dspWorkerPool.h).
+ *
+ * @param cfg points to the receiver configuration
+ * @param rx points to the receiver base data structure
+ * @param ch points to the current channel
+ */
+void CommitChannelCycle(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch);
+
+/**
+ * @brief Elaborates the channels of one execution cycle, possibly in parallel
+ * @details Prepares and commits the channels on the main thread, in the order of the channel
+ *          index, and computes the DSP of the channels on the workers of the pool (see
+ *          receiver/dspWorkerPool.h). It replaces the loop over the channels of the receiver loop.
+ *
+ * @param cfg points to the receiver configuration
+ * @param rx points to the receiver base data structure
+ */
+void RunChannelsCycle(TNGeneConfiguration *cfg, TNGeneData *rx);
+
 int FindChId(TNGeneConfiguration *cfg, TNGeneData *rx, TSatConstellation satType, int satId);
 
 void ReleaseTracking(TNGeneConfiguration *cfg, TChannelScheduler *chSch, TChannel *ch);

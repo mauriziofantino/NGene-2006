@@ -36,7 +36,6 @@ int InitTracking(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch)
     int promptDisp = 0;   // [samples]
     int earlyDisp = 0;    // [samples]
     int sidePeakDisp = 0; // [samples]
-    int index;
     int errorsFound = 0;
     /* set some configuration dependent parameters */
     if (cfg->automaticConfigurationFlag == TRUE_FLAG) {
@@ -116,18 +115,17 @@ int InitTracking(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch)
     }
 #endif
     promptDisp = ((promptDisp / XMM_REGISTER_SIZE) + 1) * XMM_REGISTER_SIZE;
+    trk->promptCodeOffset = promptDisp;
     if (cfg->lowFsElaboration == FALSE_FLAG) {
-        trk->promptCode = &(rx->dsp->codeArray[promptDisp]);
-        trk->earlyCode = &(rx->dsp->codeArray[promptDisp - earlyDisp]);
-        trk->lateCode = &(rx->dsp->codeArray[promptDisp + earlyDisp]);
+        trk->dedicatedEarlyLateCode = FALSE_FLAG;
+        trk->earlyCodeOffset = promptDisp - earlyDisp;
+        trk->lateCodeOffset = promptDisp + earlyDisp;
     } else {
-        trk->promptCode = &(rx->dsp->codeArray[promptDisp]);
-        trk->earlyCode = rx->dsp->codeEarlyArray;
-        trk->lateCode = rx->dsp->codeLateArray;
+        trk->dedicatedEarlyLateCode = TRUE_FLAG;
     }
 #ifdef CSC_DISCRIMINATOR_FUNCTION
-    trk->veryEarlyCode = &(rx->dsp->codeArray[promptDisp - veryEarlyDisp]);
-    trk->veryLateCode = &(rx->dsp->codeArray[promptDisp + veryEarlyDisp]);
+    trk->veryEarlyCodeOffset = promptDisp - veryEarlyDisp;
+    trk->veryLateCodeOffset = promptDisp + veryEarlyDisp;
 #endif
     if (trkCfg->multipleCorrelatorsFlag == TRUE_FLAG) {
         trk->numberOfMulti = trkCfg->numberOfMultipleCorrelators;
@@ -136,22 +134,13 @@ int InitTracking(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch)
             SwrxLog(NGENE_LOG_SEVERITY_ERROR, "Malloc returned a NULL pointer in InitTracking");
             CloseNGene(cfg, EXIT_FAILURE);
         }
-        trk->multiCodes[0] = &(rx->dsp->codeArray[promptDisp - multipleCorrMaxDisp]);
+        trk->multipleCodesOffset = promptDisp - multipleCorrMaxDisp;
         if (ch->satType == GPS_SAT) {
-            for (index = 1; index < trkCfg->numberOfMultipleCorrelators; index++) {
-                trk->multiCodes[index] =
-                    trk->multiCodes[index - 1] + trkCfg->multipleCorrelatorsGpsSpacing;
-            }
+            trk->multipleCodesSpacing = trkCfg->multipleCorrelatorsGpsSpacing;
         } else if (ch->satType == GALILEO_SAT) {
-            for (index = 1; index < trkCfg->numberOfMultipleCorrelators; index++) {
-                trk->multiCodes[index] =
-                    trk->multiCodes[index - 1] + trkCfg->multipleCorrelatorsGalileoSpacing;
-            }
-        } else if (ch->satType == EGNOS_SAT) {
-            for (index = 1; index < trkCfg->numberOfMultipleCorrelators; index++) {
-                trk->multiCodes[index] =
-                    trk->multiCodes[index - 1] + trkCfg->multipleCorrelatorsEgnosSpacing;
-            }
+            trk->multipleCodesSpacing = trkCfg->multipleCorrelatorsGalileoSpacing;
+        } else { /* EGNOS_SAT */
+            trk->multipleCodesSpacing = trkCfg->multipleCorrelatorsEgnosSpacing;
         }
         trk->multiI = (float *)malloc(trkCfg->numberOfMultipleCorrelators * sizeof(float));
         if (trk->multiI == NULL)
@@ -172,6 +161,8 @@ int InitTracking(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch)
         SwrxLog(NGENE_LOG_SEVERITY_ERROR, "Malloc returned a NULL pointer in InitTracking");
         CloseNGene(cfg, EXIT_FAILURE);
     }
+    /* during initialization only the receiver context exists (see receiver/dspContext.c) */
+    PointTrackingScratchToDsp(trk, NGENE_DSP(rx));
     InitTrackingStatusChecker(cfg, ch, trk);
     return SUCCESS_RETURN;
 }
@@ -184,6 +175,30 @@ void DeinitTracking(TTracking *trk)
         free(trk->multiI);
         free(trk->multiQ);
         free(trk->multiOld);
+    }
+}
+
+void PointTrackingScratchToDsp(TTracking *trk, TDspContext *dsp)
+{
+    int index;
+    /* the early and the late replica have their own arrays only when the low fs elaboration
+     * is enabled, as the prompt replica is then generated without oversampling (see InitTracking)
+     */
+    if (trk->dedicatedEarlyLateCode == TRUE_FLAG) {
+        trk->earlyCode = dsp->codeEarlyArray;
+        trk->lateCode = dsp->codeLateArray;
+    } else {
+        trk->earlyCode = &(dsp->codeArray[trk->earlyCodeOffset]);
+        trk->lateCode = &(dsp->codeArray[trk->lateCodeOffset]);
+    }
+    trk->promptCode = &(dsp->codeArray[trk->promptCodeOffset]);
+#ifdef CSC_DISCRIMINATOR_FUNCTION
+    trk->veryEarlyCode = &(dsp->codeArray[trk->veryEarlyCodeOffset]);
+    trk->veryLateCode = &(dsp->codeArray[trk->veryLateCodeOffset]);
+#endif
+    for (index = 0; index < trk->numberOfMulti; index++) {
+        trk->multiCodes[index] =
+            &(dsp->codeArray[trk->multipleCodesOffset + index * trk->multipleCodesSpacing]);
     }
 }
 

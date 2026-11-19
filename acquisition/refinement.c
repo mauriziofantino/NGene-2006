@@ -91,7 +91,7 @@ TAcquisitionStatus PerformDopplerRefinement(TNGeneConfiguration *cfg, TNGeneData
                                             char *secondBunch, unsigned int secondBunchSize)
 {
     TRefinement *ref = &(ch->refinement);
-    TDspContext *dsp = rx->dsp;
+    TDspContext *dsp = NGENE_DSP(rx);
     double fcCorrection = (double)rx->acqCommon.dopplerRefSteps[ref->indexBin];
     uint64_t p;
     double codeRateNew;
@@ -224,7 +224,7 @@ TAcquisitionStatus PerformCodeRefinement(TNGeneConfiguration *cfg, TNGeneData *r
                                          char *secondBunch, unsigned int secondBunchSize)
 {
     TRefinement *ref = &(ch->refinement);
-    TDspContext *dsp = rx->dsp;
+    TDspContext *dsp = NGENE_DSP(rx);
     int curDelay = rx->acqCommon.codeRefSteps[ref->indexBin];
     char *input1;
     unsigned int size1;

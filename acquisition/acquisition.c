@@ -527,7 +527,7 @@ void UpdateVariablesForConfirmationThresholds(TNGeneConfiguration *cfg, TNGeneDa
     double pi;
     double pq;
     int gpsBlocksize = thr->blocksize / 4;
-    if (rx->dsp->wideI) {
+    if (NGENE_DSP(rx)->wideI) {
         int64_t measured[4];
         if (!MeasureHackrfConfirmationNoise(cfg, rx, measured))
             return;

@@ -31,6 +31,9 @@ static double testCno, testI, testQ;
 static int decodedBits;
 static double lastEgnosTime;
 static short wide;
+/* The tracking code reaches the scratch through NGENE_DSP(): the override is NULL here,
+ * so the receiver scratch below is used, as in the single threaded execution. */
+NGENE_THREAD_LOCAL TDspContext *ngeneDspOverride = NULL;
 
 int SwrxLog(int severity, const char *format, ...)
 {

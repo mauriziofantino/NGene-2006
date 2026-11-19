@@ -199,7 +199,7 @@ TAcquisitionStatus PerformCoarseAcquisition(TNGeneConfiguration *cfg, TNGeneData
                                             char *secondBunch, unsigned int secondBunchSize)
 {
     TCoarseAcquisition *acq = &(ch->coarse);
-    TDspContext *dsp = rx->dsp;
+    TDspContext *dsp = NGENE_DSP(rx);
     int curDelay = acq->delays[acq->delayIndex];
     char *input1;
     unsigned int size1;

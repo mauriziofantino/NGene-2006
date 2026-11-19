@@ -18,6 +18,7 @@
 #include <ctype.h>
 #include "ngeneConstants.h"
 #include "ioFunctions.h"
+#include "logCapture.h"
 #include "ncursesApi.h"
 #include <stdlib.h>
 // Function to parse the input path
@@ -86,6 +87,15 @@ int SwrxLog(int severity, const char *format, ...)
     f = swrxLog_stdlog;
     if (f == NULL)
         return FAILURE_RETURN; /* error in the input parameter */
+    if (ngeneLogCaptureTarget != NULL) {
+        /* the log of this elaboration is queued and replayed later by the main thread,
+         * see utility/logCapture.c, so the parallel elaborations keep the byte sequence
+         * of the log of the single threaded execution */
+        va_start(arguments, format);
+        vsprintf(userString, format, arguments);
+        va_end(arguments);
+        return AppendLogCaptureEntry(severity, userString);
+    }
     pthread_mutex_lock(swrxLog_stdLogMutexPtr);
     /* prepare the string with the current time */
     currentTime = time(NULL);

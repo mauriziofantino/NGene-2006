@@ -34,6 +34,8 @@
 #include "osnmaValidations.h"
 #include "warmStart.h"
 #include "navigationMessage.h"
+#include "dspWorkerPool.h"
+#include "channelManager.h"
 /* Acquisition scheduling */
 int InitChannelScheduler(TNGeneConfiguration *cfg, TChannelScheduler *chSch,
                          int numOfRealGalileoPrns, int *realGalileoPrns)
@@ -224,6 +226,16 @@ void InitChannel(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch)
     ch->bufferOffset = 0;
     ch->blocksize = 0;
     ch->blocksizeNext = 0;
+    /* the cycle of the channel stores the data of the current execution cycle (see
+     * receiver/dspWorkerPool.h) and queues its log messages (see utility/logCapture.h) */
+    /* the queue of the log of this channel and the data of its execution cycle live in the
+     * channel structure (see utility/logCapture.h, receiver/dspWorkerPool.h) */
+    InitLogCapture(&(ch->logCapture));
+    ch->cycle.elaborates = FALSE_FLAG;
+    ch->cycle.firstBunch = NULL;
+    ch->cycle.firstBunchSize = 0;
+    ch->cycle.secondBunch = NULL;
+    ch->cycle.secondBunchSize = 0;
     ResetChannelVariables(cfg, ch);
     InitCoarseAcquisition(cfg, &(rx->acqCommon), ch);
     InitRefinement(cfg, &(ch->refinement), ch);
@@ -398,35 +410,24 @@ int AllChannelsUnused(TNGeneConfiguration *cfg, TNGeneData *rx)
     }
     return allChannelsUnused;
 }
-void DoChannelManager(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch, char *firstBunch,
-                      unsigned int firstBunchSize, char *secondBunch, unsigned int secondBunchSize)
+/**
+ * @brief Computes one execution cycle of one channel on a DSP worker.
+ * @details Elaborates the samples stored in the cycle of the channel, with the scratch owned
+ *          by the calling worker (see receiver/dspWorkerPool.h), and stores the result of the
+ *          acquisition in the cycle. The log messages of the elaboration are queued, and
+ *          replayed in channel index order by CommitChannelCycle() (see utility/logCapture.h).
+ */
+void ComputeChannelCycle(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch)
 {
-    TAcquisitionStatus acqStatus;
-    /* Manage conditions that do not allow elaboration during the current execution cycle */
-    /* Channel offset exceeds the number of samples in the buffer */
-    if (firstBunch == NULL)
+    TChannelCycle *cycle = &(ch->cycle);
+    if (cycle->elaborates == FALSE_FLAG)
+    {
+        /* PrepareChannelCycle() refused the elaboration of this execution cycle (see
+         * receiver/channelManager.c) */
         return;
-    /* If channel offset grows too much fast */
-    if (ch->bufferOffset > (unsigned int)cfg->samplesPerMillisecond)
-        return;
-    /* Blocksize exceeds the number of samples in the buffer */
-    if (ch->blocksizeNext > (firstBunchSize + secondBunchSize))
-        return;
-    /* Prepare for the elaboration */
-    ch->blocksize = ch->blocksizeNext;
-    /* Channel state machine */
-    switch (ch->chState) {
-    case POWERON_STATE:
-        ch->satId =
-            GetNextPrnForAcquisition(cfg, &(rx->warmStartData), &(rx->channelScheduler), ch);
-        if (ch->satId != INVALID_PRN) {
-            FromPrnToString(ch->satType, ch->satId, ch->prnName);
-            SwrxLog(NGENE_LOG_SEVERITY_NOTE, "Channel %2d allocated to %s", ch->chIndex,
-                    ch->prnName);
-            StartCoarseAcquisition(cfg, rx, &(rx->acqCommon), ch);
-            ch->chState = COARSE_ACQUISITION_STATE;
-        }
-        break;
+    }
+    BeginLogCapture(&(ch->logCapture));
+    switch (cycle->state) {
     case COARSE_ACQUISITION_STATE:
 #ifdef RX_PROFILING
         if (ch->satType == GPS_SAT) {
@@ -435,8 +436,9 @@ void DoChannelManager(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch, ch
             StartProfilingUpdate(&(ch->galileoCoarseAcqProfiling));
         }
 #endif
-        acqStatus = PerformCoarseAcquisition(cfg, rx, ch, firstBunch, firstBunchSize, secondBunch,
-                                             secondBunchSize);
+        cycle->acqStatus = PerformCoarseAcquisition(cfg, rx, ch, cycle->firstBunch,
+                                                    cycle->firstBunchSize, cycle->secondBunch,
+                                                    cycle->secondBunchSize);
 #ifdef RX_PROFILING
         if (ch->satType == GPS_SAT) {
             StopProfilingUpdate(&(ch->gpsCoarseAcqProfiling), 1);
@@ -446,26 +448,6 @@ void DoChannelManager(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch, ch
             TotalTimeProfilingUpdate(&(ch->galileoCoarseAcqProfiling));
         }
 #endif
-        if (acqStatus == ACQUISITION_SKIPPED) {
-            /* when acquisition is skipped, codePhase and blocksize are not updated;
-             * so at the next execution the elaboration will start without skipping samples */
-            return;
-        } else if (acqStatus == ACQUISITION_FAILURE) {
-            SwrxLog(NGENE_LOG_SEVERITY_NOTE, "Channel %2d discarded %s after coarse acquisition",
-                    ch->chIndex, ch->prnName);
-            FreeInTheVisibilityList(&(cfg->warmConfiguration), &(rx->warmStartData), ch->satType,
-                                    ch->satId);
-            FreeAcquisitionSpotAfterAcquisitionFailure(cfg, &(rx->channelScheduler), ch);
-            ch->chState = POWERON_STATE;
-        } else if (acqStatus == ACQUISITION_SUCCESS) {
-            SwrxLog(
-                NGENE_LOG_SEVERITY_NOTE,
-                "Channel %2d %s Doppler shift refinement starts at samples %llu with Doppler %f Hz",
-                ch->chIndex, ch->prnName,
-                rx->buf.discardedSamples + ch->bufferOffset + ch->blocksize, ch->dopplerShift);
-            StartDopplerRefinement(cfg, rx, ch);
-            ch->chState = DOPPLER_REFINEMENT_STATE;
-        }
         break;
     case DOPPLER_REFINEMENT_STATE:
 #ifdef RX_PROFILING
@@ -475,16 +457,9 @@ void DoChannelManager(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch, ch
             StartProfilingUpdate(&(ch->galileoDopplerRefinementProfiling));
         }
 #endif
-        if (PerformDopplerRefinement(cfg, rx, ch, firstBunch, firstBunchSize, secondBunch,
-                                     secondBunchSize) == ACQUISITION_TERMINATED) {
-            SwrxLog(
-                NGENE_LOG_SEVERITY_NOTE,
-                "Channel %2d %s code delay refinement starts at samples %llu with Doppler %f Hz",
-                ch->chIndex, ch->prnName,
-                rx->buf.discardedSamples + ch->bufferOffset + ch->blocksize, ch->dopplerShift);
-            StartCodeRefinement(cfg, rx, ch);
-            ch->chState = CODE_REFINEMENT_STATE;
-        }
+        cycle->acqStatus = PerformDopplerRefinement(cfg, rx, ch, cycle->firstBunch,
+                                                    cycle->firstBunchSize, cycle->secondBunch,
+                                                    cycle->secondBunchSize);
 #ifdef RX_PROFILING
         if (ch->satType == GPS_SAT) {
             StopProfilingUpdate(&(ch->gpsDopplerRefinementProfiling), 1);
@@ -503,8 +478,9 @@ void DoChannelManager(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch, ch
             StartProfilingUpdate(&(ch->galileoCodeRefinementProfiling));
         }
 #endif
-        acqStatus = PerformCodeRefinement(cfg, rx, ch, firstBunch, firstBunchSize, secondBunch,
-                                          secondBunchSize);
+        cycle->acqStatus = PerformCodeRefinement(cfg, rx, ch, cycle->firstBunch,
+                                                 cycle->firstBunchSize, cycle->secondBunch,
+                                                 cycle->secondBunchSize);
 #ifdef RX_PROFILING
         if (ch->satType == GPS_SAT) {
             StopProfilingUpdate(&(ch->gpsCodeRefinementProfiling), 1);
@@ -514,11 +490,148 @@ void DoChannelManager(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch, ch
             TotalTimeProfilingUpdate(&(ch->galileoCodeRefinementProfiling));
         }
 #endif
-        if (acqStatus == ACQUISITION_SKIPPED) {
+        break;
+    case CONFIRMATION_STATE:
+#ifdef RX_PROFILING
+        if (ch->satType == GPS_SAT) {
+            StartProfilingUpdate(&(ch->gpsConfirmationProfiling));
+        } else if (ch->satType == GALILEO_SAT) {
+            StartProfilingUpdate(&(ch->galileoConfirmationProfiling));
+        }
+#endif
+        cycle->acqStatus = PerformConfirmation(cfg, rx, ch, cycle->firstBunch,
+                                               cycle->firstBunchSize, cycle->secondBunch,
+                                               cycle->secondBunchSize);
+#ifdef RX_PROFILING
+        if (ch->satType == GPS_SAT) {
+            StopProfilingUpdate(&(ch->gpsConfirmationProfiling), 1);
+        } else if (ch->satType == GALILEO_SAT && ch->confirmation.msCounter == 0) {
+            StopProfilingUpdate(&(ch->galileoConfirmationProfiling), 1);
+        } else if (ch->satType == GALILEO_SAT && ch->confirmation.msCounter != 0) {
+            TotalTimeProfilingUpdate(&(ch->galileoConfirmationProfiling));
+        }
+#endif
+        break;
+    case TRACKING_STATE:
+        if (ch->satType == GALILEO_SAT) {
+#ifdef RX_PROFILING
+            StartProfilingUpdate(&(ch->galileoTrackingProfiling));
+#endif
+            ComputeGalileoTracking(cfg, rx, ch, cycle->firstBunch, cycle->firstBunchSize,
+                                   cycle->secondBunch, cycle->secondBunchSize);
+        } else {
+#ifdef RX_PROFILING
+            StartProfilingUpdate(&(ch->gpsTrackingProfiling));
+#endif
+            ComputeGpsTracking(cfg, rx, ch, cycle->firstBunch, cycle->firstBunchSize,
+                               cycle->secondBunch, cycle->secondBunchSize);
+        }
+        break;
+    default:
+        /* POWERON_STATE, UNUSED_STATE and the other states have no elaboration to compute:
+         * the assignment of a PRN and the transitions of the state machine are committed by
+         * CommitChannelCycle() on the main thread (see receiver/channelManager.c) */
+        break;
+    }
+    EndLogCapture();
+}
+/**
+ * @brief Prepares one execution cycle of one channel on the main thread.
+ * @details Reads the state of the channel and the samples of the cycle, and accepts the
+ *          elaboration. It runs before any channel of the current cycle is elaborated, so the
+ *          eligibility of the elaboration does not depend on the elaboration of the other
+ *          channels (see receiver/dspWorkerPool.h).
+ */
+void PrepareChannelCycle(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch, char *firstBunch,
+                         unsigned int firstBunchSize, char *secondBunch,
+                         unsigned int secondBunchSize)
+{
+    TChannelCycle *cycle = &(ch->cycle);
+    cycle->elaborates = FALSE_FLAG;
+    /* Manage conditions that do not allow elaboration during the current execution cycle */
+    /* Channel offset exceeds the number of samples in the buffer */
+    if (firstBunch == NULL)
+        return;
+    /* If channel offset grows too much fast */
+    if (ch->bufferOffset > (unsigned int)cfg->samplesPerMillisecond)
+        return;
+    /* Blocksize exceeds the number of samples in the buffer */
+    if (ch->blocksizeNext > (firstBunchSize + secondBunchSize))
+        return;
+    /* The state and the samples of the current elaboration are stored for the worker thread and
+     * for the commit on the main thread (see receiver/dspWorkerPool.h) */
+    cycle->state = ch->chState;
+    cycle->firstBunch = firstBunch;
+    cycle->firstBunchSize = firstBunchSize;
+    cycle->secondBunch = secondBunch;
+    cycle->secondBunchSize = secondBunchSize;
+    /* Prepare for the elaboration */
+    ch->blocksize = ch->blocksizeNext;
+    cycle->elaborates = TRUE_FLAG;
+}
+/**
+ * @brief Commits one execution cycle of one channel on the main thread.
+ * @details Replays the log messages queued by the elaboration of this channel (see
+ *          utility/logCapture.h) and applies the transitions of the channel state machine, in
+ *          the order of the channel index and therefore exactly as the single threaded execution
+ *          did (see receiver/dspWorkerPool.h).
+ */
+void CommitChannelCycle(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch)
+{
+    TChannelCycle *cycle = &(ch->cycle);
+    FlushLogCapture(&(ch->logCapture));
+    /* Channel state machine */
+    switch (cycle->state) {
+    case POWERON_STATE:
+        ch->satId =
+            GetNextPrnForAcquisition(cfg, &(rx->warmStartData), &(rx->channelScheduler), ch);
+        if (ch->satId != INVALID_PRN) {
+            FromPrnToString(ch->satType, ch->satId, ch->prnName);
+            SwrxLog(NGENE_LOG_SEVERITY_NOTE, "Channel %2d allocated to %s", ch->chIndex,
+                    ch->prnName);
+            StartCoarseAcquisition(cfg, rx, &(rx->acqCommon), ch);
+            ch->chState = COARSE_ACQUISITION_STATE;
+        }
+        break;
+    case COARSE_ACQUISITION_STATE:
+        if (cycle->acqStatus == ACQUISITION_SKIPPED) {
             /* when acquisition is skipped, codePhase and blocksize are not updated;
              * so at the next execution the elaboration will start without skipping samples */
             return;
-        } else if (acqStatus == ACQUISITION_TERMINATED) {
+        } else if (cycle->acqStatus == ACQUISITION_FAILURE) {
+            SwrxLog(NGENE_LOG_SEVERITY_NOTE, "Channel %2d discarded %s after coarse acquisition",
+                    ch->chIndex, ch->prnName);
+            FreeInTheVisibilityList(&(cfg->warmConfiguration), &(rx->warmStartData), ch->satType,
+                                    ch->satId);
+            FreeAcquisitionSpotAfterAcquisitionFailure(cfg, &(rx->channelScheduler), ch);
+            ch->chState = POWERON_STATE;
+        } else if (cycle->acqStatus == ACQUISITION_SUCCESS) {
+            SwrxLog(
+                NGENE_LOG_SEVERITY_NOTE,
+                "Channel %2d %s Doppler shift refinement starts at samples %llu with Doppler %f Hz",
+                ch->chIndex, ch->prnName,
+                rx->buf.discardedSamples + ch->bufferOffset + ch->blocksize, ch->dopplerShift);
+            StartDopplerRefinement(cfg, rx, ch);
+            ch->chState = DOPPLER_REFINEMENT_STATE;
+        }
+        break;
+    case DOPPLER_REFINEMENT_STATE:
+        if (cycle->acqStatus == ACQUISITION_TERMINATED) {
+            SwrxLog(
+                NGENE_LOG_SEVERITY_NOTE,
+                "Channel %2d %s code delay refinement starts at samples %llu with Doppler %f Hz",
+                ch->chIndex, ch->prnName,
+                rx->buf.discardedSamples + ch->bufferOffset + ch->blocksize, ch->dopplerShift);
+            StartCodeRefinement(cfg, rx, ch);
+            ch->chState = CODE_REFINEMENT_STATE;
+        }
+        break;
+    case CODE_REFINEMENT_STATE:
+        if (cycle->acqStatus == ACQUISITION_SKIPPED) {
+            /* when acquisition is skipped, codePhase and blocksize are not updated;
+             * so at the next execution the elaboration will start without skipping samples */
+            return;
+        } else if (cycle->acqStatus == ACQUISITION_TERMINATED) {
             SwrxLog(NGENE_LOG_SEVERITY_NOTE,
                     "Channel %2d %s confirmation starts at samples %llu with Doppler %f Hz",
                     ch->chIndex, ch->prnName,
@@ -532,32 +645,14 @@ void DoChannelManager(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch, ch
         }
         break;
     case CONFIRMATION_STATE:
-#ifdef RX_PROFILING
-        if (ch->satType == GPS_SAT) {
-            StartProfilingUpdate(&(ch->gpsConfirmationProfiling));
-        } else if (ch->satType == GALILEO_SAT) {
-            StartProfilingUpdate(&(ch->galileoConfirmationProfiling));
-        }
-#endif
-        acqStatus = PerformConfirmation(cfg, rx, ch, firstBunch, firstBunchSize, secondBunch,
-                                        secondBunchSize);
-#ifdef RX_PROFILING
-        if (ch->satType == GPS_SAT) {
-            StopProfilingUpdate(&(ch->gpsConfirmationProfiling), 1);
-        } else if (ch->satType == GALILEO_SAT && ch->confirmation.msCounter == 0) {
-            StopProfilingUpdate(&(ch->galileoConfirmationProfiling), 1);
-        } else if (ch->satType == GALILEO_SAT && ch->confirmation.msCounter != 0) {
-            TotalTimeProfilingUpdate(&(ch->galileoConfirmationProfiling));
-        }
-#endif
-        if (acqStatus == ACQUISITION_FAILURE) {
+        if (cycle->acqStatus == ACQUISITION_FAILURE) {
             SwrxLog(NGENE_LOG_SEVERITY_NOTE, "Channel %2d discarded %s after confirmation",
                     ch->chIndex, ch->prnName);
             FreeInTheVisibilityList(&(cfg->warmConfiguration), &(rx->warmStartData), ch->satType,
                                     ch->satId);
             FreeAcquisitionSpotAfterAcquisitionFailure(cfg, &(rx->channelScheduler), ch);
             ch->chState = POWERON_STATE;
-        } else if (acqStatus == ACQUISITION_SUCCESS) {
+        } else if (cycle->acqStatus == ACQUISITION_SUCCESS) {
             SwrxLog(NGENE_LOG_SEVERITY_INFO,
                     "Channel %2d %s tracking starts at samples %llu with Doppler %f Hz",
                     ch->chIndex, ch->prnName,
@@ -574,12 +669,9 @@ void DoChannelManager(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch, ch
         break;
     case TRACKING_STATE:
         if (ch->satType == GALILEO_SAT) {
+            CommitGalileoTracking(cfg, rx, ch);
 #ifdef RX_PROFILING
-            StartProfilingUpdate(&(ch->galileoTrackingProfiling));
-#endif
-            PerformGalileoTracking(cfg, rx, ch, firstBunch, firstBunchSize, secondBunch,
-                                   secondBunchSize);
-#ifdef RX_PROFILING
+            /* the profiling of the elaboration starts in ComputeChannelCycle() */
             if ((ch->tracking.msCounter % ch->tracking.integrationPeriod) == 0) {
                 StopProfilingUpdate(&(ch->galileoTrackingProfiling), 1);
             } else {
@@ -587,12 +679,9 @@ void DoChannelManager(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch, ch
             }
 #endif
         } else {
+            CommitGpsTracking(cfg, rx, ch);
 #ifdef RX_PROFILING
-            StartProfilingUpdate(&(ch->gpsTrackingProfiling));
-#endif
-            PerformGpsTracking(cfg, rx, ch, firstBunch, firstBunchSize, secondBunch,
-                               secondBunchSize);
-#ifdef RX_PROFILING
+            /* the profiling of the elaboration starts in ComputeChannelCycle() */
             StopProfilingUpdate(&(ch->gpsTrackingProfiling), 1);
 #endif
         }
@@ -619,6 +708,47 @@ void DoChannelManager(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch, ch
     ch->bufferOffset += ch->blocksize;
     /* Prepare next elaboration */
     UpdateBlocksize(cfg, ch);
+}
+
+void DoChannelManager(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch, char *firstBunch,
+                      unsigned int firstBunchSize, char *secondBunch, unsigned int secondBunchSize)
+{
+    PrepareChannelCycle(cfg, rx, ch, firstBunch, firstBunchSize, secondBunch, secondBunchSize);
+    if (ch->cycle.elaborates == FALSE_FLAG)
+        return;
+    ComputeChannelCycle(cfg, rx, ch);
+    CommitChannelCycle(cfg, rx, ch);
+}
+
+void RunChannelsCycle(TNGeneConfiguration *cfg, TNGeneData *rx)
+{
+    char *firstBunch;
+    char *secondBunch;
+    unsigned int firstBunchSize;
+    unsigned int secondBunchSize;
+    TChannel *ch;
+    int index;
+    /* phase 1: the eligibility of the elaboration and the samples of the cycle are read on the
+     * main thread, in the order of the channel index (see receiver/dspWorkerPool.h) */
+    for (index = 0; index < cfg->numberOfChannels; index++) {
+        ch = &(rx->channelArray[index]);
+        GetSamplePointersForChannel(ch, &(rx->buf), &firstBunch, &firstBunchSize, &secondBunch,
+                                    &secondBunchSize);
+        PrepareChannelCycle(cfg, rx, ch, firstBunch, firstBunchSize, secondBunch, secondBunchSize);
+    }
+    /* phase 2: the DSP of the channels is computed by the workers of the pool. The main thread
+     * waits there, so the samples elaborated by the channels are discarded only after the commit
+     * of all the channels of the cycle (see frontEnd/circularBuffer.c) */
+    DispatchDspJobs(&(rx->dspWorkerPool), cfg, rx, cfg->numberOfChannels);
+    /* phase 3: the transitions of the state machine and the log of the channels are committed on
+     * the main thread, in the order of the channel index */
+    for (index = 0; index < cfg->numberOfChannels; index++) {
+        ch = &(rx->channelArray[index]);
+        if (ch->cycle.elaborates == FALSE_FLAG) {
+            continue;
+        }
+        CommitChannelCycle(cfg, rx, ch);
+    }
 }
 
 int FindChId(TNGeneConfiguration *cfg, TNGeneData *rx, TSatConstellation satType, int satId)

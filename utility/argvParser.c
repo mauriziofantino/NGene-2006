@@ -16,6 +16,7 @@
 #include <stdlib.h>
 #include "argvParser.h"
 #include "ngeneConfiguration.h"
+#include "dspWorkerPool.h"
 #include "ioFunctions.h"
 #include "closeManager.h"
 extern char *optarg; ///< required by the getopt_long linux function used in handle_cmdline
@@ -39,7 +40,7 @@ int HandleCmdLine(int argc, char *argv[], TNGeneConfiguration *cfg)
         {"version", 0, 0, 'V'}, {"textual", 0, 0, 't'},  {"ncurses", 0, 0, 'n'},
         {"input", 1, 0, 'i'},   {"frontend", 1, 0, 'f'}, {"googleEarth", 1, 0, 'g'},
         {"logfile", 1, 0, 'l'}, {"verbose", 0, 0, 'v'},  {"credits", 0, 0, 'c'},
-        {"help", 0, 0, 'h'},    {NULL, 0, 0, 0}};
+        {"workers", 1, 0, 'W'}, {"help", 0, 0, 'h'},    {NULL, 0, 0, 0}};
     // and its relative help output
     const char *optsHelp[] = {
         "Print the actual version of NGene receiver.",
@@ -51,11 +52,14 @@ int HandleCmdLine(int argc, char *argv[], TNGeneConfiguration *cfg)
         "Log all the operation a logging file.",
         "Verbose output.",
         "Print the credits.",
+        "Elaborate the channels on this number of DSP workers, from 1 to 4.",
         "Print this message."};
     struct option *opt;
     const char **hlp;
     int max, size;
     int i;
+    long int requestedWorkers; /**< workers parsed from the -W option (see dspWorkerPool.h) */
+    char *conversionEnd;       /**< first character not converted by strtol() */
     /* Setting default values for the flags */
     cfg->userInterface = RX_UI_NCURSES;
     cfg->stdlog = stdout;
@@ -67,9 +71,11 @@ int HandleCmdLine(int argc, char *argv[], TNGeneConfiguration *cfg)
     cfg->configurationValid = FALSE_FLAG;
     cfg->inputFileOverride = NULL;
     cfg->frontEndOverride = 0;
+    /* one worker elaborates the channels on the main thread, as the historical execution */
+    cfg->numberOfDspWorkers = DSP_WORKERS_MINIMUM;
     /* Parse options */
     while (1) {
-        i = getopt_long(argc, argv, "Vtni:f:g:l:vcrh", opts, NULL);
+        i = getopt_long(argc, argv, "Vtni:f:g:l:vcrW:h", opts, NULL);
         if (i == -1) {
             break;
         }
@@ -112,6 +118,24 @@ int HandleCmdLine(int argc, char *argv[], TNGeneConfiguration *cfg)
             // Get the log file name and path
             cfg->logFilename[0] = '\0';
             strcat(cfg->logFilename, optarg);
+            break;
+        case 'W':
+            // Number of DSP workers elaborating the channels of one execution cycle. The pool is
+            // bounded: each worker owns one DSP scratch (see receiver/dspWorkerPool.h)
+            if (optarg == NULL) {
+                fprintf(stderr, "Missing number of DSP workers (use %d to %d)\n", DSP_WORKERS_MINIMUM,
+                        DSP_WORKERS_MAXIMUM);
+                exit(EXIT_FAILURE);
+            }
+            requestedWorkers = strtol(optarg, &(conversionEnd), 10);
+            if ((conversionEnd == optarg) || ((*conversionEnd) != '\0') ||
+                (requestedWorkers < (long int)DSP_WORKERS_MINIMUM) ||
+                (requestedWorkers > (long int)DSP_WORKERS_MAXIMUM)) {
+                fprintf(stderr, "Invalid number of DSP workers: %s (use %d to %d)\n", optarg,
+                        DSP_WORKERS_MINIMUM, DSP_WORKERS_MAXIMUM);
+                exit(EXIT_FAILURE);
+            }
+            cfg->numberOfDspWorkers = (int)requestedWorkers;
             break;
         case 'v':
             cfg->verbose = TRUE_FLAG;

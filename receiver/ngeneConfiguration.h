@@ -164,6 +164,9 @@ typedef struct NGeneConfigurationStruct {
     int numberOfEgnosChannels;     /**< Number of EGNOS channels */
     int numberOfGalileoE5aChannels; /**< Number of Galileo channels for E5a (F/NAV) */
     int numberOfChannels;           /**< Total number of supported channels */
+    int numberOfDspWorkers;         /**< Number of DSP workers elaborating the channels of one
+                                      execution cycle in parallel, limited to the bounded pool
+                                      (see receiver/dspWorkerPool.h) */
     int receiverClockEmulation;     /**< TRUE_FLAG if PC date/time are used to emulate the receiver
                                        clock */
     int receiverClockError;         /**< Absolute value of the maximum error of the receiver clock

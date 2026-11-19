@@ -11,6 +11,7 @@
  */
 #ifndef TRACKING_H_INCLUDED
 #define TRACKING_H_INCLUDED
+#include "dspContextDataStructure.h"
 /**
  * @def TRACKING_LOG_SET_SIZE
  * @brief Every integration period TRACKING_LOG_SET_SIZE data are saved in the tracking correlation
@@ -66,7 +67,19 @@ void StartTracking(TNGeneConfiguration *cfg, TChannel *ch, TTracking *trk);
  * @param sinArray points to the samples demodulated using sine
  */
 void PerformAllTrackingCorrelations(TChannel *ch, TTracking *trk, char *cosArray, char *sinArray,
-                                    const short *wideI, const short *wideQ);
+                                     const short *wideI, const short *wideQ);
+
+/**
+ * @brief Points the code replicas of one channel to the scratch of the current DSP worker.
+ * @details The computing half of the elaboration (see ComputeGpsTracking and
+ *          ComputeGalileoTracking) calls this function on the worker thread, since the replicas
+ *          generated in dsp->codeArray cannot be shared by the channels elaborated at the same
+ *          time (see receiver/dspWorkerPool.c).
+ *
+ * @param trk points to the tracking structure
+ * @param dsp points to the scratch owned by the worker elaborating this channel
+ */
+void PointTrackingScratchToDsp(TTracking *trk, TDspContext *dsp);
 
 /**
  * @brief this function writes tracking logs in the high rate correlation file

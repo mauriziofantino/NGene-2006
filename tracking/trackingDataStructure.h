@@ -231,6 +231,18 @@ typedef struct TrackingStruct {
     char *promptCode;  /**< Points to the prompt code */
     char *lateCode;    /**< Points to the late code */
     char **multiCodes; /**< Array with all the pointers to the code used for multiple correlators */
+    /* anchoring of the code pointers: they address the DSP scratch of the worker elaborating
+     * this channel (see receiver/dspContextDataStructure.h). The offsets below are evaluated
+     * once by InitTracking and re-applied by PointTrackingScratchToDsp, so each worker
+     * correlates the same replicas on its own arrays (see receiver/dspWorkerPool.c) */
+    int promptCodeOffset; /**< index of the prompt replica within dsp->codeArray [samples] */
+    int earlyCodeOffset;  /**< index of the early replica within dsp->codeArray [samples] */
+    int lateCodeOffset;   /**< index of the late replica within dsp->codeArray [samples] */
+    int dedicatedEarlyLateCode; /**< TRUE_FLAG when the early and late replicas use their own arrays
+     */
+    int multipleCodesOffset; /**< index of the first replica within dsp->codeArray [samples] */
+    int multipleCodesSpacing;  /**< step between two replicas of the multiple correlators [samples]
+     */
     char *sidePeakLeftCode;  /**< Additional correlator to check if the the Galileo signal is locked
                                 to the left side peak after the Fast Re-acquisition */
     char *sidePeakRightCode; /**< Additional correlator to check if the the Galileo signal is locked
@@ -252,6 +264,8 @@ typedef struct TrackingStruct {
 #ifdef CSC_DISCRIMINATOR_FUNCTION
     char *veryEarlyCode; /**< Points to the very early code */
     char *veryLateCode;  /**< Points to the very late code */
+    int veryEarlyCodeOffset; /**< index of the very early replica within dsp->codeArray [samples] */
+    int veryLateCodeOffset;  /**< index of the very late replica within dsp->codeArray [samples] */
     float vEI;           /**< very early in-phase correlation */
     float vEQ;           /**< very early quadrature correlation */
     float vLI;           /**< very late in-phase correlation */
@@ -286,5 +300,12 @@ typedef struct TrackingStruct {
     TTrackingStatusChecker
         trkStatusChecker; /**< this structure stores variables used to verify the tracking lock */
     TTrackingHoldover holdover;
+    /* Stage 2 of the multi-core DSP pool: the elaboration of one ms is split in the computing
+     * half (see ComputeGpsTracking and ComputeGalileoTracking) and the committing half (see
+     * CommitGpsTracking and CommitGalileoTracking), possibly in different threads and with other
+     * channels interleaved. The flag below is the value of (holdover.anchorValid ||
+     * holdover.active) read by the computing half, and used by the committing half in place of
+     * the value the single threaded execution read at the beginning of the ms */
+    int checkedBeforeLoops;
 } TTracking;
 #endif /* TRACKING_DATA_STRUCTURE_H_INCLUDED */

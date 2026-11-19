@@ -14,6 +14,7 @@
 #include "ngeneConstants.h"
 #include "circularBuffer.h"
 #include "dspContextDataStructure.h"
+#include "dspWorkerPool.h"
 #include "prnTable.h"
 #include "carrierTable.h"
 #include "fft.h"
@@ -42,8 +43,10 @@ typedef struct NGeneDataStruct {
     int dataValid; /**< if FALSE_FLAG, the de-initialization function has already been executed */
     unsigned long long int rxCounter; /**< counts the execution cycles of the receiver (about, the
                                          number of ms from the start ) */
-    TDspContext *dsp; /**< per DSP worker scratch (code, carrier, subcarrier, demodulated,
-                        wide I/Q); Stage 1: the receiver owns a single context */
+    TDspContext *dsp; /**< scratch of the main thread (code, carrier, subcarrier, demodulated,
+                        wide I/Q). Stage 2: the workers of dspWorkerPool own their own context
+                        (see receiver/dspWorkerPool.h), and the threads elaborating no channel,
+                        as the main thread, use this one */
     THackrfMixer hackrfMixer; /**< HackRF unit-circle Q15 NCO coefficients. */
     TCircularBuffer buf;       /**< buffer storing input samples */
     TPrnTable prnTable;        /**< table used to generate despreading codes at fs */
@@ -54,6 +57,8 @@ typedef struct NGeneDataStruct {
         acqCommon; /**< structure used to store acquisition variables common to all the channels */
     TChannelScheduler channelScheduler; /**< structure used to manage channel allocation */
     TChannel *channelArray;             /**< points to all the channels */
+    TDspWorkerPool dspWorkerPool; /**< workers elaborating the channels of one execution cycle
+                                    (see receiver/dspWorkerPool.c) */
     /* Warm Start */
     TWarmStartData warmStartData; /**< data used to manage the optional warm start */
     /* Navigation message */

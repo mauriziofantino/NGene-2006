@@ -18,12 +18,19 @@
 #include "tracking.h"
 #include "trackingDiscriminatorsLoops.h"
 #include "galileoMessageParser.h"
-TTrackingStatus PerformGalileoTracking(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch,
-                                       char *firstBunch, unsigned int firstBunchSize,
-                                       char *secondBunch, unsigned int secondBunchSize)
+void ComputeGalileoTracking(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch, char *firstBunch,
+                            unsigned int firstBunchSize, char *secondBunch,
+                            unsigned int secondBunchSize)
 {
     TTracking *trk = &(ch->tracking);
-    int checkedBeforeLoops = trk->holdover.anchorValid || trk->holdover.active;
+    /* the elaboration of one channel runs on the worker owning this scratch (see
+     * receiver/dspWorkerPool.c), so the replicas of the spreading code are re-anchored here */
+    TDspContext *dsp = NGENE_DSP(rx);
+    /* the committing half reads the flag below (see CommitGalileoTracking). The holdover state
+     * cannot change while the channels of one execution cycle are elaborated, so the value
+     * is the one the single threaded execution read at the beginning of the millisecond */
+    trk->checkedBeforeLoops = trk->holdover.anchorValid || trk->holdover.active;
+    PointTrackingScratchToDsp(trk, dsp);
     /* carrier wipe-off */
     ch->carrierPhase = GenerateAndMixReceiverInput(cfg, rx, firstBunch, firstBunchSize, secondBunch,
                                                    secondBunchSize, ch->blocksize,
@@ -34,14 +41,14 @@ TTrackingStatus PerformGalileoTracking(TNGeneConfiguration *cfg, TNGeneData *rx,
     // generate the subcarrier
     // prompt
     GenerateSine(cfg, &(rx->fscTable), ch->codeRate, TWICE_M_PI * ch->codePhaseFrac, ch->blocksize,
-                 rx->dsp->subcarrierArray);
+                 dsp->subcarrierArray);
     if (cfg->lowFsElaboration == TRUE_FLAG) {
         // early
         GenerateSine(cfg, &(rx->fscTable), ch->codeRate, TWICE_M_PI * trk->codeEarlyPhaseFrac,
-                     ch->blocksize, rx->dsp->subcarrierArrayEarly);
+                     ch->blocksize, dsp->subcarrierArrayEarly);
         // late
         GenerateSine(cfg, &(rx->fscTable), ch->codeRate, TWICE_M_PI * trk->codeLatePhaseFrac,
-                     ch->blocksize, rx->dsp->subcarrierArrayLate);
+                     ch->blocksize, dsp->subcarrierArrayLate);
     }
     // generate the code
     // prompt
@@ -58,14 +65,20 @@ TTrackingStatus PerformGalileoTracking(TNGeneConfiguration *cfg, TNGeneData *rx,
                      ch->blocksize, trk->lateCode);
     }
     // add subcarrier to the code
-    ArrayXor(rx->dsp->subcarrierArray, trk->promptCode, trk->promptCode, ch->blocksize);
+    ArrayXor(dsp->subcarrierArray, trk->promptCode, trk->promptCode, ch->blocksize);
     if (cfg->lowFsElaboration == TRUE_FLAG) {
-        ArrayXor(rx->dsp->subcarrierArrayEarly, trk->earlyCode, trk->earlyCode, ch->blocksize);
-        ArrayXor(rx->dsp->subcarrierArrayLate, trk->lateCode, trk->lateCode, ch->blocksize);
+        ArrayXor(dsp->subcarrierArrayEarly, trk->earlyCode, trk->earlyCode, ch->blocksize);
+        ArrayXor(dsp->subcarrierArrayLate, trk->lateCode, trk->lateCode, ch->blocksize);
     }
     // correlations
-    PerformAllTrackingCorrelations(ch, trk, rx->dsp->cosArray, rx->dsp->sinArray, rx->dsp->wideI,
-                                   rx->dsp->wideQ);
+    PerformAllTrackingCorrelations(ch, trk, dsp->cosArray, dsp->sinArray, dsp->wideI, dsp->wideQ);
+}
+
+void CommitGalileoTracking(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch)
+{
+    TTracking *trk = &(ch->tracking);
+    /* value of (holdover.anchorValid || holdover.active) read by ComputeGalileoTracking */
+    int checkedBeforeLoops = trk->checkedBeforeLoops;
     /* update ms counter, evaluate loops */
     trk->msCounter++;
     if (checkedBeforeLoops)
@@ -96,5 +109,13 @@ TTrackingStatus PerformGalileoTracking(TNGeneConfiguration *cfg, TNGeneData *rx,
         trk->msCounter = 0;
     }
     trk->trkCounter++;
-    return trk->trkStatus;
+}
+
+TTrackingStatus PerformGalileoTracking(TNGeneConfiguration *cfg, TNGeneData *rx, TChannel *ch,
+                                       char *firstBunch, unsigned int firstBunchSize,
+                                       char *secondBunch, unsigned int secondBunchSize)
+{
+    ComputeGalileoTracking(cfg, rx, ch, firstBunch, firstBunchSize, secondBunch, secondBunchSize);
+    CommitGalileoTracking(cfg, rx, ch);
+    return ch->tracking.trkStatus;
 }

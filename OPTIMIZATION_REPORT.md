@@ -677,3 +677,68 @@ Risultati e hash in `development/profiling/pvt-fixes-20261028/results.json`.
 Binario finale SHA-256:
 `6685EEED311091EE9A1EFABF34ECF6DDC3AB532B2BC4BD63BDFEBE684F9E69AB`.
 Backup precedente locale: `build/pvt-before-fixes/`.
+## 16. Pool di DSP worker, 19 novembre 2026
+
+Design in three phases per execution cycle (`receiver/channelManager.c`):
+`PrepareChannelCycle` on the main thread in channel index order, `ComputeChannelCycle`
+on the worker owning the channel, `CommitChannelCycle` on the main thread in the
+same order. `DoChannelManager` remains the serial wrapper of the three phases
+and is what the tools in `tools/` call.
+
+State that had to move:
+
+| Item | Where it lives | Note |
+| --- | --- | --- |
+| Scratch DSP arrays | `TDspContext dspContexts[]` embedded in `TDspWorkerPool` | allocated by `InitDspWorkerPool` at receiver init, no allocation in the loop |
+| XMM register backup | thread local, `InitXmmsBackup()` per thread | one thread per context, never two owners |
+| Code replicas | offsets in `TTracking` + `PointTrackingScratchToDsp` | pointers are re-anchored per worker before the correlations |
+| Deferred messages | `TLogCapture` queue embedded in `TChannel` | fixed capacity, flushed by `CommitChannelCycle` in channel order |
+| Tracking holdover flag | `trk->checkedBeforeLoops` | set in the compute half, read in the commit half |
+
+Number of workers is a command line only setting: `-W n` / `--workers n`, clamped
+to `DSP_WORKERS_MINIMUM`..`DSP_WORKERS_MAXIMUM` = 1..4, default 1 (the historical
+elaboration on the main thread). Option string fixed from `"Vtni:f:g:l:vcrWh:"`
+to `"Vtni:f:g:l:vcrW:h"`; the misplaced colon made `-W 1` pass a null `optarg`
+to `strtol` and the process died with Windows status 0xC0000409.
+
+Throughput, `recordings/native-ab.raw`, SiGe front end, executable SHA256
+`8B2E5DE24742BACD3AABF6F992895516DDE5251BF906FC9F77E5AF1113FD1EAD`:
+
+| Worker | Wall s | CPU s | Fix | Lock | Loss |
+| ---: | ---: | ---: | ---: | ---: | ---: |
+| 1 | 13,98 | 12,77 | 23 | 16 | 0 |
+| 2 | 9,15 | 12,50 | 23 | 16 | 0 |
+| 4 | 9,39 | 15,89 | 23 | 16 | 0 |
+
+Two workers pay the expected price: wall falls from 13,98 s to 9,15 s while CPU
+falls only from 12,77 s to 12,50 s, that is a factor 1,53 in wall against a
+factor 0,98 in CPU. The commit phase, the parsers and the fill of the circular
+buffer stay serial, so this record cannot benefit much from more threads. Four
+workers do not improve over two: wall 9,39 s against 9,15 s while CPU rises to
+15,89 s, that is the overhead of the pool and of the job queue against the
+work left in the cycle. Conclusion: two workers is the setting to keep, four is
+available for measurement and not a recommendation on this record.
+
+Open blocker for the equivalence requirement. With one worker the normalized
+stream is reproducible run after run. With two and with four workers the streams
+differ from the one worker stream and differ also between two runs of the same
+configuration: 114 of 437 rows, all of them the Doppler reported at a lock and
+the last digits of the coordinate, of the speed and of the bias. Two probes
+localized the cause in the scratch, not in the scheduling:
+
+1. `ArrayClean` of the code array of the scratch before the elaboration: the
+   one worker stream changes and the one and two worker streams become
+   identical.
+2. Pointing the early and the late replica at the prompt replica: the same
+   two streams become identical without other change.
+
+So an elaboration reads a region of `dsp->codeArray` that it did not write in
+that same elaboration; `GenerateCode` writes `ch->blocksize` samples while the
+correlators read replicas displaced by `gpsSpacing`, by `veryEarlyVeryLateSpacing`
+and by the multiple correlator spacing, and `InitDspContext` zeroes the arrays
+only at construction. In the serial execution the value read is the residue of
+a fixed sequence of channels, with several scratches it is the residue of the
+jobs taken by that worker. Making the read self-contained is a change in the
+numerics of the replicas, therefore a decision of accuracy to be taken on the
+Linux baseline, not a scheduling decision; the default of one worker keeps the
+behaviour identical to the serial execution in the meantime.

@@ -4,7 +4,7 @@
 int MeasureHackrfConfirmationNoise(TNGeneConfiguration *cfg, TNGeneData *rx, int64_t out[4])
 {
     TThresholdManager *thr = &rx->acqCommon.thr;
-    TDspContext *dsp = rx->dsp;
+    TDspContext *dsp = NGENE_DSP(rx);
     unsigned offset = 0, ms, gps = thr->blocksize / 4;
     double phase = 0;
     out[0] = out[1] = out[2] = out[3] = 0;

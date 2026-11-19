@@ -76,6 +76,7 @@ add_executable(ngene
     receiver/manageLogs.c
     receiver/ngeneInitialization.c
     receiver/channelManager.c
+    receiver/dspWorkerPool.c
     frontEnd/circularBuffer.c
     frontEnd/frontend.c
     frontEnd/hackrfFrontend.c
@@ -108,6 +109,7 @@ add_executable(ngene
     pvt/receiverTime.c
     utility/checkFolder.c
     utility/ioFunctions.c
+    utility/logCapture.c
     utility/nmeaLog.c
     utility/rinexLog.c
     utility/argvParser.c
@@ -237,7 +239,8 @@ if(NGENE_BUILD_PLATFORM_CHECKS)
     add_test(NAME atmosphere_contract COMMAND ngene_check_atmosphere)
     set_tests_properties(fft_evo_classic_contract PROPERTIES TIMEOUT 60)
     add_executable(ngene_check_wide_iq tools/check_wide_iq.c asmFolder/wideInput.c
-        asmFolder/hackrfInput.c acquisition/hackrfThreshold.c utility/sampleCompression.c asmFolder/carrierTable.c)
+        asmFolder/hackrfInput.c acquisition/hackrfThreshold.c utility/sampleCompression.c
+        asmFolder/carrierTable.c)
     target_link_libraries(ngene_check_wide_iq PRIVATE ngene_fft)
     add_test(NAME hackrf_full_precision COMMAND ngene_check_wide_iq)
     set_tests_properties(hackrf_full_precision PROPERTIES TIMEOUT 30)

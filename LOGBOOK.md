@@ -512,3 +512,81 @@ Priorita' successive:
 
 Non sono state verificate qui le presunte identita' con `CODE/Old NGene Code`:
 quel confronto e' stato fornito dall'utente, non ripetuto in questo workspace.
+
+
+## Stage 2: pool di DSP worker, 19 novembre 2026
+
+Implemented in this session the bounded pool of DSP workers that elaborates
+the channels of one execution cycle in parallel, above the separation of
+concerns of stage 1 already present in the tree.
+
+1. Cycle of one channel split in `PrepareChannelCycle` (main thread, order of
+   the channel index), `ComputeChannelCycle` (worker owning the channel) and
+   `CommitChannelCycle` (main thread, order of the channel index). `DoChannelManager`
+   remains the wrapper that runs the three phases in sequence, so the tools
+   of `tools/` and the historical behaviour stay valid (see `receiver/channelManager.c`).
+2. Tracking split in `ComputeGpsTracking`/`CommitGpsTracking` and in the Galileo
+   pair. The replicas of the spreading code became offsets and a flag inside
+   `TTracking`, re-anchored on the scratch of the worker by
+   `PointTrackingScratchToDsp` (see `tracking/tracking.c`); the holdover flag
+   travels from the computing half to the committing half in
+   `trk->checkedBeforeLoops`.
+3. Each worker owns one `TDspContext` and one backup of the XMM registers. The
+   scratch structure is embedded in `TDspWorkerPool` and its arrays are allocated
+   by `InitDspWorkerPool`, therefore during the initialization of the receiver
+   (see `receiver/dspWorkerPool.c`). The scratch of the calling thread is
+   selected by `NGENE_DSP(rx)` and by the thread local `ngeneDspOverride`; the
+   thread storage is selected for GCC, clang and clang-cl in
+   `receiver/xmmsBackup.h`, so the same source builds on Linux and on Windows.
+4. The log of the elaboration of one channel is queued in the channel and
+   replayed on the main thread by `CommitChannelCycle`, in the order of the
+   channel index (see `utility/logCapture.c` and the branch of `SwrxLog`).
+5. Number of workers comes from the command line only: `-W n` and `--workers n`,
+   bounded 1 to 4 by `DSP_WORKERS_MAXIMUM`; the default is one worker, that is
+   the elaboration on the main thread of the historical execution.
+
+Bug of this session found and fixed: the option string was
+`"Vtni:f:g:l:vcrWh:"`, that is the colon belonged to `h` and not to `W`. The
+option `-W 1` then left `optarg` null and `strtol` crashed with the Windows
+status 0xC0000409, with nothing on stdout because the stream was buffered.
+The string is now `"Vtni:f:g:l:vcrW:h"` and the handler rejects a null
+`optarg`, a value not entirely made of digit and a number outside the range.
+
+Measure on `recordings/native-ab.raw`, SiGe front end, one run per configuration,
+executable SHA256 8B2E5DE24742BACD3AABF6F992895516DDE5251BF906FC9F77E5AF1113FD1EAD:
+
+| Worker | Wall s | CPU s | Fix | Lock | Loss |
+| ---: | ---: | ---: | ---: | ---: | ---: |
+| 1 | 13,98 | 12,77 | 23 | 16 | 0 |
+| 2 | 9,15 | 12,50 | 23 | 16 | 0 |
+| 4 | 9,39 | 15,89 | 23 | 16 | 0 |
+
+Windows build green, ctest 14/14 green. The runner
+`development/profiling/profile-replay.ps1` takes now `-WorkersList` and writes
+the run folder `run-<n>-w<workers>`.
+
+Verification not met, and this is the state of the stage: the event stream is
+not identical to the stream of one worker. One worker reproduces itself run
+after run. With two and with four workers, two runs of the same configuration
+differ also among themselves: 114 of 437 rows after removal of the timestamp
+and of the path of the run folder. The number of rows is the same, the count
+of fix, of lock and of loss is the same; the differences are in the Doppler
+reported at the lock and in the last digit of the coordinate, of the speed
+and of the bias.
+
+Two probes localized the cause in the content left in the scratch, and not in
+the distribution of the jobs. Cleaning only the code array of the scratch before
+the elaboration made the stream of one worker change and the stream of one and
+of two workers identical. Pointing the early and the late replica at the prompt
+replica made the same two streams identical without other change. Therefore an
+elaboration reads part of `dsp->codeArray` that it does not write during that
+elaboration, so the value read belongs to the history of the scratch of the
+worker: in the serial execution that history is the fixed sequence of the
+channels, while with several scratches it is the sequence of the jobs taken by
+that worker.
+
+Consequence: the pool cannot be byte identical to the serial execution before
+those reads become self-contained, and making them self-contained changes the
+numerics of the replicas of the spreading code, that is a decision of accuracy
+and not of scheduling. The default of the configuration stays one worker; 2 and
+4 are available for measurement with the difference in the last digit understood.
