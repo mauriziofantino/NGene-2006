@@ -32,9 +32,13 @@ typedef struct PrnTableStruct {
     s128 *egnosChipsOversampledBpsk[EGNOS_NUMBER_OF_PRNS];     /**< PRN chips (+1/-1) for each EGNOS
                                                                   satellite (each chip repeated 16
                                                                   times) */
-    s128 *galileoChipsOversampledBpsk[GALILEO_NUMBER_OF_PRNS]; /**< PRN chips (+1/-1) for each EGNOS
+    s128 *galileoChipsOversampledBpsk[GALILEO_NUMBER_OF_PRNS]; /**< PRN chips (+1/-1) for each Galileo
                                                                   satellite (each chip repeated 16
                                                                   times) */
+    s128 *beidouChipsOversampled[BEIDOU_NUMBER_OF_PRNS];     /**< PRN chips ( 0/-1) for each BeiDou satellite
+                                                                  (each chip repeated 16 times) */
+    s128 *beidouChipsOversampledBpsk[BEIDOU_NUMBER_OF_PRNS]; /**< PRN chips (+1/-1) for each BeiDou satellite
+                                                                  (each chip repeated 16 times) */
     double scaling;            /**< Use this factor to multiply NCO increment and initial value */
     unsigned int ncoThreshold; /**< Maximum value for the NCO: when the value surpasses the limit,
                                   wraps to 0 */
@@ -45,6 +49,10 @@ typedef struct PrnTableStruct {
     int numberOfRealGalileoSat; /**< Number of existing Galileo satellites as reported in
                                    Galileo_real_PRNs.txt */
     int *prnOfRealGalileoSat; /**< Existing Galileo satellites as reported in Galileo_real_PRNs.txt
+                               */
+    int numberOfRealBeidouSat;  /**< Number of existing BeiDou satellites as reported in
+                                   Beidou_real_PRNs.txt */
+    int *prnOfRealBeidouSat;    /**< Existing BeiDou satellites as reported in Beidou_real_PRNs.txt
                                */
 } TPrnTable;
 /**

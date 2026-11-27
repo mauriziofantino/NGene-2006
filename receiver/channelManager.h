@@ -27,7 +27,8 @@
  * @return SUCCESS_RETURN when the function ends with success, FAILURE_RETURN otherwise
  */
 int InitChannelScheduler(TNGeneConfiguration *cfg, TChannelScheduler *chSch,
-                         int numOfRealGalileoPrns, int *realGalileoPrns);
+                         int numOfRealGalileoPrns, int *realGalileoPrns,
+                         int numOfRealBeidouPrns, int *realBeidouPrns);
 
 /**
  * @brief De-initializes the structure used to manage the scheduling of the channels

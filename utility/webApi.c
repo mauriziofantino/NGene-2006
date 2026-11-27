@@ -948,7 +948,13 @@ int InitWebApi(TNGeneConfiguration *cfg, TWebApiData *web)
 {
     NGENE_SOCKET_TYPE listenerSocket;
     struct sockaddr_in listenerAddress;
+#ifdef NGENE_NATIVE_WINDOWS
+    /* the option of SO_REUSEADDR is not asked on Windows, where the option makes bind() accept a port
+     * that another program already listens on: the browser would then be answered by that program and
+     * not by the interface of the receiver (see utility/webApi.c) */
+#else
     int reuseAddressFlag;
+#endif
     if (cfg->userInterface != RX_UI_WEB) {
         web->enabled = FALSE_FLAG;
         return SUCCESS_RETURN;
@@ -983,9 +989,11 @@ int InitWebApi(TNGeneConfiguration *cfg, TWebApiData *web)
         SwrxLog(NGENE_LOG_SEVERITY_ERROR, "Impossible to open the socket of the web interface");
         return FAILURE_RETURN;
     }
+#ifndef NGENE_NATIVE_WINDOWS
     reuseAddressFlag = TRUE_FLAG;
     setsockopt(listenerSocket, SOL_SOCKET, SO_REUSEADDR, (char *)(&reuseAddressFlag),
                (int)sizeof(int));
+#endif
     listenerAddress.sin_family = AF_INET;
     /* the interface is served on the loopback address only: the receiver of a vehicle or of a
      * laboratory bench is not exposed to the network of a facility (see utility/webApi.c) */

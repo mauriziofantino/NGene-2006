@@ -135,7 +135,7 @@ for ($taskRun=1; $taskRun -le $Repetitions; $taskRun++) {
     [IO.File]::WriteAllText((Join-Path $taskDirectory 'stdout.log'), $taskOutput.Result)
     [IO.File]::WriteAllText((Join-Path $taskDirectory 'stderr.log'), $taskError.Result)
     $taskResult = [pscustomobject]@{
-        Run = $taskRun; Frontend = $Frontend; Input = $taskInput; DspWorkers = $taskWorkers; PvtMethodOverride = $PvtMethod; WeightedLsOverride = $WeightedLs
+        Run = $taskRun; Frontend = $Frontend; Input = $taskInput; DspWorkers = $taskWorkers; UserInterface = $taskUiName; PvtMethodOverride = $PvtMethod; WeightedLsOverride = $WeightedLs
         SigeNativeIqOverride = $SigeNativeIq
         SigeIqIfHzOverride = $SigeIqIfHz
         TrackingHoldoverMsOverride = $TrackingHoldoverMs

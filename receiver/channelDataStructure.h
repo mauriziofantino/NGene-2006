@@ -183,5 +183,6 @@ typedef struct ChannelSchedulerStruct {
     int gpsChannelsInTracking;        /**< how many GPS channels are in tracking */
     int egnosChannelsInTracking;      /**< how many EGNOS channels are in tracking */
     int galileoChannelsInTracking;    /**< how many Galileo channels are in tracking */
+    int beidouChannelsInTracking;     /**< how many BeiDou channels are in tracking */
 } TChannelScheduler;
 #endif /* CHANNEL_DATA_STRUCTURE_H_INCLUDED */

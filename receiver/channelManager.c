@@ -38,11 +38,13 @@
 #include "channelManager.h"
 /* Acquisition scheduling */
 int InitChannelScheduler(TNGeneConfiguration *cfg, TChannelScheduler *chSch,
-                         int numOfRealGalileoPrns, int *realGalileoPrns)
+                         int numOfRealGalileoPrns, int *realGalileoPrns,
+                         int numOfRealBeidouPrns, int *realBeidouPrns)
 {
     int gpsEnabled = TRUE_FLAG;
     int galileoEnabled = TRUE_FLAG;
     int egnosEnabled = TRUE_FLAG;
+    int beidouEnabled = TRUE_FLAG;
     /* List of PRNs includes all supported PRNs (whose constellation has allocated channels) */
     if (cfg->numberOfGpsChannels == 0)
         gpsEnabled = FALSE_FLAG;
@@ -50,8 +52,11 @@ int InitChannelScheduler(TNGeneConfiguration *cfg, TChannelScheduler *chSch,
         galileoEnabled = FALSE_FLAG;
     if (cfg->numberOfEgnosChannels == 0)
         egnosEnabled = FALSE_FLAG;
-    if (CreatePrnList(&(chSch->prnList), gpsEnabled, galileoEnabled, egnosEnabled,
-                      numOfRealGalileoPrns, realGalileoPrns) != SUCCESS_RETURN)
+    if (cfg->numberOfBeidouChannels == 0)
+        beidouEnabled = FALSE_FLAG;
+    if (CreatePrnList(&(chSch->prnList), gpsEnabled, galileoEnabled, egnosEnabled, beidouEnabled,
+                      numOfRealGalileoPrns, realGalileoPrns,
+                      numOfRealBeidouPrns, realBeidouPrns) != SUCCESS_RETURN)
         return FAILURE_RETURN;
 /* No channels in acquisition at the start */
 #ifdef MAXIMUM_NUMBER_OF_CHANNELS_IN_ACQUISITION
@@ -69,6 +74,7 @@ int InitChannelScheduler(TNGeneConfiguration *cfg, TChannelScheduler *chSch,
     chSch->gpsChannelsInTracking = 0;
     chSch->egnosChannelsInTracking = 0;
     chSch->galileoChannelsInTracking = 0;
+    chSch->beidouChannelsInTracking = 0;
     return SUCCESS_RETURN;
 }
 
@@ -145,6 +151,8 @@ void FreeAcquisitionSpotAfterAcquisitionSuccess(TNGeneData *rx, TChannelSchedule
         chSch->galileoChannelsInTracking++;
     else if (ch->satType == EGNOS_SAT)
         chSch->egnosChannelsInTracking++;
+    else if (ch->satType == BEIDOU_SAT)
+        chSch->beidouChannelsInTracking++;
     chSch->channelsInAcquisition--;
     if (ch->satType == GALILEO_SAT)
         chSch->galileoChannelsInAcquisition--;
@@ -207,6 +215,8 @@ void ReleaseTracking(TNGeneConfiguration *cfg, TChannelScheduler *chSch, TChanne
         chSch->galileoChannelsInTracking--;
     else if (ch->satType == EGNOS_SAT)
         chSch->egnosChannelsInTracking--;
+    else if (ch->satType == BEIDOU_SAT)
+        chSch->beidouChannelsInTracking--;
     FindAndFreeInPrnList(ch->satType, ch->satId, &(chSch->prnList));
     ResetChannelVariables(cfg, ch);
 }

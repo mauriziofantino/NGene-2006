@@ -191,7 +191,9 @@ int InitReceiver(TNGeneConfiguration *cfg, TNGeneData *rx)
     if (InitFftTable(cfg, &(rx->fftTable)) != SUCCESS_RETURN)
         return FAILURE_RETURN;
     if (InitChannelScheduler(cfg, &(rx->channelScheduler), rx->prnTable.numberOfRealGalileoSat,
-                             rx->prnTable.prnOfRealGalileoSat) != SUCCESS_RETURN)
+                             rx->prnTable.prnOfRealGalileoSat,
+                             rx->prnTable.numberOfRealBeidouSat,
+                             rx->prnTable.prnOfRealBeidouSat) != SUCCESS_RETURN)
         return FAILURE_RETURN;
     if (InitAcquisitionCommon(cfg, rx) != SUCCESS_RETURN)
         return FAILURE_RETURN;

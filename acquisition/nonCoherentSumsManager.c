@@ -84,13 +84,17 @@ void PerformNonCoherentSumsManager(TNGeneConfiguration *cfg, TNGeneData *rx,
                 nonCohManager->currentNumberOfNonCoherentSums);
         /* reset the tested PRNs list: if all channels for a constellation are in tracking,
          * then this scheduler does not take into account that constellation */
+        int freeBds = TRUE_FLAG;
         if (rx->channelScheduler.gpsChannelsInTracking >= cfg->numberOfGpsChannels)
             freeGps = FALSE_FLAG;
         if (rx->channelScheduler.galileoChannelsInTracking >= cfg->numberOfGalileoChannels)
             freeGal = FALSE_FLAG;
         if (rx->channelScheduler.egnosChannelsInTracking >= cfg->numberOfEgnosChannels)
             freeEgnos = FALSE_FLAG;
-        FreeAllElementsInTheList(&(nonCohManager->testedPrns), freeGps, freeGal, freeEgnos);
+        if (rx->channelScheduler.beidouChannelsInTracking >= cfg->numberOfBeidouChannels)
+            freeBds = FALSE_FLAG;
+        FreeAllElementsInTheList(&(nonCohManager->testedPrns), freeGps, freeGal, freeEgnos,
+                                freeBds);
         /* tag as acquired all PRNs in tracking */
         for (idx = 0; idx < cfg->numberOfChannels; idx++) {
             ch = &(rx->channelArray[idx]);

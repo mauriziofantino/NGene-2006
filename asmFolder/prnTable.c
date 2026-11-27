@@ -1,4 +1,5 @@
 #include "egnosPrns.h"
+#include "beidouPrns.h"
 /**
  * @file prnTable.c
  *
@@ -57,7 +58,8 @@ int InitPrnTable(TNGeneConfiguration *cfg, TPrnTable *t)
     int gpsSize = (2 * GPS_CODE_LEN) + 1;
     int egnosSize = (2 * EGNOS_CODE_LEN) + 1;
     int galileoSize = (2 * GALILEO_CODE_LEN) + 1;
-    char code[GALILEO_CODE_LEN];
+    int beidouSize = (2 * BEIDOU_CODE_LEN) + 1;
+    char code[BEIDOU_CODE_LEN];
     char filename[MAX_ROW_LENGTH];
     FILE *codeFile;
     char row[MAX_ROW_LENGTH];
@@ -93,6 +95,17 @@ int InitPrnTable(TNGeneConfiguration *cfg, TPrnTable *t)
         posix_memalign((void **)&(t->galileoChipsOversampled[index]), POSIX_ALIGNMENT,
                        galileoSize * sizeof(s128));
         if (t->galileoChipsOversampled[index] == NULL)
+            errorsFound++;
+    }
+    /* Allocate BeiDou */
+    for (index = 0; index < BEIDOU_NUMBER_OF_PRNS; index++) {
+        posix_memalign((void **)&(t->beidouChipsOversampledBpsk[index]), POSIX_ALIGNMENT,
+                       beidouSize * sizeof(s128));
+        if (t->beidouChipsOversampledBpsk[index] == NULL)
+            errorsFound++;
+        posix_memalign((void **)&(t->beidouChipsOversampled[index]), POSIX_ALIGNMENT,
+                       beidouSize * sizeof(s128));
+        if (t->beidouChipsOversampled[index] == NULL)
             errorsFound++;
     }
     /* errors found */
@@ -147,6 +160,69 @@ int InitPrnTable(TNGeneConfiguration *cfg, TPrnTable *t)
         OversampleCode(code, GALILEO_CODE_LEN, t->galileoChipsOversampled[index]);
     }
     fclose(codeFile);
+    /* BeiDou B1C */
+    filename[0] = '\0';
+    strcat(filename, cfg->otherDataPath);
+    strcat(filename, "Beidou_B1C_codes.dat");
+    codeFile = fopen(filename, "rb");
+    if (codeFile != NULL) {
+        for (index = 0; index < BEIDOU_NUMBER_OF_PRNS; index++) {
+            if (ReadRequiredCode(cfg, codeFile, code, BEIDOU_CODE_LEN, filename) != SUCCESS_RETURN)
+                return FAILURE_RETURN;
+            OversampleCode(code, BEIDOU_CODE_LEN, t->beidouChipsOversampledBpsk[index]);
+            if (ReadRequiredCode(cfg, codeFile, code, BEIDOU_CODE_LEN, filename) != SUCCESS_RETURN)
+                return FAILURE_RETURN;
+            OversampleCode(code, BEIDOU_CODE_LEN, t->beidouChipsOversampled[index]);
+        }
+        fclose(codeFile);
+    } else {
+        /* Generate programmatically from ICD Weil sequence definitions */
+        for (index = 0; index < BEIDOU_NUMBER_OF_PRNS; index++) {
+            char mask[BEIDOU_CODE_LEN];
+            if (!GenerateBeidouB1cCode(BeidouPrnAt(index), code, mask))
+                return FAILURE_RETURN;
+            OversampleCode(code, BEIDOU_CODE_LEN, t->beidouChipsOversampledBpsk[index]);
+            OversampleCode(mask, BEIDOU_CODE_LEN, t->beidouChipsOversampled[index]);
+        }
+    }
+    /* Manage real BeiDou satellites */
+    t->numberOfRealBeidouSat = 0;
+    t->prnOfRealBeidouSat = NULL;
+    if (cfg->numberOfBeidouChannels > 0) {
+        filename[0] = '\0';
+        strcat(filename, cfg->otherDataPath);
+        strcat(filename, "Beidou_real_PRNs.txt");
+        codeFile = fopen(filename, "r");
+        if (codeFile != NULL) {
+            while (fgets(row, MAX_ROW_LENGTH, codeFile) != NULL) {
+                if ((row[0] != '#') && (sscanf(row, "%d", &prn) == 1)) {
+                    if (prn < BASE_PRN || prn > BEIDOU_NUMBER_OF_PRNS) {
+                        fclose(codeFile);
+                        SwrxLog(NGENE_LOG_SEVERITY_ERROR, "Invalid BeiDou PRN %d in %s", prn,
+                                filename);
+                        return FAILURE_RETURN;
+                    }
+                    t->numberOfRealBeidouSat++;
+                }
+            }
+            if (t->numberOfRealBeidouSat > 0) {
+                t->prnOfRealBeidouSat = (int *)malloc(t->numberOfRealBeidouSat * sizeof(int));
+                if (t->prnOfRealBeidouSat == NULL) {
+                    SwrxLog(NGENE_LOG_SEVERITY_ERROR, "Malloc returned a NULL pointer in InitPrnTable");
+                    CloseNGene(cfg, EXIT_FAILURE);
+                }
+                rewind(codeFile);
+                index = 0;
+                while (fgets(row, MAX_ROW_LENGTH, codeFile) != NULL) {
+                    if ((row[0] != '#') && (sscanf(row, "%d", &prn) == 1)) {
+                        t->prnOfRealBeidouSat[index] = prn;
+                        index++;
+                    }
+                }
+            }
+            fclose(codeFile);
+        }
+    }
     /* Manage real Galileo satellites */
     t->numberOfRealGalileoSat = 0;
     t->prnOfRealGalileoSat = NULL;
@@ -214,9 +290,17 @@ void DeinitPrnTable(TPrnTable *t)
         free(t->galileoChipsOversampledBpsk[index]);
         free(t->galileoChipsOversampled[index]);
     }
+    for (index = 0; index < BEIDOU_NUMBER_OF_PRNS; index++) {
+        free(t->beidouChipsOversampledBpsk[index]);
+        free(t->beidouChipsOversampled[index]);
+    }
     if (t->prnOfRealGalileoSat != NULL) {
         free(t->prnOfRealGalileoSat);
         t->prnOfRealGalileoSat = NULL;
+    }
+    if (t->prnOfRealBeidouSat != NULL) {
+        free(t->prnOfRealBeidouSat);
+        t->prnOfRealBeidouSat = NULL;
     }
 }
 int GenerateCode(TNGeneConfiguration *cfg, TPrnTable *t, TSatConstellation prnConstellation,
@@ -248,6 +332,12 @@ int GenerateCode(TNGeneConfiguration *cfg, TPrnTable *t, TSatConstellation prnCo
         code = &(t->galileoChipsOversampled[prn - BASE_PRN][0].b[0]);
         if (employedModulation == BPSK_MODULATION)
             code = &(t->galileoChipsOversampledBpsk[prn - BASE_PRN][0].b[0]);
+    } else if (prnConstellation == BEIDOU_SAT) {
+        if (prn > BEIDOU_NUMBER_OF_PRNS)
+            return FAILURE_RETURN;
+        code = &(t->beidouChipsOversampled[prn - BASE_PRN][0].b[0]);
+        if (employedModulation == BPSK_MODULATION)
+            code = &(t->beidouChipsOversampledBpsk[prn - BASE_PRN][0].b[0]);
     } else /* EGNOS_SAT */
     {
         int slot = EgnosPrnIndex(prn);
@@ -318,6 +408,8 @@ void UpdateCodePhase(TNGeneConfiguration *cfg, TSatConstellation satType, double
         codeLen = (float)GPS_CODE_LEN;
     else if (satType == GALILEO_SAT)
         codeLen = (float)GALILEO_CODE_LEN;
+    else if (satType == BEIDOU_SAT)
+        codeLen = (float)BEIDOU_CODE_LEN;
     else
         codeLen = (float)EGNOS_CODE_LEN;
     (*codePhase) += ((double)nSamples * codeRate * cfg->ts);
@@ -333,6 +425,8 @@ void AddCodePhases(TSatConstellation satType, double codePhase1, double codePhas
         codeLen = (float)GPS_CODE_LEN;
     else if (satType == GALILEO_SAT)
         codeLen = (float)GALILEO_CODE_LEN;
+    else if (satType == BEIDOU_SAT)
+        codeLen = (float)BEIDOU_CODE_LEN;
     else
         codeLen = (float)EGNOS_CODE_LEN;
     (*codePhase) = codePhase1 + codePhase2;

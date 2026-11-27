@@ -137,6 +137,31 @@
  */
 #define EGNOS_BIT_DURATION 2
 /**
+ * @def BEIDOU_NUMBER_OF_PRNS
+ * @brief Total number of spreading codes for BeiDou B1C signal
+ */
+#define BEIDOU_NUMBER_OF_PRNS 63
+/**
+ * @def BEIDOU_CODE_RATE
+ * @brief Code rate [chip/s] for BeiDou B1C signal
+ */
+#define BEIDOU_CODE_RATE 1023000.0
+/**
+ * @def BEIDOU_CODE_LEN
+ * @brief Length of a code period [chip] for BeiDou B1C signal
+ */
+#define BEIDOU_CODE_LEN 10230
+/**
+ * @def BEIDOU_CODE_DURATION
+ * @brief Nominal duration of a code period [ms] for BeiDou B1C signal
+ */
+#define BEIDOU_CODE_DURATION 10
+/**
+ * @def BEIDOU_BIT_DURATION
+ * @brief Nominal duration of a symbol/bit [ms] for BeiDou B1C signal (100 sps)
+ */
+#define BEIDOU_BIT_DURATION 10
+/**
  * @enum SatConstellationEnum
  *
  * @brief is the type that indicates the constellation of the current PRN.
@@ -145,7 +170,8 @@ typedef enum SatConstellationEnum {
     INVALID_SAT = 0, /**< Default no-good value */
     GPS_SAT = 1,     /**< GPS PRN */
     GALILEO_SAT = 2, /**< Galileo PRN */
-    EGNOS_SAT = 3    /**< EGNOS PRN */
+    EGNOS_SAT = 3,   /**< EGNOS PRN */
+    BEIDOU_SAT = 4   /**< BeiDou PRN */
 } TSatConstellation;
 /**
  *  @enum SatSignalEnum
@@ -158,6 +184,7 @@ typedef enum SatSignalEnum {
     E1_BC,              /**< Galileo OS on E1 */
     E5_A,               /**< Galileo E5a (F/NAV) */
     E5_B,               /**< Galileo E5b (I/NAV) */
-    L1                  /**< EGNOS */
+    L1,                 /**< EGNOS */
+    B1_C                /**< BeiDou B1C */
 } TSatSignal;
 #endif /* SPREADING_CODES_H_INCLUDED */

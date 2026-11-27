@@ -57,7 +57,7 @@ static int CheckSbasCodes(void)
     }
     fclose(file);
     CHECK(!GenerateEgnosCode(999, bpsk, mask));
-    CHECK(CreatePrnList(&list, 0, 0, 1, 0, NULL) == SUCCESS_RETURN);
+    CHECK(CreatePrnList(&list, 0, 0, 1, 0, 0, NULL, 0, NULL) == SUCCESS_RETURN);
     CHECK(GetNextAvailableFromPrnList(EGNOS_SAT, &list) == 121);
     CHECK(GetNextAvailableFromPrnList(EGNOS_SAT, &list) == 136);
     CHECK(DestroyPrnList(&list) == SUCCESS_RETURN);

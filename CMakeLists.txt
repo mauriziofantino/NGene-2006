@@ -273,6 +273,17 @@ if(NGENE_BUILD_PLATFORM_CHECKS)
     target_link_libraries(ngene_check_web_api PRIVATE ngene_platform PkgConfig::USB Threads::Threads)
     add_test(NAME web_user_interface COMMAND ngene_check_web_api)
     set_tests_properties(web_user_interface PROPERTIES TIMEOUT 30)
+    add_executable(ngene_generate_beidou_codes tools/generate_beidou_codes.c)
+    target_link_libraries(ngene_generate_beidou_codes PRIVATE ngene_platform)
+
+    add_executable(ngene_check_beidou_codes tools/check_beidou_codes.c
+        asmFolder/carrierTable.c asmFolder/prnTable.c asmFolder/arrays.c utilityGnss/prnList.c)
+    target_link_libraries(ngene_check_beidou_codes PRIVATE ngene_platform PkgConfig::USB)
+    target_compile_definitions(ngene_check_beidou_codes PRIVATE
+        NGENE_TEST_DATA_DIRECTORY="${PROJECT_SOURCE_DIR}/sampleConfigurationFiles/otherData/")
+    add_test(NAME beidou_codes_contract COMMAND ngene_check_beidou_codes)
+    set_tests_properties(beidou_codes_contract PROPERTIES TIMEOUT 30)
+
     if(NGENE_NATIVE_WINDOWS)
         add_executable(ngene_check_windows tools/check_native_windows.c)
         target_link_libraries(ngene_check_windows PRIVATE ngene_windows)

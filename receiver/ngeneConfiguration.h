@@ -165,6 +165,7 @@ typedef struct NGeneConfigurationStruct {
     int numberOfGpsChannels;       /**< Number of GPS channels */
     int numberOfGalileoChannels;   /**< Number of Galileo channels */
     int numberOfEgnosChannels;     /**< Number of EGNOS channels */
+    int numberOfBeidouChannels;    /**< Number of BeiDou channels */
     int numberOfGalileoE5aChannels; /**< Number of Galileo channels for E5a (F/NAV) */
     int numberOfChannels;           /**< Total number of supported channels */
     int numberOfDspWorkers;         /**< Number of DSP workers elaborating the channels of one

@@ -33,7 +33,8 @@
  * @return SUCCESS_RETURN if successful, FAILURE_RETURN otherwise
  */
 int CreatePrnList(TPrnList *ptr, int gpsEnabled, int galileoEnabled, int egnosEnabled,
-                  int numOfRealGalileoPrns, int *realGalileoPrns);
+                  int beidouEnabled, int numOfRealGalileoPrns, int *realGalileoPrns,
+                  int numOfRealBeidouPrns, int *realBeidouPrns);
 
 /**
  * @brief Delete a PRN list
@@ -169,7 +170,8 @@ int FindAndFreeInPrnList(TSatConstellation constellation, int prn, TPrnList *ptr
  * @param freeGal when FALSE_FLAG, elements related to Galileo are not reset to PRN_AVAILABLE
  * @param freeEgnos when FALSE_FLAG, elements related to EGNOS are not reset to PRN_AVAILABLE
  */
-void FreeAllElementsInTheList(TPrnList *ptr, int freeGps, int freeGal, int freeEgnos);
+void FreeAllElementsInTheList(TPrnList *ptr, int freeGps, int freeGal, int freeEgnos,
+                              int freeBds);
 
 /**
  * @brief It translates a string describing a PRN into constellation and prn index.

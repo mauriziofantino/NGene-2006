@@ -23,7 +23,8 @@
  */
 #define MAXIMUM_SUPPORTED_GALILEO_PRN 36
 int CreatePrnList(TPrnList *ptr, int gpsEnabled, int galileoEnabled, int egnosEnabled,
-                  int numOfRealGalileoPrns, int *realGalileoPrns)
+                  int beidouEnabled, int numOfRealGalileoPrns, int *realGalileoPrns,
+                  int numOfRealBeidouPrns, int *realBeidouPrns)
 {
     unsigned int index;
     ptr->head = NULL; /* the list is empty */
@@ -56,6 +57,23 @@ int CreatePrnList(TPrnList *ptr, int gpsEnabled, int galileoEnabled, int egnosEn
             }
         } else
             return FAILURE_RETURN; /* No implicit simulator/all-PRN search. */
+    }
+    /* insert in the list all possible BeiDou satellites */
+    if (beidouEnabled == TRUE_FLAG) {
+        if (numOfRealBeidouPrns > 0) {
+            for (index = 0; index < (unsigned int)numOfRealBeidouPrns; index++) {
+                if (InsertElementIntoPrnList(BEIDOU_SAT, realBeidouPrns[index], ptr) !=
+                    SUCCESS_RETURN) {
+                    return FAILURE_RETURN;
+                }
+            }
+        } else {
+            for (index = BASE_PRN; index <= BEIDOU_NUMBER_OF_PRNS; index++) {
+                if (InsertElementIntoPrnList(BEIDOU_SAT, index, ptr) != SUCCESS_RETURN) {
+                    return FAILURE_RETURN;
+                }
+            }
+        }
     }
     return SUCCESS_RETURN;
 }
@@ -289,7 +307,8 @@ int FindAndFreeInPrnList(TSatConstellation constellation, int prn, TPrnList *ptr
     return SUCCESS_RETURN;
 }
 
-void FreeAllElementsInTheList(TPrnList *ptr, int freeGps, int freeGal, int freeEgnos)
+void FreeAllElementsInTheList(TPrnList *ptr, int freeGps, int freeGal, int freeEgnos,
+                              int freeBds)
 {
     TPrnListElement *currentElement;
     currentElement = ptr->head;
@@ -300,6 +319,8 @@ void FreeAllElementsInTheList(TPrnList *ptr, int freeGps, int freeGal, int freeE
         if ((currentElement->prnConstellation == GALILEO_SAT) && (freeGal == TRUE_FLAG))
             currentElement->available = PRN_AVAILABLE;
         if ((currentElement->prnConstellation == EGNOS_SAT) && (freeEgnos == TRUE_FLAG))
+            currentElement->available = PRN_AVAILABLE;
+        if ((currentElement->prnConstellation == BEIDOU_SAT) && (freeBds == TRUE_FLAG))
             currentElement->available = PRN_AVAILABLE;
         currentElement = currentElement->nextPrn;
     }
@@ -315,8 +336,37 @@ void FromStringToPrn(char *prnDescription, TSatConstellation *constellation, int
     } else if (strncmp(prnDescription, "EGNOS", 5) == 0) {
         *constellation = EGNOS_SAT;
         sscanf(&(prnDescription[5]), "%d", prn);
-    } else /* if(strncmp(prnDescription,"Galileo",7)==0) */
-    {
+    } else if (strncmp(prnDescription, "Galileo", 7) == 0) {
+        *constellation = GALILEO_SAT;
+        sscanf(&(prnDescription[7]), "%d", prn);
+    } else if (strncmp(prnDescription, "GALILEO", 7) == 0) {
+        *constellation = GALILEO_SAT;
+        sscanf(&(prnDescription[7]), "%d", prn);
+    } else if (strncmp(prnDescription, "Beidou", 6) == 0) {
+        *constellation = BEIDOU_SAT;
+        sscanf(&(prnDescription[6]), "%d", prn);
+    } else if (strncmp(prnDescription, "BEIDOU", 6) == 0) {
+        *constellation = BEIDOU_SAT;
+        sscanf(&(prnDescription[6]), "%d", prn);
+    } else if (strncmp(prnDescription, "BDS", 3) == 0) {
+        *constellation = BEIDOU_SAT;
+        sscanf(&(prnDescription[3]), "%d", prn);
+    } else if (strncmp(prnDescription, "B1C", 3) == 0) {
+        *constellation = BEIDOU_SAT;
+        sscanf(&(prnDescription[3]), "%d", prn);
+    } else if (prnDescription[0] == 'C' || prnDescription[0] == 'c') {
+        *constellation = BEIDOU_SAT;
+        sscanf(&(prnDescription[1]), "%d", prn);
+    } else if (prnDescription[0] == 'G' || prnDescription[0] == 'g') {
+        *constellation = GPS_SAT;
+        sscanf(&(prnDescription[1]), "%d", prn);
+    } else if (prnDescription[0] == 'E' || prnDescription[0] == 'e') {
+        *constellation = GALILEO_SAT;
+        sscanf(&(prnDescription[1]), "%d", prn);
+    } else if (prnDescription[0] == 'S' || prnDescription[0] == 's') {
+        *constellation = EGNOS_SAT;
+        sscanf(&(prnDescription[1]), "%d", prn);
+    } else {
         *constellation = GALILEO_SAT;
         sscanf(&(prnDescription[7]), "%d", prn);
     }
@@ -334,6 +384,8 @@ void FromPrnToString(TSatConstellation constellation, int prn, char *prnDescript
         sprintf(prnDescription, "EGNOS%d", prn);
     } else if (constellation == GALILEO_SAT) {
         sprintf(prnDescription, "Galileo%d", prn);
+    } else if (constellation == BEIDOU_SAT) {
+        sprintf(prnDescription, "BDS%d", prn);
     } else {
         sprintf(prnDescription, "INVALID");
     }
